@@ -1,0 +1,23 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Build package
+        run: just install build
+    # Uncomment for your project
+    #   - name: Publish to PyPI
+    #     uses: pypa/gh-action-pypi-publish@release/v1
+    #     with:
+    #       password: ${{ secrets.PYPI_API_TOKEN }}
