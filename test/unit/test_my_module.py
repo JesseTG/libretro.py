@@ -1,5 +1,5 @@
-import project_name
+import libretro
 
 
 def test_main():
-    project_name.main()
+    libretro.main()

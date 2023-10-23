@@ -19,7 +19,7 @@ A longer paragraph description of your project goes here.
 
 ```bash
 # Install tool
-pip3 install project_name
+pip3 install libretro
 
 # Install locally
 just install
