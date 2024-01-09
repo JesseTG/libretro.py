@@ -20,12 +20,14 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Games/Entertainment",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Testing",
 ]
+keywords = ["libretro", "retroarch", "emulation", "testing", "retrogaming"]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
