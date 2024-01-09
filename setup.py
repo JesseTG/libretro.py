@@ -30,39 +30,4 @@ DEV_REQUIREMENTS = [
     'twine == 4.*',
 ]
 
-setuptools.setup(
-    name='libretro.py',
-    version=version,
-    description='Your project description here',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url='http://github.com/JesseTG/libretro.py',
-    author='JesseTG',
-    license='MIT',
-    packages=setuptools.find_packages(
-        exclude=[
-            'examples',
-            'test',
-        ]
-    ),
-    package_data={
-        'libretro': [
-            'py.typed',
-        ]
-    },
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    install_requires=REQUIREMENTS,
-    extras_require={
-        'dev': DEV_REQUIREMENTS,
-    },
-    entry_points={
-        'console_scripts': [
-            'PROJECT_NAME_URL=libretro.my_module:main',
-        ]
-    },
-    python_requires='>=3.8, <4',
-)
+setuptools.setup()
