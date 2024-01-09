@@ -8,6 +8,9 @@ license = {text = "MIT License"}
 authors = [
     {name = "Jesse Talavera", email = "jesse@jesse.tg"},
 ]
+maintainers = [
+    {name = "Jesse Talavera", email = "jesse@jesse.tg"},
+]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Environment :: Console",
@@ -32,6 +35,8 @@ keywords = ["libretro", "retroarch", "emulation", "testing", "retrogaming"]
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
 Issues = "https://github.com/JesseTG/libretro.py/issues"
+Repository = "https://github.com/JesseTG/libretro.py"
+Changelog = "https://github.com/JesseTG/libretro.py/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = ["setuptools>=61.0"]
