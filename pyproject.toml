@@ -1,12 +1,35 @@
 [project]
 name = "libretro.py"
 version = "0.0.0"
+description = "A libretro frontend for Python intended for testing cores."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT License"}
 authors = [
     {name = "Jesse Talavera", email = "jesse@jesse.tg"},
 ]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Environment :: Console :: Framebuffer",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Testing",
+]
+
+[project.urls]
+Homepage = "https://github.com/JesseTG/libretro.py"
+Issues = "https://github.com/JesseTG/libretro.py/issues"
 
 [build-system]
 requires = ["setuptools>=61.0"]
