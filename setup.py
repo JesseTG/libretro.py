@@ -6,7 +6,7 @@ with open('README.md', 'r') as readme_file:
     long_description = readme_file.read()
 
 # Inspiration: https://stackoverflow.com/a/7071358/6064135
-with open('libretro/_version.py', 'r') as version_file:
+with open('src/libretro/_version.py', 'r') as version_file:
     version_groups = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_groups:
         version = version_groups.group(1)
