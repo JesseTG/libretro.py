@@ -1,3 +1,13 @@
+[project]
+name = "libretro.py"
+version = "0.0.0"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT License"}
+authors = [
+    {name = "Jesse Talavera", email = "jesse@jesse.tg"},
+]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
