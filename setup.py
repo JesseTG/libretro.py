@@ -4,6 +4,8 @@ import re
 import setuptools
 import ctypesgen
 
+# TODO: Clone libretro-common here
+
 with open('README.md', 'r') as readme_file:
     long_description = readme_file.read()
 
