@@ -8,3 +8,4 @@ dist
 htmlcov
 venv
 .idea
+build/
