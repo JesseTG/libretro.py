@@ -1,6 +1,8 @@
+import os.path
 import re
 
 import setuptools
+import ctypesgen
 
 with open('README.md', 'r') as readme_file:
     long_description = readme_file.read()
@@ -22,6 +24,7 @@ DEV_REQUIREMENTS = [
     'bandit == 1.7.*',
     'black == 23.*',
     'build == 0.10.*',
+    'ctypesgen == 1.1.*',
     'flake8 == 6.*',
     'isort == 5.*',
     'mypy == 1.5.*',
@@ -29,5 +32,17 @@ DEV_REQUIREMENTS = [
     'pytest-cov == 4.*',
     'twine == 4.*',
 ]
+
+THISDIR = os.path.dirname(__file__)
+LIBRETRO_COMMON_INCLUDE = os.path.join(THISDIR, 'deps', 'libretro-common', 'include')
+CTYPESGEN_TARGET = os.path.join(THISDIR, 'src', 'libretro', '_libretro.py')
+
+ctypesoptions = ctypesgen.options.get_default_options()
+ctypesoptions.output_file = CTYPESGEN_TARGET
+ctypesoptions.headers = [os.path.join(LIBRETRO_COMMON_INCLUDE, 'libretro.h')]
+
+descriptions = ctypesgen.parser.parse(ctypesoptions.headers, ctypesoptions)
+ctypesgen.processor.process(descriptions, ctypesoptions)
+ctypesgen.printer.WrapperPrinter(CTYPESGEN_TARGET, ctypesoptions, descriptions)
 
 setuptools.setup()
