@@ -36,8 +36,19 @@ def validate_core(core: CDLL) -> None:
     except AttributeError as e:
         raise ValueError(f"Couldn't find required symbol '{e.name}' from {core._name}") from e
 
+
 class Core:
+    """
+    A thin wrapper around a libretro core.
+    """
+
     def __init__(self, core: CDLL | str):
+        """
+        Create a new Core instance.
+
+        Parameters:
+            core: The core to wrap. Can be a path to a shared library or a CDLL instance.
+        """
         if isinstance(core, str):
             self._core = ctypes.cdll.LoadLibrary(core)
         else:
