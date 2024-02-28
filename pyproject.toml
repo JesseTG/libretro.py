@@ -39,7 +39,20 @@ Repository = "https://github.com/JesseTG/libretro.py"
 Changelog = "https://github.com/JesseTG/libretro.py/blob/master/CHANGELOG.md"
 
 [build-system]
-requires = ["setuptools>=69.1.1", "ctypesgen>=1.1.1", "GitPython>=3.1.42"]
+requires = [
+    'bandit == 1.7.*',
+    'black == 23.*',
+    'build == 0.10.*',
+    'ctypesgen == 1.1.*',
+    'ctypesgen>=1.1.1',
+    'flake8 == 6.*',
+    'isort == 5.*',
+    'mypy == 1.5.*',
+    'pytest == 7.*',
+    'pytest-cov == 4.*',
+    'setuptools>=69.1.1',
+    'twine == 4.*',
+]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
