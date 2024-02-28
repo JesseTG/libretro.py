@@ -39,7 +39,7 @@ Repository = "https://github.com/JesseTG/libretro.py"
 Changelog = "https://github.com/JesseTG/libretro.py/blob/master/CHANGELOG.md"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=69.1.1", "ctypesgen>=1.1.1", "GitPython>=3.1.42"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
