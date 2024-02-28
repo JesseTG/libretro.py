@@ -1,12 +1,12 @@
 from ctypes import CDLL
 from typing import *
 
-from . import _libretro as retro
-from .defs import *
+from ._libretro import *
+from .defs import Region
 
 
 # noinspection PyStatementEffect
-def validate_core(core: CDLL):
+def validate_core(core: CDLL) -> None:
     try:
         core.retro_set_environment
         core.retro_set_video_refresh
@@ -44,8 +44,6 @@ class Core:
             self._core = core
 
         validate_core(self._core)
-        self._rotation = Rotation.NONE
-        self._overscan = False
 
     def set_environment(self, env: retro_environment_t):
         self._core.retro_set_environment(env)
@@ -75,10 +73,14 @@ class Core:
         return self._core.retro_api_version()
 
     def get_system_info(self) -> retro_system_info:
-        pass
+        system_info = retro_system_info()
+        self._core.retro_get_system_info(byref(system_info))
+        return system_info
 
     def get_system_av_info(self) -> retro_system_av_info:
-        pass
+        system_av_info = retro_system_av_info()
+        self._core.retro_get_system_av_info(byref(system_av_info))
+        return system_av_info
 
     def set_controller_port_device(self, port: int, device: int):
         self._core.retro_set_controller_port_device(port, device)
@@ -93,34 +95,31 @@ class Core:
         return self._core.retro_serialize_size()
 
     def serialize(self, data: bytearray) -> bool:
-        pass
+        return self._core.retro_serialize(data, len(data))
 
     def unserialize(self, data: bytes) -> bool:
-        pass
+        return self._core.retro_unserialize(data, len(data))
 
     def cheat_reset(self):
         self._core.retro_cheat_reset()
 
-    def cheat_set(self, index: int, enabled: bool, code: str) -> None:
-        pass
+    def cheat_set(self, index: int, enabled: bool, code: str):
+        self._core.retro_cheat_set(index, enabled, code)
 
     def load_game(self, game: retro_game_info) -> bool:
-        pass
+        return self._core.retro_load_game(byref(game))
 
-    def load_game_special(self, game_type: int, info: retro_game_info, num_info: int) -> bool:
-        pass
+    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
+        return self._core.retro_load_game_special(game_type, info, len(info))
 
-    def unload_game(self) -> None:
-        pass
+    def unload_game(self):
+        self._core.retro_unload_game()
 
-    def get_region(self) -> int:
-        return self._core.retro_get_region()
+    def get_region(self) -> Region:
+        return Region(self._core.retro_get_region())
 
-    def get_memory_data(self, id: int) -> Any:
-        pass
+    def get_memory_data(self, id: int) -> c_void_p:
+        return self._core.retro_get_memory_data(id)
 
     def get_memory_size(self, id: int) -> int:
-        pass
-
-    def _env(self, cmd: int, data: Any) -> bool:
-        pass
+        return self._core.retro_get_memory_size(id)
