@@ -1,4 +1,6 @@
-PYTHON_BINARY := "python3"
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+PYTHON_BINARY := "python3.11"
 VIRTUAL_ENV := "venv"
 VIRTUAL_BIN := VIRTUAL_ENV / "bin"
 PROJECT_NAME := "project_name"
