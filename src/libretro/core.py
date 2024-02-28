@@ -1,14 +1,47 @@
 from ctypes import CDLL
 from typing import *
 
-from ._libretro import *
+from . import _libretro as retro
 from .defs import *
 
+def validate_core(core: CDLL):
+    try:
+        core.retro_set_environment
+        core.retro_set_video_refresh
+        core.retro_set_audio_sample
+        core.retro_set_audio_sample_batch
+        core.retro_set_input_poll
+        core.retro_set_input_state
+        core.retro_init
+        core.retro_deinit
+        core.retro_api_version
+        core.retro_get_system_info
+        core.retro_get_system_av_info
+        core.retro_set_controller_port_device
+        core.retro_reset
+        core.retro_run
+        core.retro_serialize_size
+        core.retro_serialize
+        core.retro_unserialize
+        core.retro_cheat_reset
+        core.retro_cheat_set
+        core.retro_load_game
+        core.retro_load_game_special
+        core.retro_unload_game
+        core.retro_get_region
+        core.retro_get_memory_data
+        core.retro_get_memory_size
+    except AttributeError as e:
+        raise ValueError(f"Couldn't find required symbol '{e.name}' from {core._name}") from e
+
 class Core:
-    def __init__(self, core: CDLL):
-        # TODO: Load the core when passed as a DLL, a file, or a path
-        self._core: CDLL = core
-        self._callbacks = None
+    def __init__(self, core: CDLL | str):
+        if isinstance(core, str):
+            self._core = ctypes.cdll.LoadLibrary(core)
+        else:
+            self._core = core
+
+        validate_core(self._core)
         self._rotation = Rotation.NONE
         self._overscan = False
 
