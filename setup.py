@@ -1,11 +1,11 @@
 import os.path
-import re
-
 import setuptools
 import ctypesgen
 
 THISDIR = os.path.dirname(__file__)
 LIBRETRO_COMMON_PATH = os.path.join(THISDIR, 'deps', 'libretro-common')
+
+# TODO: Fetch the version dynamically from CHANGELOG.md
 
 if not os.path.exists(LIBRETRO_COMMON_PATH):
     raise FileNotFoundError(f"libretro-common not found at {LIBRETRO_COMMON_PATH}; run 'git submodule update --init'")

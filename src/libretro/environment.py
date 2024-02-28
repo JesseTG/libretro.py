@@ -8,16 +8,36 @@ from .input import InputState
 from .audio import AudioState
 from .video import VideoState
 
+
 class Environment:
-    def __init__(self, core: Core | str | CDLL, **kwargs):
+    def __init__(
+            self,
+            core: Core | str | CDLL,
+            audio: AudioState,
+            input: InputState,
+            video: VideoState,
+            **kwargs
+    ):
+        if core is None:
+            raise ValueError("Core cannot be None")
+
+        if audio is None:
+            raise ValueError("AudioState cannot be None")
+
+        if input is None:
+            raise ValueError("InputState cannot be None")
+
+        if video is None:
+            raise ValueError("VideoState cannot be None")
+
         if isinstance(core, Core):
             self._core = core
         else:
             self._core = Core(core)
 
-        self._audio = kwargs["audio"] if "audio" in kwargs else AudioState()
-        self._input = kwargs["input"] if "input" in kwargs else InputState()
-        self._video = kwargs["video"] if "video" in kwargs else VideoState()
+        self._audio = audio
+        self._input = input
+        self._video = video
         self._overrides: Dict[int, Any] = {}
 
         self._rotation: Optional[Rotation] = Rotation.NONE
@@ -31,6 +51,22 @@ class Environment:
         self._save_directory = kwargs.get("save_directory", None)
         self._language: Optional[Language] = None
         self._support_achievements = False
+
+    @property
+    def core(self) -> Core:
+        return self._core
+
+    @property
+    def audio(self) -> AudioState:
+        return self._audio
+
+    @property
+    def input(self) -> InputState:
+        return self._input
+
+    @property
+    def video(self) -> VideoState:
+        return self._video
 
     @property
     def rotation(self) -> Optional[Rotation]:
@@ -152,7 +188,7 @@ class Environment:
     def language(self):
         self._language = None
 
-    def _env(self, cmd: int, data: c_void_p) -> bool:
+    def environment(self, cmd: int, data: c_void_p) -> bool:
         if cmd in self._overrides:
             return self._overrides[cmd](data)
 
