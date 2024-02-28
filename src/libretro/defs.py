@@ -21,6 +21,13 @@ class Region(enum.IntEnum):
     PAL = RETRO_REGION_PAL
 
 
+class LogLevel(enum.IntEnum):
+    Debug = RETRO_LOG_DEBUG
+    Info = RETRO_LOG_INFO
+    Warning = RETRO_LOG_WARN
+    Error = RETRO_LOG_ERROR
+
+
 class Language(enum.IntEnum):
     English = RETRO_LANGUAGE_ENGLISH
     Japanese = RETRO_LANGUAGE_JAPANESE

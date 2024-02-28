@@ -51,6 +51,9 @@ class Environment:
         self._save_directory = kwargs.get("save_directory", None)
         self._language: Optional[Language] = None
         self._support_achievements = False
+        self._fastforwarding: Optional[bool] = False
+        self._target_refresh_rate: Optional[float] = 60.0
+        self._core_options_version: Optional[int] = 2
 
     @property
     def core(self) -> Core:
@@ -188,6 +191,42 @@ class Environment:
     def language(self):
         self._language = None
 
+    @property
+    def support_achievements(self) -> Optional[bool]:
+        return self._support_achievements
+
+    @support_achievements.setter
+    def support_achievements(self, value: bool):
+        self._support_achievements = value
+
+    @support_achievements.deleter
+    def support_achievements(self):
+        self._support_achievements = None
+
+    @property
+    def fastforwarding(self) -> Optional[bool]:
+        return self._fastforwarding
+
+    @fastforwarding.setter
+    def fastforwarding(self, value: bool):
+        self._fastforwarding = value
+
+    @fastforwarding.deleter
+    def fastforwarding(self):
+        self._fastforwarding = None
+
+    @property
+    def target_refresh_rate(self) -> Optional[float]:
+        return self._target_refresh_rate
+
+    @target_refresh_rate.setter
+    def target_refresh_rate(self, value: float):
+        self._target_refresh_rate = value
+
+    @target_refresh_rate.deleter
+    def target_refresh_rate(self):
+        self._target_refresh_rate = None
+
     def environment(self, cmd: int, data: c_void_p) -> bool:
         if cmd in self._overrides:
             return self._overrides[cmd](data)
@@ -243,6 +282,27 @@ class Environment:
                     # If the no-content envcall isn't disabled...
                     ptr = cast(data, POINTER(c_bool))
                     self._support_no_game = ptr.contents
+                    return True
+
+            case EnvironmentCall.SetSupportAchievements:
+                if self._support_achievements is not None:
+                    # If the achievements envcall isn't disabled...
+                    ptr = cast(data, POINTER(c_bool))
+                    self._support_achievements = ptr.contents
+                    return True
+
+            case EnvironmentCall.GetFastForwarding:
+                if self._fastforwarding is not None:
+                    # If the fastforwarding envcall isn't disabled...
+                    ptr = cast(data, POINTER(c_bool))
+                    ptr.contents = self._fastforwarding
+                    return True
+
+            case EnvironmentCall.GetTargetRefreshRate:
+                if self._target_refresh_rate is not None:
+                    # If the target refresh rate envcall isn't disabled...
+                    ptr = cast(data, POINTER(c_float))
+                    ptr.contents = self._target_refresh_rate
                     return True
 
         print(f"Unsupported environment call {cmd}")
