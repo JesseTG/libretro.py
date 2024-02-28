@@ -36,7 +36,12 @@ DEV_REQUIREMENTS = [
 ]
 
 THISDIR = os.path.dirname(__file__)
-LIBRETRO_COMMON_INCLUDE = os.path.join(THISDIR, 'deps', 'libretro-common', 'include')
+LIBRETRO_COMMON_PATH = os.path.join(THISDIR, 'deps', 'libretro-common')
+
+if not os.path.exists(LIBRETRO_COMMON_PATH):
+    raise FileNotFoundError(f"libretro-common not found at {LIBRETRO_COMMON_PATH}; run 'git submodule update --init'")
+
+LIBRETRO_COMMON_INCLUDE = os.path.join(LIBRETRO_COMMON_PATH, 'include')
 CTYPESGEN_TARGET = os.path.join(THISDIR, 'src', 'libretro', '_libretro.py')
 
 ctypesoptions = ctypesgen.options.get_default_options()
