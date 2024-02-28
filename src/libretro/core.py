@@ -4,6 +4,8 @@ from typing import *
 from . import _libretro as retro
 from .defs import *
 
+
+# noinspection PyStatementEffect
 def validate_core(core: CDLL):
     try:
         core.retro_set_environment
