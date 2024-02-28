@@ -2,8 +2,8 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 PYTHON_BINARY := "python3.11"
 VIRTUAL_ENV := "venv"
-VIRTUAL_BIN := VIRTUAL_ENV / "bin"
-PROJECT_NAME := "project_name"
+VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
+PROJECT_NAME := "libretro.py"
 TEST_DIR := "test"
 
 # Scans the project for security vulnerabilities
@@ -44,7 +44,7 @@ lint-fix: black isort
 # Install the project locally
 install:
     {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
-    {{VIRTUAL_BIN}}/pip install -e .
+    {{VIRTUAL_BIN}}/pip install -v -e .
 
 # Sorts imports throughout the project
 isort:
@@ -61,3 +61,8 @@ mypy:
 # Test the project
 test:
     {{VIRTUAL_BIN}}/pytest
+
+
+# Install the project locally
+venv:
+    {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
