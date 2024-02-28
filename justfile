@@ -44,7 +44,7 @@ lint-fix: black isort
 # Install the project locally
 install:
     {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
-    {{VIRTUAL_BIN}}/pip install -e ."[dev]"
+    {{VIRTUAL_BIN}}/pip install -e .
 
 # Sorts imports throughout the project
 isort:
