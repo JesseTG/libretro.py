@@ -13,42 +13,34 @@ class Environment:
     def __init__(
             self,
             core: Core | str | CDLL,
-            audio: AudioState,
-            input: InputState,
-            video: VideoState,
-            **kwargs
+            audio: Optional[AudioState] = None,
+            input_state: Optional[InputState] = None,
+            video: Optional[VideoState] = None,
+            system_directory: Optional[str] = None,
+            save_directory: Optional[str] = None,
     ):
         if core is None:
             raise ValueError("Core cannot be None")
-
-        if audio is None:
-            raise ValueError("AudioState cannot be None")
-
-        if input is None:
-            raise ValueError("InputState cannot be None")
-
-        if video is None:
-            raise ValueError("VideoState cannot be None")
 
         if isinstance(core, Core):
             self._core = core
         else:
             self._core = Core(core)
 
-        self._audio = audio
-        self._input = input
-        self._video = video
+        self._audio = audio or AudioState()
+        self._input = input_state or InputState()
+        self._video = video or VideoState()
         self._overrides: Dict[int, Any] = {}
 
         self._rotation: Optional[Rotation] = Rotation.NONE
         self._overscan: Optional[bool] = False
         self._performance_level: Optional[int] = None
         self._username: Optional[str] = "libretro.py"
-        self._system_directory = kwargs.get("system_directory", None)
+        self._system_directory = system_directory
         self._pixel_format: PixelFormat = PixelFormat.RGB1555
         self._input_descriptors: Sequence[retro_input_descriptor] = []
         self._support_no_game = False
-        self._save_directory = kwargs.get("save_directory", None)
+        self._save_directory = save_directory
         self._language: Optional[Language] = None
         self._support_achievements = False
         self._fastforwarding: Optional[bool] = False
