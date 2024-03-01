@@ -152,13 +152,16 @@ if sys.version_info >= (3, 12):
 else:
     Content: TypeAlias = PathLike | bytes | bytearray | memoryview
 
-VideoRefreshCallable: TypeAlias = Callable[[c_void_p, c_uint, c_uint, c_uint], None]
+EnvironmentCallable: TypeAlias = Callable[[c_uint, c_void_p], c_bool]
+EnvironmentCallback: TypeAlias = retro_environment_t | EnvironmentCallable
+
+VideoRefreshCallable: TypeAlias = Callable[[c_void_p, c_uint, c_uint, c_size_t], None]
 VideoRefreshCallback: TypeAlias = retro_video_refresh_t | VideoRefreshCallable
 
 AudioSampleCallable: TypeAlias = Callable[[c_int16, c_int16], None]
 AudioSampleCallback: TypeAlias = retro_audio_sample_t | AudioSampleCallable
 
-AudioSampleBatchCallable: TypeAlias = Callable[[c_void_p, c_uint], None]
+AudioSampleBatchCallable: TypeAlias = Callable[[POINTER(c_int16), c_size_t], c_size_t]
 AudioSampleBatchCallback: TypeAlias = retro_audio_sample_batch_t | AudioSampleBatchCallable
 
 InputPollCallable: TypeAlias = Callable[[], None]
@@ -167,5 +170,3 @@ InputPollCallback: TypeAlias = retro_input_poll_t | InputPollCallable
 InputStateCallable: TypeAlias = Callable[[c_uint, c_uint, c_uint, c_uint], c_int16]
 InputStateCallback: TypeAlias = retro_input_state_t | InputStateCallable
 
-EnvironmentCallable: TypeAlias = Callable[[c_uint, c_void_p], c_bool]
-EnvironmentCallback: TypeAlias = retro_environment_t | EnvironmentCallable
