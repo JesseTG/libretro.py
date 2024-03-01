@@ -1,4 +1,7 @@
+from collections.abc import *
 import enum
+import sys
+from os import PathLike
 
 from ._libretro import *
 
@@ -141,3 +144,10 @@ class EnvironmentCall(enum.IntEnum):
     GetMicrophoneInterface = RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE
     SetNetpacketInterface = RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE
     GetDevicePower = RETRO_ENVIRONMENT_GET_DEVICE_POWER
+
+
+if sys.version_info >= (3, 12):
+    Content = PathLike | bytes | bytearray | memoryview | Buffer
+    # Buffer was added in Python 3.12
+else:
+    Content = PathLike | bytes | bytearray | memoryview
