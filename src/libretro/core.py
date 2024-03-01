@@ -40,6 +40,8 @@ def validate_core(core: CDLL) -> None:
 class Core:
     """
     A thin wrapper around a libretro core.
+    Can be used to call the core's public interface,
+    but does not manage its life cycle.
     """
 
     def __init__(self, core: CDLL | str):
@@ -78,6 +80,12 @@ class Core:
         self._core.retro_init()
 
     def deinit(self):
+        """
+        Calls `retro_deinit` on the core.
+
+        Note:
+            This function is not implicitly called when the Core instance is deleted.
+        """
         self._core.retro_deinit()
 
     def api_version(self) -> int:
