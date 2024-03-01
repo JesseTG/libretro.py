@@ -2,7 +2,7 @@ from ctypes import CDLL
 from typing import *
 
 from ._libretro import *
-from .defs import Region
+from .defs import *
 
 
 # noinspection PyStatementEffect
@@ -36,7 +36,7 @@ def validate_core(core: CDLL) -> None:
     except AttributeError as e:
         raise ValueError(f"Couldn't find required symbol '{e.name}' from {core._name}") from e
 
-
+# TODO: Implement context manager protocol
 class Core:
     """
     A thin wrapper around a libretro core.
@@ -58,23 +58,53 @@ class Core:
 
         validate_core(self._core)
 
-    def set_environment(self, env: retro_environment_t):
-        self._core.retro_set_environment(env)
+    def set_environment(self, env: EnvironmentCallback) -> None:
+        if isinstance(env, retro_environment_t):
+            self._core.retro_set_environment(env)
+        elif callable(env):
+            self._core.retro_set_environment(retro_environment_t(env))
+        else:
+            raise TypeError(f"Expected {EnvironmentCallback}, got {type(env)}")
 
-    def set_video_refresh(self, video: retro_video_refresh_t):
-        self._core.retro_set_video_refresh(video)
+    def set_video_refresh(self, video: VideoRefreshCallback) -> None:
+        if isinstance(video, retro_video_refresh_t):
+            self._core.retro_set_video_refresh(video)
+        elif callable(video):
+            self._core.retro_set_video_refresh(retro_video_refresh_t(video))
+        else:
+            raise TypeError(f"Expected {VideoRefreshCallback}, got {type(video)}")
 
-    def set_audio_sample(self, audio: retro_audio_sample_t):
-        self._core.retro_set_audio_sample(audio)
+    def set_audio_sample(self, audio: AudioSampleCallback) -> None:
+        if isinstance(audio, retro_audio_sample_t):
+            self._core.retro_set_audio_sample(audio)
+        elif callable(audio):
+            self._core.retro_set_audio_sample(retro_audio_sample_t(audio))
+        else:
+            raise TypeError(f"Expected {AudioSampleCallback}, got {type(audio)}")
 
-    def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t):
-        self._core.retro_set_audio_sample_batch(audio)
+    def set_audio_sample_batch(self, audio: AudioSampleBatchCallback) -> None:
+        if isinstance(audio, retro_audio_sample_batch_t):
+            self._core.retro_set_audio_sample_batch(audio)
+        elif callable(audio):
+            self._core.retro_set_audio_sample_batch(retro_audio_sample_batch_t(audio))
+        else:
+            raise TypeError(f"Expected {AudioSampleBatchCallback}, got {type(audio)}")
 
-    def set_input_poll(self, poll: retro_input_poll_t):
-        self._core.retro_set_input_poll(poll)
+    def set_input_poll(self, poll: InputPollCallback) -> None:
+        if isinstance(poll, retro_input_poll_t):
+            self._core.retro_set_input_poll(poll)
+        elif callable(poll):
+            self._core.retro_set_input_poll(retro_input_poll_t(poll))
+        else:
+            raise TypeError(f"Expected {InputPollCallback}, got {type(poll)}")
 
-    def set_input_state(self, state: retro_input_state_t):
-        self._core.retro_set_input_state(state)
+    def set_input_state(self, state: InputStateCallback) -> None:
+        if isinstance(state, retro_input_state_t):
+            self._core.retro_set_input_state(state)
+        elif callable(state):
+            self._core.retro_set_input_state(retro_input_state_t(state))
+        else:
+            raise TypeError(f"Expected {InputStateCallback}, got {type(state)}")
 
     def init(self):
         self._core.retro_init()
