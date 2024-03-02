@@ -144,6 +144,25 @@ class EnvironmentCall(enum.IntEnum):
     GetMicrophoneInterface = RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE
     SetNetpacketInterface = RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE
     GetDevicePower = RETRO_ENVIRONMENT_GET_DEVICE_POWER
+    GetPlaylistDirectory = 79 # Not synced to libretro-common yet
+
+
+class SerializationQuirks(enum.IntFlag):
+    Incomplete = RETRO_SERIALIZATION_QUIRK_INCOMPLETE
+    MustInitialize = RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE
+    CoreVariableSize = RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE
+    FrontendVariableSize = RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE
+    SingleSession = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION
+    EndianDependent = RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT
+    PlatformDependent = RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT
+
+
+class SavestateContext(enum.IntEnum):
+    Normal = RETRO_SAVESTATE_CONTEXT_NORMAL
+    RunaheadSameInstance = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE
+    RunaheadSameBinary = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY
+    RollbackNetplay = RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY
+    Unknown = RETRO_SAVESTATE_CONTEXT_UNKNOWN
 
 
 if sys.version_info >= (3, 12):
