@@ -8,7 +8,6 @@ from .defs import Rotation, PixelFormat, Language, EnvironmentCall, Serializatio
 from .input import InputState
 from .audio import AudioState
 from .video import VideoState
-from .interface.getprocaddress import *
 
 
 class EnvironmentProtocol(Protocol):
@@ -1250,12 +1249,39 @@ class Environment:
     def __init__(
             self,
             core: Core | str | CDLL,
-            audio: Optional[AudioState] = None,
-            input_state: Optional[InputState] = None,
-            video: Optional[VideoState] = None,
-            system_directory: Optional[str] = None,
-            save_directory: Optional[str] = None,
+            audio: AudioState,
+            input_state: InputState,
+            video: VideoState,
+            rotation: Rotation | NotImplemented = None,
+            performance_level: int | None = None,
+            system_directory: str | None = None,
+            username: str | None = None,
+            pixel_format: PixelFormat = PixelFormat.RGB1555,
+            input_descriptors: Sequence[retro_input_descriptor] | None = None,
+            support_no_game: bool | None = None,
+            save_directory: str | None = None,
+            proc_address_callback: GetProcAddressProtocol | None = None,
+            language: Language | None = None,
+            support_achievements: bool | None = None,
+            fastforwarding: bool | None = None,
+            target_refresh_rate: float | None = None,
+            core_options_version: int | None = None,
+            device_power: retro_device_power | None = None
     ):
+        """
+        Load a libretro core from a file and sets all the required retro_ callbacks.
+        Does not call retro_init or retro_load_game.
+
+        Parameters:
+            core: The shared library that contains the core.
+              Can be a path to a file or a CDLL instance.
+
+        Returns:
+            An environment object that can be used to manage the core's life and execution.
+
+        Raises:
+            ValueError: If `core` is missing a required symbol.
+        """
         if core is None:
             raise ValueError("Core cannot be None")
 
@@ -1269,20 +1295,41 @@ class Environment:
         self._video = video or VideoState()
         self._overrides: Dict[int, Any] = {}
 
-        self._rotation: Optional[Rotation] = Rotation.NONE
-        self._overscan: Optional[bool] = False
-        self._performance_level: Optional[int] = None
-        self._username: Optional[str] = "libretro.py"
-        self._system_directory = system_directory
-        self._pixel_format: PixelFormat = PixelFormat.RGB1555
-        self._input_descriptors: Sequence[retro_input_descriptor] = []
-        self._support_no_game = False
-        self._save_directory = save_directory
-        self._language: Optional[Language] = None
-        self._support_achievements = False
-        self._fastforwarding: Optional[bool] = False
-        self._target_refresh_rate: Optional[float] = 60.0
-        self._core_options_version: Optional[int] = 2
+        self.rotation = rotation
+        self.overscan = overscan
+        self.performance_level = performance_level
+        self.username = username
+        self.system_directory = system_directory
+        self.pixel_format = pixel_format
+        self.input_descriptors = input_descriptors
+        self.support_no_game = support_no_game
+        self.save_directory = save_directory
+        self.proc_address_callback = proc_address_callback
+        self.language = language
+        self.support_achievements = support_achievements
+        self.fastforwarding = fastforwarding
+        self.target_refresh_rate = target_refresh_rate
+        self.core_options_version = core_options_version
+        self.device_power = device_power
+
+
+    def __enter__(self):
+        self._core.set_video_refresh(self._video.refresh)
+        self._core.set_audio_sample(self._audio.audio_sample)
+        self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
+        self._core.set_input_poll(self._input.poll)
+        self._core.set_input_state(self._input.state)
+        self._core.set_environment(self.environment)
+
+        self._core.init()
+        # TODO: Call retro_load_game or retro_load_game_special here (even if there's no content)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._core.unload_game()
+        self._core.deinit()
+        del self._core
+        return False
 
     @property
     def core(self) -> Core:
@@ -1299,240 +1346,3 @@ class Environment:
     @property
     def video(self) -> VideoState:
         return self._video
-
-    @property
-    def rotation(self) -> Optional[Rotation]:
-        return self._rotation
-
-    @rotation.setter
-    def rotation(self, value: Rotation):
-        self._rotation = value
-
-    @rotation.deleter
-    def rotation(self):
-        self._rotation = None
-
-    @property
-    def overscan(self) -> Optional[bool]:
-        return self._overscan
-
-    @overscan.setter
-    def overscan(self, value: bool):
-        self._overscan = value
-
-    @overscan.deleter
-    def overscan(self):
-        self._overscan = None
-
-    @property
-    def performance_level(self) -> Optional[int]:
-        return self._performance_level
-
-    @performance_level.setter
-    def performance_level(self, value: int):
-        self._performance_level = value
-
-    @performance_level.deleter
-    def performance_level(self):
-        self._performance_level = None
-
-    @property
-    def system_directory(self) -> Optional[str]:
-        return self._system_directory
-
-    @system_directory.setter
-    def system_directory(self, value: str):
-        self._system_directory = value
-
-    @system_directory.deleter
-    def system_directory(self):
-        self._system_directory = None
-
-    @property
-    def pixel_format(self) -> PixelFormat:
-        return self._pixel_format
-
-    @pixel_format.setter
-    def pixel_format(self, value: PixelFormat):
-        self._pixel_format = value
-
-    @pixel_format.deleter
-    def pixel_format(self):
-        self._pixel_format = PixelFormat.RGB1555
-
-    @property
-    def input_descriptors(self) -> Sequence[retro_input_descriptor]:
-        return self._input_descriptors
-
-    @input_descriptors.setter
-    def input_descriptors(self, value: Sequence[retro_input_descriptor]):
-        self._input_descriptors = list(value)
-
-    @input_descriptors.deleter
-    def input_descriptors(self):
-        self._input_descriptors = None
-
-    @property
-    def support_no_game(self) -> bool:
-        return self._support_no_game
-
-    @support_no_game.setter
-    def support_no_game(self, value: bool):
-        self._support_no_game = value
-
-    @support_no_game.deleter
-    def support_no_game(self):
-        self._support_no_game = False
-
-    @property
-    def save_directory(self) -> Optional[str]:
-        return self._save_directory
-
-    @save_directory.setter
-    def save_directory(self, value: str):
-        self._save_directory = value
-
-    @save_directory.deleter
-    def save_directory(self):
-        self._save_directory = None
-
-    @property
-    def username(self) -> Optional[str]:
-        return self._username
-
-    @username.setter
-    def username(self, value: str):
-        self._username = value
-
-    @username.deleter
-    def username(self):
-        self._username = None
-
-    @property
-    def language(self) -> Optional[Language]:
-        return self._language
-
-    @language.setter
-    def language(self, value: Language):
-        self._language = value
-
-    @language.deleter
-    def language(self):
-        self._language = None
-
-    @property
-    def support_achievements(self) -> Optional[bool]:
-        return self._support_achievements
-
-    @support_achievements.setter
-    def support_achievements(self, value: bool):
-        self._support_achievements = value
-
-    @support_achievements.deleter
-    def support_achievements(self):
-        self._support_achievements = None
-
-    @property
-    def fastforwarding(self) -> Optional[bool]:
-        return self._fastforwarding
-
-    @fastforwarding.setter
-    def fastforwarding(self, value: bool):
-        self._fastforwarding = value
-
-    @fastforwarding.deleter
-    def fastforwarding(self):
-        self._fastforwarding = None
-
-    @property
-    def target_refresh_rate(self) -> Optional[float]:
-        return self._target_refresh_rate
-
-    @target_refresh_rate.setter
-    def target_refresh_rate(self, value: float):
-        self._target_refresh_rate = value
-
-    @target_refresh_rate.deleter
-    def target_refresh_rate(self):
-        self._target_refresh_rate = None
-
-    def environment(self, cmd: int, data: c_void_p) -> bool:
-        if cmd in self._overrides:
-            return self._overrides[cmd](data)
-
-        match cmd:
-            case EnvironmentCall.SetRotation:
-                if self._rotation is not None:
-                    # If the rotation envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_uint))
-                    self._rotation = Rotation(ptr.contents)
-                    return True
-
-            case EnvironmentCall.GetOverscan:
-                if self._overscan is not None:
-                    # If the overscan envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_bool))
-                    ptr.contents = self._overscan
-                    return True
-
-            case EnvironmentCall.SetPerformanceLevel:
-                if self._performance_level is not None:
-                    # If the performance level envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_uint))
-                    self._performance_level = ptr.contents
-                    return True
-
-            case EnvironmentCall.GetSystemDirectory:
-                if self._system_directory is not None:
-                    # If the system directory envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_char_p))
-                    ptr.contents = self._system_directory.encode()
-                    return True
-
-            case EnvironmentCall.SetPixelFormat:
-                ptr = cast(data, POINTER(enum_retro_pixel_format))
-                self._pixel_format = PixelFormat(ptr.contents)
-                return True
-
-            case EnvironmentCall.SetInputDescriptors:
-                if self._input_descriptors is not None:
-                    # If the input descriptors envcall isn't disabled...
-                    ptr = cast(data, POINTER(retro_input_descriptor))
-                    self._input_descriptors = []
-                    i = 0
-                    while ptr[i].contents.description is not None:
-                        self._input_descriptors.append(ptr[i].contents)
-                        i += 1
-
-                    return True
-
-            case EnvironmentCall.SetSupportNoGame:
-                if self._support_no_game is not None:
-                    # If the no-content envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_bool))
-                    self._support_no_game = ptr.contents
-                    return True
-
-            case EnvironmentCall.SetSupportAchievements:
-                if self._support_achievements is not None:
-                    # If the achievements envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_bool))
-                    self._support_achievements = ptr.contents
-                    return True
-
-            case EnvironmentCall.GetFastForwarding:
-                if self._fastforwarding is not None:
-                    # If the fastforwarding envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_bool))
-                    ptr.contents = self._fastforwarding
-                    return True
-
-            case EnvironmentCall.GetTargetRefreshRate:
-                if self._target_refresh_rate is not None:
-                    # If the target refresh rate envcall isn't disabled...
-                    ptr = cast(data, POINTER(c_float))
-                    ptr.contents = self._target_refresh_rate
-                    return True
-
-        print(f"Unsupported environment call {cmd}")
-        return False
