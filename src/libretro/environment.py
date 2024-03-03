@@ -16,7 +16,7 @@ class EnvironmentProtocol(Protocol):
     @property
     def core(self) -> Core: ...
 
-    def set_rotation(self, rotation: Rotation) -> bool:
+    def set_rotation(self, rotation: Rotation | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_ROTATION``.
 
@@ -29,7 +29,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_overscan(self) -> bool | None:
+    def get_overscan(self, overscan: POINTER(c_bool)) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_OVERSCAN``.
 
@@ -38,9 +38,9 @@ class EnvironmentProtocol(Protocol):
           ``False`` if it's disabled,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_can_dupe(self) -> bool | None:
+    def get_can_dupe(self, can_dupe: c_bool | None) -> bool | None:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_CAN_DUPE``.
 
@@ -51,7 +51,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_message(self, message: retro_message) -> bool:
+    def set_message(self, message: retro_message | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_MESSAGE``.
 
@@ -74,7 +74,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_performance_level(self, level: int) -> bool:
+    def set_performance_level(self, level: int | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL``.
 
@@ -97,7 +97,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_pixel_format(self, pixel_format: PixelFormat) -> bool:
+    def set_pixel_format(self, pixel_format: PixelFormat | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_PIXEL_FORMAT``.
 
@@ -110,7 +110,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_input_descriptors(self, descriptors: Sequence[retro_input_descriptor]) -> bool:
+    def set_input_descriptors(self, descriptors: Sequence[retro_input_descriptor] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS``.
 
@@ -124,7 +124,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_keyboard_callback(self, callback: retro_keyboard_callback) -> bool:
+    def set_keyboard_callback(self, callback: retro_keyboard_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK``.
 
@@ -137,7 +137,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_disk_control_interface(self, interface: retro_disk_control_callback) -> bool:
+    def set_disk_control_interface(self, interface: retro_disk_control_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE``.
 
@@ -150,7 +150,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_hw_render(self, callback: retro_hw_render_callback) -> bool:
+    def set_hw_render(self, callback: retro_hw_render_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_HW_RENDER``.
 
@@ -164,7 +164,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_variable(self, variable: retro_variable) -> bool:
+    def get_variable(self, variable: retro_variable | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_VARIABLE``.
 
@@ -178,7 +178,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_variables(self, variables: Sequence[retro_variable]) -> bool:
+    def set_variables(self, variables: Sequence[retro_variable] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_VARIABLES``.
 
@@ -203,7 +203,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_support_no_game(self, support: bool) -> bool:
+    def set_support_no_game(self, support: bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME``.
 
@@ -226,7 +226,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_frame_time_callback(self, callback: retro_frame_time_callback) -> bool:
+    def set_frame_time_callback(self, callback: retro_frame_time_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK``.
 
@@ -239,7 +239,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_audio_callback(self, callback: retro_audio_callback) -> bool:
+    def set_audio_callback(self, callback: retro_audio_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK``.
 
@@ -346,7 +346,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_system_av_info(self, info: retro_system_av_info) -> bool:
+    def set_system_av_info(self, info: retro_system_av_info | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO``.
 
@@ -359,7 +359,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_proc_address_callback(self, callback: retro_get_proc_address_interface) -> bool:
+    def set_proc_address_callback(self, callback: retro_get_proc_address_interface | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK``.
 
@@ -372,7 +372,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_subsystem_info(self, info: Sequence[retro_subsystem_info]) -> bool:
+    def set_subsystem_info(self, info: Sequence[retro_subsystem_info] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO``.
 
@@ -386,7 +386,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_controller_info(self, info: retro_controller_info) -> bool:
+    def set_controller_info(self, info: retro_controller_info | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CONTROLLER_INFO``.
 
@@ -400,7 +400,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_memory_maps(self, maps: retro_memory_map) -> bool:
+    def set_memory_maps(self, maps: retro_memory_map | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_MEMORY_MAPS``.
 
@@ -413,7 +413,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_geometry(self, geometry: retro_game_geometry) -> bool:
+    def set_geometry(self, geometry: retro_game_geometry | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_GEOMETRY``.
 
@@ -446,7 +446,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def get_current_software_framebuffer(self, framebuffer: retro_framebuffer) -> bool:
+    def get_current_software_framebuffer(self, framebuffer: retro_framebuffer | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER``.
         
@@ -470,7 +470,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
     
-    def set_support_achievements(self, support: bool) -> bool:
+    def set_support_achievements(self, support: bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS``.
 
@@ -483,7 +483,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_hw_render_context_negotiation_interface(self, interface: retro_hw_render_context_negotiation_interface) -> bool:
+    def set_hw_render_context_negotiation_interface(self, interface: retro_hw_render_context_negotiation_interface | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE``.
 
@@ -601,7 +601,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_core_options(self, options: Sequence[retro_core_option_definition]) -> bool:
+    def set_core_options(self, options: Sequence[retro_core_option_definition] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CORE_OPTIONS``.
 
@@ -615,7 +615,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_core_options_intl(self, options: retro_core_options_intl) -> bool:
+    def set_core_options_intl(self, options: retro_core_options_intl | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL``.
 
@@ -628,7 +628,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_core_options_display(self, options: retro_core_option_display) -> bool:
+    def set_core_options_display(self, options: retro_core_option_display | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY``.
 
@@ -661,7 +661,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_disk_control_ext_interface(self, interface: retro_disk_control_ext_callback) -> bool:
+    def set_disk_control_ext_interface(self, interface: retro_disk_control_ext_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE``.
 
@@ -684,7 +684,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_message_ext(self, message: retro_message_ext) -> bool:
+    def set_message_ext(self, message: retro_message_ext | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_MESSAGE_EXT``.
 
@@ -707,7 +707,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def set_audio_buffer_status_callback(self, callback: retro_audio_buffer_status_callback) -> bool:
+    def set_audio_buffer_status_callback(self, callback: retro_audio_buffer_status_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK``.
 
@@ -720,7 +720,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_minimum_audio_latency(self, latency: int) -> bool:
+    def set_minimum_audio_latency(self, latency: int | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY``.
 
@@ -733,7 +733,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_fastforwarding_override(self, override: retro_fastforwarding_override) -> bool:
+    def set_fastforwarding_override(self, override: retro_fastforwarding_override | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE``.
 
@@ -746,7 +746,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_content_info_override(self, info: Sequence[retro_system_content_info_override]) -> bool:
+    def set_content_info_override(self, info: Sequence[retro_system_content_info_override] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE``.
 
@@ -783,7 +783,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_core_options_v2_intl(self, options: retro_core_options_intl | None) -> bool:
+    def set_core_options_v2_intl(self, options: retro_core_options_v2_intl | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL``.
 
@@ -809,7 +809,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def set_variable(self, variable: retro_variable) -> bool:
+    def set_variable(self, variable: retro_variable | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_VARIABLE``.
 
@@ -884,7 +884,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def retro_set_netpacket_interface(self, interface: retro_netpacket_callback | None) -> bool:
+    def set_netpacket_interface(self, interface: retro_netpacket_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE``.
 
@@ -897,6 +897,353 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
+    def get_playlist_directory(self) -> str | None:
+        """
+        Equivalent to ``RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY``.
+
+        Returns:
+          The path to the playlist directory,
+          or ``None`` if the environment call is not supported.
+        """
+        return None
+
+def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
+    def callback(cmd: int, data: c_void_p) -> bool:
+        match cmd:
+            case EnvironmentCall.SetRotation:
+                ptr = cast(data, POINTER(c_uint))
+                value: Rotation | None = Rotation(ptr.contents) if ptr else None
+                return env.set_rotation(value)
+
+            case EnvironmentCall.GetOverscan:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetCanDupe:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetMessage:
+                ptr = cast(data, POINTER(retro_message))
+                value: retro_message | None = ptr.contents if ptr else None
+                return env.set_message(value)
+
+            case EnvironmentCall.Shutdown:
+                return env.shutdown()
+
+            case EnvironmentCall.SetPerformanceLevel:
+                ptr = cast(data, POINTER(c_uint))
+                value: int | None = int(ptr.contents) if ptr else None
+                return env.set_performance_level(value)
+
+            case EnvironmentCall.GetSystemDirectory:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetPixelFormat:
+                ptr = cast(data, POINTER(c_uint))
+                value: PixelFormat | None = PixelFormat(ptr.contents) if ptr else None
+                return env.set_pixel_format(value)
+
+            case EnvironmentCall.SetInputDescriptors:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetKeyboardCallback:
+                ptr = cast(data, POINTER(retro_keyboard_callback))
+                value: retro_keyboard_callback | None = ptr.contents if ptr else None
+                return env.set_keyboard_callback(retro_keyboard_callback(data))
+
+            case EnvironmentCall.SetDiskControlInterface:
+                ptr = cast(data, POINTER(retro_disk_control_callback))
+                value: retro_disk_control_callback | None = ptr.contents if ptr else None
+                return env.set_disk_control_interface(value)
+
+            case EnvironmentCall.SetHwRender:
+                ptr = cast(data, POINTER(retro_hw_render_callback))
+                value: retro_hw_render_callback | None = ptr.contents if ptr else None
+                return env.set_hw_render(value)
+
+            case EnvironmentCall.GetVariable:
+                ptr = cast(data, POINTER(retro_variable))
+                value: retro_variable | None = ptr.contents if ptr else None
+                return env.get_variable(value)
+
+            case EnvironmentCall.SetVariables:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetVariableUpdate:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetSupportNoGame:
+                ptr = cast(data, POINTER(c_bool))
+                value: bool | None = bool(ptr.contents) if ptr else None
+                return env.set_support_no_game(value)
+
+            case EnvironmentCall.GetLibretroPath:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetFrameTimeCallback:
+                ptr = cast(data, POINTER(retro_frame_time_callback))
+                value: retro_frame_time_callback | None = ptr.contents if ptr else None
+                return env.set_frame_time_callback(value)
+
+            case EnvironmentCall.SetAudioCallback:
+                ptr = cast(data, POINTER(retro_audio_callback))
+                value: retro_audio_callback | None = ptr.contents if ptr else None
+                return env.set_audio_callback(value)
+
+            case EnvironmentCall.GetRumbleInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetInputDeviceCapabilities:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetSensorInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetCameraInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetLogInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetPerfInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetLocationInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetCoreAssetsDirectory:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetSaveDirectory:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetSystemAvInfo:
+                ptr = cast(data, POINTER(retro_system_av_info))
+                value: retro_system_av_info | None = ptr.contents if ptr else None
+                return env.set_system_av_info(value)
+
+            case EnvironmentCall.SetProcAddressCallback:
+                ptr = cast(data, POINTER(retro_get_proc_address_interface))
+                value: retro_get_proc_address_interface | None = ptr.contents if ptr else None
+                return env.set_proc_address_callback(value)
+
+            case EnvironmentCall.SetSubsystemInfo:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetControllerInfo:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetMemoryMaps:
+                ptr = cast(data, POINTER(retro_memory_map))
+                value: retro_memory_map | None = ptr.contents if ptr else None
+                return env.set_memory_maps(value)
+
+            case EnvironmentCall.SetGeometry:
+                ptr = cast(data, POINTER(retro_game_geometry))
+                value: retro_game_geometry | None = ptr.contents if ptr else None
+                return env.set_geometry(value)
+
+            case EnvironmentCall.GetUsername:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetLanguage:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetCurrentSoftwareFramebuffer:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetHwRenderInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetSupportAchievements:
+                ptr = cast(data, POINTER(c_bool))
+                value: bool | None = bool(ptr.contents) if ptr else None
+                return env.set_support_achievements(value)
+
+            case EnvironmentCall.SetHwRenderContextNegotiationInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetSerializationQuirks:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetHwSharedContext:
+                return env.set_hw_shared_context()
+
+            case EnvironmentCall.GetVfsInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetLedInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetAudioVideoEnable:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetMidiInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetFastForwarding:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetTargetRefreshRate:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetInputBitmasks:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetCoreOptionsVersion:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetCoreOptions:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetCoreOptionsIntl:
+                ptr = cast(data, POINTER(retro_core_options_intl))
+                value: retro_core_options_intl | None = ptr.contents if ptr else None
+                return env.set_core_options_intl(value)
+
+            case EnvironmentCall.SetCoreOptionsDisplay:
+                ptr = cast(data, POINTER(retro_core_option_display))
+                value: retro_core_option_display | None = ptr.contents if ptr else None
+                return env.set_core_options_display(value)
+
+            case EnvironmentCall.GetPreferredHwRender:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetDiskControlInterfaceVersion:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetDiskControlExtInterface:
+                ptr = cast(data, POINTER(retro_disk_control_ext_callback))
+                value: retro_disk_control_ext_callback | None = ptr.contents if ptr else None
+                return env.set_disk_control_ext_interface(value)
+
+            case EnvironmentCall.GetMessageInterfaceVersion:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetMessageExt:
+                ptr = cast(data, POINTER(retro_message_ext))
+                value: retro_message_ext | None = ptr.contents if ptr else None
+                return env.set_message_ext(value)
+
+            case EnvironmentCall.GetInputMaxUsers:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetAudioBufferStatusCallback:
+                ptr = cast(data, POINTER(retro_audio_buffer_status_callback))
+                value: retro_audio_buffer_status_callback | None = ptr.contents if ptr else None
+                return env.set_audio_buffer_status_callback(value)
+
+            case EnvironmentCall.SetMinimumAudioLatency:
+                ptr = cast(data, POINTER(c_uint))
+                value: int | None = int(ptr.contents) if ptr else None
+                return env.set_minimum_audio_latency(value)
+
+            case EnvironmentCall.SetFastForwardingOverride:
+                ptr = cast(data, POINTER(retro_fastforwarding_override))
+                value: retro_fastforwarding_override | None = ptr.contents if ptr else None
+                return env.set_fastforwarding_override(value)
+
+            case EnvironmentCall.SetContentInfoOverride:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetGameInfoExt:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetCoreOptionsV2:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetCoreOptionsV2Intl:
+                ptr = cast(data, POINTER(retro_core_options_v2_intl))
+                value: retro_core_options_v2_intl | None = ptr.contents if ptr else None
+                return env.set_core_options_v2_intl(value)
+
+            case EnvironmentCall.SetCoreOptionsUpdateDisplayCallback:
+                ptr = cast(data, POINTER(retro_core_options_update_display_callback))
+                value: retro_core_options_update_display_callback | None = ptr.contents if ptr else None
+                return env.set_core_options_update_display_callback(value)
+
+            case EnvironmentCall.SetVariable:
+                ptr = cast(data, POINTER(retro_variable))
+                value: retro_variable | None = ptr.contents if ptr else None
+                return env.set_variable(value)
+
+            case EnvironmentCall.GetThrottleState:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetSaveStateContext:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetHwRenderContextNegotiationInterfaceSupport:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetJitCapable:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetMicrophoneInterface:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.GetDevicePower:
+                # TODO: Implement
+                return False
+
+            case EnvironmentCall.SetNetpacketInterface:
+                ptr = cast(data, POINTER(retro_netpacket_callback))
+                value: retro_netpacket_callback | None = ptr.contents if ptr else None
+                return env.set_netpacket_interface(value)
+
+            case EnvironmentCall.GetPlaylistDirectory:
+                # TODO: Implement
+                return False
+
+            case _:
+                return False
+
+
+    return callback
 
 
 class Environment:
