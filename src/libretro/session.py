@@ -40,7 +40,6 @@ class Session:
         self._core.set_environment(retro_environment_t(self._environment.__call__))
 
         self._core.init()
-        if self._content:
         # TODO: Call retro_load_game or retro_load_game_special here (even if there's no content)
         return self
 
