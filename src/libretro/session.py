@@ -1,19 +1,20 @@
 from typing import *
 
-from libretro import Core, retro_environment_t
-from libretro.callback.audio import AudioState
-from libretro.environment import EnvironmentCallbackProtocol
-from libretro.callback.input import InputState
-from libretro.callback.video import VideoState
+from ._libretro import retro_environment_t
+from .core import Core
+from .callback.audio import AudioCallbacks
+from .environment import EnvironmentCallbackProtocol
+from .callback.input import InputCallbacks
+from .callback.video import VideoCallbacks
 
 
 class Session:
     def __init__(
             self,
             core: Core | str,
-            audio: AudioState,
-            input_state: InputState,
-            video: VideoState,
+            audio: AudioCallbacks,
+            input_state: InputCallbacks,
+            video: VideoCallbacks,
             environment: EnvironmentCallbackProtocol,
             content: str | Sequence[str] | None = None,
     ):
@@ -54,15 +55,15 @@ class Session:
         return self._core
 
     @property
-    def audio(self) -> AudioState:
+    def audio(self) -> AudioCallbacks:
         return self._audio
 
     @property
-    def input(self) -> InputState:
+    def input(self) -> InputCallbacks:
         return self._input
 
     @property
-    def video(self) -> VideoState:
+    def video(self) -> VideoCallbacks:
         return self._video
 
 
