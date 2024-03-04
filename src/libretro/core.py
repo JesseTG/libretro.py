@@ -75,28 +75,28 @@ class Core:
         return False
 
     def set_environment(self, env: retro_environment_t) -> None:
-        self._environment = env
-        self._core.retro_set_environment(env)
+        self._environment = retro_environment_t(env)
+        self._core.retro_set_environment(self._environment)
 
     def set_video_refresh(self, video: retro_video_refresh_t) -> None:
-        self._video_refresh = video
-        self._core.retro_set_video_refresh(video)
+        self._video_refresh = retro_video_refresh_t(video)
+        self._core.retro_set_video_refresh(self._video_refresh)
 
     def set_audio_sample(self, audio: retro_audio_sample_t) -> None:
-        self._audio_sample = audio
-        self._core.retro_set_audio_sample(audio)
+        self._audio_sample = retro_audio_sample_t(audio)
+        self._core.retro_set_audio_sample(self._audio_sample)
 
     def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None:
-        self._audio_sample_batch = audio
-        self._core.retro_set_audio_sample_batch(audio)
+        self._audio_sample_batch = retro_audio_sample_batch_t(audio)
+        self._core.retro_set_audio_sample_batch(self._audio_sample_batch)
 
     def set_input_poll(self, poll: retro_input_poll_t) -> None:
-        self._input_poll = poll
-        self._core.retro_set_input_poll(poll)
+        self._input_poll = retro_input_poll_t(poll)
+        self._core.retro_set_input_poll(self._input_poll)
 
     def set_input_state(self, state: retro_input_state_t) -> None:
-        self._input_state = state
-        self._core.retro_set_input_state(state)
+        self._input_state = retro_input_state_t(state)
+        self._core.retro_set_input_state(self._input_state)
 
     def init(self):
         self._core.retro_init()
