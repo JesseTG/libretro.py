@@ -1,20 +1,10 @@
-import ctypes
 from typing import *
-from abc import abstractmethod
 
-from .core import Core
 from ._libretro import *
-from .defs import Rotation, PixelFormat, Language, EnvironmentCall, SerializationQuirks, SavestateContext
-from .input import InputState
-from .audio import AudioState
-from .video import VideoState
+from .defs import Rotation, PixelFormat, EnvironmentCall, SerializationQuirks
 
 
-class EnvironmentProtocol(Protocol):
-    @abstractmethod
-    @property
-    def core(self) -> Core: ...
-
+class EnvironmentCallbackProtocol(Protocol):
     def set_rotation(self, rotation: Rotation | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_ROTATION``.
@@ -101,7 +91,7 @@ class EnvironmentProtocol(Protocol):
 
         Parameters:
           descriptors: The input descriptors to set.
-           Includes a sentinel with a ``None`` description.
+           May include a sentinel with a ``None`` description.
 
         Returns:
           ``True`` if the input descriptors were set,
@@ -166,29 +156,16 @@ class EnvironmentProtocol(Protocol):
     def set_variables(self, variables: Sequence[retro_variable] | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_VARIABLES``.
-
-        Parameters:
-          variables: The variables to set.
-            Includes a sentinel with a ``None`` key.
-
-        Returns:
-          ``True`` if the variables were set,
-          ``False`` if the environment call is not supported.
         """
         return False
 
-    def get_variable_update(self) -> bool | None:
+    def get_variable_update(self, update: c_bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE``.
-
-        Returns:
-          ``True`` if a variable was updated,
-          ``False`` if not,
-          ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def set_support_no_game(self, support: bool | None) -> bool:
+    def set_support_no_game(self, support: c_bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME``.
 
@@ -209,7 +186,7 @@ class EnvironmentProtocol(Protocol):
           The path to the libretro core,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def set_frame_time_callback(self, callback: retro_frame_time_callback | None) -> bool:
         """
@@ -237,27 +214,19 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_rumble_interface(self) -> retro_rumble_interface | None:
+    def get_rumble_interface(self, interface: retro_rumble_interface | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE``.
-
-        Returns:
-          The rumble interface,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_input_device_capabilities(self) -> int | None:
+    def get_input_device_capabilities(self, caps: c_uint64 | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES``.
-
-        Returns:
-          The input device capabilities,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_sensor_interface(self) -> retro_sensor_interface | None:
+    def get_sensor_interface(self, interface: retro_sensor_interface | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE``.
 
@@ -265,9 +234,9 @@ class EnvironmentProtocol(Protocol):
           The sensor interface,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_camera_interface(self) -> retro_camera_callback | None:
+    def get_camera_interface(self, interface: retro_camera_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE``.
 
@@ -275,9 +244,9 @@ class EnvironmentProtocol(Protocol):
           The camera interface,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_log_interface(self) -> retro_log_callback | None:
+    def get_log_interface(self, interface: retro_log_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_LOG_INTERFACE``.
 
@@ -285,9 +254,9 @@ class EnvironmentProtocol(Protocol):
           The log interface,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_perf_interface(self) -> retro_perf_callback | None:
+    def get_perf_interface(self, interface: retro_perf_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_PERF_INTERFACE``.
 
@@ -295,7 +264,7 @@ class EnvironmentProtocol(Protocol):
           The performance interface,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def get_location_interface(self) -> retro_location_callback | None:
         """
@@ -682,7 +651,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_input_max_users(self) -> int | None:
+    def get_input_max_users(self, users: c_uint | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS``.
 
@@ -690,7 +659,7 @@ class EnvironmentProtocol(Protocol):
           The maximum number of users,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def set_audio_buffer_status_callback(self, callback: retro_audio_buffer_status_callback | None) -> bool:
         """
@@ -807,25 +776,17 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_throttle_state(self) -> retro_throttle_state | None:
+    def get_throttle_state(self, state: retro_throttle_state | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_THROTTLE_STATE``.
-
-        Returns:
-          The throttle state,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_savestate_context(self) -> SavestateContext | None:
+    def get_savestate_context(self, context: enum_retro_savestate_context | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT``.
-
-        Returns:
-          The savestate context flags,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def get_hw_render_context_negotiation_interface_support(self, interface: retro_hw_render_context_negotiation_interface) -> bool | None:
         """
@@ -838,62 +799,38 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def get_jit_capable(self) -> bool | None:
+    def get_jit_capable(self, capable: c_bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_JIT_CAPABLE``.
-
-        Returns:
-          ``True`` if the core is JIT capable,
-          ``False`` if it isn't,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_microphone_interface(self) -> retro_microphone_interface | None:
+    def get_microphone_interface(self, interface: POINTER(retro_microphone_interface) | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE``.
-
-        Returns:
-          The microphone interface,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_device_power(self) -> retro_device_power | None:
+    def get_device_power(self, power: POINTER(retro_device_power) | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_DEVICE_POWER``.
-
-        Returns:
-          The device power state,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def set_netpacket_interface(self, interface: retro_netpacket_callback | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE``.
-
-        Parameters:
-          interface: The netpacket interface to set.
-
-        Returns:
-          ``True`` if the netpacket interface was set,
-          ``False`` if the environment call is not supported.
         """
         return False
 
-    def get_playlist_directory(self) -> str | None:
+    def get_playlist_directory(self, directory: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY``.
-
-        Returns:
-          The path to the playlist directory,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
 
-def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
+def environment_callback(env: EnvironmentCallbackProtocol) -> retro_environment_t:
     def callback(cmd: int, data: c_void_p) -> bool:
         match cmd:
             case EnvironmentCall.SetRotation:
@@ -1164,8 +1101,9 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_message_ext(value)
 
             case EnvironmentCall.GetInputMaxUsers:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_uint))
+                value: c_uint | None = ptr.contents if ptr else None
+                return env.get_input_max_users(value)
 
             case EnvironmentCall.SetAudioBufferStatusCallback:
                 ptr = cast(data, POINTER(retro_audio_buffer_status_callback))
@@ -1210,28 +1148,33 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_variable(value)
 
             case EnvironmentCall.GetThrottleState:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(retro_throttle_state))
+                value: retro_throttle_state | None = ptr.contents if ptr else None
+                return env.get_throttle_state(value)
 
             case EnvironmentCall.GetSaveStateContext:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(enum_retro_savestate_context))
+                value: enum_retro_savestate_context | None = ptr.contents if ptr else None
+                return env.get_savestate_context(value)
 
             case EnvironmentCall.GetHwRenderContextNegotiationInterfaceSupport:
                 # TODO: Implement
                 return False
 
             case EnvironmentCall.GetJitCapable:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_bool))
+                value: c_bool | None = ptr.contents if ptr else None
+                return env.get_jit_capable(value)
 
             case EnvironmentCall.GetMicrophoneInterface:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(retro_microphone_interface))
+                value: retro_microphone_interface | None = ptr.contents if ptr else None
+                return env.get_microphone_interface(retro_microphone_interface)
 
             case EnvironmentCall.GetDevicePower:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(retro_device_power))
+                value: retro_device_power | None = ptr.contents if ptr else None
+                return env.get_device_power(value)
 
             case EnvironmentCall.SetNetpacketInterface:
                 ptr = cast(data, POINTER(retro_netpacket_callback))
@@ -1239,8 +1182,9 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_netpacket_interface(value)
 
             case EnvironmentCall.GetPlaylistDirectory:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_playlist_directory(value)
 
             case _:
                 return False
@@ -1248,104 +1192,36 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
     return callback
 
 
-class Environment(EnvironmentProtocol):
-    def __init__(
-            self,
-            core: Core | str | CDLL,
-            audio: AudioState,
-            input_state: InputState,
-            video: VideoState,
-            rotation: Rotation | NotImplemented = None,
-            performance_level: int | None = None,
-            system_directory: str | None = None,
-            username: str | None = None,
-            pixel_format: PixelFormat = PixelFormat.RGB1555,
-            input_descriptors: Sequence[retro_input_descriptor] | None = None,
-            support_no_game: bool | None = None,
-            save_directory: str | None = None,
-            proc_address_callback: retro_get_proc_address_interface | None = None,
-            language: Language | None = None,
-            support_achievements: bool | None = None,
-            fastforwarding: bool | None = None,
-            target_refresh_rate: float | None = None,
-            core_options_version: int | None = None,
-            device_power: retro_device_power | None = None
-    ):
-        """
-        Load a libretro core from a file and sets all the required retro_ callbacks.
-        Does not call retro_init or retro_load_game.
+class Environment(EnvironmentCallbackProtocol):
 
-        Parameters:
-            core: The shared library that contains the core.
-              Can be a path to a file or a CDLL instance.
+    def __init__(self):
+        self.rotation: Rotation | None = Rotation.NONE
+        self.overscan: bool | None = False
+        self.can_dupe: bool | None = False
 
-        Returns:
-            An environment object that can be used to manage the core's life and execution.
+    @override
+    def set_rotation(self, rotation: Rotation | None) -> bool:
+        if self.rotation is None:
+            return False
 
-        Raises:
-            ValueError: If `core` is missing a required symbol.
-        """
-        if core is None:
-            raise ValueError("Core cannot be None")
+        if rotation is not None:
+            self.rotation = rotation
 
-        if isinstance(core, Core):
-            self._core = core
-        else:
-            self._core = Core(core)
+        return True
 
-        self._audio = audio or AudioState()
-        self._input = input_state or InputState()
-        self._video = video or VideoState()
-        self._overrides: Dict[int, Any] = {}
+    @override
+    def get_overscan(self, overscan: c_bool | None) -> bool:
+        if self.overscan is None:
+            return False
 
-        self.rotation = rotation
-        self.overscan = overscan
-        self.performance_level = performance_level
-        self.username = username
-        self.system_directory = system_directory
-        self.pixel_format = pixel_format
-        self.input_descriptors = input_descriptors
-        self.support_no_game = support_no_game
-        self.save_directory = save_directory
-        self.proc_address_callback = proc_address_callback
-        self.language = language
-        self.support_achievements = support_achievements
-        self.fastforwarding = fastforwarding
-        self.target_refresh_rate = target_refresh_rate
-        self.core_options_version = core_options_version
-        self.device_power = device_power
+        if overscan is not None:
+            overscan.value = self.overscan
 
+        return True
 
-    def __enter__(self):
-        self._core.set_video_refresh(self._video.refresh)
-        self._core.set_audio_sample(self._audio.audio_sample)
-        self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
-        self._core.set_input_poll(self._input.poll)
-        self._core.set_input_state(self._input.state)
-        self._core.set_environment(self.environment)
+    @override
+    def set_proc_address_callback(self, callback: retro_get_proc_address_interface | None) -> bool:
+        if callback is not None:
+            self.proc_address_callback = callback
 
-        self._core.init()
-        # TODO: Call retro_load_game or retro_load_game_special here (even if there's no content)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._core.unload_game()
-        self._core.deinit()
-        del self._core
-        return False
-
-    @property
-    def core(self) -> Core:
-        return self._core
-
-    @property
-    def audio(self) -> AudioState:
-        return self._audio
-
-    @property
-    def input(self) -> InputState:
-        return self._input
-
-    @property
-    def video(self) -> VideoState:
-        return self._video
+        return True
