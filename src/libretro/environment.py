@@ -28,27 +28,17 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_overscan(self, overscan: POINTER(c_bool)) -> bool:
+    def get_overscan(self, overscan: c_bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_OVERSCAN``.
-
-        Returns:
-          ``True`` if overscan is enabled,
-          ``False`` if it's disabled,
-          or ``None`` if the environment call is not supported.
         """
         return False
 
-    def get_can_dupe(self, can_dupe: c_bool | None) -> bool | None:
+    def get_can_dupe(self, can_dupe: c_bool | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_CAN_DUPE``.
-
-        Returns:
-          ``True`` if the core supports frame duplication,
-          ``False`` if it doesn't,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def set_message(self, message: retro_message | None) -> bool:
         """
@@ -86,15 +76,11 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_system_directory(self) -> str | None:
+    def get_system_directory(self, directory: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY``.
-
-        Returns:
-          The path to the system directory,
-          or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def set_pixel_format(self, pixel_format: PixelFormat | None) -> bool:
         """
@@ -215,7 +201,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_libretro_path(self) -> str | None:
+    def get_libretro_path(self, path: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_LIBRETRO_PATH``.
 
@@ -321,7 +307,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
-    def get_core_assets_directory(self) -> str | None:
+    def get_core_assets_directory(self, directory: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY``.
 
@@ -332,10 +318,10 @@ class EnvironmentProtocol(Protocol):
         return None
 
     @final
-    def get_content_directory(self) -> str | None:
-        return self.get_core_assets_directory()
+    def get_content_directory(self, directory: c_char_p | None) -> bool:
+        return self.get_core_assets_directory(directory)
 
-    def get_save_directory(self) -> str | None:
+    def get_save_directory(self, directory: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY``.
 
@@ -425,7 +411,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_username(self) -> str | None:
+    def get_username(self, username: c_char_p | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_USERNAME``.
 
@@ -433,9 +419,9 @@ class EnvironmentProtocol(Protocol):
           The username,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
-    def get_language(self) -> enum_retro_language | None:
+    def get_language(self, language: POINTER(enum_retro_language) | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_LANGUAGE``.
 
@@ -443,7 +429,7 @@ class EnvironmentProtocol(Protocol):
           The language,
           or ``None`` if the environment call is not supported.
         """
-        return None
+        return False
 
     def get_current_software_framebuffer(self, framebuffer: retro_framebuffer | None) -> bool:
         """
@@ -906,6 +892,7 @@ class EnvironmentProtocol(Protocol):
         """
         return None
 
+
 def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
     def callback(cmd: int, data: c_void_p) -> bool:
         match cmd:
@@ -915,12 +902,14 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_rotation(value)
 
             case EnvironmentCall.GetOverscan:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_bool))
+                value: c_bool | None = ptr.contents if ptr else None
+                return env.get_overscan(value)
 
             case EnvironmentCall.GetCanDupe:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_bool))
+                value: c_bool | None = ptr.contents if ptr else None
+                return env.get_can_dupe(value)
 
             case EnvironmentCall.SetMessage:
                 ptr = cast(data, POINTER(retro_message))
@@ -936,8 +925,9 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_performance_level(value)
 
             case EnvironmentCall.GetSystemDirectory:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_system_directory(value)
 
             case EnvironmentCall.SetPixelFormat:
                 ptr = cast(data, POINTER(c_uint))
@@ -945,8 +935,17 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_pixel_format(value)
 
             case EnvironmentCall.SetInputDescriptors:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(retro_input_descriptor))
+                if ptr:
+                    descriptors = []
+                    i = 0
+                    d = ptr[0]
+                    while ptr[i].description:
+                        descriptors.append(ptr[i])
+                        i += 1
+                    return env.set_input_descriptors(descriptors)
+                else:
+                    return env.set_input_descriptors(None)
 
             case EnvironmentCall.SetKeyboardCallback:
                 ptr = cast(data, POINTER(retro_keyboard_callback))
@@ -982,8 +981,9 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_support_no_game(value)
 
             case EnvironmentCall.GetLibretroPath:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_libretro_path(value)
 
             case EnvironmentCall.SetFrameTimeCallback:
                 ptr = cast(data, POINTER(retro_frame_time_callback))
@@ -1024,12 +1024,14 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return False
 
             case EnvironmentCall.GetCoreAssetsDirectory:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_core_assets_directory(value)
 
             case EnvironmentCall.GetSaveDirectory:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_save_directory(value)
 
             case EnvironmentCall.SetSystemAvInfo:
                 ptr = cast(data, POINTER(retro_system_av_info))
@@ -1060,12 +1062,14 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
                 return env.set_geometry(value)
 
             case EnvironmentCall.GetUsername:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_char_p))
+                value: c_char_p | None = ptr.contents if ptr else None
+                return env.get_username(value)
 
             case EnvironmentCall.GetLanguage:
-                # TODO: Implement
-                return False
+                ptr = cast(data, POINTER(c_uint))
+                value: c_uint | None = ptr.contents if ptr else None
+                return env.get_language(value)
 
             case EnvironmentCall.GetCurrentSoftwareFramebuffer:
                 # TODO: Implement
@@ -1241,11 +1245,10 @@ def environment_callback(env: EnvironmentProtocol) -> retro_environment_t:
             case _:
                 return False
 
-
     return callback
 
 
-class Environment:
+class Environment(EnvironmentProtocol):
     def __init__(
             self,
             core: Core | str | CDLL,
@@ -1260,7 +1263,7 @@ class Environment:
             input_descriptors: Sequence[retro_input_descriptor] | None = None,
             support_no_game: bool | None = None,
             save_directory: str | None = None,
-            proc_address_callback: GetProcAddressProtocol | None = None,
+            proc_address_callback: retro_get_proc_address_interface | None = None,
             language: Language | None = None,
             support_achievements: bool | None = None,
             fastforwarding: bool | None = None,
