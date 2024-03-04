@@ -1,10 +1,10 @@
 from typing import *
 
-from ._libretro import *
-from .defs import Rotation, PixelFormat, EnvironmentCall, SerializationQuirks
+from .._libretro import *
+from ..defs import Rotation, PixelFormat, EnvironmentCall, SerializationQuirks
 
 
-class EnvironmentCallbackProtocol(Protocol):
+class EnvironmentCallbacks(Protocol):
     def set_rotation(self, rotation: Rotation | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_ROTATION``.
@@ -830,7 +830,7 @@ class EnvironmentCallbackProtocol(Protocol):
         return False
 
 
-def environment_callback(env: EnvironmentCallbackProtocol) -> retro_environment_t:
+def environment_callback(env: EnvironmentCallbacks) -> retro_environment_t:
     def callback(cmd: int, data: c_void_p) -> bool:
         match cmd:
             case EnvironmentCall.SetRotation:
@@ -1192,7 +1192,7 @@ def environment_callback(env: EnvironmentCallbackProtocol) -> retro_environment_
     return callback
 
 
-class Environment(EnvironmentCallbackProtocol):
+class Environment(EnvironmentCallbacks):
 
     def __init__(self):
         self.rotation: Rotation | None = Rotation.NONE

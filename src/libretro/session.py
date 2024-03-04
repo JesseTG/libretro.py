@@ -1,11 +1,16 @@
 from typing import *
 
-from ._libretro import retro_environment_t
+from ._libretro import retro_game_info
 from .core import Core
-from .callback.audio import AudioCallbacks
-from .environment import EnvironmentCallbackProtocol
-from .callback.input import InputCallbacks
-from .callback.video import VideoCallbacks
+from .callback.audio import AudioCallbacks, AudioState
+from libretro.callback.environment import EnvironmentCallbacks, Environment
+from .callback.input import InputCallbacks, InputState
+from .callback.video import VideoCallbacks, VideoState
+
+
+class SpecialContent(NamedTuple):
+    type: int
+    content: Sequence[str]
 
 
 class Session:
@@ -15,8 +20,8 @@ class Session:
             audio: AudioCallbacks,
             input_state: InputCallbacks,
             video: VideoCallbacks,
-            environment: EnvironmentCallbackProtocol,
-            content: str | Sequence[str] | None = None,
+            environment: EnvironmentCallbacks,
+            content: str | SpecialContent | None = None,
     ):
         if core is None:
             raise ValueError("Core cannot be None")
@@ -38,10 +43,24 @@ class Session:
         self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
         self._core.set_input_poll(self._input.poll)
         self._core.set_input_state(self._input.state)
-        self._core.set_environment(retro_environment_t(self._environment.__call__))
+        self._core.set_environment(self._environment.__call__)
 
         self._core.init()
-        # TODO: Call retro_load_game or retro_load_game_special here (even if there's no content)
+        loaded: bool = False
+        match self._content:
+            case str(content):
+                loaded = self._core.load_game(content)
+            case SpecialContent(content_type, content):
+                loaded = self._core.load_game_special(content_type, content)
+            case None:
+                if not self._environment.support_no_game:
+                    raise RuntimeError("No content provided")
+
+                loaded = self._core.load_game(retro_game_info())
+
+        if not loaded:
+            raise RuntimeError("Failed to load game")
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -66,12 +85,28 @@ class Session:
     def video(self) -> VideoCallbacks:
         return self._video
 
+    @property
+    def environment(self) -> EnvironmentCallbacks:
+        return self._environment
+
 
 def default_session(
         core: str,
-        content: str | Sequence[str] | None = None
+        content: str | SpecialContent | None = None,
+        audio: AudioCallbacks | None = None,
+        input_state: InputCallbacks | None = None,
+        video: VideoCallbacks | None = None,
+        environment: EnvironmentCallbacks | None = None,
         ) -> Session:
     """
     Returns a Session with default state objects.
     """
-    pass
+
+    return Session(
+        core=core,
+        audio=audio or AudioState(),
+        input_state=input_state or InputState(),
+        video=video or VideoState(),
+        environment=environment or Environment(),
+        content=content
+    )
