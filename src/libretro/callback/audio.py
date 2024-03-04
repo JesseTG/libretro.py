@@ -1,9 +1,10 @@
 from abc import abstractmethod
 from ctypes import *
 from array import array
-from typing import Protocol, final, override
+from typing import Protocol, final, runtime_checkable
 
 
+@runtime_checkable
 class AudioCallbacks(Protocol):
     @abstractmethod
     def audio_sample(self, left: c_int16, right: c_int16) -> None: ...
@@ -17,12 +18,10 @@ class AudioState(AudioCallbacks):
     def __init__(self):
         self._buffer = array('h')
 
-    @override
     def audio_sample(self, left: c_int16, right: c_int16):
         self._buffer.append(left)
         self._buffer.append(right)
 
-    @override
     def audio_sample_batch(self, data: POINTER(c_int16), frames: c_size_t) -> c_size_t:
         self._buffer.frombytes(data)
 

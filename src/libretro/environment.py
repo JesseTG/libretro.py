@@ -1199,7 +1199,6 @@ class Environment(EnvironmentCallbackProtocol):
         self.overscan: bool | None = False
         self.can_dupe: bool | None = False
 
-    @override
     def set_rotation(self, rotation: Rotation | None) -> bool:
         if self.rotation is None:
             return False
@@ -1209,7 +1208,6 @@ class Environment(EnvironmentCallbackProtocol):
 
         return True
 
-    @override
     def get_overscan(self, overscan: c_bool | None) -> bool:
         if self.overscan is None:
             return False
@@ -1219,7 +1217,6 @@ class Environment(EnvironmentCallbackProtocol):
 
         return True
 
-    @override
     def set_proc_address_callback(self, callback: retro_get_proc_address_interface | None) -> bool:
         if callback is not None:
             self.proc_address_callback = callback
