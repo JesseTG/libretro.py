@@ -6,7 +6,7 @@ __pycache__
 *.lcov
 dist
 htmlcov
-venv
+venv*
 .idea
 build/
 src/libretro/_libretro.py
