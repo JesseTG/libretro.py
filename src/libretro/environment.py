@@ -626,7 +626,7 @@ class EnvironmentProtocol(Protocol):
         """
         return False
 
-    def get_preferred_hw_render(self) -> retro_hw_render | None:
+    def get_preferred_hw_render(self, rendere: enum_retro_hw_context_type | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER``.
 

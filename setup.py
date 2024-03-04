@@ -2,6 +2,7 @@ import os.path
 import setuptools
 import ctypesgen
 
+# TODO: Only run ctypesgen if building a sdist
 THISDIR = os.path.dirname(__file__)
 LIBRETRO_COMMON_PATH = os.path.join(THISDIR, 'deps', 'libretro-common')
 
