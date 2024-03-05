@@ -251,7 +251,7 @@ class SpecialContent(NamedTuple):
     content: Sequence[str]
 
 
-Directory = str
+Directory = str | bytes
 DevicePower = retro_device_power | Callable[[], retro_device_power]
 
 if sys.version_info >= (3, 12):
