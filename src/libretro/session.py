@@ -1,11 +1,13 @@
+from ctypes import *
 from typing import *
 
 from ._libretro import retro_game_info
 from .core import Core
 from .callback.audio import AudioCallbacks, AudioState
-from libretro.callback.environment import EnvironmentCallbacks, Environment
+from .callback.environment import EnvironmentCallback
 from .callback.input import InputCallbacks, GeneratorInputState
 from .callback.video import VideoCallbacks, SoftwareVideoState
+from .defs import *
 
 
 class SpecialContent(NamedTuple):
@@ -13,14 +15,14 @@ class SpecialContent(NamedTuple):
     content: Sequence[str]
 
 
-class Session:
+class Session(EnvironmentCallback):
+
     def __init__(
             self,
             core: Core | str,
             audio: AudioCallbacks,
             input_state: InputCallbacks,
             video: VideoCallbacks,
-            environment: EnvironmentCallbacks,
             content: str | SpecialContent | None = None,
     ):
         if core is None:
@@ -34,7 +36,6 @@ class Session:
         self._audio = audio
         self._input = input_state
         self._video = video
-        self._environment = environment
         self._content = content
 
     def __enter__(self):
@@ -43,7 +44,7 @@ class Session:
         self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
         self._core.set_input_poll(self._input.poll)
         self._core.set_input_state(self._input.state)
-        self._core.set_environment(self._environment.environment)
+        self._core.set_environment(self.environment)
 
         self._core.init()
         loaded: bool = False
@@ -85,9 +86,231 @@ class Session:
     def video(self) -> VideoCallbacks:
         return self._video
 
-    @property
-    def environment(self) -> EnvironmentCallbacks:
-        return self._environment
+    def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
+        match cmd:
+            case EnvironmentCall.SetRotation:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetOverscan:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetCanDupe:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetMessage:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.Shutdown:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetPerformanceLevel:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetSystemDirectory:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetPixelFormat:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetInputDescriptors:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetKeyboardCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetDiskControlInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetVariable:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetVariables:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetVariableUpdate:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetSupportNoGame:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetLibretroPath:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetFrameTimeCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetAudioCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetRumbleInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetInputDeviceCapabilities:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetSensorInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetCameraInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetLogInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetPerfInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetLocationInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetCoreAssetsDirectory:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetSaveDirectory:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetSystemAvInfo:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetProcAddressCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetSubsystemInfo:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetControllerInfo:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetMemoryMaps:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetGeometry:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetUsername:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetLanguage:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetCurrentSoftwareFramebuffer:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetHwRenderInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetSupportAchievements:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetHwRenderContextNegotiationInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetSerializationQuirks:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetHwSharedContext:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetVfsInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetLedInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetAudioVideoEnable:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetMidiInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetFastForwarding:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetTargetRefreshRate:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetCoreOptionsVersion:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptions:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptionsIntl:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptionsDisplay:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetPreferredHwRender:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetDiskControlInterfaceVersion:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetDiskControlExtInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetMessageInterfaceVersion:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetMessageExt:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetAudioBufferStatusCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetMinimumAudioLatency:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetFastForwardingOverride:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetContentInfoOverride:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetGameInfoExt:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptionsV2:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptionsV2Intl:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetCoreOptionsUpdateDisplayCallback:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetVariable:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetThrottleState:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetSaveStateContext:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetHwRenderContextNegotiationInterfaceSupport:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetJitCapable:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetMicrophoneInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetDevicePower:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.SetNetpacketInterface:
+                # TODO: Implement
+                pass
+            case EnvironmentCall.GetPlaylistDirectory:
+                # TODO: Implement
+                pass
+            case _:
+                return False
+        # TODO: Define a way to override certain calls
+        return False
 
 
 def default_session(
@@ -96,7 +319,6 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | None = None,
         video: VideoCallbacks | None = None,
-        environment: EnvironmentCallbacks | None = None,
         ) -> Session:
     """
     Returns a Session with default state objects.
@@ -107,6 +329,5 @@ def default_session(
         audio=audio or AudioState(),
         input_state=input_state or GeneratorInputState(),
         video=video or SoftwareVideoState(),
-        environment=environment or Environment(),
         content=content
     )
