@@ -210,7 +210,6 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
                 support_no_game_ptr = cast(data, POINTER(c_bool))
-                print(support_no_game_ptr.contents)
                 self._support_no_game = support_no_game_ptr.contents.value
                 return True
 
