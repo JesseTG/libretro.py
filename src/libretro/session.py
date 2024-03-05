@@ -128,6 +128,10 @@ class Session(EnvironmentCallback):
     def video(self) -> VideoCallbacks:
         return self._video
 
+    @property
+    def support_no_game(self) -> bool | None:
+        return self._support_no_game
+
     def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
         match cmd:
