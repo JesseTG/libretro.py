@@ -238,6 +238,22 @@ class AnalogIndex(enum.IntEnum):
     Button = RETRO_DEVICE_INDEX_ANALOG_BUTTON
 
 
+class PowerState(enum.IntEnum):
+    Unknown = RETRO_POWERSTATE_UNKNOWN
+    Discharging = RETRO_POWERSTATE_DISCHARGING
+    Charging = RETRO_POWERSTATE_CHARGING
+    Charged = RETRO_POWERSTATE_CHARGED
+    PluggedIn = RETRO_POWERSTATE_PLUGGED_IN
+
+
+class SpecialContent(NamedTuple):
+    type: int
+    content: Sequence[str]
+
+
+Directory = str
+DevicePower = retro_device_power | Callable[[], retro_device_power]
+
 if sys.version_info >= (3, 12):
     Content: TypeAlias = PathLike | bytes | bytearray | memoryview | Buffer
     # Buffer was added in Python 3.12
