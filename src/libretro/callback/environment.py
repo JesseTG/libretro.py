@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import *
 
 from .._libretro import *
@@ -5,6 +6,9 @@ from ..defs import Rotation, PixelFormat, EnvironmentCall, SerializationQuirks
 
 
 class EnvironmentCallbacks(Protocol):
+    @abstractmethod
+    def environment(self, cmd: int, data: c_void_p) -> bool: ...
+
     def set_rotation(self, rotation: Rotation | None) -> bool:
         """
         Equivalent to ``RETRO_ENVIRONMENT_SET_ROTATION``.
@@ -1191,13 +1195,16 @@ def environment_callback(env: EnvironmentCallbacks) -> retro_environment_t:
 
     return callback
 
-
 class Environment(EnvironmentCallbacks):
-
     def __init__(self):
         self.rotation: Rotation | None = Rotation.NONE
         self.overscan: bool | None = False
         self.can_dupe: bool | None = False
+        self.support_no_game: bool | None = False
+        self._env = environment_callback(self)
+
+    def environment(self, cmd: int, data: c_void_p) -> bool:
+        return self._env(cmd, data)
 
     def set_rotation(self, rotation: Rotation | None) -> bool:
         if self.rotation is None:
@@ -1214,6 +1221,12 @@ class Environment(EnvironmentCallbacks):
 
         if overscan is not None:
             overscan.value = self.overscan
+
+        return True
+
+    def set_support_no_game(self, support: c_bool | None) -> bool:
+        if support is not None:
+            self.support_no_game = support
 
         return True
 

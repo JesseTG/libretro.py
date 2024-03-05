@@ -4,8 +4,8 @@ from ._libretro import retro_game_info
 from .core import Core
 from .callback.audio import AudioCallbacks, AudioState
 from libretro.callback.environment import EnvironmentCallbacks, Environment
-from .callback.input import InputCallbacks, InputState
-from .callback.video import VideoCallbacks, VideoState
+from .callback.input import InputCallbacks, GeneratorInputState
+from .callback.video import VideoCallbacks, SoftwareVideoState
 
 
 class SpecialContent(NamedTuple):
@@ -43,7 +43,7 @@ class Session:
         self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
         self._core.set_input_poll(self._input.poll)
         self._core.set_input_state(self._input.state)
-        self._core.set_environment(self._environment.__call__)
+        self._core.set_environment(self._environment.environment)
 
         self._core.init()
         loaded: bool = False
@@ -105,8 +105,8 @@ def default_session(
     return Session(
         core=core,
         audio=audio or AudioState(),
-        input_state=input_state or InputState(),
-        video=video or VideoState(),
+        input_state=input_state or GeneratorInputState(),
+        video=video or SoftwareVideoState(),
         environment=environment or Environment(),
         content=content
     )

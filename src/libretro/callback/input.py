@@ -3,6 +3,8 @@ from collections.abc import Iterator, Callable
 from ctypes import c_int16, c_uint
 from typing import Protocol, NamedTuple, runtime_checkable, final, Sequence
 
+from ..defs import InputDeviceFlag
+
 
 @runtime_checkable
 class InputCallbacks(Protocol):
@@ -10,15 +12,21 @@ class InputCallbacks(Protocol):
     def poll(self) -> None: ...
 
     @abstractmethod
-    def state(self, port: c_uint, device: c_uint, index: c_uint, id: c_uint) -> c_int16: ...
+    def state(self, port: int, device: InputDeviceFlag, index: int, id: int) -> int: ...
 
 
-class DeviceParams(NamedTuple):
-    port: int
-    device: int
-    index: int
-    id: int
+class InputState(InputCallbacks, Protocol):
+    @property
+    @abstractmethod
+    def device_capabilities(self) -> InputDeviceFlag: ...
 
+    @property
+    @abstractmethod
+    def bitmasks(self) -> bool: ...
+
+    @property
+    @abstractmethod
+    def max_users(self) -> int: ...
 
 class JoypadState(NamedTuple):
     b: bool = False
@@ -38,6 +46,7 @@ class JoypadState(NamedTuple):
     l3: bool = False
     r3: bool = False
 
+    @property
     def mask(self) -> int:
         return (self.b << 0) \
             | (self.y << 1) \
@@ -56,6 +65,7 @@ class JoypadState(NamedTuple):
             | (self.l3 << 14) \
             | (self.r3 << 15)
 
+
 class MouseState(NamedTuple):
     x: int = 0
     y: int = 0
@@ -69,24 +79,30 @@ class MouseState(NamedTuple):
     button4: bool = False
     button5: bool = False
 
+
 class KeyboardState(NamedTuple):
     pass
+
 
 class LightGunState(NamedTuple):
     pass
 
+
 class AnalogState(NamedTuple):
     pass
+
 
 class PointerTouch(NamedTuple):
     x: int = 0
     y: int = 0
+
 
 class PointerState(NamedTuple):
     touches: Sequence[PointerTouch] = ()
 
 
 DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
+
 
 class PortState(NamedTuple):
     joypad: JoypadState | None = None
@@ -97,24 +113,65 @@ class PortState(NamedTuple):
     pointer: PointerState | None = None
 
 
-PortStateGenerator = Callable[[int], Iterator[PortState | DeviceState | int | None]]
-PortStateGenerators = Sequence[PortStateGenerator]
+InputPollResult = PortState | DeviceState | PointerTouch | int | None
+InputStateGenerator = Callable[[], Iterator[InputPollResult | Sequence[InputPollResult]]]
 
 
 @final
-class InputState(InputCallbacks):
-
-    def __init__(self, generator: PortStateGenerator | None):
+class GeneratorInputState(InputState):
+    def __init__(self, generator: InputStateGenerator | None = None):
         self._generator = generator
-        self._last_state: dict[int, PortState] = {}
+        self._generator_state: Iterator[InputPollResult | Sequence[InputPollResult]] | None = None
+        self._last_poll_result: InputPollResult = None
+
+    def device_capabilities(self) -> InputDeviceFlag:
+        pass
+
+    def bitmasks(self) -> bool:
+        pass
+
+    def max_users(self) -> int:
+        pass
 
     def poll(self) -> None:
-        self._last_state.clear()
-        if self._generator is not None:
-            pass # TODO: Advance each live iterator and store the result in self._last_state
+        if self._generator:
+            if self._generator_state is None:
+                self._generator_state = self._generator()
 
-    def state(self, port: c_uint, device: c_uint, index: c_uint, id: c_uint) -> c_int16:
-        if port.value not in self._last_state:
-            return 0
+            self._last_poll_result = next(self._generator_state, None)
 
-        pass
+    def state(self, port: int, device: InputDeviceFlag, index: int, id: int) -> int:
+        match self._last_poll_result:
+            case InputPollResult(result):
+                return self._convert_to_state(result, port, device, index, id)
+            case [*results]:
+                return self._convert_to_state(results[port], port, device, index, id)
+            case int(value):
+                return value
+            case None:
+                return 0
+            case _:
+                return 0
+
+    def _convert_to_state(self, result: InputPollResult, port: int, device: InputDeviceFlag, index: int, id: int) -> int:
+        match result:
+            case JoypadState(joypad) as j:
+                return joypad.mask()
+            case MouseState(mouse):
+                pass
+            case KeyboardState(keyboard):
+                pass
+            case LightGunState(light_gun):
+                pass
+            case AnalogState(analog):
+                pass
+            case PointerState(pointer):
+                pass
+            case PointerTouch(touch):
+                pass
+            case int(value):
+                return value
+            case None:
+                return 0
+            case _:
+                return 0
