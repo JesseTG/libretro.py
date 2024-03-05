@@ -18,6 +18,28 @@ class PixelFormat(enum.IntEnum):
     XRGB8888 = RETRO_PIXEL_FORMAT_XRGB8888
     RGB565 = RETRO_PIXEL_FORMAT_RGB565
 
+    def bytes_per_pixel(self) -> int:
+        match self:
+            case self.RGB1555:
+                return 2
+            case self.XRGB8888:
+                return 4
+            case self.RGB565:
+                return 2
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
+    def typecode(self) -> str:
+        match self:
+            case self.RGB1555:
+                return 'H'
+            case self.XRGB8888:
+                return 'L'
+            case self.RGB565:
+                return 'H'
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
 
 class Region(enum.IntEnum):
     NTSC = RETRO_REGION_NTSC
