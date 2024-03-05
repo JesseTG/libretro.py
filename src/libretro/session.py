@@ -166,7 +166,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL doesn't accept NULL")
 
                 perflevel_ptr = cast(data, POINTER(c_uint))
-                self._performance_level = perflevel_ptr.contents
+                self._performance_level = perflevel_ptr.contents.value
                 return True
 
             case EnvironmentCall.GetSystemDirectory:
@@ -210,7 +210,8 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
                 support_no_game_ptr = cast(data, POINTER(c_bool))
-                self._support_no_game = support_no_game_ptr.contents
+                print(support_no_game_ptr.contents)
+                self._support_no_game = support_no_game_ptr.contents.value
                 return True
 
             case EnvironmentCall.GetLibretroPath:
@@ -332,7 +333,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS doesn't accept NULL")
 
                 supports_achievements_ptr = cast(data, POINTER(c_bool))
-                self._supports_achievements = supports_achievements_ptr.contents
+                self._supports_achievements = supports_achievements_ptr.contents.value
                 return True
 
             case EnvironmentCall.SetHwRenderContextNegotiationInterface:
