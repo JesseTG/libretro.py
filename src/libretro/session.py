@@ -10,20 +10,29 @@ from .callback.video import VideoCallbacks, SoftwareVideoState
 from .defs import *
 
 
-class SpecialContent(NamedTuple):
-    type: int
-    content: Sequence[str]
+def _full_power() -> retro_device_power:
+    return retro_device_power(PowerState.PluggedIn, RETRO_POWERSTATE_NO_ESTIMATE, 100)
 
 
 class Session(EnvironmentCallback):
-
     def __init__(
             self,
             core: Core | str,
             audio: AudioCallbacks,
             input_state: InputCallbacks,
             video: VideoCallbacks,
+            # TODO: Support for an env override function
+            # TODO: Support for core options
             content: str | SpecialContent | None = None,
+            system_dir: Directory | None = None,
+            core_assets_dir: Directory | None = None,
+            save_dir: Directory | None = None,
+            username: str | None = "libretro.py",
+            language: Language | None = Language.English,
+            target_refresh_rate: float | None = 60.0,
+            jit_capable: bool | None = True,
+            device_power: DevicePower | None = _full_power,
+            playlist_dir: Directory | None = None
     ):
         if core is None:
             raise ValueError("Core cannot be None")
@@ -37,6 +46,30 @@ class Session(EnvironmentCallback):
         self._input = input_state
         self._video = video
         self._content = content
+        self._system_av_info: retro_system_av_info | None = None
+
+        self._is_shutdown: bool = False
+        self._keyboard_callback: retro_keyboard_callback | None = None
+        self._performance_level: int | None = None
+        self._system_dir = system_dir
+        self._support_no_game: bool | None = None
+        self._frame_time_callback: retro_frame_time_callback | None = None
+        self._core_assets_dir = core_assets_dir
+        self._save_dir = save_dir
+        self._proc_address_callback: retro_get_proc_address_interface | None = None
+        self._subsystem_info: Sequence[retro_subsystem_info] | None = None
+        self._memory_maps: retro_memory_map | None = None
+        self._username = username
+        self._language = language
+        self._supports_achievements: bool | None = None
+        self._serialization_quirks: SerializationQuirks | None = None
+        self._target_refresh_rate = target_refresh_rate
+        self._fastforwarding_override: retro_fastforwarding_override | None = None
+        self._content_info_override: Sequence[retro_system_content_info_override] | None = None
+        self._throttle_state: retro_throttle_state | None = None
+        self._savestate_context: SavestateContext | None = SavestateContext.Normal
+        self._jit_capable = jit_capable
+        self._playlist_dir = playlist_dir
 
     def __enter__(self):
         self._core.set_video_refresh(self._video.refresh)
@@ -110,6 +143,9 @@ class Session(EnvironmentCallback):
                 # TODO: Implement
                 pass
             case EnvironmentCall.SetPixelFormat:
+                ptr = cast(data, POINTER(PixelFormat))
+                if not ptr:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
                 # TODO: Implement
                 pass
             case EnvironmentCall.SetInputDescriptors:
