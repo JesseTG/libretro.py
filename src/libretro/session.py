@@ -29,14 +29,14 @@ class Session(EnvironmentCallback):
             # TODO: Support for an env override function
             # TODO: Support for core options
             content: str | SpecialContent | None = None,
-            overscan: bool | None = False,
+            overscan: bool = False,
             system_dir: Directory | None = None,
             core_assets_dir: Directory | None = None,
             save_dir: Directory | None = None,
             username: str | None = "libretro.py",
-            language: Language | None = Language.English,
-            target_refresh_rate: float | None = 60.0,
-            jit_capable: bool | None = True,
+            language: Language = Language.English,
+            target_refresh_rate: float = 60.0,
+            jit_capable: bool = True,
             device_power: DevicePower | None = _full_power,
             playlist_dir: Directory | None = None
     ):
@@ -96,8 +96,8 @@ class Session(EnvironmentCallback):
             case SpecialContent(content_type, content):
                 loaded = self._core.load_game_special(content_type, content)
             case None:
-                if not self._environment.support_no_game:
-                    raise RuntimeError("No content provided")
+                if not self._support_no_game:
+                    raise RuntimeError("No content provided and core did not indicate support for no game.")
 
                 loaded = self._core.load_game(retro_game_info())
 
@@ -139,8 +139,6 @@ class Session(EnvironmentCallback):
                 return self._video.set_rotation(rotation_ptr.contents)
 
             case EnvironmentCall.GetOverscan:
-                if self._overscan is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_OVERSCAN doesn't accept NULL")
 
@@ -164,13 +162,11 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.SetPerformanceLevel:
-                if self._performance_level is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL doesn't accept NULL")
 
                 perflevel_ptr = cast(data, POINTER(c_uint))
-                perflevel_ptr.contents = self._performance_level
+                self._performance_level = perflevel_ptr.contents
                 return True
 
             case EnvironmentCall.GetSystemDirectory:
@@ -210,13 +206,11 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.SetSupportNoGame:
-                if self._support_no_game is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
                 support_no_game_ptr = cast(data, POINTER(c_bool))
-                support_no_game_ptr.contents = self._support_no_game
+                self._support_no_game = support_no_game_ptr.contents
                 return True
 
             case EnvironmentCall.GetLibretroPath:
@@ -284,9 +278,17 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SetSystemAvInfo:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.SetProcAddressCallback:
-                # TODO: Implement
-                pass
+                if not data:
+                    self._proc_address_callback = None
+                else:
+                    procaddress_ptr = cast(data, POINTER(retro_get_proc_address_interface))
+                    interface: retro_get_proc_address_interface = procaddress_ptr.contents
+                    self._proc_address_callback = retro_get_proc_address_interface(interface.get_proc_address)
+
+                return True
+
             case EnvironmentCall.SetSubsystemInfo:
                 # TODO: Implement
                 pass
@@ -311,8 +313,6 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GetLanguage:
-                if self._language is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
@@ -328,13 +328,11 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.SetSupportAchievements:
-                if self._supports_achievements is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS doesn't accept NULL")
 
                 supports_achievements_ptr = cast(data, POINTER(c_bool))
-                supports_achievements_ptr.contents = self._supports_achievements
+                self._supports_achievements = supports_achievements_ptr.contents
                 return True
 
             case EnvironmentCall.SetHwRenderContextNegotiationInterface:
@@ -363,8 +361,6 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.GetTargetRefreshRate:
-                if self._target_refresh_rate is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
@@ -437,8 +433,6 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.GetJitCapable:
-                if self._jit_capable is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_JIT_CAPABLE doesn't accept NULL")
 
