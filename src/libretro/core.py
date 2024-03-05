@@ -147,8 +147,8 @@ class Core:
     def cheat_set(self, index: int, enabled: bool, code: str):
         self._core.retro_cheat_set(index, enabled, code)
 
-    def load_game(self, game: retro_game_info) -> bool:
-        return self._core.retro_load_game(byref(game))
+    def load_game(self, game: retro_game_info | None) -> bool:
+        return self._core.retro_load_game(byref(game) if game else None)
 
     def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
         return self._core.retro_load_game_special(game_type, info, len(info))

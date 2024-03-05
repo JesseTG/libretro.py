@@ -99,7 +99,7 @@ class Session(EnvironmentCallback):
                 if not self._support_no_game:
                     raise RuntimeError("No content provided and core did not indicate support for no game.")
 
-                loaded = self._core.load_game(retro_game_info())
+                loaded = self._core.load_game(None)
 
         if not loaded:
             raise RuntimeError("Failed to load game")
