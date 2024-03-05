@@ -164,3 +164,7 @@ class Core:
 
     def get_memory_size(self, id: int) -> int:
         return self._core.retro_get_memory_size(id)
+
+    @property
+    def path(self) -> str:
+        return self._core._name
