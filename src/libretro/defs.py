@@ -165,6 +165,57 @@ class SavestateContext(enum.IntEnum):
     Unknown = RETRO_SAVESTATE_CONTEXT_UNKNOWN
 
 
+class InputDevice(enum.IntEnum):
+    None_ = RETRO_DEVICE_NONE
+    Joypad = RETRO_DEVICE_JOYPAD
+    Mouse = RETRO_DEVICE_MOUSE
+    Keyboard = RETRO_DEVICE_KEYBOARD
+    LightGun = RETRO_DEVICE_LIGHTGUN
+    Analog = RETRO_DEVICE_ANALOG
+    Pointer = RETRO_DEVICE_POINTER
+
+
+class InputDeviceFlag(enum.IntFlag):
+    None_ = 1 << RETRO_DEVICE_NONE
+    Joypad = 1 << RETRO_DEVICE_JOYPAD
+    Mouse = 1 << RETRO_DEVICE_MOUSE
+    Keyboard = 1 << RETRO_DEVICE_KEYBOARD
+    LightGun = 1 << RETRO_DEVICE_LIGHTGUN
+    Analog = 1 << RETRO_DEVICE_ANALOG
+    Pointer = 1 << RETRO_DEVICE_POINTER
+
+
+class JoypadId(enum.IntEnum):
+    B = RETRO_DEVICE_ID_JOYPAD_B
+    Y = RETRO_DEVICE_ID_JOYPAD_Y
+    Select = RETRO_DEVICE_ID_JOYPAD_SELECT
+    Start = RETRO_DEVICE_ID_JOYPAD_START
+    Up = RETRO_DEVICE_ID_JOYPAD_UP
+    Down = RETRO_DEVICE_ID_JOYPAD_DOWN
+    Left = RETRO_DEVICE_ID_JOYPAD_LEFT
+    Right = RETRO_DEVICE_ID_JOYPAD_RIGHT
+    A = RETRO_DEVICE_ID_JOYPAD_A
+    X = RETRO_DEVICE_ID_JOYPAD_X
+    L = RETRO_DEVICE_ID_JOYPAD_L
+    R = RETRO_DEVICE_ID_JOYPAD_R
+    L2 = RETRO_DEVICE_ID_JOYPAD_L2
+    R2 = RETRO_DEVICE_ID_JOYPAD_R2
+    L3 = RETRO_DEVICE_ID_JOYPAD_L3
+    R3 = RETRO_DEVICE_ID_JOYPAD_R3
+    Mask = RETRO_DEVICE_ID_JOYPAD_MASK
+
+
+class AnalogId(enum.IntEnum):
+    X = RETRO_DEVICE_ID_ANALOG_X
+    Y = RETRO_DEVICE_ID_ANALOG_Y
+
+
+class AnalogIndex(enum.IntEnum):
+    Left = RETRO_DEVICE_INDEX_ANALOG_LEFT
+    Right = RETRO_DEVICE_INDEX_ANALOG_RIGHT
+    Button = RETRO_DEVICE_INDEX_ANALOG_BUTTON
+
+
 if sys.version_info >= (3, 12):
     Content: TypeAlias = PathLike | bytes | bytearray | memoryview | Buffer
     # Buffer was added in Python 3.12
