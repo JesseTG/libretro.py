@@ -174,13 +174,11 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GetSystemDirectory:
-                if self._system_dir is None:
-                    return False
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY doesn't accept NULL")
 
                 sysdir_ptr = cast(data, POINTER(c_char_p))
-                sysdir_ptr.contents = self._system_dir
+                sysdir_ptr.contents.value = self._system_dir
                 return True
 
             case EnvironmentCall.SetPixelFormat:
@@ -222,7 +220,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH doesn't accept NULL")
 
                 libretro_path_ptr = cast(data, POINTER(c_char_p))
-                libretro_path_ptr.contents = self._libretro_path
+                libretro_path_ptr.contents.value = self._libretro_path
                 return True
 
             case EnvironmentCall.SetFrameTimeCallback:
@@ -266,7 +264,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY doesn't accept NULL")
 
                 core_assets_dir_ptr = cast(data, POINTER(c_char_p))
-                core_assets_dir_ptr.contents = self._core_assets_dir
+                core_assets_dir_ptr.contents.value = self._core_assets_dir
                 return True
 
             case EnvironmentCall.GetSaveDirectory:
@@ -276,7 +274,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY doesn't accept NULL")
 
                 save_dir_ptr = cast(data, POINTER(c_char_p))
-                save_dir_ptr.contents = self._save_dir
+                save_dir_ptr.contents.value = self._save_dir
                 return True
 
             case EnvironmentCall.SetSystemAvInfo:
@@ -313,7 +311,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_USERNAME doesn't accept NULL")
 
                 username_ptr = cast(data, POINTER(c_char_p))
-                username_ptr.contents = self._username
+                username_ptr.contents.value = self._username
                 return True
 
             case EnvironmentCall.GetLanguage:
@@ -461,7 +459,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY doesn't accept NULL")
 
                 playlist_dir_ptr = cast(data, POINTER(c_char_p))
-                playlist_dir_ptr.contents = self._playlist_dir
+                playlist_dir_ptr.contents.value = self._playlist_dir
                 return True
 
         # TODO: Define a way to override certain calls
@@ -474,6 +472,7 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | None = None,
         video: VideoCallbacks | None = None,
+        system_dir: Directory | None = None,
         ) -> Session:
     """
     Returns a Session with default state objects.
@@ -485,4 +484,5 @@ def default_session(
         input_state=input_state or GeneratorInputState(),
         video=video or SoftwareVideoState(),
         content=content
+        system_dir=system_dir,
     )
