@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from io import FileIO
 from typing import Protocol, Literal
-from .._libretro import *
+from ..retro import *
 from ..defs import *
 
 

@@ -9,4 +9,3 @@ htmlcov
 venv*
 .idea
 build/
-src/libretro/_libretro.py

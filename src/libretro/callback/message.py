@@ -3,7 +3,7 @@ from typing import Protocol, NamedTuple
 from logging import Logger
 import logging
 
-from .._libretro import *
+from ..retro import *
 from ..defs import *
 
 

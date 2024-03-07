@@ -4,7 +4,7 @@ from typing import *
 import enum
 from os import PathLike
 
-from ._libretro import *
+from .retro import *
 
 
 class Rotation(enum.IntEnum):

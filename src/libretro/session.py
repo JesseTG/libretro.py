@@ -1,7 +1,7 @@
 import logging
 from ctypes import *
 
-from ._libretro import retro_game_info
+from .retro import retro_game_info
 from .callback.log import LogCallback, StandardLogger
 from .core import Core
 from .callback.audio import AudioCallbacks, AudioState, ArrayAudioState

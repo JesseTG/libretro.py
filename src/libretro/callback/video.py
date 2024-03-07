@@ -3,7 +3,7 @@ from array import array
 from ctypes import *
 from typing import Protocol, runtime_checkable, final
 
-from .._libretro import *
+from ..retro import *
 from ..defs import PixelFormat
 
 

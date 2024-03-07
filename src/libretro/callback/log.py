@@ -5,7 +5,7 @@ import logging
 from logging import Logger, LogRecord
 
 from ..defs import LogLevel
-from .._libretro import retro_log_callback, retro_log_printf_t
+from ..retro import retro_log_callback, retro_log_printf_t
 
 
 class LogCallback(Protocol):
