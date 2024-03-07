@@ -1,11 +1,14 @@
+import logging
 from ctypes import *
 
 from ._libretro import retro_game_info
+from .callback.log import LogCallback, StandardLogger
 from .core import Core
 from .callback.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .callback.environment import EnvironmentCallback
 from .callback.input import InputCallbacks, GeneratorInputState, InputState
 from .callback.video import VideoCallbacks, SoftwareVideoState, VideoState
+from .content import load_game, SpecialContent
 from .defs import *
 
 
@@ -31,6 +34,7 @@ class Session(EnvironmentCallback):
             content: str | SpecialContent | None = None,
             overscan: bool = False,
             system_dir: Directory | None = None,
+            log_callback: LogCallback | None = None,
             core_assets_dir: Directory | None = None,
             save_dir: Directory | None = None,
             username: str | None = "libretro.py",
@@ -62,6 +66,7 @@ class Session(EnvironmentCallback):
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = _to_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
+        self._log_callback: LogCallback | None = log_callback
         self._core_assets_dir = _to_bytes(core_assets_dir)
         self._save_dir = _to_bytes(save_dir)
         self._proc_address_callback: retro_get_proc_address_interface | None = None
@@ -129,8 +134,40 @@ class Session(EnvironmentCallback):
         return self._video
 
     @property
+    def system_directory(self) -> bytes | None:
+        return self._system_dir
+
+    @property
+    def system_dir(self) -> bytes | None:
+        return self._system_dir
+
+    @property
     def support_no_game(self) -> bool | None:
         return self._support_no_game
+
+    @property
+    def log(self) -> LogCallback | None:
+        return self._log_callback
+
+    @property
+    def save_directory(self) -> bytes | None:
+        return self._save_dir
+
+    @property
+    def save_dir(self) -> bytes | None:
+        return self._save_dir
+
+    @property
+    def proc_address_callback(self) -> retro_get_proc_address_interface | None:
+        return self._proc_address_callback
+
+    @property
+    def subsystems(self) -> Sequence[retro_subsystem_info] | None:
+        return self._subsystem_info
+
+    @property
+    def support_achievements(self) -> bool | None:
+        return self._supports_achievements
 
     def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
@@ -247,9 +284,16 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GetCameraInterface:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GetLogInterface:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
+
+                log_ptr = cast(data, POINTER(retro_log_callback))
+                log_ptr.contents = self._log_callback._as_parameter_
+                # TODO: Is there a cleaner way to do this than using _as_parameter_?
+                return True
+
             case EnvironmentCall.GetPerfInterface:
                 # TODO: Implement
                 pass
@@ -472,7 +516,10 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | None = None,
         video: VideoCallbacks | None = None,
+        overscan: bool = False,
         system_dir: Directory | None = None,
+        log_callback: LogCallback | None = None,
+        save_dir: Directory | None = None,
         ) -> Session:
     """
     Returns a Session with default state objects.
@@ -483,6 +530,9 @@ def default_session(
         audio=audio or ArrayAudioState(),
         input_state=input_state or GeneratorInputState(),
         video=video or SoftwareVideoState(),
-        content=content
+        content=content,
+        overscan=overscan,
         system_dir=system_dir,
+        log_callback=log_callback or StandardLogger(logging.getLogger('libretro')),
+        save_dir=save_dir
     )
