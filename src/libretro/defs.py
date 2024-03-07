@@ -1,3 +1,4 @@
+import logging
 from collections.abc import *
 from typing import *
 import enum
@@ -51,6 +52,17 @@ class LogLevel(enum.IntEnum):
     Info = RETRO_LOG_INFO
     Warning = RETRO_LOG_WARN
     Error = RETRO_LOG_ERROR
+
+    def to_logging_level(self) -> int:
+        match self:
+            case self.Debug:
+                return logging.DEBUG
+            case self.Info:
+                return logging.INFO
+            case self.Warning:
+                return logging.WARN
+            case self.Error:
+                return logging.ERROR
 
 
 class Language(enum.IntEnum):
@@ -187,6 +199,19 @@ class SavestateContext(enum.IntEnum):
     Unknown = RETRO_SAVESTATE_CONTEXT_UNKNOWN
 
 
+class MessageTarget(enum.IntEnum):
+    All = RETRO_MESSAGE_TARGET_ALL
+    Osd = RETRO_MESSAGE_TARGET_OSD
+    Log = RETRO_MESSAGE_TARGET_LOG
+
+
+class MessageType(enum.IntEnum):
+    Notification = RETRO_MESSAGE_TYPE_NOTIFICATION
+    NotificationAlt = RETRO_MESSAGE_TYPE_NOTIFICATION_ALT
+    Status = RETRO_MESSAGE_TYPE_STATUS
+    Progress = RETRO_MESSAGE_TYPE_PROGRESS
+
+
 class InputDevice(enum.IntEnum):
     None_ = RETRO_DEVICE_NONE
     Joypad = RETRO_DEVICE_JOYPAD
@@ -238,17 +263,36 @@ class AnalogIndex(enum.IntEnum):
     Button = RETRO_DEVICE_INDEX_ANALOG_BUTTON
 
 
+class FileAccessMode(enum.IntFlag):
+    Read = RETRO_VFS_FILE_ACCESS_READ
+    Write = RETRO_VFS_FILE_ACCESS_WRITE
+    ReadWrite = RETRO_VFS_FILE_ACCESS_READ_WRITE
+    UpdateExisting = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
+
+
+class FileAccessHint(enum.IntFlag):
+    None_ = RETRO_VFS_FILE_ACCESS_HINT_NONE
+    FrequentAccess = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
+
+
+class FileSeekPos(enum.IntEnum):
+    Start = RETRO_VFS_SEEK_POSITION_START
+    Current = RETRO_VFS_SEEK_POSITION_CURRENT
+    End = RETRO_VFS_SEEK_POSITION_END
+
+
+class FileStat(enum.IntFlag):
+    IsValid = RETRO_VFS_STAT_IS_VALID
+    IsDirectory = RETRO_VFS_STAT_IS_DIRECTORY
+    IsCharacterSpecial = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
+
+
 class PowerState(enum.IntEnum):
     Unknown = RETRO_POWERSTATE_UNKNOWN
     Discharging = RETRO_POWERSTATE_DISCHARGING
     Charging = RETRO_POWERSTATE_CHARGING
     Charged = RETRO_POWERSTATE_CHARGED
     PluggedIn = RETRO_POWERSTATE_PLUGGED_IN
-
-
-class SpecialContent(NamedTuple):
-    type: int
-    content: Sequence[str]
 
 
 Directory = str | bytes
