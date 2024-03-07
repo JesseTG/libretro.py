@@ -9,9 +9,9 @@ from .retro import *
 
 class Rotation(enum.IntEnum):
     NONE = 0
-    _90 = 1
-    _180 = 2
-    _270 = 3
+    Ninety = 1
+    OneEighty = 2
+    TwoSeventy = 3
 
 
 class PixelFormat(enum.IntEnum):
