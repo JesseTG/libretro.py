@@ -18,6 +18,12 @@ for t in _int_types:
 del t
 del _int_types
 
+if not hasattr(ctypes, "c_uintptr"):
+    class c_uintptr(ctypes._SimpleCData):
+        _type_ = "P"
+
+    ctypes._check_size(c_uintptr)
+
 
 
 class UserString:
@@ -843,9 +849,9 @@ retro_vfs_tell_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_h
 
 retro_vfs_seek_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), c_int64, c_int)
 
-retro_vfs_read_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), uint64_t)
+retro_vfs_read_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
 
-retro_vfs_write_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), uint64_t)
+retro_vfs_write_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
 
 retro_vfs_flush_t = CFUNCTYPE(UNCHECKED(c_int), POINTER(struct_retro_vfs_file_handle))
 
@@ -921,7 +927,7 @@ struct_retro_vfs_interface_info.__slots__ = [
     'iface',
 ]
 struct_retro_vfs_interface_info._fields_ = [
-    ('required_interface_version', uint32_t),
+    ('required_interface_version', c_uint32),
     ('iface', POINTER(struct_retro_vfs_interface)),
 ]
 
@@ -969,9 +975,9 @@ retro_midi_input_enabled_t = CFUNCTYPE(UNCHECKED(c_bool), )
 
 retro_midi_output_enabled_t = CFUNCTYPE(UNCHECKED(c_bool), )
 
-retro_midi_read_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(uint8_t))
+retro_midi_read_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(c_uint8))
 
-retro_midi_write_t = CFUNCTYPE(UNCHECKED(c_bool), uint8_t, uint32_t)
+retro_midi_write_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint8, c_uint32)
 
 retro_midi_flush_t = CFUNCTYPE(UNCHECKED(c_bool), )
 
@@ -1025,7 +1031,7 @@ struct_retro_memory_descriptor.__slots__ = [
     'addrspace',
 ]
 struct_retro_memory_descriptor._fields_ = [
-    ('flags', uint64_t),
+    ('flags', c_uint64),
     ('ptr', POINTER(None)),
     ('offset', c_size_t),
     ('start', c_size_t),
@@ -1161,7 +1167,7 @@ struct_retro_log_callback._fields_ = [
     ('log', retro_log_printf_t),
 ]
 
-retro_perf_tick_t = uint64_t
+retro_perf_tick_t = c_uint64
 
 retro_time_t = c_int64
 
@@ -1187,7 +1193,7 @@ retro_perf_get_time_usec_t = CFUNCTYPE(UNCHECKED(retro_time_t), )
 
 retro_perf_get_counter_t = CFUNCTYPE(UNCHECKED(retro_perf_tick_t), )
 
-retro_get_cpu_features_t = CFUNCTYPE(UNCHECKED(uint64_t), )
+retro_get_cpu_features_t = CFUNCTYPE(UNCHECKED(c_uint64), )
 
 retro_perf_log_t = CFUNCTYPE(UNCHECKED(None), )
 
@@ -1265,7 +1271,7 @@ retro_camera_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
 retro_camera_lifetime_status_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(UNCHECKED(None), POINTER(uint32_t), c_uint, c_uint, c_size_t)
+retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(UNCHECKED(None), POINTER(c_uint32), c_uint, c_uint, c_size_t)
 
 retro_camera_frame_opengl_texture_t = CFUNCTYPE(UNCHECKED(None), c_uint, c_uint, POINTER(c_float))
 
@@ -1284,7 +1290,7 @@ struct_retro_camera_callback.__slots__ = [
     'deinitialized',
 ]
 struct_retro_camera_callback._fields_ = [
-    ('caps', uint64_t),
+    ('caps', c_uint64),
     ('width', c_uint),
     ('height', c_uint),
     ('start', retro_camera_start_t),
@@ -1333,7 +1339,7 @@ RETRO_RUMBLE_WEAK = 1
 
 RETRO_RUMBLE_DUMMY = 0x7fffffff
 
-retro_set_rumble_state_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, enum_retro_rumble_effect, uint16_t)
+retro_set_rumble_state_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, enum_retro_rumble_effect, c_uint16)
 
 class struct_retro_rumble_interface(Structure):
     pass
@@ -1391,7 +1397,7 @@ struct_retro_audio_buffer_status_callback._fields_ = [
 
 retro_hw_context_reset_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_hw_get_current_framebuffer_t = CFUNCTYPE(UNCHECKED(uintptr_t), )
+retro_hw_get_current_framebuffer_t = CFUNCTYPE(UNCHECKED(c_uintptr), )
 
 retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
@@ -1453,7 +1459,7 @@ struct_retro_hw_render_callback._fields_ = [
     ('debug_context', c_bool),
 ]
 
-retro_keyboard_event_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, uint32_t, uint16_t)
+retro_keyboard_event_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, c_uint32, c_uint16)
 
 class struct_retro_keyboard_callback(Structure):
     pass
@@ -1538,19 +1544,19 @@ struct_retro_disk_control_ext_callback._fields_ = [
     ('get_image_label', retro_get_image_label_t),
 ]
 
-retro_netpacket_send_t = CFUNCTYPE(UNCHECKED(None), c_int, POINTER(None), c_size_t, uint16_t, c_bool)
+retro_netpacket_send_t = CFUNCTYPE(UNCHECKED(None), c_int, POINTER(None), c_size_t, c_uint16, c_bool)
 
-retro_netpacket_start_t = CFUNCTYPE(UNCHECKED(None), uint16_t, retro_netpacket_send_t)
+retro_netpacket_start_t = CFUNCTYPE(UNCHECKED(None), c_uint16, retro_netpacket_send_t)
 
-retro_netpacket_receive_t = CFUNCTYPE(UNCHECKED(None), POINTER(None), c_size_t, uint16_t)
+retro_netpacket_receive_t = CFUNCTYPE(UNCHECKED(None), POINTER(None), c_size_t, c_uint16)
 
 retro_netpacket_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
 retro_netpacket_poll_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_netpacket_connected_t = CFUNCTYPE(UNCHECKED(c_bool), uint16_t)
+retro_netpacket_connected_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint16)
 
-retro_netpacket_disconnected_t = CFUNCTYPE(UNCHECKED(None), uint16_t)
+retro_netpacket_disconnected_t = CFUNCTYPE(UNCHECKED(None), c_uint16)
 
 class struct_retro_netpacket_callback(Structure):
     pass
