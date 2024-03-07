@@ -2,6 +2,7 @@ from ctypes import CDLL, cdll, pythonapi, c_char_p, c_ssize_t, c_int, py_object
 from typing import *
 
 from .retro import *
+from .content import GameInfo
 from .defs import *
 
 # When https://github.com/python/cpython/issues/112015 is merged,
