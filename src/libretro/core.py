@@ -1,8 +1,14 @@
-from ctypes import CDLL, cdll
+from ctypes import CDLL, cdll, pythonapi, c_char_p, c_ssize_t, c_int, py_object
 from typing import *
 
 from ._libretro import *
 from .defs import *
+
+# When https://github.com/python/cpython/issues/112015 is merged,
+# use ctypes.memoryview_at instead of this hack
+# taken from https://stackoverflow.com/a/72968176/1089957
+pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
+pythonapi.PyMemoryView_FromMemory.restype = py_object
 
 
 # noinspection PyStatementEffect
@@ -164,6 +170,16 @@ class Core:
 
     def get_memory_size(self, id: int) -> int:
         return self._core.retro_get_memory_size(id)
+
+    def get_memory(self, id: int) -> memoryview | None:
+        data = self.get_memory_data(id)
+        if not data:
+            return None
+
+        size = self.get_memory_size(id)
+        return pythonapi.PyMemoryView_FromMemory(data, size, 0x200)
+        # 0x200 = read/write, 0x100 = read-only
+
 
     @property
     def path(self) -> str:
