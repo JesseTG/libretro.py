@@ -441,11 +441,6 @@ _libs = {}
 
 import ctypes
 import ctypes.util
-import glob
-import os.path
-import platform
-import re
-import sys
 
 enum_retro_language = c_int
 
