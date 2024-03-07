@@ -144,13 +144,13 @@ class Core:
     def serialize(self, data: bytearray) -> bool:
         return self._core.retro_serialize(data, len(data))
 
-    def unserialize(self, data: bytes) -> bool:
+    def unserialize(self, data: bytes | bytearray | memoryview) -> bool:
         return self._core.retro_unserialize(data, len(data))
 
     def cheat_reset(self):
         self._core.retro_cheat_reset()
 
-    def cheat_set(self, index: int, enabled: bool, code: str):
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview):
         self._core.retro_cheat_set(index, enabled, code)
 
     def load_game(self, game: retro_game_info | None) -> bool:
@@ -165,7 +165,7 @@ class Core:
     def get_region(self) -> Region:
         return Region(self._core.retro_get_region())
 
-    def get_memory_data(self, id: int) -> c_void_p:
+    def get_memory_data(self, id: int) -> c_void_p | None:
         return self._core.retro_get_memory_data(id)
 
     def get_memory_size(self, id: int) -> int:
