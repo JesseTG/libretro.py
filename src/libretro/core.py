@@ -1,8 +1,3 @@
-from ctypes import CDLL, cdll, pythonapi, c_char_p, c_ssize_t, c_int, py_object
-from typing import *
-
-from .retro import *
-from .content import GameInfo
 from .defs import *
 
 # When https://github.com/python/cpython/issues/112015 is merged,
@@ -11,37 +6,6 @@ from .defs import *
 pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
 pythonapi.PyMemoryView_FromMemory.restype = py_object
 
-
-# noinspection PyStatementEffect
-def validate_core(core: CDLL) -> None:
-    try:
-        core.retro_set_environment
-        core.retro_set_video_refresh
-        core.retro_set_audio_sample
-        core.retro_set_audio_sample_batch
-        core.retro_set_input_poll
-        core.retro_set_input_state
-        core.retro_init
-        core.retro_deinit
-        core.retro_api_version
-        core.retro_get_system_info
-        core.retro_get_system_av_info
-        core.retro_set_controller_port_device
-        core.retro_reset
-        core.retro_run
-        core.retro_serialize_size
-        core.retro_serialize
-        core.retro_unserialize
-        core.retro_cheat_reset
-        core.retro_cheat_set
-        core.retro_load_game
-        core.retro_load_game_special
-        core.retro_unload_game
-        core.retro_get_region
-        core.retro_get_memory_data
-        core.retro_get_memory_size
-    except AttributeError as e:
-        raise ValueError(f"Couldn't find required symbol '{e.name}' from {core._name}") from e
 
 # TODO: Implement context manager protocol
 class Core:
@@ -63,7 +27,84 @@ class Core:
         else:
             self._core = core
 
-        validate_core(self._core)
+        try:
+            self._core.retro_set_environment.argtypes = [retro_environment_t]
+            self._core.retro_set_environment.restype = None
+
+            self._core.retro_set_video_refresh.argtypes = [retro_video_refresh_t]
+            self._core.retro_set_video_refresh.restype = None
+
+            self._core.retro_set_audio_sample.argtypes = [retro_audio_sample_t]
+            self._core.retro_set_audio_sample.restype = None
+
+            self._core.retro_set_audio_sample_batch.argtypes = [retro_audio_sample_batch_t]
+            self._core.retro_set_audio_sample_batch.restype = None
+
+            self._core.retro_set_input_poll.argtypes = [retro_input_poll_t]
+            self._core.retro_set_input_poll.restype = None
+
+            self._core.retro_set_input_state.argtypes = [retro_input_state_t]
+            self._core.retro_set_input_state.restype = None
+
+            self._core.retro_init.argtypes = []
+            self._core.retro_init.restype = None
+
+            self._core.retro_deinit.argtypes = []
+            self._core.retro_deinit.restype = None
+
+            self._core.retro_api_version.argtypes = []
+            self._core.retro_api_version.restype = c_uint
+
+            self._core.retro_get_system_info.argtypes = [POINTER(struct_retro_system_info)]
+            self._core.retro_get_system_info.restype = None
+
+            self._core.retro_get_system_av_info.argtypes = [POINTER(struct_retro_system_av_info)]
+            self._core.retro_get_system_av_info.restype = None
+
+            self._core.retro_set_controller_port_device.argtypes = [c_uint, c_uint]
+            self._core.retro_set_controller_port_device.restype = None
+
+            self._core.retro_reset.argtypes = []
+            self._core.retro_reset.restype = None
+
+            self._core.retro_run.argtypes = []
+            self._core.retro_run.restype = None
+
+            self._core.retro_serialize_size.argtypes = []
+            self._core.retro_serialize_size.restype = c_size_t
+
+            self._core.retro_serialize.argtypes = [c_void_p, c_size_t]
+            self._core.retro_serialize.restype = c_bool
+
+            self._core.retro_unserialize.argtypes = [c_void_p, c_size_t]
+            self._core.retro_unserialize.restype = c_bool
+
+            self._core.retro_cheat_reset.argtypes = []
+            self._core.retro_cheat_reset.restype = None
+
+            self._core.retro_cheat_set.argtypes = [c_uint, c_bool, String]
+            self._core.retro_cheat_set.restype = None
+
+            self._core.retro_load_game.argtypes = [POINTER(struct_retro_game_info)]
+            self._core.retro_load_game.restype = c_bool
+
+            self._core.retro_load_game_special.argtypes = [c_uint, POINTER(struct_retro_game_info), c_size_t]
+            self._core.retro_load_game_special.restype = c_bool
+
+            self._core.retro_unload_game.argtypes = []
+            self._core.retro_unload_game.restype = None
+
+            self._core.retro_get_region.argtypes = []
+            self._core.retro_get_region.restype = c_uint
+
+            self._core.retro_get_memory_data.argtypes = [c_uint]
+            self._core.retro_get_memory_data.restype = POINTER(c_ubyte)
+            self._core.retro_get_memory_data.errcheck = lambda v, *a: cast(v, c_void_p)
+
+            self._core.retro_get_memory_size.argtypes = [c_uint]
+            self._core.retro_get_memory_size.restype = c_size_t
+        except AttributeError as e:
+            raise ValueError(f"Couldn't find required symbol '{e.name}' from {self._core._name}") from e
 
         # Need to keep references to these objects to prevent them from being garbage collected,
         # otherwise the C function pointers to them will become invalid.
@@ -154,11 +195,13 @@ class Core:
     def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview):
         self._core.retro_cheat_set(index, enabled, code)
 
-    def load_game(self, game: retro_game_info | None) -> bool:
+    def load_game(self, game: str | bytes | retro_game_info | None) -> bool:
         return self._core.retro_load_game(byref(game) if game else None)
 
     def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
-        return self._core.retro_load_game_special(game_type, info, len(info))
+        GameInfoArray = retro_game_info * len(info)
+        info_array = GameInfoArray(*info)
+        return self._core.retro_load_game_special(game_type, info_array, len(info))
 
     def unload_game(self):
         self._core.retro_unload_game()
