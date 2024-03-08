@@ -3,17 +3,18 @@ from ctypes import *
 
 from .retro import retro_game_info
 from .callback.log import LogCallback, StandardLogger
+from .callback.message import MessageInterface, LoggerMessageInterface
 from .core import Core
 from .callback.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .callback.environment import EnvironmentCallback
-from .callback.input import InputCallbacks, GeneratorInputState, InputState
+from .callback.input import *
 from .callback.video import VideoCallbacks, SoftwareVideoState, VideoState
 from .content import load_game, SpecialContent
 from .defs import *
 
 
 def _full_power() -> retro_device_power:
-    return retro_device_power(PowerState.PluggedIn, RETRO_POWERSTATE_NO_ESTIMATE, 100)
+    return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
 
 
 def _to_bytes(value: str | bytes | None) -> bytes | None:
@@ -33,12 +34,13 @@ class Session(EnvironmentCallback):
             # TODO: Support for core options
             content: str | SpecialContent | None = None,
             overscan: bool = False,
+            message: MessageInterface | None = None,
             system_dir: Directory | None = None,
             log_callback: LogCallback | None = None,
             core_assets_dir: Directory | None = None,
             save_dir: Directory | None = None,
             username: str | None = "libretro.py",
-            language: Language = Language.English,
+            language: Language = Language.ENGLISH,
             target_refresh_rate: float = 60.0,
             jit_capable: bool = True,
             device_power: DevicePower | None = _full_power,
@@ -59,6 +61,7 @@ class Session(EnvironmentCallback):
         self._system_av_info: retro_system_av_info | None = None
 
         self._overscan = overscan
+        self._message: MessageInterface | None = message
         self._is_shutdown: bool = False
         self._keyboard_callback: retro_keyboard_callback | None = None
         self._performance_level: int | None = None
@@ -80,7 +83,7 @@ class Session(EnvironmentCallback):
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
         self._throttle_state: retro_throttle_state | None = None
-        self._savestate_context: SavestateContext | None = SavestateContext.Normal
+        self._savestate_context: SavestateContext | None = SavestateContext.NORMAL
         self._jit_capable = jit_capable
         self._device_power = device_power
         self._playlist_dir = _to_bytes(playlist_dir)
@@ -134,6 +137,10 @@ class Session(EnvironmentCallback):
         return self._video
 
     @property
+    def message(self) -> MessageInterface | None:
+        return self._message
+
+    @property
     def system_directory(self) -> bytes | None:
         return self._system_dir
 
@@ -161,6 +168,12 @@ class Session(EnvironmentCallback):
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._proc_address_callback
 
+    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
+        if self._proc_address_callback is None or sym is None:
+            return None
+
+        return self._proc_address_callback.get_proc_address(sym)
+
     @property
     def subsystems(self) -> Sequence[retro_subsystem_info] | None:
         return self._subsystem_info
@@ -172,14 +185,14 @@ class Session(EnvironmentCallback):
     def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
         match cmd:
-            case EnvironmentCall.SetRotation:
+            case EnvironmentCall.SET_ROTATION:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_ROTATION doesn't accept NULL")
 
                 rotation_ptr = cast(data, POINTER(c_uint))
                 return self._video.set_rotation(rotation_ptr.contents)
 
-            case EnvironmentCall.GetOverscan:
+            case EnvironmentCall.GET_OVERSCAN:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_OVERSCAN doesn't accept NULL")
 
@@ -187,7 +200,7 @@ class Session(EnvironmentCallback):
                 overscan_ptr.contents = self._overscan
                 return True
 
-            case EnvironmentCall.GetCanDupe:
+            case EnvironmentCall.GET_CAN_DUPE:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_CAN_DUPE doesn't accept NULL")
 
@@ -195,14 +208,14 @@ class Session(EnvironmentCallback):
                 dupe_ptr.contents = self._video.can_dupe()
                 return True
 
-            case EnvironmentCall.SetMessage:
+            case EnvironmentCall.SET_MESSAGE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.Shutdown:
+            case EnvironmentCall.SHUTDOWN:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.SetPerformanceLevel:
+            case EnvironmentCall.SET_PERFORMANCE_LEVEL:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL doesn't accept NULL")
 
@@ -210,7 +223,7 @@ class Session(EnvironmentCallback):
                 self._performance_level = perflevel_ptr.contents.value
                 return True
 
-            case EnvironmentCall.GetSystemDirectory:
+            case EnvironmentCall.GET_SYSTEM_DIRECTORY:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY doesn't accept NULL")
 
@@ -218,33 +231,33 @@ class Session(EnvironmentCallback):
                 sysdir_ptr.contents.value = self._system_dir
                 return True
 
-            case EnvironmentCall.SetPixelFormat:
+            case EnvironmentCall.SET_PIXEL_FORMAT:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
-                pixfmt_ptr = cast(data, POINTER(enum_retro_pixel_format))
+                pixfmt_ptr = cast(data, POINTER(retro_pixel_format))
                 return self._video.set_pixel_format(pixfmt_ptr.contents)
 
-            case EnvironmentCall.SetInputDescriptors:
+            case EnvironmentCall.SET_INPUT_DESCRIPTORS:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetKeyboardCallback:
+            case EnvironmentCall.SET_KEYBOARD_CALLBACK:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetDiskControlInterface:
+            case EnvironmentCall.SET_DISK_CONTROL_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetVariable:
+            case EnvironmentCall.GET_VARIABLE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetVariables:
+            case EnvironmentCall.SET_VARIABLES:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetVariableUpdate:
+            case EnvironmentCall.GET_VARIABLE_UPDATE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.SetSupportNoGame:
+            case EnvironmentCall.SET_SUPPORT_NO_GAME:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
@@ -252,7 +265,7 @@ class Session(EnvironmentCallback):
                 self._support_no_game = support_no_game_ptr.contents.value
                 return True
 
-            case EnvironmentCall.GetLibretroPath:
+            case EnvironmentCall.GET_LIBRETRO_PATH:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH doesn't accept NULL")
 
@@ -260,17 +273,17 @@ class Session(EnvironmentCallback):
                 libretro_path_ptr.contents.value = self._libretro_path
                 return True
 
-            case EnvironmentCall.SetFrameTimeCallback:
+            case EnvironmentCall.SET_FRAME_TIME_CALLBACK:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetAudioCallback:
+            case EnvironmentCall.SET_AUDIO_CALLBACK:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetRumbleInterface:
+            case EnvironmentCall.GET_RUMBLE_INTERFACE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetInputDeviceCapabilities:
+            case EnvironmentCall.GET_INPUT_DEVICE_CAPABILITIES:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
@@ -278,14 +291,14 @@ class Session(EnvironmentCallback):
                 inputcaps_ptr.contents = self._input.device_capabilities
                 return True
 
-            case EnvironmentCall.GetSensorInterface:
+            case EnvironmentCall.GET_SENSOR_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetCameraInterface:
+            case EnvironmentCall.GET_CAMERA_INTERFACE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetLogInterface:
+            case EnvironmentCall.GET_LOG_INTERFACE:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
@@ -294,14 +307,14 @@ class Session(EnvironmentCallback):
                 # TODO: Is there a cleaner way to do this than using _as_parameter_?
                 return True
 
-            case EnvironmentCall.GetPerfInterface:
+            case EnvironmentCall.GET_PERF_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetLocationInterface:
+            case EnvironmentCall.GET_LOCATION_INTERFACE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetCoreAssetsDirectory:
+            case EnvironmentCall.GET_CORE_ASSETS_DIRECTORY:
                 if self._core_assets_dir is None:
                     return False
                 if not data:
@@ -311,7 +324,7 @@ class Session(EnvironmentCallback):
                 core_assets_dir_ptr.contents.value = self._core_assets_dir
                 return True
 
-            case EnvironmentCall.GetSaveDirectory:
+            case EnvironmentCall.GET_SAVE_DIRECTORY:
                 if self._save_dir is None:
                     return False
                 if not data:
@@ -321,11 +334,11 @@ class Session(EnvironmentCallback):
                 save_dir_ptr.contents.value = self._save_dir
                 return True
 
-            case EnvironmentCall.SetSystemAvInfo:
+            case EnvironmentCall.SET_SYSTEM_AV_INFO:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.SetProcAddressCallback:
+            case EnvironmentCall.SET_PROC_ADDRESS_CALLBACK:
                 if not data:
                     self._proc_address_callback = None
                 else:
@@ -335,20 +348,20 @@ class Session(EnvironmentCallback):
 
                 return True
 
-            case EnvironmentCall.SetSubsystemInfo:
+            case EnvironmentCall.SET_SUBSYSTEM_INFO:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetControllerInfo:
+            case EnvironmentCall.SET_CONTROLLER_INFO:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetMemoryMaps:
+            case EnvironmentCall.SET_MEMORY_MAPS:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetGeometry:
+            case EnvironmentCall.SET_GEOMETRY:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetUsername:
+            case EnvironmentCall.GET_USERNAME:
                 if self._username is None:
                     return False
                 if not data:
@@ -358,22 +371,22 @@ class Session(EnvironmentCallback):
                 username_ptr.contents.value = self._username
                 return True
 
-            case EnvironmentCall.GetLanguage:
+            case EnvironmentCall.GET_LANGUAGE:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
-                language_ptr = cast(data, POINTER(enum_retro_language))
+                language_ptr = cast(data, POINTER(retro_language))
                 language_ptr.contents = self._language
                 return True
 
-            case EnvironmentCall.GetCurrentSoftwareFramebuffer:
+            case EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetHwRenderInterface:
+            case EnvironmentCall.GET_HW_RENDER_INTERFACE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.SetSupportAchievements:
+            case EnvironmentCall.SET_SUPPORT_ACHIEVEMENTS:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS doesn't accept NULL")
 
@@ -381,32 +394,32 @@ class Session(EnvironmentCallback):
                 self._supports_achievements = supports_achievements_ptr.contents.value
                 return True
 
-            case EnvironmentCall.SetHwRenderContextNegotiationInterface:
+            case EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetSerializationQuirks:
+            case EnvironmentCall.SET_SERIALIZATION_QUIRKS:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetHwSharedContext:
+            case EnvironmentCall.SET_HW_SHARED_CONTEXT:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetVfsInterface:
+            case EnvironmentCall.GET_VFS_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetLedInterface:
+            case EnvironmentCall.GET_LED_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetAudioVideoEnable:
+            case EnvironmentCall.GET_AUDIO_VIDEO_ENABLE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetMidiInterface:
+            case EnvironmentCall.GET_MIDI_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetFastForwarding:
+            case EnvironmentCall.GET_FASTFORWARDING:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetTargetRefreshRate:
+            case EnvironmentCall.GET_TARGET_REFRESH_RATE:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
@@ -414,71 +427,71 @@ class Session(EnvironmentCallback):
                 refresh_rate_ptr.contents = self._target_refresh_rate
                 return True
 
-            case EnvironmentCall.GetCoreOptionsVersion:
+            case EnvironmentCall.GET_CORE_OPTIONS_VERSION:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptions:
+            case EnvironmentCall.SET_CORE_OPTIONS:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptionsIntl:
+            case EnvironmentCall.SET_CORE_OPTIONS_INTL:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptionsDisplay:
+            case EnvironmentCall.SET_CORE_OPTIONS_DISPLAY:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetPreferredHwRender:
+            case EnvironmentCall.GET_PREFERRED_HW_RENDER:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetDiskControlInterfaceVersion:
+            case EnvironmentCall.GET_DISK_CONTROL_INTERFACE_VERSION:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetDiskControlExtInterface:
+            case EnvironmentCall.SET_DISK_CONTROL_EXT_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetMessageInterfaceVersion:
+            case EnvironmentCall.GET_MESSAGE_INTERFACE_VERSION:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetMessageExt:
+            case EnvironmentCall.SET_MESSAGE_EXT:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetAudioBufferStatusCallback:
+            case EnvironmentCall.SET_AUDIO_BUFFER_STATUS_CALLBACK:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetMinimumAudioLatency:
+            case EnvironmentCall.SET_MINIMUM_AUDIO_LATENCY:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetFastForwardingOverride:
+            case EnvironmentCall.SET_FASTFORWARDING_OVERRIDE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetContentInfoOverride:
+            case EnvironmentCall.SET_CONTENT_INFO_OVERRIDE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetGameInfoExt:
+            case EnvironmentCall.GET_GAME_INFO_EXT:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptionsV2:
+            case EnvironmentCall.SET_CORE_OPTIONS_V2:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptionsV2Intl:
+            case EnvironmentCall.SET_CORE_OPTIONS_V2_INTL:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetCoreOptionsUpdateDisplayCallback:
+            case EnvironmentCall.SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetVariable:
+            case EnvironmentCall.SET_VARIABLE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetThrottleState:
+            case EnvironmentCall.GET_THROTTLE_STATE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetSaveStateContext:
+            case EnvironmentCall.GET_SAVE_STATE_CONTEXT:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetHwRenderContextNegotiationInterfaceSupport:
+            case EnvironmentCall.GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetJitCapable:
+            case EnvironmentCall.GET_JIT_CAPABLE:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_JIT_CAPABLE doesn't accept NULL")
 
@@ -486,17 +499,17 @@ class Session(EnvironmentCallback):
                 jit_capable_ptr.contents = self._jit_capable
                 return True
 
-            case EnvironmentCall.GetMicrophoneInterface:
+            case EnvironmentCall.GET_MICROPHONE_INTERFACE:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.GetDevicePower:
+            case EnvironmentCall.GET_DEVICE_POWER:
                 # TODO: Implement
                 pass
-            case EnvironmentCall.SetNetpacketInterface:
+            case EnvironmentCall.SET_NETPACKET_INTERFACE:
                 # TODO: Implement
                 pass
 
-            case EnvironmentCall.GetPlaylistDirectory:
+            case EnvironmentCall.GET_PLAYLIST_DIRECTORY:
                 if self._playlist_dir is None:
                     return False
                 if not data:
@@ -514,9 +527,10 @@ def default_session(
         core: str,
         content: str | SpecialContent | None = None,
         audio: AudioCallbacks | None = None,
-        input_state: InputCallbacks | None = None,
+        input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoCallbacks | None = None,
         overscan: bool = False,
+        message: MessageInterface | None = None,
         system_dir: Directory | None = None,
         log_callback: LogCallback | None = None,
         save_dir: Directory | None = None,
@@ -525,14 +539,24 @@ def default_session(
     Returns a Session with default state objects.
     """
 
+    input_impl: InputState | None = None
+    if isinstance(input_state, InputState):
+        input_impl = input_state
+    elif isinstance(input_state, InputStateIterator):
+        input_impl = GeneratorInputState(input_state)
+    elif isinstance(input_state, InputStateGenerator):
+        input_impl = GeneratorInputState(input_state)
+
+    logger = logging.getLogger('libretro')
     return Session(
         core=core,
         audio=audio or ArrayAudioState(),
-        input_state=input_state or GeneratorInputState(),
+        input_state=input_impl or GeneratorInputState(),
         video=video or SoftwareVideoState(),
         content=content,
         overscan=overscan,
+        message=message or LoggerMessageInterface(1, logger),
         system_dir=system_dir,
-        log_callback=log_callback or StandardLogger(logging.getLogger('libretro')),
+        log_callback=log_callback or StandardLogger(logger),
         save_dir=save_dir
     )
