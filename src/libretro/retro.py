@@ -710,9 +710,9 @@ retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 
 retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
 
-retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
 
-retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
 
 retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 
@@ -893,7 +893,7 @@ retro_memory_descriptor.__slots__ = [
 ]
 retro_memory_descriptor._fields_ = [
     ('flags', c_uint64),
-    ('ptr', POINTER(None)),
+    ('ptr', c_void_p),
     ('offset', c_size_t),
     ('start', c_size_t),
     ('select', c_size_t),
@@ -1423,11 +1423,11 @@ retro_disk_control_ext_callback._fields_ = [
     ('get_image_label', retro_get_image_label_t),
 ]
 
-retro_netpacket_send_t = CFUNCTYPE(UNCHECKED(None), c_int, POINTER(None), c_size_t, c_uint16, c_bool)
+retro_netpacket_send_t = CFUNCTYPE(UNCHECKED(None), c_int, c_void_p, c_size_t, c_uint16, c_bool)
 
 retro_netpacket_start_t = CFUNCTYPE(UNCHECKED(None), c_uint16, retro_netpacket_send_t)
 
-retro_netpacket_receive_t = CFUNCTYPE(UNCHECKED(None), POINTER(None), c_size_t, c_uint16)
+retro_netpacket_receive_t = CFUNCTYPE(UNCHECKED(None), c_void_p, c_size_t, c_uint16)
 
 retro_netpacket_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
@@ -1656,7 +1656,7 @@ retro_game_info_ext._fields_ = [
     ('name', String),
     ('ext', String),
     ('meta', String),
-    ('data', POINTER(None)),
+    ('data', c_void_p),
     ('size', c_size_t),
     ('file_in_archive', c_bool),
     ('persistent_data', c_bool),
@@ -1852,7 +1852,7 @@ retro_game_info.__slots__ = [
 ]
 retro_game_info._fields_ = [
     ('path', String),
-    ('data', POINTER(None)),
+    ('data', c_void_p),
     ('size', c_size_t),
     ('meta', String),
 ]
@@ -1870,7 +1870,7 @@ retro_framebuffer.__slots__ = [
     'memory_flags',
 ]
 retro_framebuffer._fields_ = [
-    ('data', POINTER(None)),
+    ('data', c_void_p),
     ('width', c_uint),
     ('height', c_uint),
     ('pitch', c_size_t),
@@ -1984,9 +1984,9 @@ retro_device_power._fields_ = [
     ('percent', c_int8),
 ]
 
-retro_environment_t = CFUNCTYPE(c_bool, c_uint, POINTER(None))
+retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
 
-retro_video_refresh_t = CFUNCTYPE(UNCHECKED(None), POINTER(None), c_uint, c_uint, c_size_t)
+retro_video_refresh_t = CFUNCTYPE(UNCHECKED(None), c_void_p, c_uint, c_uint, c_size_t)
 
 retro_audio_sample_t = CFUNCTYPE(UNCHECKED(None), c_int16, c_int16)
 
@@ -2432,7 +2432,7 @@ RETRO_SENSOR_GYROSCOPE_X = 3
 RETRO_SENSOR_GYROSCOPE_Y = 4
 RETRO_SENSOR_GYROSCOPE_Z = 5
 RETRO_SENSOR_ILLUMINANCE = 6
-RETRO_HW_FRAME_BUFFER_VALID = cast((-1), POINTER(None))
+RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = (1 << 0)
 RETRO_NETPACKET_UNSEQUENCED = (1 << 1)
