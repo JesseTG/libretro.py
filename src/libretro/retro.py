@@ -451,9 +451,8 @@ class Rotation(enum.IntEnum):
     OneEighty = 2
     TwoSeventy = 3
 
-    def __init__(self, value: int):
+    def __init__(self, value):
         self._type_ = 'I'
-        self.value = value
 
 
 enum_retro_language = c_int
@@ -531,7 +530,6 @@ class Language(enum.IntEnum):
 
     def __init__(self, value):
         self._type_ = 'I'
-        self.value = value
 
 
 enum_retro_key = c_int
@@ -1022,7 +1020,6 @@ class LogLevel(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
     @property
     def logging_level(self) -> int:
@@ -1474,7 +1471,6 @@ class PixelFormat(enum.IntEnum):
 
     def __init__(self, value):
         self._type_ = 'I'
-        self.value = value
 
     @property
     def bytes_per_pixel(self) -> int:
@@ -1519,7 +1515,6 @@ class SavestateContext(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'i'
-        self.value = value
 
 
 class struct_retro_message(Structure):
@@ -1547,7 +1542,6 @@ class MessageTarget(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 enum_retro_message_type = c_int
@@ -1565,7 +1559,6 @@ class MessageType(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 class struct_retro_message_ext(Structure):
@@ -2031,7 +2024,6 @@ class InputDevice(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'H'
-        self.value = value
 
 
 class InputDeviceFlag(enum.IntFlag):
@@ -2082,7 +2074,6 @@ class DeviceIdJoypad(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'H'
-        self.value = value
 
 
 RETRO_DEVICE_INDEX_ANALOG_LEFT = 0
@@ -2097,7 +2088,6 @@ class DeviceIndexAnalog(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'H'
-        self.value = value
 
 
 RETRO_DEVICE_ID_ANALOG_X = 0
@@ -2109,7 +2099,6 @@ class DeviceIdAnalog(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'H'
-        self.value = value
 
 
 
@@ -2158,7 +2147,6 @@ class Region(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_MEMORY_MASK = 0xff
@@ -2328,7 +2316,6 @@ class EnvironmentCall(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_VFS_FILE_ACCESS_READ = (1 << 0)
@@ -2345,7 +2332,6 @@ class VfsFileAccess(enum.IntFlag):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_VFS_FILE_ACCESS_HINT_NONE = 0
@@ -2358,7 +2344,6 @@ class VfsFileAccessHint(enum.IntFlag):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_VFS_SEEK_POSITION_START = 0
@@ -2373,7 +2358,6 @@ class VfsSeekPosition(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_VFS_STAT_IS_VALID = (1 << 0)
@@ -2388,7 +2372,6 @@ class VfsStat(enum.IntFlag):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 RETRO_SERIALIZATION_QUIRK_INCOMPLETE = (1 << 0)
@@ -2478,7 +2461,6 @@ class PowerState(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-        self.value = value
 
 
 retro_vfs_file_handle = struct_retro_vfs_file_handle
