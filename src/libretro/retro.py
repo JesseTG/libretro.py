@@ -685,107 +685,70 @@ RETROKMOD_CAPSLOCK = 0x20
 RETROKMOD_SCROLLOCK = 0x40
 RETROKMOD_DUMMY = 0x7fffffff
 
+
 class retro_vfs_file_handle(Structure):
     pass
+
 
 class retro_vfs_dir_handle(Structure):
     pass
 
+
 retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
-
 retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_file_handle)), String, c_uint, c_uint)
-
 retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
-
 retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
-
 retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
-
 retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
-
 retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
-
 retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
-
 retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
-
 retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
-
 retro_vfs_remove_t = CFUNCTYPE(c_int, String)
-
 retro_vfs_rename_t = CFUNCTYPE(c_int, String, String)
-
 retro_vfs_stat_t = CFUNCTYPE(c_int, String, POINTER(c_int32))
-
 retro_vfs_mkdir_t = CFUNCTYPE(c_int, String)
-
 retro_vfs_opendir_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_dir_handle)), String, c_bool)
-
 retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
-
 retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_dir_handle))
-
 retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
-
 retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
 
-class retro_vfs_interface(Structure):
-    pass
 
-retro_vfs_interface.__slots__ = [
-    'get_path',
-    'open',
-    'close',
-    'size',
-    'tell',
-    'seek',
-    'read',
-    'write',
-    'flush',
-    'remove',
-    'rename',
-    'truncate',
-    'stat',
-    'mkdir',
-    'opendir',
-    'readdir',
-    'dirent_get_name',
-    'dirent_is_dir',
-    'closedir',
-]
-retro_vfs_interface._fields_ = [
-    ('get_path', retro_vfs_get_path_t),
-    ('open', retro_vfs_open_t),
-    ('close', retro_vfs_close_t),
-    ('size', retro_vfs_size_t),
-    ('tell', retro_vfs_tell_t),
-    ('seek', retro_vfs_seek_t),
-    ('read', retro_vfs_read_t),
-    ('write', retro_vfs_write_t),
-    ('flush', retro_vfs_flush_t),
-    ('remove', retro_vfs_remove_t),
-    ('rename', retro_vfs_rename_t),
-    ('truncate', retro_vfs_truncate_t),
-    ('stat', retro_vfs_stat_t),
-    ('mkdir', retro_vfs_mkdir_t),
-    ('opendir', retro_vfs_opendir_t),
-    ('readdir', retro_vfs_readdir_t),
-    ('dirent_get_name', retro_vfs_dirent_get_name_t),
-    ('dirent_is_dir', retro_vfs_dirent_is_dir_t),
-    ('closedir', retro_vfs_closedir_t),
-]
+class retro_vfs_interface(Structure):
+    _fields_ = [
+        ('get_path', retro_vfs_get_path_t),
+        ('open', retro_vfs_open_t),
+        ('close', retro_vfs_close_t),
+        ('size', retro_vfs_size_t),
+        ('tell', retro_vfs_tell_t),
+        ('seek', retro_vfs_seek_t),
+        ('read', retro_vfs_read_t),
+        ('write', retro_vfs_write_t),
+        ('flush', retro_vfs_flush_t),
+        ('remove', retro_vfs_remove_t),
+        ('rename', retro_vfs_rename_t),
+        ('truncate', retro_vfs_truncate_t),
+        ('stat', retro_vfs_stat_t),
+        ('mkdir', retro_vfs_mkdir_t),
+        ('opendir', retro_vfs_opendir_t),
+        ('readdir', retro_vfs_readdir_t),
+        ('dirent_get_name', retro_vfs_dirent_get_name_t),
+        ('dirent_is_dir', retro_vfs_dirent_is_dir_t),
+        ('closedir', retro_vfs_closedir_t),
+    ]
+
+    __slots__ = [f[0] for f in _fields_]
+
 
 class retro_vfs_interface_info(Structure):
-    pass
+    _fields_ = [
+        ('required_interface_version', c_uint32),
+        ('iface', POINTER(retro_vfs_interface)),
+    ]
 
-retro_vfs_interface_info.__slots__ = [
-    'required_interface_version',
-    'iface',
-]
-retro_vfs_interface_info._fields_ = [
-    ('required_interface_version', c_uint32),
-    ('iface', POINTER(retro_vfs_interface)),
-]
+    __slots__ = [f[0] for f in _fields_]
+
 
 retro_hw_render_interface_type = c_int
 
@@ -818,14 +781,11 @@ retro_hw_render_interface._fields_ = [
 retro_set_led_state_t = CFUNCTYPE(None, c_int, c_int)
 
 class retro_led_interface(Structure):
-    pass
+    _fields_ = [
+        ('set_led_state', retro_set_led_state_t),
+    ]
 
-retro_led_interface.__slots__ = [
-    'set_led_state',
-]
-retro_led_interface._fields_ = [
-    ('set_led_state', retro_set_led_state_t),
-]
+    __slots__ = [f[0] for f in _fields_]
 
 retro_midi_input_enabled_t = CFUNCTYPE(c_bool, )
 
@@ -838,22 +798,15 @@ retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
 retro_midi_flush_t = CFUNCTYPE(c_bool, )
 
 class retro_midi_interface(Structure):
-    pass
+    _fields_ = [
+        ('input_enabled', retro_midi_input_enabled_t),
+        ('output_enabled', retro_midi_output_enabled_t),
+        ('read', retro_midi_read_t),
+        ('write', retro_midi_write_t),
+        ('flush', retro_midi_flush_t),
+    ]
 
-retro_midi_interface.__slots__ = [
-    'input_enabled',
-    'output_enabled',
-    'read',
-    'write',
-    'flush',
-]
-retro_midi_interface._fields_ = [
-    ('input_enabled', retro_midi_input_enabled_t),
-    ('output_enabled', retro_midi_output_enabled_t),
-    ('read', retro_midi_read_t),
-    ('write', retro_midi_write_t),
-    ('flush', retro_midi_flush_t),
-]
+    __slots__ = [f[0] for f in _fields_]
 
 retro_hw_render_context_negotiation_interface_type = c_int
 
@@ -909,29 +862,23 @@ retro_memory_map._fields_ = [
     ('num_descriptors', c_uint),
 ]
 
-class retro_controller_description(Structure):
-    pass
 
-retro_controller_description.__slots__ = [
-    'desc',
-    'id',
-]
-retro_controller_description._fields_ = [
-    ('desc', String),
-    ('id', c_uint),
-]
+class retro_controller_description(Structure):
+    _fields_ = [
+        ('desc', String),
+        ('id', c_uint),
+    ]
+
+    __slots__ = [f[0] for f in _fields_]
+
 
 class retro_controller_info(Structure):
-    pass
+    _fields_ = [
+        ('types', POINTER(retro_controller_description)),
+        ('num_types', c_uint),
+    ]
 
-retro_controller_info.__slots__ = [
-    'types',
-    'num_types',
-]
-retro_controller_info._fields_ = [
-    ('types', POINTER(retro_controller_description)),
-    ('num_types', c_uint),
-]
+    __slots__ = [f[0] for f in _fields_]
 
 class retro_subsystem_memory_info(Structure):
     pass
@@ -946,26 +893,17 @@ retro_subsystem_memory_info._fields_ = [
 ]
 
 class retro_subsystem_rom_info(Structure):
-    pass
+    _fields_ = [
+        ('desc', String),
+        ('valid_extensions', String),
+        ('need_fullpath', c_bool),
+        ('block_extract', c_bool),
+        ('required', c_bool),
+        ('memory', POINTER(retro_subsystem_memory_info)),
+        ('num_memory', c_uint),
+    ]
 
-retro_subsystem_rom_info.__slots__ = [
-    'desc',
-    'valid_extensions',
-    'need_fullpath',
-    'block_extract',
-    'required',
-    'memory',
-    'num_memory',
-]
-retro_subsystem_rom_info._fields_ = [
-    ('desc', String),
-    ('valid_extensions', String),
-    ('need_fullpath', c_bool),
-    ('block_extract', c_bool),
-    ('required', c_bool),
-    ('memory', POINTER(retro_subsystem_memory_info)),
-    ('num_memory', c_uint),
-]
+    __slots__ = [f[0] for f in _fields_]
 
 class retro_subsystem_info(Structure):
     pass
@@ -990,14 +928,11 @@ retro_proc_address_t = CFUNCTYPE(None, )
 retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
 class retro_get_proc_address_interface(Structure):
-    pass
+    _fields_ = [
+        ('get_proc_address', retro_get_proc_address_t),
+    ]
 
-retro_get_proc_address_interface.__slots__ = [
-    'get_proc_address',
-]
-retro_get_proc_address_interface._fields_ = [
-    ('get_proc_address', retro_get_proc_address_t),
-]
+    __slots__ = [f[0] for f in _fields_]
 
 retro_log_level = c_int
 RETRO_LOG_DEBUG = 0
@@ -1019,13 +954,13 @@ class LogLevel(enum.IntEnum):
     @property
     def logging_level(self) -> int:
         match self:
-            case self.Debug:
+            case self.DEBUG:
                 return logging.DEBUG
-            case self.Info:
+            case self.INFO:
                 return logging.INFO
-            case self.Warning:
+            case self.WARNING:
                 return logging.WARN
-            case self.Error:
+            case self.ERROR:
                 return logging.ERROR
 
 
