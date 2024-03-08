@@ -55,10 +55,10 @@ class Core:
             self._core.retro_api_version.argtypes = []
             self._core.retro_api_version.restype = c_uint
 
-            self._core.retro_get_system_info.argtypes = [POINTER(struct_retro_system_info)]
+            self._core.retro_get_system_info.argtypes = [POINTER(retro_system_info)]
             self._core.retro_get_system_info.restype = None
 
-            self._core.retro_get_system_av_info.argtypes = [POINTER(struct_retro_system_av_info)]
+            self._core.retro_get_system_av_info.argtypes = [POINTER(retro_system_av_info)]
             self._core.retro_get_system_av_info.restype = None
 
             self._core.retro_set_controller_port_device.argtypes = [c_uint, c_uint]
@@ -85,10 +85,10 @@ class Core:
             self._core.retro_cheat_set.argtypes = [c_uint, c_bool, String]
             self._core.retro_cheat_set.restype = None
 
-            self._core.retro_load_game.argtypes = [POINTER(struct_retro_game_info)]
+            self._core.retro_load_game.argtypes = [POINTER(retro_game_info)]
             self._core.retro_load_game.restype = c_bool
 
-            self._core.retro_load_game_special.argtypes = [c_uint, POINTER(struct_retro_game_info), c_size_t]
+            self._core.retro_load_game_special.argtypes = [c_uint, POINTER(retro_game_info), c_size_t]
             self._core.retro_load_game_special.restype = c_bool
 
             self._core.retro_unload_game.argtypes = []

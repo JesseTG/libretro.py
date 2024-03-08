@@ -455,7 +455,7 @@ class Rotation(enum.IntEnum):
         self._type_ = 'I'
 
 
-enum_retro_language = c_int
+retro_language = c_int
 RETRO_LANGUAGE_ENGLISH = 0
 RETRO_LANGUAGE_JAPANESE = 1
 RETRO_LANGUAGE_FRENCH = 2
@@ -532,7 +532,7 @@ class Language(enum.IntEnum):
         self._type_ = 'I'
 
 
-enum_retro_key = c_int
+retro_key = c_int
 RETROK_UNKNOWN = 0
 RETROK_FIRST = 0
 RETROK_BACKSPACE = 8
@@ -678,7 +678,7 @@ RETROK_OEM_102 = 323
 RETROK_LAST = (RETROK_OEM_102 + 1)
 RETROK_DUMMY = 0x7fffffff
 
-enum_retro_mod = c_int
+retro_mod = c_int
 
 RETROKMOD_NONE = 0x0000
 RETROKMOD_SHIFT = 0x01
@@ -690,31 +690,31 @@ RETROKMOD_CAPSLOCK = 0x20
 RETROKMOD_SCROLLOCK = 0x40
 RETROKMOD_DUMMY = 0x7fffffff
 
-class struct_retro_vfs_file_handle(Structure):
+class retro_vfs_file_handle(Structure):
     pass
 
-class struct_retro_vfs_dir_handle(Structure):
+class retro_vfs_dir_handle(Structure):
     pass
 
-retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(struct_retro_vfs_file_handle))
+retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
 
-retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(struct_retro_vfs_file_handle)), String, c_uint, c_uint)
+retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_file_handle)), String, c_uint, c_uint)
 
-retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_file_handle))
+retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 
-retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle))
+retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 
-retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), c_int64)
+retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
 
-retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle))
+retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 
-retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), c_int64, c_int)
+retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
 
-retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), POINTER(None), c_uint64)
 
-retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), POINTER(None), c_uint64)
 
-retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_file_handle))
+retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 
 retro_vfs_remove_t = CFUNCTYPE(c_int, String)
 
@@ -724,20 +724,20 @@ retro_vfs_stat_t = CFUNCTYPE(c_int, String, POINTER(c_int32))
 
 retro_vfs_mkdir_t = CFUNCTYPE(c_int, String)
 
-retro_vfs_opendir_t = CFUNCTYPE(UNCHECKED(POINTER(struct_retro_vfs_dir_handle)), String, c_bool)
+retro_vfs_opendir_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_dir_handle)), String, c_bool)
 
-retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
 
-retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_dir_handle))
 
-retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
 
-retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
 
-class struct_retro_vfs_interface(Structure):
+class retro_vfs_interface(Structure):
     pass
 
-struct_retro_vfs_interface.__slots__ = [
+retro_vfs_interface.__slots__ = [
     'get_path',
     'open',
     'close',
@@ -758,7 +758,7 @@ struct_retro_vfs_interface.__slots__ = [
     'dirent_is_dir',
     'closedir',
 ]
-struct_retro_vfs_interface._fields_ = [
+retro_vfs_interface._fields_ = [
     ('get_path', retro_vfs_get_path_t),
     ('open', retro_vfs_open_t),
     ('close', retro_vfs_close_t),
@@ -780,19 +780,19 @@ struct_retro_vfs_interface._fields_ = [
     ('closedir', retro_vfs_closedir_t),
 ]
 
-class struct_retro_vfs_interface_info(Structure):
+class retro_vfs_interface_info(Structure):
     pass
 
-struct_retro_vfs_interface_info.__slots__ = [
+retro_vfs_interface_info.__slots__ = [
     'required_interface_version',
     'iface',
 ]
-struct_retro_vfs_interface_info._fields_ = [
+retro_vfs_interface_info._fields_ = [
     ('required_interface_version', c_uint32),
-    ('iface', POINTER(struct_retro_vfs_interface)),
+    ('iface', POINTER(retro_vfs_interface)),
 ]
 
-enum_retro_hw_render_interface_type = c_int
+retro_hw_render_interface_type = c_int
 
 RETRO_HW_RENDER_INTERFACE_VULKAN = 0
 
@@ -808,27 +808,27 @@ RETRO_HW_RENDER_INTERFACE_GSKIT_PS2 = 5
 
 RETRO_HW_RENDER_INTERFACE_DUMMY = 0x7fffffff
 
-class struct_retro_hw_render_interface(Structure):
+class retro_hw_render_interface(Structure):
     pass
 
-struct_retro_hw_render_interface.__slots__ = [
+retro_hw_render_interface.__slots__ = [
     'interface_type',
     'interface_version',
 ]
-struct_retro_hw_render_interface._fields_ = [
-    ('interface_type', enum_retro_hw_render_interface_type),
+retro_hw_render_interface._fields_ = [
+    ('interface_type', retro_hw_render_interface_type),
     ('interface_version', c_uint),
 ]
 
 retro_set_led_state_t = CFUNCTYPE(UNCHECKED(None), c_int, c_int)
 
-class struct_retro_led_interface(Structure):
+class retro_led_interface(Structure):
     pass
 
-struct_retro_led_interface.__slots__ = [
+retro_led_interface.__slots__ = [
     'set_led_state',
 ]
-struct_retro_led_interface._fields_ = [
+retro_led_interface._fields_ = [
     ('set_led_state', retro_set_led_state_t),
 ]
 
@@ -842,17 +842,17 @@ retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
 
 retro_midi_flush_t = CFUNCTYPE(c_bool, )
 
-class struct_retro_midi_interface(Structure):
+class retro_midi_interface(Structure):
     pass
 
-struct_retro_midi_interface.__slots__ = [
+retro_midi_interface.__slots__ = [
     'input_enabled',
     'output_enabled',
     'read',
     'write',
     'flush',
 ]
-struct_retro_midi_interface._fields_ = [
+retro_midi_interface._fields_ = [
     ('input_enabled', retro_midi_input_enabled_t),
     ('output_enabled', retro_midi_output_enabled_t),
     ('read', retro_midi_read_t),
@@ -860,28 +860,28 @@ struct_retro_midi_interface._fields_ = [
     ('flush', retro_midi_flush_t),
 ]
 
-enum_retro_hw_render_context_negotiation_interface_type = c_int
+retro_hw_render_context_negotiation_interface_type = c_int
 
 RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN = 0
 
 RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_DUMMY = 0x7fffffff
 
-class struct_retro_hw_render_context_negotiation_interface(Structure):
+class retro_hw_render_context_negotiation_interface(Structure):
     pass
 
-struct_retro_hw_render_context_negotiation_interface.__slots__ = [
+retro_hw_render_context_negotiation_interface.__slots__ = [
     'interface_type',
     'interface_version',
 ]
-struct_retro_hw_render_context_negotiation_interface._fields_ = [
-    ('interface_type', enum_retro_hw_render_context_negotiation_interface_type),
+retro_hw_render_context_negotiation_interface._fields_ = [
+    ('interface_type', retro_hw_render_context_negotiation_interface_type),
     ('interface_version', c_uint),
 ]
 
-class struct_retro_memory_descriptor(Structure):
+class retro_memory_descriptor(Structure):
     pass
 
-struct_retro_memory_descriptor.__slots__ = [
+retro_memory_descriptor.__slots__ = [
     'flags',
     'ptr',
     'offset',
@@ -891,7 +891,7 @@ struct_retro_memory_descriptor.__slots__ = [
     'len',
     'addrspace',
 ]
-struct_retro_memory_descriptor._fields_ = [
+retro_memory_descriptor._fields_ = [
     ('flags', c_uint64),
     ('ptr', POINTER(None)),
     ('offset', c_size_t),
@@ -902,58 +902,58 @@ struct_retro_memory_descriptor._fields_ = [
     ('addrspace', String),
 ]
 
-class struct_retro_memory_map(Structure):
+class retro_memory_map(Structure):
     pass
 
-struct_retro_memory_map.__slots__ = [
+retro_memory_map.__slots__ = [
     'descriptors',
     'num_descriptors',
 ]
-struct_retro_memory_map._fields_ = [
-    ('descriptors', POINTER(struct_retro_memory_descriptor)),
+retro_memory_map._fields_ = [
+    ('descriptors', POINTER(retro_memory_descriptor)),
     ('num_descriptors', c_uint),
 ]
 
-class struct_retro_controller_description(Structure):
+class retro_controller_description(Structure):
     pass
 
-struct_retro_controller_description.__slots__ = [
+retro_controller_description.__slots__ = [
     'desc',
     'id',
 ]
-struct_retro_controller_description._fields_ = [
+retro_controller_description._fields_ = [
     ('desc', String),
     ('id', c_uint),
 ]
 
-class struct_retro_controller_info(Structure):
+class retro_controller_info(Structure):
     pass
 
-struct_retro_controller_info.__slots__ = [
+retro_controller_info.__slots__ = [
     'types',
     'num_types',
 ]
-struct_retro_controller_info._fields_ = [
-    ('types', POINTER(struct_retro_controller_description)),
+retro_controller_info._fields_ = [
+    ('types', POINTER(retro_controller_description)),
     ('num_types', c_uint),
 ]
 
-class struct_retro_subsystem_memory_info(Structure):
+class retro_subsystem_memory_info(Structure):
     pass
 
-struct_retro_subsystem_memory_info.__slots__ = [
+retro_subsystem_memory_info.__slots__ = [
     'extension',
     'type',
 ]
-struct_retro_subsystem_memory_info._fields_ = [
+retro_subsystem_memory_info._fields_ = [
     ('extension', String),
     ('type', c_uint),
 ]
 
-class struct_retro_subsystem_rom_info(Structure):
+class retro_subsystem_rom_info(Structure):
     pass
 
-struct_retro_subsystem_rom_info.__slots__ = [
+retro_subsystem_rom_info.__slots__ = [
     'desc',
     'valid_extensions',
     'need_fullpath',
@@ -962,30 +962,30 @@ struct_retro_subsystem_rom_info.__slots__ = [
     'memory',
     'num_memory',
 ]
-struct_retro_subsystem_rom_info._fields_ = [
+retro_subsystem_rom_info._fields_ = [
     ('desc', String),
     ('valid_extensions', String),
     ('need_fullpath', c_bool),
     ('block_extract', c_bool),
     ('required', c_bool),
-    ('memory', POINTER(struct_retro_subsystem_memory_info)),
+    ('memory', POINTER(retro_subsystem_memory_info)),
     ('num_memory', c_uint),
 ]
 
-class struct_retro_subsystem_info(Structure):
+class retro_subsystem_info(Structure):
     pass
 
-struct_retro_subsystem_info.__slots__ = [
+retro_subsystem_info.__slots__ = [
     'desc',
     'ident',
     'roms',
     'num_roms',
     'id',
 ]
-struct_retro_subsystem_info._fields_ = [
+retro_subsystem_info._fields_ = [
     ('desc', String),
     ('ident', String),
-    ('roms', POINTER(struct_retro_subsystem_rom_info)),
+    ('roms', POINTER(retro_subsystem_rom_info)),
     ('num_roms', c_uint),
     ('id', c_uint),
 ]
@@ -994,17 +994,17 @@ retro_proc_address_t = CFUNCTYPE(UNCHECKED(None), )
 
 retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
-class struct_retro_get_proc_address_interface(Structure):
+class retro_get_proc_address_interface(Structure):
     pass
 
-struct_retro_get_proc_address_interface.__slots__ = [
+retro_get_proc_address_interface.__slots__ = [
     'get_proc_address',
 ]
-struct_retro_get_proc_address_interface._fields_ = [
+retro_get_proc_address_interface._fields_ = [
     ('get_proc_address', retro_get_proc_address_t),
 ]
 
-enum_retro_log_level = c_int
+retro_log_level = c_int
 RETRO_LOG_DEBUG = 0
 RETRO_LOG_INFO = (RETRO_LOG_DEBUG + 1)
 RETRO_LOG_WARN = (RETRO_LOG_INFO + 1)
@@ -1034,15 +1034,15 @@ class LogLevel(enum.IntEnum):
                 return logging.ERROR
 
 
-retro_log_printf_t = CFUNCTYPE(UNCHECKED(None), enum_retro_log_level, String)
+retro_log_printf_t = CFUNCTYPE(UNCHECKED(None), retro_log_level, String)
 
-class struct_retro_log_callback(Structure):
+class retro_log_callback(Structure):
     pass
 
-struct_retro_log_callback.__slots__ = [
+retro_log_callback.__slots__ = [
     'log',
 ]
-struct_retro_log_callback._fields_ = [
+retro_log_callback._fields_ = [
     ('log', retro_log_printf_t),
 ]
 
@@ -1050,17 +1050,17 @@ retro_perf_tick_t = c_uint64
 
 retro_time_t = c_int64
 
-class struct_retro_perf_counter(Structure):
+class retro_perf_counter(Structure):
     pass
 
-struct_retro_perf_counter.__slots__ = [
+retro_perf_counter.__slots__ = [
     'ident',
     'start',
     'total',
     'call_cnt',
     'registered',
 ]
-struct_retro_perf_counter._fields_ = [
+retro_perf_counter._fields_ = [
     ('ident', String),
     ('start', retro_perf_tick_t),
     ('total', retro_perf_tick_t),
@@ -1076,16 +1076,16 @@ retro_get_cpu_features_t = CFUNCTYPE(c_uint64, )
 
 retro_perf_log_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_perf_register_t = CFUNCTYPE(UNCHECKED(None), POINTER(struct_retro_perf_counter))
+retro_perf_register_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
 
-retro_perf_start_t = CFUNCTYPE(UNCHECKED(None), POINTER(struct_retro_perf_counter))
+retro_perf_start_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
 
-retro_perf_stop_t = CFUNCTYPE(UNCHECKED(None), POINTER(struct_retro_perf_counter))
+retro_perf_stop_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
 
-class struct_retro_perf_callback(Structure):
+class retro_perf_callback(Structure):
     pass
 
-struct_retro_perf_callback.__slots__ = [
+retro_perf_callback.__slots__ = [
     'get_time_usec',
     'get_cpu_features',
     'get_perf_counter',
@@ -1094,7 +1094,7 @@ struct_retro_perf_callback.__slots__ = [
     'perf_stop',
     'perf_log',
 ]
-struct_retro_perf_callback._fields_ = [
+retro_perf_callback._fields_ = [
     ('get_time_usec', retro_perf_get_time_usec_t),
     ('get_cpu_features', retro_get_cpu_features_t),
     ('get_perf_counter', retro_perf_get_counter_t),
@@ -1104,7 +1104,7 @@ struct_retro_perf_callback._fields_ = [
     ('perf_log', retro_perf_log_t),
 ]
 
-enum_retro_sensor_action = c_int
+retro_sensor_action = c_int
 
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0
 
@@ -1120,23 +1120,23 @@ RETRO_SENSOR_ILLUMINANCE_DISABLE = (RETRO_SENSOR_ILLUMINANCE_ENABLE + 1)
 
 RETRO_SENSOR_DUMMY = 0x7fffffff
 
-retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, enum_retro_sensor_action, c_uint)
+retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, retro_sensor_action, c_uint)
 
 retro_sensor_get_input_t = CFUNCTYPE(c_float, c_uint, c_uint)
 
-class struct_retro_sensor_interface(Structure):
+class retro_sensor_interface(Structure):
     pass
 
-struct_retro_sensor_interface.__slots__ = [
+retro_sensor_interface.__slots__ = [
     'set_sensor_state',
     'get_sensor_input',
 ]
-struct_retro_sensor_interface._fields_ = [
+retro_sensor_interface._fields_ = [
     ('set_sensor_state', retro_set_sensor_state_t),
     ('get_sensor_input', retro_sensor_get_input_t),
 ]
 
-enum_retro_camera_buffer = c_int
+retro_camera_buffer = c_int
 
 RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0
 
@@ -1154,10 +1154,10 @@ retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(UNCHECKED(None), POINTER(c_uint
 
 retro_camera_frame_opengl_texture_t = CFUNCTYPE(UNCHECKED(None), c_uint, c_uint, POINTER(c_float))
 
-class struct_retro_camera_callback(Structure):
+class retro_camera_callback(Structure):
     pass
 
-struct_retro_camera_callback.__slots__ = [
+retro_camera_callback.__slots__ = [
     'caps',
     'width',
     'height',
@@ -1168,7 +1168,7 @@ struct_retro_camera_callback.__slots__ = [
     'initialized',
     'deinitialized',
 ]
-struct_retro_camera_callback._fields_ = [
+retro_camera_callback._fields_ = [
     ('caps', c_uint64),
     ('width', c_uint),
     ('height', c_uint),
@@ -1190,10 +1190,10 @@ retro_location_get_position_t = CFUNCTYPE(c_bool, POINTER(c_double), POINTER(c_d
 
 retro_location_lifetime_status_t = CFUNCTYPE(UNCHECKED(None), )
 
-class struct_retro_location_callback(Structure):
+class retro_location_callback(Structure):
     pass
 
-struct_retro_location_callback.__slots__ = [
+retro_location_callback.__slots__ = [
     'start',
     'stop',
     'get_position',
@@ -1201,7 +1201,7 @@ struct_retro_location_callback.__slots__ = [
     'initialized',
     'deinitialized',
 ]
-struct_retro_location_callback._fields_ = [
+retro_location_callback._fields_ = [
     ('start', retro_location_start_t),
     ('stop', retro_location_stop_t),
     ('get_position', retro_location_get_position_t),
@@ -1210,7 +1210,7 @@ struct_retro_location_callback._fields_ = [
     ('deinitialized', retro_location_lifetime_status_t),
 ]
 
-enum_retro_rumble_effect = c_int
+retro_rumble_effect = c_int
 
 RETRO_RUMBLE_STRONG = 0
 
@@ -1218,15 +1218,15 @@ RETRO_RUMBLE_WEAK = 1
 
 RETRO_RUMBLE_DUMMY = 0x7fffffff
 
-retro_set_rumble_state_t = CFUNCTYPE(c_bool, c_uint, enum_retro_rumble_effect, c_uint16)
+retro_set_rumble_state_t = CFUNCTYPE(c_bool, c_uint, retro_rumble_effect, c_uint16)
 
-class struct_retro_rumble_interface(Structure):
+class retro_rumble_interface(Structure):
     pass
 
-struct_retro_rumble_interface.__slots__ = [
+retro_rumble_interface.__slots__ = [
     'set_rumble_state',
 ]
-struct_retro_rumble_interface._fields_ = [
+retro_rumble_interface._fields_ = [
     ('set_rumble_state', retro_set_rumble_state_t),
 ]
 
@@ -1234,14 +1234,14 @@ retro_audio_callback_t = CFUNCTYPE(UNCHECKED(None), )
 
 retro_audio_set_state_callback_t = CFUNCTYPE(UNCHECKED(None), c_bool)
 
-class struct_retro_audio_callback(Structure):
+class retro_audio_callback(Structure):
     pass
 
-struct_retro_audio_callback.__slots__ = [
+retro_audio_callback.__slots__ = [
     'callback',
     'set_state',
 ]
-struct_retro_audio_callback._fields_ = [
+retro_audio_callback._fields_ = [
     ('callback', retro_audio_callback_t),
     ('set_state', retro_audio_set_state_callback_t),
 ]
@@ -1250,27 +1250,27 @@ retro_usec_t = c_int64
 
 retro_frame_time_callback_t = CFUNCTYPE(UNCHECKED(None), retro_usec_t)
 
-class struct_retro_frame_time_callback(Structure):
+class retro_frame_time_callback(Structure):
     pass
 
-struct_retro_frame_time_callback.__slots__ = [
+retro_frame_time_callback.__slots__ = [
     'callback',
     'reference',
 ]
-struct_retro_frame_time_callback._fields_ = [
+retro_frame_time_callback._fields_ = [
     ('callback', retro_frame_time_callback_t),
     ('reference', retro_usec_t),
 ]
 
 retro_audio_buffer_status_callback_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, c_bool)
 
-class struct_retro_audio_buffer_status_callback(Structure):
+class retro_audio_buffer_status_callback(Structure):
     pass
 
-struct_retro_audio_buffer_status_callback.__slots__ = [
+retro_audio_buffer_status_callback.__slots__ = [
     'callback',
 ]
-struct_retro_audio_buffer_status_callback._fields_ = [
+retro_audio_buffer_status_callback._fields_ = [
     ('callback', retro_audio_buffer_status_callback_t),
 ]
 
@@ -1280,7 +1280,7 @@ retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr, )
 
 retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
-enum_retro_hw_context_type = c_int
+retro_hw_context_type = c_int
 
 RETRO_HW_CONTEXT_NONE = 0
 
@@ -1306,10 +1306,10 @@ RETRO_HW_CONTEXT_D3D9 = 10
 
 RETRO_HW_CONTEXT_DUMMY = 0x7fffffff
 
-class struct_retro_hw_render_callback(Structure):
+class retro_hw_render_callback(Structure):
     pass
 
-struct_retro_hw_render_callback.__slots__ = [
+retro_hw_render_callback.__slots__ = [
     'context_type',
     'context_reset',
     'get_current_framebuffer',
@@ -1323,8 +1323,8 @@ struct_retro_hw_render_callback.__slots__ = [
     'context_destroy',
     'debug_context',
 ]
-struct_retro_hw_render_callback._fields_ = [
-    ('context_type', enum_retro_hw_context_type),
+retro_hw_render_callback._fields_ = [
+    ('context_type', retro_hw_context_type),
     ('context_reset', retro_hw_context_reset_t),
     ('get_current_framebuffer', retro_hw_get_current_framebuffer_t),
     ('get_proc_address', retro_hw_get_proc_address_t),
@@ -1340,13 +1340,13 @@ struct_retro_hw_render_callback._fields_ = [
 
 retro_keyboard_event_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, c_uint32, c_uint16)
 
-class struct_retro_keyboard_callback(Structure):
+class retro_keyboard_callback(Structure):
     pass
 
-struct_retro_keyboard_callback.__slots__ = [
+retro_keyboard_callback.__slots__ = [
     'callback',
 ]
-struct_retro_keyboard_callback._fields_ = [
+retro_keyboard_callback._fields_ = [
     ('callback', retro_keyboard_event_t),
 ]
 
@@ -1360,10 +1360,10 @@ retro_set_image_index_t = CFUNCTYPE(c_bool, c_uint)
 
 retro_get_num_images_t = CFUNCTYPE(c_uint, )
 
-class struct_retro_game_info(Structure):
+class retro_game_info(Structure):
     pass
 
-retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(struct_retro_game_info))
+retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(retro_game_info))
 
 retro_add_image_index_t = CFUNCTYPE(c_bool, )
 
@@ -1373,10 +1373,10 @@ retro_get_image_path_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
 
 retro_get_image_label_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
 
-class struct_retro_disk_control_callback(Structure):
+class retro_disk_control_callback(Structure):
     pass
 
-struct_retro_disk_control_callback.__slots__ = [
+retro_disk_control_callback.__slots__ = [
     'set_eject_state',
     'get_eject_state',
     'get_image_index',
@@ -1385,7 +1385,7 @@ struct_retro_disk_control_callback.__slots__ = [
     'replace_image_index',
     'add_image_index',
 ]
-struct_retro_disk_control_callback._fields_ = [
+retro_disk_control_callback._fields_ = [
     ('set_eject_state', retro_set_eject_state_t),
     ('get_eject_state', retro_get_eject_state_t),
     ('get_image_index', retro_get_image_index_t),
@@ -1395,10 +1395,10 @@ struct_retro_disk_control_callback._fields_ = [
     ('add_image_index', retro_add_image_index_t),
 ]
 
-class struct_retro_disk_control_ext_callback(Structure):
+class retro_disk_control_ext_callback(Structure):
     pass
 
-struct_retro_disk_control_ext_callback.__slots__ = [
+retro_disk_control_ext_callback.__slots__ = [
     'set_eject_state',
     'get_eject_state',
     'get_image_index',
@@ -1410,7 +1410,7 @@ struct_retro_disk_control_ext_callback.__slots__ = [
     'get_image_path',
     'get_image_label',
 ]
-struct_retro_disk_control_ext_callback._fields_ = [
+retro_disk_control_ext_callback._fields_ = [
     ('set_eject_state', retro_set_eject_state_t),
     ('get_eject_state', retro_get_eject_state_t),
     ('get_image_index', retro_get_image_index_t),
@@ -1437,10 +1437,10 @@ retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
 
 retro_netpacket_disconnected_t = CFUNCTYPE(UNCHECKED(None), c_uint16)
 
-class struct_retro_netpacket_callback(Structure):
+class retro_netpacket_callback(Structure):
     pass
 
-struct_retro_netpacket_callback.__slots__ = [
+retro_netpacket_callback.__slots__ = [
     'start',
     'receive',
     'stop',
@@ -1448,7 +1448,7 @@ struct_retro_netpacket_callback.__slots__ = [
     'connected',
     'disconnected',
 ]
-struct_retro_netpacket_callback._fields_ = [
+retro_netpacket_callback._fields_ = [
     ('start', retro_netpacket_start_t),
     ('receive', retro_netpacket_receive_t),
     ('stop', retro_netpacket_stop_t),
@@ -1457,7 +1457,7 @@ struct_retro_netpacket_callback._fields_ = [
     ('disconnected', retro_netpacket_disconnected_t),
 ]
 
-enum_retro_pixel_format = c_int
+retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
 RETRO_PIXEL_FORMAT_XRGB8888 = 1
 RETRO_PIXEL_FORMAT_RGB565 = 2
@@ -1497,7 +1497,7 @@ class PixelFormat(enum.IntEnum):
                 raise ValueError(f"Unknown pixel format: {self}")
 
 
-enum_retro_savestate_context = c_int
+retro_savestate_context = c_int
 
 RETRO_SAVESTATE_CONTEXT_NORMAL = 0
 RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE = 1
@@ -1517,19 +1517,19 @@ class SavestateContext(enum.IntEnum):
         self._type_ = 'i'
 
 
-class struct_retro_message(Structure):
+class retro_message(Structure):
     pass
 
-struct_retro_message.__slots__ = [
+retro_message.__slots__ = [
     'msg',
     'frames',
 ]
-struct_retro_message._fields_ = [
+retro_message._fields_ = [
     ('msg', String),
     ('frames', c_uint),
 ]
 
-enum_retro_message_target = c_int
+retro_message_target = c_int
 RETRO_MESSAGE_TARGET_ALL = 0
 RETRO_MESSAGE_TARGET_OSD = (RETRO_MESSAGE_TARGET_ALL + 1)
 RETRO_MESSAGE_TARGET_LOG = (RETRO_MESSAGE_TARGET_OSD + 1)
@@ -1544,7 +1544,7 @@ class MessageTarget(enum.IntEnum):
         self._type_ = 'I'
 
 
-enum_retro_message_type = c_int
+retro_message_type = c_int
 RETRO_MESSAGE_TYPE_NOTIFICATION = 0
 RETRO_MESSAGE_TYPE_NOTIFICATION_ALT = (RETRO_MESSAGE_TYPE_NOTIFICATION + 1)
 RETRO_MESSAGE_TYPE_STATUS = (RETRO_MESSAGE_TYPE_NOTIFICATION_ALT + 1)
@@ -1561,10 +1561,10 @@ class MessageType(enum.IntEnum):
         self._type_ = 'I'
 
 
-class struct_retro_message_ext(Structure):
+class retro_message_ext(Structure):
     pass
 
-struct_retro_message_ext.__slots__ = [
+retro_message_ext.__slots__ = [
     'msg',
     'duration',
     'priority',
@@ -1573,27 +1573,27 @@ struct_retro_message_ext.__slots__ = [
     'type',
     'progress',
 ]
-struct_retro_message_ext._fields_ = [
+retro_message_ext._fields_ = [
     ('msg', String),
     ('duration', c_uint),
     ('priority', c_uint),
-    ('level', enum_retro_log_level),
-    ('target', enum_retro_message_target),
-    ('type', enum_retro_message_type),
+    ('level', retro_log_level),
+    ('target', retro_message_target),
+    ('type', retro_message_type),
     ('progress', c_int8),
 ]
 
-class struct_retro_input_descriptor(Structure):
+class retro_input_descriptor(Structure):
     pass
 
-struct_retro_input_descriptor.__slots__ = [
+retro_input_descriptor.__slots__ = [
     'port',
     'device',
     'index',
     'id',
     'description',
 ]
-struct_retro_input_descriptor._fields_ = [
+retro_input_descriptor._fields_ = [
     ('port', c_uint),
     ('device', c_uint),
     ('index', c_uint),
@@ -1601,17 +1601,17 @@ struct_retro_input_descriptor._fields_ = [
     ('description', String),
 ]
 
-class struct_retro_system_info(Structure):
+class retro_system_info(Structure):
     pass
 
-struct_retro_system_info.__slots__ = [
+retro_system_info.__slots__ = [
     'library_name',
     'library_version',
     'valid_extensions',
     'need_fullpath',
     'block_extract',
 ]
-struct_retro_system_info._fields_ = [
+retro_system_info._fields_ = [
     ('library_name', String),
     ('library_version', String),
     ('valid_extensions', String),
@@ -1619,24 +1619,24 @@ struct_retro_system_info._fields_ = [
     ('block_extract', c_bool),
 ]
 
-class struct_retro_system_content_info_override(Structure):
+class retro_system_content_info_override(Structure):
     pass
 
-struct_retro_system_content_info_override.__slots__ = [
+retro_system_content_info_override.__slots__ = [
     'extensions',
     'need_fullpath',
     'persistent_data',
 ]
-struct_retro_system_content_info_override._fields_ = [
+retro_system_content_info_override._fields_ = [
     ('extensions', String),
     ('need_fullpath', c_bool),
     ('persistent_data', c_bool),
 ]
 
-class struct_retro_game_info_ext(Structure):
+class retro_game_info_ext(Structure):
     pass
 
-struct_retro_game_info_ext.__slots__ = [
+retro_game_info_ext.__slots__ = [
     'full_path',
     'archive_path',
     'archive_file',
@@ -1649,7 +1649,7 @@ struct_retro_game_info_ext.__slots__ = [
     'file_in_archive',
     'persistent_data',
 ]
-struct_retro_game_info_ext._fields_ = [
+retro_game_info_ext._fields_ = [
     ('full_path', String),
     ('archive_path', String),
     ('archive_file', String),
@@ -1663,17 +1663,17 @@ struct_retro_game_info_ext._fields_ = [
     ('persistent_data', c_bool),
 ]
 
-class struct_retro_game_geometry(Structure):
+class retro_game_geometry(Structure):
     pass
 
-struct_retro_game_geometry.__slots__ = [
+retro_game_geometry.__slots__ = [
     'base_width',
     'base_height',
     'max_width',
     'max_height',
     'aspect_ratio',
 ]
-struct_retro_game_geometry._fields_ = [
+retro_game_geometry._fields_ = [
     ('base_width', c_uint),
     ('base_height', c_uint),
     ('max_width', c_uint),
@@ -1681,114 +1681,114 @@ struct_retro_game_geometry._fields_ = [
     ('aspect_ratio', c_float),
 ]
 
-class struct_retro_system_timing(Structure):
+class retro_system_timing(Structure):
     pass
 
-struct_retro_system_timing.__slots__ = [
+retro_system_timing.__slots__ = [
     'fps',
     'sample_rate',
 ]
-struct_retro_system_timing._fields_ = [
+retro_system_timing._fields_ = [
     ('fps', c_double),
     ('sample_rate', c_double),
 ]
 
-class struct_retro_system_av_info(Structure):
+class retro_system_av_info(Structure):
     pass
 
-struct_retro_system_av_info.__slots__ = [
+retro_system_av_info.__slots__ = [
     'geometry',
     'timing',
 ]
-struct_retro_system_av_info._fields_ = [
-    ('geometry', struct_retro_game_geometry),
-    ('timing', struct_retro_system_timing),
+retro_system_av_info._fields_ = [
+    ('geometry', retro_game_geometry),
+    ('timing', retro_system_timing),
 ]
 
-class struct_retro_variable(Structure):
+class retro_variable(Structure):
     pass
 
-struct_retro_variable.__slots__ = [
+retro_variable.__slots__ = [
     'key',
     'value',
 ]
-struct_retro_variable._fields_ = [
+retro_variable._fields_ = [
     ('key', String),
     ('value', String),
 ]
 
-class struct_retro_core_option_display(Structure):
+class retro_core_option_display(Structure):
     pass
 
-struct_retro_core_option_display.__slots__ = [
+retro_core_option_display.__slots__ = [
     'key',
     'visible',
 ]
-struct_retro_core_option_display._fields_ = [
+retro_core_option_display._fields_ = [
     ('key', String),
     ('visible', c_bool),
 ]
 
-class struct_retro_core_option_value(Structure):
+class retro_core_option_value(Structure):
     pass
 
-struct_retro_core_option_value.__slots__ = [
+retro_core_option_value.__slots__ = [
     'value',
     'label',
 ]
-struct_retro_core_option_value._fields_ = [
+retro_core_option_value._fields_ = [
     ('value', String),
     ('label', String),
 ]
 
-class struct_retro_core_option_definition(Structure):
+class retro_core_option_definition(Structure):
     pass
 
-struct_retro_core_option_definition.__slots__ = [
+retro_core_option_definition.__slots__ = [
     'key',
     'desc',
     'info',
     'values',
     'default_value',
 ]
-struct_retro_core_option_definition._fields_ = [
+retro_core_option_definition._fields_ = [
     ('key', String),
     ('desc', String),
     ('info', String),
-    ('values', struct_retro_core_option_value * int(128)),
+    ('values', retro_core_option_value * int(128)),
     ('default_value', String),
 ]
 
-class struct_retro_core_options_intl(Structure):
+class retro_core_options_intl(Structure):
     pass
 
-struct_retro_core_options_intl.__slots__ = [
+retro_core_options_intl.__slots__ = [
     'us',
     'local',
 ]
-struct_retro_core_options_intl._fields_ = [
-    ('us', POINTER(struct_retro_core_option_definition)),
-    ('local', POINTER(struct_retro_core_option_definition)),
+retro_core_options_intl._fields_ = [
+    ('us', POINTER(retro_core_option_definition)),
+    ('local', POINTER(retro_core_option_definition)),
 ]
 
-class struct_retro_core_option_v2_category(Structure):
+class retro_core_option_v2_category(Structure):
     pass
 
-struct_retro_core_option_v2_category.__slots__ = [
+retro_core_option_v2_category.__slots__ = [
     'key',
     'desc',
     'info',
 ]
-struct_retro_core_option_v2_category._fields_ = [
+retro_core_option_v2_category._fields_ = [
     ('key', String),
     ('desc', String),
     ('info', String),
 ]
 
-class struct_retro_core_option_v2_definition(Structure):
+class retro_core_option_v2_definition(Structure):
     pass
 
-struct_retro_core_option_v2_definition.__slots__ = [
+retro_core_option_v2_definition.__slots__ = [
     'key',
     'desc',
     'desc_categorized',
@@ -1798,70 +1798,70 @@ struct_retro_core_option_v2_definition.__slots__ = [
     'values',
     'default_value',
 ]
-struct_retro_core_option_v2_definition._fields_ = [
+retro_core_option_v2_definition._fields_ = [
     ('key', String),
     ('desc', String),
     ('desc_categorized', String),
     ('info', String),
     ('info_categorized', String),
     ('category_key', String),
-    ('values', struct_retro_core_option_value * int(128)),
+    ('values', retro_core_option_value * int(128)),
     ('default_value', String),
 ]
 
-class struct_retro_core_options_v2(Structure):
+class retro_core_options_v2(Structure):
     pass
 
-struct_retro_core_options_v2.__slots__ = [
+retro_core_options_v2.__slots__ = [
     'categories',
     'definitions',
 ]
-struct_retro_core_options_v2._fields_ = [
-    ('categories', POINTER(struct_retro_core_option_v2_category)),
-    ('definitions', POINTER(struct_retro_core_option_v2_definition)),
+retro_core_options_v2._fields_ = [
+    ('categories', POINTER(retro_core_option_v2_category)),
+    ('definitions', POINTER(retro_core_option_v2_definition)),
 ]
 
-class struct_retro_core_options_v2_intl(Structure):
+class retro_core_options_v2_intl(Structure):
     pass
 
-struct_retro_core_options_v2_intl.__slots__ = [
+retro_core_options_v2_intl.__slots__ = [
     'us',
     'local',
 ]
-struct_retro_core_options_v2_intl._fields_ = [
-    ('us', POINTER(struct_retro_core_options_v2)),
-    ('local', POINTER(struct_retro_core_options_v2)),
+retro_core_options_v2_intl._fields_ = [
+    ('us', POINTER(retro_core_options_v2)),
+    ('local', POINTER(retro_core_options_v2)),
 ]
 
 retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool, )
 
-class struct_retro_core_options_update_display_callback(Structure):
+class retro_core_options_update_display_callback(Structure):
     pass
 
-struct_retro_core_options_update_display_callback.__slots__ = [
+retro_core_options_update_display_callback.__slots__ = [
     'callback',
 ]
-struct_retro_core_options_update_display_callback._fields_ = [
+retro_core_options_update_display_callback._fields_ = [
     ('callback', retro_core_options_update_display_callback_t),
 ]
 
-struct_retro_game_info.__slots__ = [
+retro_game_info.__slots__ = [
     'path',
     'data',
     'size',
     'meta',
 ]
-struct_retro_game_info._fields_ = [
+retro_game_info._fields_ = [
     ('path', String),
     ('data', POINTER(None)),
     ('size', c_size_t),
     ('meta', String),
 ]
 
-class struct_retro_framebuffer(Structure):
+class retro_framebuffer(Structure):
     pass
 
-struct_retro_framebuffer.__slots__ = [
+retro_framebuffer.__slots__ = [
     'data',
     'width',
     'height',
@@ -1870,60 +1870,60 @@ struct_retro_framebuffer.__slots__ = [
     'access_flags',
     'memory_flags',
 ]
-struct_retro_framebuffer._fields_ = [
+retro_framebuffer._fields_ = [
     ('data', POINTER(None)),
     ('width', c_uint),
     ('height', c_uint),
     ('pitch', c_size_t),
-    ('format', enum_retro_pixel_format),
+    ('format', retro_pixel_format),
     ('access_flags', c_uint),
     ('memory_flags', c_uint),
 ]
 
-class struct_retro_fastforwarding_override(Structure):
+class retro_fastforwarding_override(Structure):
     pass
 
-struct_retro_fastforwarding_override.__slots__ = [
+retro_fastforwarding_override.__slots__ = [
     'ratio',
     'fastforward',
     'notification',
     'inhibit_toggle',
 ]
-struct_retro_fastforwarding_override._fields_ = [
+retro_fastforwarding_override._fields_ = [
     ('ratio', c_float),
     ('fastforward', c_bool),
     ('notification', c_bool),
     ('inhibit_toggle', c_bool),
 ]
 
-class struct_retro_throttle_state(Structure):
+class retro_throttle_state(Structure):
     pass
 
-struct_retro_throttle_state.__slots__ = [
+retro_throttle_state.__slots__ = [
     'mode',
     'rate',
 ]
-struct_retro_throttle_state._fields_ = [
+retro_throttle_state._fields_ = [
     ('mode', c_uint),
     ('rate', c_float),
 ]
 
-class struct_retro_microphone(Structure):
+class retro_microphone(Structure):
     pass
 
-retro_microphone_t = struct_retro_microphone
+retro_microphone_t = retro_microphone
 
-class struct_retro_microphone_params(Structure):
+class retro_microphone_params(Structure):
     pass
 
-struct_retro_microphone_params.__slots__ = [
+retro_microphone_params.__slots__ = [
     'rate',
 ]
-struct_retro_microphone_params._fields_ = [
+retro_microphone_params._fields_ = [
     ('rate', c_uint),
 ]
 
-retro_microphone_params_t = struct_retro_microphone_params
+retro_microphone_params_t = retro_microphone_params
 
 retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone_t)), POINTER(retro_microphone_params_t))
 
@@ -1937,10 +1937,10 @@ retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t))
 
 retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone_t), POINTER(c_int16), c_size_t)
 
-class struct_retro_microphone_interface(Structure):
+class retro_microphone_interface(Structure):
     pass
 
-struct_retro_microphone_interface.__slots__ = [
+retro_microphone_interface.__slots__ = [
     'interface_version',
     'open_mic',
     'close_mic',
@@ -1949,7 +1949,7 @@ struct_retro_microphone_interface.__slots__ = [
     'get_mic_state',
     'read_mic',
 ]
-struct_retro_microphone_interface._fields_ = [
+retro_microphone_interface._fields_ = [
     ('interface_version', c_uint),
     ('open_mic', retro_open_mic_t),
     ('close_mic', retro_close_mic_t),
@@ -1959,7 +1959,7 @@ struct_retro_microphone_interface._fields_ = [
     ('read_mic', retro_read_mic_t),
 ]
 
-enum_retro_power_state = c_int
+retro_power_state = c_int
 
 RETRO_POWERSTATE_UNKNOWN = 0
 
@@ -1971,16 +1971,16 @@ RETRO_POWERSTATE_CHARGED = (RETRO_POWERSTATE_CHARGING + 1)
 
 RETRO_POWERSTATE_PLUGGED_IN = (RETRO_POWERSTATE_CHARGED + 1)
 
-class struct_retro_device_power(Structure):
+class retro_device_power(Structure):
     pass
 
-struct_retro_device_power.__slots__ = [
+retro_device_power.__slots__ = [
     'state',
     'seconds',
     'percent',
 ]
-struct_retro_device_power._fields_ = [
-    ('state', enum_retro_power_state),
+retro_device_power._fields_ = [
+    ('state', retro_power_state),
     ('seconds', c_int),
     ('percent', c_int8),
 ]
@@ -2461,121 +2461,3 @@ class PowerState(enum.IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'I'
-
-
-retro_vfs_file_handle = struct_retro_vfs_file_handle
-
-retro_vfs_dir_handle = struct_retro_vfs_dir_handle
-
-retro_vfs_interface = struct_retro_vfs_interface
-
-retro_vfs_interface_info = struct_retro_vfs_interface_info
-
-retro_hw_render_interface = struct_retro_hw_render_interface
-
-retro_led_interface = struct_retro_led_interface
-
-retro_midi_interface = struct_retro_midi_interface
-
-retro_hw_render_context_negotiation_interface = struct_retro_hw_render_context_negotiation_interface
-
-retro_memory_descriptor = struct_retro_memory_descriptor
-
-retro_memory_map = struct_retro_memory_map
-
-retro_controller_description = struct_retro_controller_description
-
-retro_controller_info = struct_retro_controller_info
-
-retro_subsystem_memory_info = struct_retro_subsystem_memory_info
-
-retro_subsystem_rom_info = struct_retro_subsystem_rom_info
-
-retro_subsystem_info = struct_retro_subsystem_info
-
-retro_get_proc_address_interface = struct_retro_get_proc_address_interface
-
-retro_log_callback = struct_retro_log_callback
-
-retro_perf_counter = struct_retro_perf_counter
-
-retro_perf_callback = struct_retro_perf_callback
-
-retro_sensor_interface = struct_retro_sensor_interface
-
-retro_camera_callback = struct_retro_camera_callback
-
-retro_location_callback = struct_retro_location_callback
-
-retro_rumble_interface = struct_retro_rumble_interface
-
-retro_audio_callback = struct_retro_audio_callback
-
-retro_frame_time_callback = struct_retro_frame_time_callback
-
-retro_audio_buffer_status_callback = struct_retro_audio_buffer_status_callback
-
-retro_hw_render_callback = struct_retro_hw_render_callback
-
-retro_keyboard_callback = struct_retro_keyboard_callback
-
-retro_game_info = struct_retro_game_info
-
-retro_disk_control_callback = struct_retro_disk_control_callback
-
-retro_disk_control_ext_callback = struct_retro_disk_control_ext_callback
-
-retro_netpacket_callback = struct_retro_netpacket_callback
-
-retro_message = struct_retro_message
-
-retro_message_ext = struct_retro_message_ext
-
-retro_input_descriptor = struct_retro_input_descriptor
-
-retro_system_info = struct_retro_system_info
-
-retro_system_content_info_override = struct_retro_system_content_info_override
-
-retro_game_info_ext = struct_retro_game_info_ext
-
-retro_game_geometry = struct_retro_game_geometry
-
-retro_system_timing = struct_retro_system_timing
-
-retro_system_av_info = struct_retro_system_av_info
-
-retro_variable = struct_retro_variable
-
-retro_core_option_display = struct_retro_core_option_display
-
-retro_core_option_value = struct_retro_core_option_value
-
-retro_core_option_definition = struct_retro_core_option_definition
-
-retro_core_options_intl = struct_retro_core_options_intl
-
-retro_core_option_v2_category = struct_retro_core_option_v2_category
-
-retro_core_option_v2_definition = struct_retro_core_option_v2_definition
-
-retro_core_options_v2 = struct_retro_core_options_v2
-
-retro_core_options_v2_intl = struct_retro_core_options_v2_intl
-
-retro_core_options_update_display_callback = struct_retro_core_options_update_display_callback
-
-retro_framebuffer = struct_retro_framebuffer
-
-retro_fastforwarding_override = struct_retro_fastforwarding_override
-
-retro_throttle_state = struct_retro_throttle_state
-
-retro_microphone = struct_retro_microphone
-
-retro_microphone_params = struct_retro_microphone_params
-
-retro_microphone_interface = struct_retro_microphone_interface
-
-retro_device_power = struct_retro_device_power
-
