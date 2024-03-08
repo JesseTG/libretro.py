@@ -4,6 +4,7 @@ __docformat__ = "restructuredtext"
 
 import ctypes
 import enum
+import logging
 import sys
 from ctypes import *  # noqa: F401, F403
 
@@ -443,8 +444,19 @@ _libs = {}
 import ctypes
 import ctypes.util
 
-enum_retro_language = c_int
 
+class Rotation(enum.IntEnum):
+    NONE = 0
+    Ninety = 1
+    OneEighty = 2
+    TwoSeventy = 3
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
+enum_retro_language = c_int
 RETRO_LANGUAGE_ENGLISH = 0
 RETRO_LANGUAGE_JAPANESE = 1
 RETRO_LANGUAGE_FRENCH = 2
@@ -481,6 +493,7 @@ RETRO_LANGUAGE_BELARUSIAN = 32
 RETRO_LANGUAGE_LAST = (RETRO_LANGUAGE_BELARUSIAN + 1)
 RETRO_LANGUAGE_DUMMY = 0x7fffffff
 
+
 class Language(enum.IntEnum):
     English = RETRO_LANGUAGE_ENGLISH
     Japanese = RETRO_LANGUAGE_JAPANESE
@@ -515,10 +528,13 @@ class Language(enum.IntEnum):
     BritishEnglish = RETRO_LANGUAGE_BRITISH_ENGLISH
     Hungarian = RETRO_LANGUAGE_HUNGARIAN
     Belarusian = RETRO_LANGUAGE_BELARUSIAN
-    Last = Belarusian
+
+    def __init__(self, value):
+        self._type_ = 'I'
+        self.value = value
+
 
 enum_retro_key = c_int
-
 RETROK_UNKNOWN = 0
 RETROK_FIRST = 0
 RETROK_BACKSPACE = 8
@@ -991,16 +1007,35 @@ struct_retro_get_proc_address_interface._fields_ = [
 ]
 
 enum_retro_log_level = c_int
-
 RETRO_LOG_DEBUG = 0
-
 RETRO_LOG_INFO = (RETRO_LOG_DEBUG + 1)
-
 RETRO_LOG_WARN = (RETRO_LOG_INFO + 1)
-
 RETRO_LOG_ERROR = (RETRO_LOG_WARN + 1)
-
 RETRO_LOG_DUMMY = 0x7fffffff
+
+
+class LogLevel(enum.IntEnum):
+    Debug = RETRO_LOG_DEBUG
+    Info = RETRO_LOG_INFO
+    Warning = RETRO_LOG_WARN
+    Error = RETRO_LOG_ERROR
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+    @property
+    def logging_level(self) -> int:
+        match self:
+            case self.Debug:
+                return logging.DEBUG
+            case self.Info:
+                return logging.INFO
+            case self.Warning:
+                return logging.WARN
+            case self.Error:
+                return logging.ERROR
+
 
 retro_log_printf_t = CFUNCTYPE(UNCHECKED(None), enum_retro_log_level, String)
 
@@ -1426,26 +1461,66 @@ struct_retro_netpacket_callback._fields_ = [
 ]
 
 enum_retro_pixel_format = c_int
-
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
-
 RETRO_PIXEL_FORMAT_XRGB8888 = 1
-
 RETRO_PIXEL_FORMAT_RGB565 = 2
-
 RETRO_PIXEL_FORMAT_UNKNOWN = 0x7fffffff
+
+
+class PixelFormat(enum.IntEnum):
+    RGB1555 = RETRO_PIXEL_FORMAT_0RGB1555
+    XRGB8888 = RETRO_PIXEL_FORMAT_XRGB8888
+    RGB565 = RETRO_PIXEL_FORMAT_RGB565
+
+    def __init__(self, value):
+        self._type_ = 'I'
+        self.value = value
+
+    @property
+    def bytes_per_pixel(self) -> int:
+        match self:
+            case self.RGB1555:
+                return 2
+            case self.XRGB8888:
+                return 4
+            case self.RGB565:
+                return 2
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
+    @property
+    def typecode(self) -> str:
+        match self:
+            case self.RGB1555:
+                return 'H'
+            case self.XRGB8888:
+                return 'L'
+            case self.RGB565:
+                return 'H'
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
 
 enum_retro_savestate_context = c_int
 
 RETRO_SAVESTATE_CONTEXT_NORMAL = 0
-
 RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE = 1
-
 RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY = 2
-
 RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY = 3
-
 RETRO_SAVESTATE_CONTEXT_UNKNOWN = 0x7fffffff
+
+
+class SavestateContext(enum.IntEnum):
+    Normal = RETRO_SAVESTATE_CONTEXT_NORMAL
+    RunaheadSameInstance = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE
+    RunaheadSameBinary = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY
+    RollbackNetplay = RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY
+    Unknown = RETRO_SAVESTATE_CONTEXT_UNKNOWN
+
+    def __init__(self, value: int):
+        self._type_ = 'i'
+        self.value = value
+
 
 class struct_retro_message(Structure):
     pass
@@ -1460,22 +1535,38 @@ struct_retro_message._fields_ = [
 ]
 
 enum_retro_message_target = c_int
-
 RETRO_MESSAGE_TARGET_ALL = 0
-
 RETRO_MESSAGE_TARGET_OSD = (RETRO_MESSAGE_TARGET_ALL + 1)
-
 RETRO_MESSAGE_TARGET_LOG = (RETRO_MESSAGE_TARGET_OSD + 1)
 
+
+class MessageTarget(enum.IntEnum):
+    All = RETRO_MESSAGE_TARGET_ALL
+    Osd = RETRO_MESSAGE_TARGET_OSD
+    Log = RETRO_MESSAGE_TARGET_LOG
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 enum_retro_message_type = c_int
-
 RETRO_MESSAGE_TYPE_NOTIFICATION = 0
-
 RETRO_MESSAGE_TYPE_NOTIFICATION_ALT = (RETRO_MESSAGE_TYPE_NOTIFICATION + 1)
-
 RETRO_MESSAGE_TYPE_STATUS = (RETRO_MESSAGE_TYPE_NOTIFICATION_ALT + 1)
-
 RETRO_MESSAGE_TYPE_PROGRESS = (RETRO_MESSAGE_TYPE_STATUS + 1)
+
+
+class MessageType(enum.IntEnum):
+    Notification = RETRO_MESSAGE_TYPE_NOTIFICATION
+    NotificationAlt = RETRO_MESSAGE_TYPE_NOTIFICATION_ALT
+    Status = RETRO_MESSAGE_TYPE_STATUS
+    Progress = RETRO_MESSAGE_TYPE_PROGRESS
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
 
 class struct_retro_message_ext(Structure):
     pass
@@ -1916,8 +2007,9 @@ retro_input_state_t = CFUNCTYPE(UNCHECKED(c_int16), c_uint, c_uint, c_uint, c_ui
 RETRO_API_VERSION = 1
 RETRO_DEVICE_TYPE_SHIFT = 8
 RETRO_DEVICE_MASK = ((1 << RETRO_DEVICE_TYPE_SHIFT) - 1)
-def RETRO_DEVICE_SUBCLASS(base, id):
+def RETRO_DEVICE_SUBCLASS(base: int, id: int) -> int:
     return (((id + 1) << RETRO_DEVICE_TYPE_SHIFT) | base)
+
 
 RETRO_DEVICE_NONE = 0
 RETRO_DEVICE_JOYPAD = 1
@@ -1926,6 +2018,31 @@ RETRO_DEVICE_KEYBOARD = 3
 RETRO_DEVICE_LIGHTGUN = 4
 RETRO_DEVICE_ANALOG = 5
 RETRO_DEVICE_POINTER = 6
+
+
+class InputDevice(enum.IntEnum):
+    None_ = RETRO_DEVICE_NONE
+    Joypad = RETRO_DEVICE_JOYPAD
+    Mouse = RETRO_DEVICE_MOUSE
+    Keyboard = RETRO_DEVICE_KEYBOARD
+    LightGun = RETRO_DEVICE_LIGHTGUN
+    Analog = RETRO_DEVICE_ANALOG
+    Pointer = RETRO_DEVICE_POINTER
+
+    def __init__(self, value: int):
+        self._type_ = 'H'
+        self.value = value
+
+
+class InputDeviceFlag(enum.IntFlag):
+    None_ = 1 << RETRO_DEVICE_NONE
+    Joypad = 1 << RETRO_DEVICE_JOYPAD
+    Mouse = 1 << RETRO_DEVICE_MOUSE
+    Keyboard = 1 << RETRO_DEVICE_KEYBOARD
+    LightGun = 1 << RETRO_DEVICE_LIGHTGUN
+    Analog = 1 << RETRO_DEVICE_ANALOG
+    Pointer = 1 << RETRO_DEVICE_POINTER
+
 RETRO_DEVICE_ID_JOYPAD_B = 0
 RETRO_DEVICE_ID_JOYPAD_Y = 1
 RETRO_DEVICE_ID_JOYPAD_SELECT = 2
@@ -1943,11 +2060,59 @@ RETRO_DEVICE_ID_JOYPAD_R2 = 13
 RETRO_DEVICE_ID_JOYPAD_L3 = 14
 RETRO_DEVICE_ID_JOYPAD_R3 = 15
 RETRO_DEVICE_ID_JOYPAD_MASK = 256
+
+class DeviceIdJoypad(enum.IntEnum):
+    B = RETRO_DEVICE_ID_JOYPAD_B
+    Y = RETRO_DEVICE_ID_JOYPAD_Y
+    Select = RETRO_DEVICE_ID_JOYPAD_SELECT
+    Start = RETRO_DEVICE_ID_JOYPAD_START
+    Up = RETRO_DEVICE_ID_JOYPAD_UP
+    Down = RETRO_DEVICE_ID_JOYPAD_DOWN
+    Left = RETRO_DEVICE_ID_JOYPAD_LEFT
+    Right = RETRO_DEVICE_ID_JOYPAD_RIGHT
+    A = RETRO_DEVICE_ID_JOYPAD_A
+    X = RETRO_DEVICE_ID_JOYPAD_X
+    L = RETRO_DEVICE_ID_JOYPAD_L
+    R = RETRO_DEVICE_ID_JOYPAD_R
+    L2 = RETRO_DEVICE_ID_JOYPAD_L2
+    R2 = RETRO_DEVICE_ID_JOYPAD_R2
+    L3 = RETRO_DEVICE_ID_JOYPAD_L3
+    R3 = RETRO_DEVICE_ID_JOYPAD_R3
+    Mask = RETRO_DEVICE_ID_JOYPAD_MASK
+
+    def __init__(self, value: int):
+        self._type_ = 'H'
+        self.value = value
+
+
 RETRO_DEVICE_INDEX_ANALOG_LEFT = 0
 RETRO_DEVICE_INDEX_ANALOG_RIGHT = 1
 RETRO_DEVICE_INDEX_ANALOG_BUTTON = 2
+
+
+class DeviceIndexAnalog(enum.IntEnum):
+    Left = RETRO_DEVICE_INDEX_ANALOG_LEFT
+    Right = RETRO_DEVICE_INDEX_ANALOG_RIGHT
+    Button = RETRO_DEVICE_INDEX_ANALOG_BUTTON
+
+    def __init__(self, value: int):
+        self._type_ = 'H'
+        self.value = value
+
+
 RETRO_DEVICE_ID_ANALOG_X = 0
 RETRO_DEVICE_ID_ANALOG_Y = 1
+
+class DeviceIdAnalog(enum.IntEnum):
+    X = RETRO_DEVICE_ID_ANALOG_X
+    Y = RETRO_DEVICE_ID_ANALOG_Y
+
+    def __init__(self, value: int):
+        self._type_ = 'H'
+        self.value = value
+
+
+
 RETRO_DEVICE_ID_MOUSE_X = 0
 RETRO_DEVICE_ID_MOUSE_Y = 1
 RETRO_DEVICE_ID_MOUSE_LEFT = 2
@@ -1982,8 +2147,20 @@ RETRO_DEVICE_ID_POINTER_X = 0
 RETRO_DEVICE_ID_POINTER_Y = 1
 RETRO_DEVICE_ID_POINTER_PRESSED = 2
 RETRO_DEVICE_ID_POINTER_COUNT = 3
+
 RETRO_REGION_NTSC = 0
 RETRO_REGION_PAL = 1
+
+
+class Region(enum.IntEnum):
+    NTSC = RETRO_REGION_NTSC
+    PAL = RETRO_REGION_PAL
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_MEMORY_MASK = 0xff
 RETRO_MEMORY_SAVE_RAM = 0
 RETRO_MEMORY_RTC = 1
@@ -2067,18 +2244,153 @@ RETRO_ENVIRONMENT_GET_JIT_CAPABLE = 74
 RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE = (75 | RETRO_ENVIRONMENT_EXPERIMENTAL)
 RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE = 76
 RETRO_ENVIRONMENT_GET_DEVICE_POWER = (77 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY = 79
+
+
+@enum.unique
+class EnvironmentCall(enum.IntEnum):
+    SetRotation = RETRO_ENVIRONMENT_SET_ROTATION
+    GetOverscan = RETRO_ENVIRONMENT_GET_OVERSCAN
+    GetCanDupe = RETRO_ENVIRONMENT_GET_CAN_DUPE
+    SetMessage = RETRO_ENVIRONMENT_SET_MESSAGE
+    Shutdown = RETRO_ENVIRONMENT_SHUTDOWN
+    SetPerformanceLevel = RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL
+    GetSystemDirectory = RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY
+    SetPixelFormat = RETRO_ENVIRONMENT_SET_PIXEL_FORMAT
+    SetInputDescriptors = RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS
+    SetKeyboardCallback = RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK
+    SetDiskControlInterface = RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE
+    SetHwRender = RETRO_ENVIRONMENT_SET_HW_RENDER
+    GetVariable = RETRO_ENVIRONMENT_GET_VARIABLE
+    SetVariables = RETRO_ENVIRONMENT_SET_VARIABLES
+    GetVariableUpdate = RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE
+    SetSupportNoGame = RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME
+    GetLibretroPath = RETRO_ENVIRONMENT_GET_LIBRETRO_PATH
+    SetFrameTimeCallback = RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK
+    SetAudioCallback = RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK
+    GetRumbleInterface = RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE
+    GetInputDeviceCapabilities = RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES
+    GetSensorInterface = RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE
+    GetCameraInterface = RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE
+    GetLogInterface = RETRO_ENVIRONMENT_GET_LOG_INTERFACE
+    GetPerfInterface = RETRO_ENVIRONMENT_GET_PERF_INTERFACE
+    GetLocationInterface = RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE
+    GetCoreAssetsDirectory = RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY
+    GetSaveDirectory = RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY
+    SetSystemAvInfo = RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO
+    SetProcAddressCallback = RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK
+    SetSubsystemInfo = RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO
+    SetControllerInfo = RETRO_ENVIRONMENT_SET_CONTROLLER_INFO
+    SetMemoryMaps = RETRO_ENVIRONMENT_SET_MEMORY_MAPS
+    SetGeometry = RETRO_ENVIRONMENT_SET_GEOMETRY
+    GetUsername = RETRO_ENVIRONMENT_GET_USERNAME
+    GetLanguage = RETRO_ENVIRONMENT_GET_LANGUAGE
+    GetCurrentSoftwareFramebuffer = RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER
+    GetHwRenderInterface = RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE
+    SetSupportAchievements = RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS
+    SetHwRenderContextNegotiationInterface = RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE
+    SetSerializationQuirks = RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS
+    SetHwSharedContext = RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT
+    GetVfsInterface = RETRO_ENVIRONMENT_GET_VFS_INTERFACE
+    GetLedInterface = RETRO_ENVIRONMENT_GET_LED_INTERFACE
+    GetAudioVideoEnable = RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE
+    GetMidiInterface = RETRO_ENVIRONMENT_GET_MIDI_INTERFACE
+    GetFastForwarding = RETRO_ENVIRONMENT_GET_FASTFORWARDING
+    GetTargetRefreshRate = RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE
+    GetInputBitmasks = RETRO_ENVIRONMENT_GET_INPUT_BITMASKS
+    GetCoreOptionsVersion = RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION
+    SetCoreOptions = RETRO_ENVIRONMENT_SET_CORE_OPTIONS
+    SetCoreOptionsIntl = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL
+    SetCoreOptionsDisplay = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY
+    GetPreferredHwRender = RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER
+    GetDiskControlInterfaceVersion = RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION
+    SetDiskControlExtInterface = RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE
+    GetMessageInterfaceVersion = RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION
+    SetMessageExt = RETRO_ENVIRONMENT_SET_MESSAGE_EXT
+    GetInputMaxUsers = RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS
+    SetAudioBufferStatusCallback = RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK
+    SetMinimumAudioLatency = RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY
+    SetFastForwardingOverride = RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE
+    SetContentInfoOverride = RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE
+    GetGameInfoExt = RETRO_ENVIRONMENT_GET_GAME_INFO_EXT
+    SetCoreOptionsV2 = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2
+    SetCoreOptionsV2Intl = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL
+    SetCoreOptionsUpdateDisplayCallback = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK
+    SetVariable = RETRO_ENVIRONMENT_SET_VARIABLE
+    GetThrottleState = RETRO_ENVIRONMENT_GET_THROTTLE_STATE
+    GetSaveStateContext = RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT
+    GetHwRenderContextNegotiationInterfaceSupport = RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT
+    GetJitCapable = RETRO_ENVIRONMENT_GET_JIT_CAPABLE
+    GetMicrophoneInterface = RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE
+    SetNetpacketInterface = RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE
+    GetDevicePower = RETRO_ENVIRONMENT_GET_DEVICE_POWER
+    GetPlaylistDirectory = RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_VFS_FILE_ACCESS_READ = (1 << 0)
 RETRO_VFS_FILE_ACCESS_WRITE = (1 << 1)
 RETRO_VFS_FILE_ACCESS_READ_WRITE = (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE)
 RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING = (1 << 2)
+
+
+class VfsFileAccess(enum.IntFlag):
+    Read = RETRO_VFS_FILE_ACCESS_READ
+    Write = RETRO_VFS_FILE_ACCESS_WRITE
+    ReadWrite = RETRO_VFS_FILE_ACCESS_READ_WRITE
+    UpdateExisting = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_VFS_FILE_ACCESS_HINT_NONE = 0
 RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS = (1 << 0)
+
+
+class VfsFileAccessHint(enum.IntFlag):
+    None_ = RETRO_VFS_FILE_ACCESS_HINT_NONE
+    FrequentAccess = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_VFS_SEEK_POSITION_START = 0
 RETRO_VFS_SEEK_POSITION_CURRENT = 1
 RETRO_VFS_SEEK_POSITION_END = 2
+
+
+class VfsSeekPosition(enum.IntEnum):
+    Start = RETRO_VFS_SEEK_POSITION_START
+    Current = RETRO_VFS_SEEK_POSITION_CURRENT
+    End = RETRO_VFS_SEEK_POSITION_END
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_VFS_STAT_IS_VALID = (1 << 0)
 RETRO_VFS_STAT_IS_DIRECTORY = (1 << 1)
 RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = (1 << 2)
+
+
+class VfsStat(enum.IntFlag):
+    IsValid = RETRO_VFS_STAT_IS_VALID
+    IsDirectory = RETRO_VFS_STAT_IS_DIRECTORY
+    IsCharacterSpecial = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
+
 RETRO_SERIALIZATION_QUIRK_INCOMPLETE = (1 << 0)
 RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE = (1 << 1)
 RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE = (1 << 2)
@@ -2086,6 +2398,18 @@ RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE = (1 << 3)
 RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION = (1 << 4)
 RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT = (1 << 5)
 RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT = (1 << 6)
+
+
+class SerializationQuirks(enum.IntFlag):
+    Incomplete = RETRO_SERIALIZATION_QUIRK_INCOMPLETE
+    MustInitialize = RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE
+    CoreVariableSize = RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE
+    FrontendVariableSize = RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE
+    SingleSession = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION
+    EndianDependent = RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT
+    PlatformDependent = RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT
+
+
 RETRO_MEMDESC_CONST = (1 << 0)
 RETRO_MEMDESC_BIGENDIAN = (1 << 1)
 RETRO_MEMDESC_SYSTEM_RAM = (1 << 2)
@@ -2143,6 +2467,19 @@ RETRO_THROTTLE_VSYNC = 5
 RETRO_THROTTLE_UNBLOCKED = 6
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
 RETRO_POWERSTATE_NO_ESTIMATE = (-1)
+
+
+class PowerState(enum.IntEnum):
+    Unknown = RETRO_POWERSTATE_UNKNOWN
+    Discharging = RETRO_POWERSTATE_DISCHARGING
+    Charging = RETRO_POWERSTATE_CHARGING
+    Charged = RETRO_POWERSTATE_CHARGED
+    PluggedIn = RETRO_POWERSTATE_PLUGGED_IN
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+        self.value = value
+
 
 retro_vfs_file_handle = struct_retro_vfs_file_handle
 
