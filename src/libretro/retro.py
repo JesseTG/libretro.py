@@ -696,43 +696,43 @@ class struct_retro_vfs_file_handle(Structure):
 class struct_retro_vfs_dir_handle(Structure):
     pass
 
-retro_vfs_get_path_t = CFUNCTYPE(UNCHECKED(c_char_p), POINTER(struct_retro_vfs_file_handle))
+retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(struct_retro_vfs_file_handle))
 
 retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(struct_retro_vfs_file_handle)), String, c_uint, c_uint)
 
-retro_vfs_close_t = CFUNCTYPE(UNCHECKED(c_int), POINTER(struct_retro_vfs_file_handle))
+retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_file_handle))
 
-retro_vfs_size_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle))
+retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle))
 
-retro_vfs_truncate_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), c_int64)
+retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), c_int64)
 
-retro_vfs_tell_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle))
+retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle))
 
-retro_vfs_seek_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), c_int64, c_int)
+retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), c_int64, c_int)
 
-retro_vfs_read_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
 
-retro_vfs_write_t = CFUNCTYPE(UNCHECKED(c_int64), POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
+retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(struct_retro_vfs_file_handle), POINTER(None), c_uint64)
 
-retro_vfs_flush_t = CFUNCTYPE(UNCHECKED(c_int), POINTER(struct_retro_vfs_file_handle))
+retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_file_handle))
 
-retro_vfs_remove_t = CFUNCTYPE(UNCHECKED(c_int), String)
+retro_vfs_remove_t = CFUNCTYPE(c_int, String)
 
-retro_vfs_rename_t = CFUNCTYPE(UNCHECKED(c_int), String, String)
+retro_vfs_rename_t = CFUNCTYPE(c_int, String, String)
 
-retro_vfs_stat_t = CFUNCTYPE(UNCHECKED(c_int), String, POINTER(c_int32))
+retro_vfs_stat_t = CFUNCTYPE(c_int, String, POINTER(c_int32))
 
-retro_vfs_mkdir_t = CFUNCTYPE(UNCHECKED(c_int), String)
+retro_vfs_mkdir_t = CFUNCTYPE(c_int, String)
 
 retro_vfs_opendir_t = CFUNCTYPE(UNCHECKED(POINTER(struct_retro_vfs_dir_handle)), String, c_bool)
 
-retro_vfs_readdir_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(struct_retro_vfs_dir_handle))
 
-retro_vfs_dirent_get_name_t = CFUNCTYPE(UNCHECKED(c_char_p), POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(struct_retro_vfs_dir_handle))
 
-retro_vfs_dirent_is_dir_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(struct_retro_vfs_dir_handle))
 
-retro_vfs_closedir_t = CFUNCTYPE(UNCHECKED(c_int), POINTER(struct_retro_vfs_dir_handle))
+retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(struct_retro_vfs_dir_handle))
 
 class struct_retro_vfs_interface(Structure):
     pass
@@ -832,15 +832,15 @@ struct_retro_led_interface._fields_ = [
     ('set_led_state', retro_set_led_state_t),
 ]
 
-retro_midi_input_enabled_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_midi_input_enabled_t = CFUNCTYPE(c_bool, )
 
-retro_midi_output_enabled_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_midi_output_enabled_t = CFUNCTYPE(c_bool, )
 
-retro_midi_read_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(c_uint8))
+retro_midi_read_t = CFUNCTYPE(c_bool, POINTER(c_uint8))
 
-retro_midi_write_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint8, c_uint32)
+retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
 
-retro_midi_flush_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_midi_flush_t = CFUNCTYPE(c_bool, )
 
 class struct_retro_midi_interface(Structure):
     pass
@@ -1072,7 +1072,7 @@ retro_perf_get_time_usec_t = CFUNCTYPE(UNCHECKED(retro_time_t), )
 
 retro_perf_get_counter_t = CFUNCTYPE(UNCHECKED(retro_perf_tick_t), )
 
-retro_get_cpu_features_t = CFUNCTYPE(UNCHECKED(c_uint64), )
+retro_get_cpu_features_t = CFUNCTYPE(c_uint64, )
 
 retro_perf_log_t = CFUNCTYPE(UNCHECKED(None), )
 
@@ -1120,9 +1120,9 @@ RETRO_SENSOR_ILLUMINANCE_DISABLE = (RETRO_SENSOR_ILLUMINANCE_ENABLE + 1)
 
 RETRO_SENSOR_DUMMY = 0x7fffffff
 
-retro_set_sensor_state_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, enum_retro_sensor_action, c_uint)
+retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, enum_retro_sensor_action, c_uint)
 
-retro_sensor_get_input_t = CFUNCTYPE(UNCHECKED(c_float), c_uint, c_uint)
+retro_sensor_get_input_t = CFUNCTYPE(c_float, c_uint, c_uint)
 
 class struct_retro_sensor_interface(Structure):
     pass
@@ -1144,7 +1144,7 @@ RETRO_CAMERA_BUFFER_RAW_FRAMEBUFFER = (RETRO_CAMERA_BUFFER_OPENGL_TEXTURE + 1)
 
 RETRO_CAMERA_BUFFER_DUMMY = 0x7fffffff
 
-retro_camera_start_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_camera_start_t = CFUNCTYPE(c_bool, )
 
 retro_camera_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
@@ -1182,11 +1182,11 @@ struct_retro_camera_callback._fields_ = [
 
 retro_location_set_interval_t = CFUNCTYPE(UNCHECKED(None), c_uint, c_uint)
 
-retro_location_start_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_location_start_t = CFUNCTYPE(c_bool, )
 
 retro_location_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_location_get_position_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double))
+retro_location_get_position_t = CFUNCTYPE(c_bool, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double))
 
 retro_location_lifetime_status_t = CFUNCTYPE(UNCHECKED(None), )
 
@@ -1218,7 +1218,7 @@ RETRO_RUMBLE_WEAK = 1
 
 RETRO_RUMBLE_DUMMY = 0x7fffffff
 
-retro_set_rumble_state_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, enum_retro_rumble_effect, c_uint16)
+retro_set_rumble_state_t = CFUNCTYPE(c_bool, c_uint, enum_retro_rumble_effect, c_uint16)
 
 class struct_retro_rumble_interface(Structure):
     pass
@@ -1276,7 +1276,7 @@ struct_retro_audio_buffer_status_callback._fields_ = [
 
 retro_hw_context_reset_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_hw_get_current_framebuffer_t = CFUNCTYPE(UNCHECKED(c_uintptr), )
+retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr, )
 
 retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
@@ -1350,28 +1350,28 @@ struct_retro_keyboard_callback._fields_ = [
     ('callback', retro_keyboard_event_t),
 ]
 
-retro_set_eject_state_t = CFUNCTYPE(UNCHECKED(c_bool), c_bool)
+retro_set_eject_state_t = CFUNCTYPE(c_bool, c_bool)
 
-retro_get_eject_state_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_get_eject_state_t = CFUNCTYPE(c_bool, )
 
-retro_get_image_index_t = CFUNCTYPE(UNCHECKED(c_uint), )
+retro_get_image_index_t = CFUNCTYPE(c_uint, )
 
-retro_set_image_index_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint)
+retro_set_image_index_t = CFUNCTYPE(c_bool, c_uint)
 
-retro_get_num_images_t = CFUNCTYPE(UNCHECKED(c_uint), )
+retro_get_num_images_t = CFUNCTYPE(c_uint, )
 
 class struct_retro_game_info(Structure):
     pass
 
-retro_replace_image_index_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, POINTER(struct_retro_game_info))
+retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(struct_retro_game_info))
 
-retro_add_image_index_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_add_image_index_t = CFUNCTYPE(c_bool, )
 
-retro_set_initial_image_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, String)
+retro_set_initial_image_t = CFUNCTYPE(c_bool, c_uint, String)
 
-retro_get_image_path_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, String, c_size_t)
+retro_get_image_path_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
 
-retro_get_image_label_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, String, c_size_t)
+retro_get_image_label_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
 
 class struct_retro_disk_control_callback(Structure):
     pass
@@ -1433,7 +1433,7 @@ retro_netpacket_stop_t = CFUNCTYPE(UNCHECKED(None), )
 
 retro_netpacket_poll_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_netpacket_connected_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint16)
+retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
 
 retro_netpacket_disconnected_t = CFUNCTYPE(UNCHECKED(None), c_uint16)
 
@@ -1833,7 +1833,7 @@ struct_retro_core_options_v2_intl._fields_ = [
     ('local', POINTER(struct_retro_core_options_v2)),
 ]
 
-retro_core_options_update_display_callback_t = CFUNCTYPE(UNCHECKED(c_bool), )
+retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool, )
 
 class struct_retro_core_options_update_display_callback(Structure):
     pass
@@ -1929,13 +1929,13 @@ retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone_t)), POINTER(ret
 
 retro_close_mic_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_microphone_t))
 
-retro_get_mic_params_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(retro_microphone_t), POINTER(retro_microphone_params_t))
+retro_get_mic_params_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t), POINTER(retro_microphone_params_t))
 
-retro_set_mic_state_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(retro_microphone_t), c_bool)
+retro_set_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t), c_bool)
 
-retro_get_mic_state_t = CFUNCTYPE(UNCHECKED(c_bool), POINTER(retro_microphone_t))
+retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t))
 
-retro_read_mic_t = CFUNCTYPE(UNCHECKED(c_int), POINTER(retro_microphone_t), POINTER(c_int16), c_size_t)
+retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone_t), POINTER(c_int16), c_size_t)
 
 class struct_retro_microphone_interface(Structure):
     pass
@@ -1985,17 +1985,17 @@ struct_retro_device_power._fields_ = [
     ('percent', c_int8),
 ]
 
-retro_environment_t = CFUNCTYPE(UNCHECKED(c_bool), c_uint, POINTER(None))
+retro_environment_t = CFUNCTYPE(c_bool, c_uint, POINTER(None))
 
 retro_video_refresh_t = CFUNCTYPE(UNCHECKED(None), POINTER(None), c_uint, c_uint, c_size_t)
 
 retro_audio_sample_t = CFUNCTYPE(UNCHECKED(None), c_int16, c_int16)
 
-retro_audio_sample_batch_t = CFUNCTYPE(UNCHECKED(c_size_t), POINTER(c_int16), c_size_t)
+retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
 
 retro_input_poll_t = CFUNCTYPE(UNCHECKED(None), )
 
-retro_input_state_t = CFUNCTYPE(UNCHECKED(c_int16), c_uint, c_uint, c_uint, c_uint)
+retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
 
 RETRO_API_VERSION = 1
 RETRO_DEVICE_TYPE_SHIFT = 8
