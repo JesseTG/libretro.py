@@ -439,11 +439,6 @@ def ord_if_char(value):
 
 # End preamble
 
-_libs = {}
-
-import ctypes
-import ctypes.util
-
 
 class Rotation(enum.IntEnum):
     NONE = 0
