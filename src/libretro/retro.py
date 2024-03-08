@@ -820,7 +820,7 @@ retro_hw_render_interface._fields_ = [
     ('interface_version', c_uint),
 ]
 
-retro_set_led_state_t = CFUNCTYPE(UNCHECKED(None), c_int, c_int)
+retro_set_led_state_t = CFUNCTYPE(None, c_int, c_int)
 
 class retro_led_interface(Structure):
     pass
@@ -990,7 +990,7 @@ retro_subsystem_info._fields_ = [
     ('id', c_uint),
 ]
 
-retro_proc_address_t = CFUNCTYPE(UNCHECKED(None), )
+retro_proc_address_t = CFUNCTYPE(None, )
 
 retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 
@@ -1034,7 +1034,7 @@ class LogLevel(enum.IntEnum):
                 return logging.ERROR
 
 
-retro_log_printf_t = CFUNCTYPE(UNCHECKED(None), retro_log_level, String)
+retro_log_printf_t = CFUNCTYPE(None, retro_log_level, String)
 
 class retro_log_callback(Structure):
     pass
@@ -1074,13 +1074,13 @@ retro_perf_get_counter_t = CFUNCTYPE(UNCHECKED(retro_perf_tick_t), )
 
 retro_get_cpu_features_t = CFUNCTYPE(c_uint64, )
 
-retro_perf_log_t = CFUNCTYPE(UNCHECKED(None), )
+retro_perf_log_t = CFUNCTYPE(None, )
 
-retro_perf_register_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
+retro_perf_register_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
 
-retro_perf_start_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
+retro_perf_start_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
 
-retro_perf_stop_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_perf_counter))
+retro_perf_stop_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
 
 class retro_perf_callback(Structure):
     pass
@@ -1146,13 +1146,13 @@ RETRO_CAMERA_BUFFER_DUMMY = 0x7fffffff
 
 retro_camera_start_t = CFUNCTYPE(c_bool, )
 
-retro_camera_stop_t = CFUNCTYPE(UNCHECKED(None), )
+retro_camera_stop_t = CFUNCTYPE(None, )
 
-retro_camera_lifetime_status_t = CFUNCTYPE(UNCHECKED(None), )
+retro_camera_lifetime_status_t = CFUNCTYPE(None, )
 
-retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(UNCHECKED(None), POINTER(c_uint32), c_uint, c_uint, c_size_t)
+retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(None, POINTER(c_uint32), c_uint, c_uint, c_size_t)
 
-retro_camera_frame_opengl_texture_t = CFUNCTYPE(UNCHECKED(None), c_uint, c_uint, POINTER(c_float))
+retro_camera_frame_opengl_texture_t = CFUNCTYPE(None, c_uint, c_uint, POINTER(c_float))
 
 class retro_camera_callback(Structure):
     pass
@@ -1180,15 +1180,15 @@ retro_camera_callback._fields_ = [
     ('deinitialized', retro_camera_lifetime_status_t),
 ]
 
-retro_location_set_interval_t = CFUNCTYPE(UNCHECKED(None), c_uint, c_uint)
+retro_location_set_interval_t = CFUNCTYPE(None, c_uint, c_uint)
 
 retro_location_start_t = CFUNCTYPE(c_bool, )
 
-retro_location_stop_t = CFUNCTYPE(UNCHECKED(None), )
+retro_location_stop_t = CFUNCTYPE(None, )
 
 retro_location_get_position_t = CFUNCTYPE(c_bool, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double))
 
-retro_location_lifetime_status_t = CFUNCTYPE(UNCHECKED(None), )
+retro_location_lifetime_status_t = CFUNCTYPE(None, )
 
 class retro_location_callback(Structure):
     pass
@@ -1230,9 +1230,9 @@ retro_rumble_interface._fields_ = [
     ('set_rumble_state', retro_set_rumble_state_t),
 ]
 
-retro_audio_callback_t = CFUNCTYPE(UNCHECKED(None), )
+retro_audio_callback_t = CFUNCTYPE(None, )
 
-retro_audio_set_state_callback_t = CFUNCTYPE(UNCHECKED(None), c_bool)
+retro_audio_set_state_callback_t = CFUNCTYPE(None, c_bool)
 
 class retro_audio_callback(Structure):
     pass
@@ -1248,7 +1248,7 @@ retro_audio_callback._fields_ = [
 
 retro_usec_t = c_int64
 
-retro_frame_time_callback_t = CFUNCTYPE(UNCHECKED(None), retro_usec_t)
+retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
 
 class retro_frame_time_callback(Structure):
     pass
@@ -1262,7 +1262,7 @@ retro_frame_time_callback._fields_ = [
     ('reference', retro_usec_t),
 ]
 
-retro_audio_buffer_status_callback_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, c_bool)
+retro_audio_buffer_status_callback_t = CFUNCTYPE(None, c_bool, c_uint, c_bool)
 
 class retro_audio_buffer_status_callback(Structure):
     pass
@@ -1274,7 +1274,7 @@ retro_audio_buffer_status_callback._fields_ = [
     ('callback', retro_audio_buffer_status_callback_t),
 ]
 
-retro_hw_context_reset_t = CFUNCTYPE(UNCHECKED(None), )
+retro_hw_context_reset_t = CFUNCTYPE(None, )
 
 retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr, )
 
@@ -1338,7 +1338,7 @@ retro_hw_render_callback._fields_ = [
     ('debug_context', c_bool),
 ]
 
-retro_keyboard_event_t = CFUNCTYPE(UNCHECKED(None), c_bool, c_uint, c_uint32, c_uint16)
+retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
 class retro_keyboard_callback(Structure):
     pass
@@ -1423,19 +1423,19 @@ retro_disk_control_ext_callback._fields_ = [
     ('get_image_label', retro_get_image_label_t),
 ]
 
-retro_netpacket_send_t = CFUNCTYPE(UNCHECKED(None), c_int, c_void_p, c_size_t, c_uint16, c_bool)
+retro_netpacket_send_t = CFUNCTYPE(None, c_int, c_void_p, c_size_t, c_uint16, c_bool)
 
-retro_netpacket_start_t = CFUNCTYPE(UNCHECKED(None), c_uint16, retro_netpacket_send_t)
+retro_netpacket_start_t = CFUNCTYPE(None, c_uint16, retro_netpacket_send_t)
 
-retro_netpacket_receive_t = CFUNCTYPE(UNCHECKED(None), c_void_p, c_size_t, c_uint16)
+retro_netpacket_receive_t = CFUNCTYPE(None, c_void_p, c_size_t, c_uint16)
 
-retro_netpacket_stop_t = CFUNCTYPE(UNCHECKED(None), )
+retro_netpacket_stop_t = CFUNCTYPE(None, )
 
-retro_netpacket_poll_t = CFUNCTYPE(UNCHECKED(None), )
+retro_netpacket_poll_t = CFUNCTYPE(None, )
 
 retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
 
-retro_netpacket_disconnected_t = CFUNCTYPE(UNCHECKED(None), c_uint16)
+retro_netpacket_disconnected_t = CFUNCTYPE(None, c_uint16)
 
 class retro_netpacket_callback(Structure):
     pass
@@ -1926,7 +1926,7 @@ retro_microphone_params_t = retro_microphone_params
 
 retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone_t)), POINTER(retro_microphone_params_t))
 
-retro_close_mic_t = CFUNCTYPE(UNCHECKED(None), POINTER(retro_microphone_t))
+retro_close_mic_t = CFUNCTYPE(None, POINTER(retro_microphone_t))
 
 retro_get_mic_params_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t), POINTER(retro_microphone_params_t))
 
@@ -1986,13 +1986,13 @@ retro_device_power._fields_ = [
 
 retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
 
-retro_video_refresh_t = CFUNCTYPE(UNCHECKED(None), c_void_p, c_uint, c_uint, c_size_t)
+retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
 
-retro_audio_sample_t = CFUNCTYPE(UNCHECKED(None), c_int16, c_int16)
+retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
 
 retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
 
-retro_input_poll_t = CFUNCTYPE(UNCHECKED(None), )
+retro_input_poll_t = CFUNCTYPE(None, )
 
 retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
 
