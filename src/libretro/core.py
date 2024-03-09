@@ -7,7 +7,6 @@ pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
 pythonapi.PyMemoryView_FromMemory.restype = py_object
 
 
-# TODO: Implement context manager protocol
 class Core:
     """
     A thin wrapper around a libretro core.
@@ -104,7 +103,7 @@ class Core:
             self._core.retro_get_memory_size.argtypes = [c_uint]
             self._core.retro_get_memory_size.restype = c_size_t
         except AttributeError as e:
-            raise ValueError(f"Couldn't find required symbol '{e.name}' from {self._core._name}") from e
+            raise ValueError(f"Couldn't find required symbol '{e.name}' in {self._core._name}") from e
 
         # Need to keep references to these objects to prevent them from being garbage collected,
         # otherwise the C function pointers to them will become invalid.
@@ -114,13 +113,6 @@ class Core:
         self._audio_sample_batch: retro_audio_sample_batch_t | None = None
         self._input_poll: retro_input_poll_t | None = None
         self._input_state: retro_input_state_t | None = None
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        del self._core
-        return False
 
     def set_environment(self, env: retro_environment_t) -> None:
         self._environment = retro_environment_t(env)
@@ -195,7 +187,7 @@ class Core:
     def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview):
         self._core.retro_cheat_set(index, enabled, code)
 
-    def load_game(self, game: str | bytes | retro_game_info | None) -> bool:
+    def load_game(self, game: retro_game_info | None) -> bool:
         return self._core.retro_load_game(byref(game) if game else None)
 
     def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
@@ -223,7 +215,6 @@ class Core:
         size = self.get_memory_size(id)
         return pythonapi.PyMemoryView_FromMemory(data, size, 0x200)
         # 0x200 = read/write, 0x100 = read-only
-
 
     @property
     def path(self) -> str:

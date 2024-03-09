@@ -1,4 +1,8 @@
+import itertools
 import logging
+import sys
+import mmap
+from contextlib import contextmanager
 from ctypes import *
 
 from .retro import retro_game_info
@@ -9,7 +13,6 @@ from .callback.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .callback.environment import EnvironmentCallback
 from .callback.input import *
 from .callback.video import VideoCallbacks, SoftwareVideoState, VideoState
-from .content import load_game, SpecialContent
 from .defs import *
 
 
@@ -22,6 +25,30 @@ def _to_bytes(value: str | bytes | None) -> bytes | None:
         return value.encode('utf-8')
     return value
 
+def _array_from_null_terminated(ptr, when: Callable[[Structure], bool]) -> list[Structure]:
+    result: list[Structure] = []
+    i = 0
+    while when(ptr[i]):
+        result.append(ptr[i])
+        i += 1
+
+    return result
+
+@contextmanager
+def _mmap_rom(path: str | PathLike):
+    with open(path, "r+b", buffering=0) as f:
+        with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
+            view = memoryview(m)
+            yield view
+            view.release()
+            # If we don't release the memoryview manually,
+            # we'll get a BufferError when the context manager exits
+        f.close()
+
+class _DoNotLoad: pass
+
+DoNotLoad = _DoNotLoad()
+
 
 class Session(EnvironmentCallback):
     def __init__(
@@ -32,7 +59,8 @@ class Session(EnvironmentCallback):
             video: VideoState,
             # TODO: Support for an env override function
             # TODO: Support for core options
-            content: str | SpecialContent | None = None,
+
+            content: Content | SpecialContent | _DoNotLoad | None = None,
             overscan: bool = False,
             message: MessageInterface | None = None,
             system_dir: Directory | None = None,
@@ -59,6 +87,7 @@ class Session(EnvironmentCallback):
         self._video = video
         self._content = content
         self._system_av_info: retro_system_av_info | None = None
+        self._system_info: retro_system_info | None = None
 
         self._overscan = overscan
         self._message: MessageInterface | None = message
@@ -89,20 +118,83 @@ class Session(EnvironmentCallback):
         self._playlist_dir = _to_bytes(playlist_dir)
 
     def __enter__(self):
+        api_version = self._core.api_version()
+        if api_version != RETRO_API_VERSION:
+            raise RuntimeError(f"libretro.py is only compatible with API version {RETRO_API_VERSION}, but the core uses {api_version}")
+
         self._core.set_video_refresh(self._video.refresh)
         self._core.set_audio_sample(self._audio.audio_sample)
         self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
         self._core.set_input_poll(self._input.poll)
         self._core.set_input_state(self._input.state)
         self._core.set_environment(self.environment)
+        self._system_info = self._core.get_system_info()
+
+        if self._system_info.library_name is None:
+            raise RuntimeError("Core did not provide a library name")
+
+        if self._system_info.library_version is None:
+            raise RuntimeError("Core did not provide a library version")
+
+        if self._system_info.valid_extensions is None:
+            raise RuntimeError("Core did not provide valid extensions")
 
         self._core.init()
+
+        # TODO: Enforce the condition given in retro_system_content_info_override
+        # TODO: Enforce the contents of retro_subsystem_info (if any)
+
+        need_fullpath = self._system_info.need_fullpath # TODO: Look through the overrides and subsystems to determine when this is true
+        persistent_data = False # TODO: Look through the overrides and subsystems to determine when this is true
         loaded: bool = False
         match self._content:
-            case str(content):
-                loaded = self._core.load_game(content)
-            case SpecialContent(content_type, content):
-                loaded = self._core.load_game_special(content_type, content)
+            case _DoNotLoad():
+                # Do nothing, we're testing something that doesn't need to load a game
+                return self
+            case retro_game_info(info) if need_fullpath:
+                # For test cases that create a retro_game_info manually
+                info: retro_game_info
+
+                if not info.path:
+                    raise ValueError("Core requires a full path, but none was provided")
+
+                loaded = self._core.load_game(info)
+            case retro_game_info(info) if not need_fullpath:
+                # For test cases that create a retro_game_info manually
+                if not info.data:
+                    raise ValueError("Core wants retro_game_info to include data, but none was provided")
+
+                loaded = self._core.load_game(info)
+            case str(path) | PathLike(path) if need_fullpath:
+                loaded = self._core.load_game(retro_game_info(path.encode(), None, 0, None))
+            case str(path) | PathLike(path) if not need_fullpath:
+                # For test cases that just provide a path
+                with _mmap_rom(path) as content:
+                    # noinspection PyTypeChecker
+                    # You can't directly get an address from a memoryview,
+                    # so you need to resort to C-like casting
+                    array_type: Array = c_ubyte * len(content)
+                    buffer_array = array_type.from_buffer(content)
+
+                    info = retro_game_info(path.encode(), addressof(buffer_array), len(content), None)
+                    loaded = self._core.load_game(info)
+                    del info
+                    del buffer_array
+                    del array_type
+                    # Need to clear all outstanding pointers, or else mmap will raise a BufferError
+
+            case bytes(rom) | bytearray(rom) | memoryview(rom):
+                # For test cases that provide ROM data directly
+                if need_fullpath:
+                    raise ValueError("Core requires a full path, but none was provided")
+
+                loaded = self._core.load_game(retro_game_info(None, rom, len(rom), None))
+            case SpecialContent(content_type, special_content):
+                if not self._subsystem_info:
+                    raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
+
+                # TODO
+                #loaded = self._core.load_game_special(content_type, content)
             case None:
                 if not self._support_no_game:
                     raise RuntimeError("No content provided and core did not indicate support for no game.")
@@ -115,7 +207,8 @@ class Session(EnvironmentCallback):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._core.unload_game()
+        if self._content is not DoNotLoad:
+            self._core.unload_game()
         self._core.deinit()
         del self._core
         return False
@@ -181,6 +274,10 @@ class Session(EnvironmentCallback):
     @property
     def support_achievements(self) -> bool | None:
         return self._supports_achievements
+
+    @property
+    def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
+        return self._content_info_override
 
     def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
@@ -349,8 +446,13 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_SUBSYSTEM_INFO:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
+
+                subsystem_info_ptr = cast(data, POINTER(retro_subsystem_info))
+                self._subsystem_info = _array_from_null_terminated(subsystem_info_ptr, lambda x: x.desc)
+                return True
+
             case EnvironmentCall.SET_CONTROLLER_INFO:
                 # TODO: Implement
                 pass
@@ -464,8 +566,14 @@ class Session(EnvironmentCallback):
                 # TODO: Implement
                 pass
             case EnvironmentCall.SET_CONTENT_INFO_OVERRIDE:
-                # TODO: Implement
-                pass
+                if not data:
+                    return True
+                # The docs say that passing NULL here serves to query for support
+
+                override_ptr = cast(data, POINTER(retro_system_content_info_override))
+                self._content_info_override = _array_from_null_terminated(override_ptr, lambda x: x.extensions)
+                return True
+
             case EnvironmentCall.GET_GAME_INFO_EXT:
                 # TODO: Implement
                 pass
@@ -525,7 +633,7 @@ class Session(EnvironmentCallback):
 
 def default_session(
         core: str,
-        content: str | SpecialContent | None = None,
+        content: str | SpecialContent | _DoNotLoad | None = None,
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoCallbacks | None = None,
@@ -542,9 +650,9 @@ def default_session(
     input_impl: InputState | None = None
     if isinstance(input_state, InputState):
         input_impl = input_state
-    elif isinstance(input_state, InputStateIterator):
+    elif isinstance(input_state, Iterable):
         input_impl = GeneratorInputState(input_state)
-    elif isinstance(input_state, InputStateGenerator):
+    elif isinstance(input_state, Callable):
         input_impl = GeneratorInputState(input_state)
 
     logger = logging.getLogger('libretro')

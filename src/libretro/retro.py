@@ -7,6 +7,7 @@ import enum
 import logging
 import sys
 from ctypes import *  # noqa: F401, F403
+from typing import TYPE_CHECKING, get_type_hints
 
 _int_types = (ctypes.c_int16, ctypes.c_int32)
 if hasattr(ctypes, "c_int64"):
@@ -437,6 +438,15 @@ def ord_if_char(value):
     """
     return ord(value) if (isinstance(value, bytes) or isinstance(value, str)) else value
 
+# Taken from https://blag.nullteilerfrei.de/2021/06/20/prettier-struct-definitions-for-python-ctypes/
+class FieldsFromTypeHints(type(ctypes.Structure)):
+    def __new__(cls, name, bases, namespace):
+        class AnnotationDummy:
+            __annotations__ = namespace.get('__annotations__', {})
+        annotations = get_type_hints(AnnotationDummy)
+        namespace['_fields_'] = list(annotations.items())
+        namespace['__slots__'] = list(annotations.keys())
+        return type(ctypes.Structure).__new__(cls, name, bases, namespace)
 # End preamble
 
 
@@ -880,48 +890,29 @@ class retro_controller_info(Structure):
 
     __slots__ = [f[0] for f in _fields_]
 
-class retro_subsystem_memory_info(Structure):
-    pass
 
-retro_subsystem_memory_info.__slots__ = [
-    'extension',
-    'type',
-]
-retro_subsystem_memory_info._fields_ = [
-    ('extension', String),
-    ('type', c_uint),
-]
+class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
+    extension: String
+    type: c_uint
 
-class retro_subsystem_rom_info(Structure):
-    _fields_ = [
-        ('desc', String),
-        ('valid_extensions', String),
-        ('need_fullpath', c_bool),
-        ('block_extract', c_bool),
-        ('required', c_bool),
-        ('memory', POINTER(retro_subsystem_memory_info)),
-        ('num_memory', c_uint),
-    ]
 
-    __slots__ = [f[0] for f in _fields_]
+class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
+    desc: String
+    valid_extensions: String
+    need_fullpath: c_bool
+    block_extract: c_bool
+    required: c_bool
+    memory: POINTER(retro_subsystem_memory_info)
+    num_memory: c_uint
 
-class retro_subsystem_info(Structure):
-    pass
 
-retro_subsystem_info.__slots__ = [
-    'desc',
-    'ident',
-    'roms',
-    'num_roms',
-    'id',
-]
-retro_subsystem_info._fields_ = [
-    ('desc', String),
-    ('ident', String),
-    ('roms', POINTER(retro_subsystem_rom_info)),
-    ('num_roms', c_uint),
-    ('id', c_uint),
-]
+class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
+    desc: String
+    ident: String
+    roms: POINTER(retro_subsystem_rom_info)
+    num_roms: c_uint
+    id: c_uint
+
 
 retro_proc_address_t = CFUNCTYPE(None, )
 
@@ -1290,8 +1281,13 @@ retro_set_image_index_t = CFUNCTYPE(c_bool, c_uint)
 
 retro_get_num_images_t = CFUNCTYPE(c_uint, )
 
-class retro_game_info(Structure):
-    pass
+
+class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
+    path: c_char_p
+    data: c_void_p
+    size: c_size_t
+    meta: c_char_p
+
 
 retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(retro_game_info))
 
@@ -1530,37 +1526,22 @@ retro_input_descriptor._fields_ = [
     ('description', String),
 ]
 
-class retro_system_info(Structure):
-    pass
 
-retro_system_info.__slots__ = [
-    'library_name',
-    'library_version',
-    'valid_extensions',
-    'need_fullpath',
-    'block_extract',
-]
-retro_system_info._fields_ = [
-    ('library_name', String),
-    ('library_version', String),
-    ('valid_extensions', String),
-    ('need_fullpath', c_bool),
-    ('block_extract', c_bool),
-]
+class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
+    library_name: String
+    library_version: String
+    valid_extensions: String
+    need_fullpath: c_bool
+    block_extract: c_bool
 
-class retro_system_content_info_override(Structure):
-    pass
 
-retro_system_content_info_override.__slots__ = [
-    'extensions',
-    'need_fullpath',
-    'persistent_data',
-]
-retro_system_content_info_override._fields_ = [
-    ('extensions', String),
-    ('need_fullpath', c_bool),
-    ('persistent_data', c_bool),
-]
+class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHints):
+    extensions: String
+    need_fullpath: c_bool
+    persistent_data: c_bool
+
+    def __repr__(self):
+        return f"retro_system_content_info_override({self.extensions}, {self.need_fullpath!r}, {self.persistent_data!r})"
 
 class retro_game_info_ext(Structure):
     pass
@@ -1772,19 +1753,6 @@ retro_core_options_update_display_callback.__slots__ = [
 ]
 retro_core_options_update_display_callback._fields_ = [
     ('callback', retro_core_options_update_display_callback_t),
-]
-
-retro_game_info.__slots__ = [
-    'path',
-    'data',
-    'size',
-    'meta',
-]
-retro_game_info._fields_ = [
-    ('path', String),
-    ('data', c_void_p),
-    ('size', c_size_t),
-    ('meta', String),
 ]
 
 class retro_framebuffer(Structure):
