@@ -166,9 +166,10 @@ class Session(EnvironmentCallback):
 
                 loaded = self._core.load_game(info)
             case str(path) | PathLike(path) if need_fullpath:
+                # For test cases with content that needs a full path, so no data is provided
+                # (RetroArch does this)
                 loaded = self._core.load_game(retro_game_info(path.encode(), None, 0, None))
             case str(path) | PathLike(path) if not need_fullpath:
-                # For test cases that just provide a path
                 with _mmap_rom(path) as content:
                     # noinspection PyTypeChecker
                     # You can't directly get an address from a memoryview,
