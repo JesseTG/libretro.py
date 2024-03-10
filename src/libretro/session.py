@@ -334,7 +334,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
                 pixfmt_ptr = cast(data, POINTER(retro_pixel_format))
-                return self._video.set_pixel_format(pixfmt_ptr.contents)
+                return self._video.set_pixel_format(PixelFormat(pixfmt_ptr.contents))
 
             case EnvironmentCall.SET_INPUT_DESCRIPTORS:
                 # TODO: Implement
