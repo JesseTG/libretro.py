@@ -2,7 +2,7 @@ from abc import abstractmethod
 from ctypes import c_void_p
 from typing import Protocol
 
-from ..defs import EnvironmentCall
+from ..retro import EnvironmentCall
 
 
 class EnvironmentCallback(Protocol):

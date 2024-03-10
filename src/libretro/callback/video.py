@@ -16,10 +16,13 @@ class VideoCallbacks(Protocol):
 @runtime_checkable
 class VideoState(VideoCallbacks, Protocol):
     @abstractmethod
+    def set_rotation(self, rotation: int) -> bool: ...
+
+    @abstractmethod
     def can_dupe(self) -> bool: ...
 
     @abstractmethod
-    def set_pixel_format(self, format: PixelFormat) -> None: ...
+    def set_pixel_format(self, format: PixelFormat) -> bool: ...
 
     @abstractmethod
     def set_system_av_info(self, av_info: retro_system_av_info) -> None: ...
@@ -39,14 +42,21 @@ class SoftwareVideoState(VideoState):
     def frame(self) -> array | None:
         return self._frame
 
+    def set_rotation(self, rotation: int) -> bool:
+        return False # TODO: Implement
+
     def can_dupe(self) -> bool:
         return True
 
-    def set_pixel_format(self, format: PixelFormat) -> None:
+    def set_pixel_format(self, format: PixelFormat) -> bool:
+        if not isinstance(format, PixelFormat):
+            raise TypeError(f"Expected a PixelFormat, got {type(format)}")
+
         if self._pixel_format != format:
             self._frame = None
 
         self._pixel_format = format
+        return True
 
     def set_system_av_info(self, av_info: retro_system_av_info) -> None:
         system_av_info = retro_system_av_info(av_info)
@@ -64,7 +74,7 @@ class SoftwareVideoState(VideoState):
     def refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
         if not self._frame or self._frame.buffer_info()[1] * self._frame.itemsize != pitch * height:
             # If we don't have a frame or the frame is not the right size, create a new one
-            self._frame = array(self._pixel_format.typecode(), [0] * (pitch * height))
+            self._frame = array(self._pixel_format.typecode, [0] * (pitch * height))
 
         # Copy the data into the frame
         memmove(self._frame.buffer_info()[0], data, pitch * height)

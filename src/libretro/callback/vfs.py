@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from io import FileIO
+import os
 from typing import Protocol, Literal
 from ..retro import *
 from ..defs import *
@@ -18,7 +19,7 @@ class FileSystemInterfaceV1(Protocol):
     def get_path(self, stream: FileHandle) -> bytes: ...
 
     @abstractmethod
-    def open(self, path: bytes, mode: FileAccessMode, hints: FileAccessHint) -> FileHandle: ...
+    def open(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint) -> FileHandle: ...
 
     @abstractmethod
     def close(self, stream: FileHandle) -> int: ...
@@ -30,7 +31,7 @@ class FileSystemInterfaceV1(Protocol):
     def tell(self, stream: FileHandle) -> int: ...
 
     @abstractmethod
-    def seek(self, stream: FileHandle, offset: int, whence: FileSeekPos) -> int: ...
+    def seek(self, stream: FileHandle, offset: int, whence: VfsSeekPosition) -> int: ...
 
     @abstractmethod
     def read(self, stream: FileHandle, buffer: c_void_p, length: int) -> int: ...
@@ -55,7 +56,7 @@ class FileSystemInterfaceV2(FileSystemInterfaceV1, Protocol):
 
 class FileSystemInterfaceV3(FileSystemInterfaceV2, Protocol):
     @abstractmethod
-    def stat(self, path: bytes, size: c_int32) -> FileStat: ...
+    def stat(self, path: bytes, size: c_int32) -> VfsStat: ...
 
     @abstractmethod
     def mkdir(self, path: bytes) -> int: ...
@@ -114,7 +115,7 @@ class PythonFileSystemInterface(FileSystemInterfaceV3):
 
         return stream.file.name
 
-    def open(self, path: bytes, mode: FileAccessMode, hints: FileAccessHint) -> FileHandle | None:
+    def open(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint) -> FileHandle | None:
         if path is None:
             return None
 
@@ -165,7 +166,7 @@ class PythonFileSystemInterface(FileSystemInterfaceV3):
 
         return stream.file.tell()
 
-    def seek(self, stream: FileHandle, offset: int, whence: FileSeekPos) -> int:
+    def seek(self, stream: FileHandle, offset: int, whence: VfsSeekPosition) -> int:
         if not stream or stream not in self._file_handles or not stream.file.seekable():
             return -1
 
@@ -227,7 +228,7 @@ class PythonFileSystemInterface(FileSystemInterfaceV3):
         except OSError as e:
             return -1
 
-    def stat(self, path: bytes, size: c_int32) -> FileStat:
+    def stat(self, path: bytes, size: c_int32) -> VfsStat:
         if not path:
             return -1
 

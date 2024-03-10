@@ -13,8 +13,13 @@ class AudioCallbacks(Protocol):
     def audio_sample_batch(self, data: POINTER(c_int16), frames: c_size_t) -> c_size_t: ...
 
 
+class AudioState(AudioCallbacks, Protocol):
+    @property
+    def buffer(self) -> array: ...
+
+
 @final
-class AudioState(AudioCallbacks):
+class ArrayAudioState(AudioState):
     def __init__(self):
         self._buffer = array('h')
 

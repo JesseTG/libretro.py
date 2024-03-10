@@ -32,7 +32,7 @@ class MessageExt:
         self.progress = int(message.progress)
 
 
-class LoggingMessageInterface(MessageInterface):
+class LoggerMessageInterface(MessageInterface):
     def __init__(self, version: int, logger: Logger | None):
         self._version = version
         self._logger = logger
@@ -42,9 +42,11 @@ class LoggingMessageInterface(MessageInterface):
     def version(self) -> int:
         return self._version
 
+    @property
     def messages(self) -> Sequence[Message]:
         return self._messages
 
+    @property
     def message_exts(self) -> Sequence[MessageExt]:
         return self._message_exts
 
@@ -59,7 +61,7 @@ class LoggingMessageInterface(MessageInterface):
             case retro_message_ext() if self._version >= 1:
                 m = MessageExt(message)
                 self._message_exts.append(m)
-                if self._logger is not None:
+                if self._logger is not None and m.target in (MessageTarget.Log, MessageTarget.All):
                     self._logger.log(m.level.to_logging_level(), m.msg)
                 return True
             case _:
