@@ -25,7 +25,7 @@ class InputState(InputCallbacks, Protocol):
 
     @property
     @abstractmethod
-    def bitmasks(self) -> bool: ...
+    def bitmasks_supported(self) -> bool: ...
 
     @property
     @abstractmethod
@@ -295,6 +295,7 @@ class AnalogState(NamedTuple):
     right_x: int = 0
     right_y: int = 0
 
+
 @dataclass(frozen=True)
 class Point(NamedTuple):
     x: int = 0
@@ -353,19 +354,47 @@ InputStateGenerator = Callable[[], InputStateIterator]
 
 @final
 class GeneratorInputState(InputState):
-    def __init__(self, generator: InputStateGenerator | InputStateIterator | None = None):
+    def __init__(
+            self,
+            generator: InputStateGenerator | None = None,
+            device_capabilities: InputDeviceFlag = InputDeviceFlag.ALL,
+            bitmasks_supported: bool = False,
+            max_users: int = 8
+    ):
         self._generator = generator
         self._generator_state: Iterator[InputPollResult | Sequence[InputPollResult]] | None = None
         self._last_poll_result: InputPollResult = None
+        self._device_capabilities = device_capabilities
+        self._bitmasks_supported = bitmasks_supported
+        self._max_users = max_users
 
+    @property
     def device_capabilities(self) -> InputDeviceFlag:
-        pass  # TODO: Implement
+        return self._device_capabilities
 
-    def bitmasks(self) -> bool:
-        pass  # TODO: Implement
+    @device_capabilities.setter
+    def device_capabilities(self, value: InputDeviceFlag) -> None:
+        # Unrecognized devices will be filtered out by the CONFORM boundary on InputDeviceFlag
+        self._device_capabilities = InputDeviceFlag(value)
 
+    @property
+    def bitmasks_supported(self) -> bool:
+        return self._bitmasks_supported
+
+    @bitmasks_supported.setter
+    def bitmasks_supported(self, value: bool) -> None:
+        self._bitmasks_supported = bool(value)
+
+    @property
     def max_users(self) -> int:
-        pass  # TODO: Implement
+        return self._max_users
+
+    @max_users.setter
+    def max_users(self, value: int) -> None:
+        if value < 0:
+            raise ValueError(f"Expected a non-negative value of max_users, got {value}")
+
+        self._max_users = int(value)
 
     def poll(self) -> None:
         if self._generator:
@@ -375,20 +404,25 @@ class GeneratorInputState(InputState):
             self._last_poll_result = next(self._generator_state, None)
 
     def state(self, port: int, device: InputDevice, index: int, id: int) -> int:
-        match self._last_poll_result:
-            case []:
-                # Yielding an empty sequence will expose 0 to all ports, devices, indexes, and IDs.
+        match (self._generator, self._last_poll_result, port, device):
+            case(None, _, _, _) | (_, [], _, _):
+                # An unassigned generator or an empty result list will default to 0
                 return 0
-            case [*results]:
+            case _, _, port, device if not ((0 <= port < self.max_users) and (self.device_capabilities & device.flag)):
+                # Non-existent ports and unavailable devices will always return 0
+                return 0
+            case _, [*results], port, device if port < len(results):
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
                 results: Sequence[InputPollResult]
                 return self._lookup_port_state(results[port], device, index, id)
-            case result if isinstance(result, InputPollResult):
+            case _, result, _, device if isinstance(result, InputPollResult):
                 # Yielding a type that's _not_ a sequence
                 # will expose it to all ports.
                 return self._lookup_port_state(result, device, index, id)
+            case _:
+                return 0
 
     def _lookup_port_state(self, result: InputPollResult, device: InputDevice, index: int, id: int) -> int:
         match (result, device, index, id):
@@ -404,7 +438,7 @@ class GeneratorInputState(InputState):
             # Yielding a JoypadState will expose it to the port's joypad device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case JoypadState() as joypad_state, InputDevice.JOYPAD, _, DeviceIdJoypad.MASK:
+            case JoypadState() as joypad_state, InputDevice.JOYPAD, _, DeviceIdJoypad.MASK if self._bitmasks_supported:
                 # When asking for the joypad's button mask,
                 # return the mask as an integer
                 joypad_state: JoypadState
@@ -426,7 +460,7 @@ class GeneratorInputState(InputState):
 
             case AnalogState() as analog_state, InputDevice.ANALOG, _, id:
                 analog_state: AnalogState
-                return 0
+                return 0 # TODO: Implement
 
             # Yielding a MouseState will expose it to the port's mouse device,
             # with all other devices defaulting to 0.
@@ -484,8 +518,8 @@ class GeneratorInputState(InputState):
                 # Index is ignored.
                 pointer_state: PointerState
                 return len(pointer_state.pointers)
-            case PointerState() as pointer_state, InputDevice.POINTER, index, id \
-                    if 0 <= index < len(pointer_state.pointers) and 0 <= id < len(pointer_state.pointers[index]):
+            case PointerState() as pointer_state, InputDevice.POINTER, index, (0 | 1 | 2) as id \
+                    if 0 <= index < len(pointer_state.pointers):
                 # The state of a specific touch will be exposed as RETRO_DEVICE_ID_POINTER_PRESSED on that index.
                 # Unused or invalid touches will return 0 (False).
                 # id=0 is X, id=1 is Y, id=2 is PRESSED
