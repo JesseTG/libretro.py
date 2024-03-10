@@ -1812,6 +1812,17 @@ RETRO_DEVICE_LIGHTGUN = 4
 RETRO_DEVICE_ANALOG = 5
 RETRO_DEVICE_POINTER = 6
 
+class InputDeviceFlag(IntFlag, boundary=CONFORM):
+    NONE = 1 << RETRO_DEVICE_NONE
+    JOYPAD = 1 << RETRO_DEVICE_JOYPAD
+    MOUSE = 1 << RETRO_DEVICE_MOUSE
+    KEYBOARD = 1 << RETRO_DEVICE_KEYBOARD
+    LIGHTGUN = 1 << RETRO_DEVICE_LIGHTGUN
+    ANALOG = 1 << RETRO_DEVICE_ANALOG
+    POINTER = 1 << RETRO_DEVICE_POINTER
+
+    ALL = JOYPAD | MOUSE | KEYBOARD | LIGHTGUN | ANALOG | POINTER
+
 
 class InputDevice(IntEnum):
     NONE = RETRO_DEVICE_NONE
@@ -1825,15 +1836,12 @@ class InputDevice(IntEnum):
     def __init__(self, value: int):
         self._type_ = 'H'
 
+    @property
+    def flag(self) -> InputDeviceFlag:
+        return InputDeviceFlag(1 << self.value)
 
-class InputDeviceFlag(IntFlag, boundary=CONFORM):
-    NONE = 1 << RETRO_DEVICE_NONE
-    JOYPAD = 1 << RETRO_DEVICE_JOYPAD
-    MOUSE = 1 << RETRO_DEVICE_MOUSE
-    KEYBOARD = 1 << RETRO_DEVICE_KEYBOARD
-    LIGHTGUN = 1 << RETRO_DEVICE_LIGHTGUN
-    ANALOG = 1 << RETRO_DEVICE_ANALOG
-    POINTER = 1 << RETRO_DEVICE_POINTER
+
+
 
 RETRO_DEVICE_ID_JOYPAD_B = 0
 RETRO_DEVICE_ID_JOYPAD_Y = 1
