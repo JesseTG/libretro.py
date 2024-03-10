@@ -6,13 +6,13 @@ from contextlib import contextmanager
 from ctypes import *
 
 from .retro import retro_game_info
-from .callback.log import LogCallback, StandardLogger
-from .callback.message import MessageInterface, LoggerMessageInterface
+from .api.log import LogCallback, StandardLogger
+from .api.message import MessageInterface, LoggerMessageInterface
 from .core import Core
-from .callback.audio import AudioCallbacks, AudioState, ArrayAudioState
-from .callback.environment import EnvironmentCallback
-from .callback.input import *
-from .callback.video import VideoCallbacks, SoftwareVideoState, VideoState
+from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
+from .api.environment import EnvironmentCallback
+from .api.input import *
+from .api.video import VideoCallbacks, SoftwareVideoState, VideoState
 from .defs import *
 
 

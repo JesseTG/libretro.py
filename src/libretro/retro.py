@@ -1707,10 +1707,10 @@ class retro_core_options_update_display_callback(Structure):
     pass
 
 retro_core_options_update_display_callback.__slots__ = [
-    'callback',
+    'api',
 ]
 retro_core_options_update_display_callback._fields_ = [
-    ('callback', retro_core_options_update_display_callback_t),
+    ('api', retro_core_options_update_display_callback_t),
 ]
 
 class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
