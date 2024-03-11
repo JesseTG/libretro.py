@@ -17,14 +17,21 @@ def as_bytes(value: str | bytes | None) -> bytes | None:
     return value
 
 
-def array_from_null_terminated(ptr, when: Callable[[Structure], bool]) -> list[Structure]:
+def is_zeroed(struct: Structure) -> bool:
+    return not any(getattr(struct, field) for field, _ in struct._fields_)
+
+
+def from_zero_terminated(ptr) -> tuple[Structure]:
+    if not ptr:
+        return tuple[Structure]()
+
     result: list[Structure] = []
     i = 0
-    while when(ptr[i]):
+    while not is_zeroed(ptr[i]):
         result.append(ptr[i])
         i += 1
 
-    return result
+    return tuple[Structure](result)
 
 
 @contextmanager

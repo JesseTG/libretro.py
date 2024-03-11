@@ -424,7 +424,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 
                 subsystem_info_ptr = cast(data, POINTER(retro_subsystem_info))
-                self._subsystem_info = array_from_null_terminated(subsystem_info_ptr, lambda x: x.desc)
+                self._subsystem_info = from_zero_terminated(subsystem_info_ptr)
                 return True
 
             case EnvironmentCall.SET_CONTROLLER_INFO:
@@ -545,7 +545,7 @@ class Session(EnvironmentCallback):
                 # The docs say that passing NULL here serves to query for support
 
                 override_ptr = cast(data, POINTER(retro_system_content_info_override))
-                self._content_info_override = array_from_null_terminated(override_ptr, lambda x: x.extensions)
+                self._content_info_override = from_zero_terminated(override_ptr)
                 return True
 
             case EnvironmentCall.GET_GAME_INFO_EXT:
