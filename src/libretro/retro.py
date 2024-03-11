@@ -451,6 +451,9 @@ class FieldsFromTypeHints(type(ctypes.Structure)):
 # End preamble
 
 
+RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
+
+
 class Rotation(IntEnum):
     NONE = 0
     NINETY = 1
@@ -1561,145 +1564,67 @@ class retro_system_av_info(Structure, metaclass=FieldsFromTypeHints):
     timing: retro_system_timing
 
 
-class retro_variable(Structure):
-    pass
+class retro_variable(Structure, metaclass=FieldsFromTypeHints):
+    key: c_char_p
+    value: c_char_p
 
-retro_variable.__slots__ = [
-    'key',
-    'value',
-]
-retro_variable._fields_ = [
-    ('key', String),
-    ('value', String),
-]
 
-class retro_core_option_display(Structure):
-    pass
+class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
+    key: c_char_p
+    visible: c_bool
 
-retro_core_option_display.__slots__ = [
-    'key',
-    'visible',
-]
-retro_core_option_display._fields_ = [
-    ('key', String),
-    ('visible', c_bool),
-]
 
-class retro_core_option_value(Structure):
-    pass
+class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
+    value: c_char_p
+    label: c_char_p
 
-retro_core_option_value.__slots__ = [
-    'value',
-    'label',
-]
-retro_core_option_value._fields_ = [
-    ('value', String),
-    ('label', String),
-]
 
-class retro_core_option_definition(Structure):
-    pass
+class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
+    key: c_char_p
+    desc: c_char_p
+    info: c_char_p
+    values: retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
+    default_value: c_char_p
 
-retro_core_option_definition.__slots__ = [
-    'key',
-    'desc',
-    'info',
-    'values',
-    'default_value',
-]
-retro_core_option_definition._fields_ = [
-    ('key', String),
-    ('desc', String),
-    ('info', String),
-    ('values', retro_core_option_value * int(128)),
-    ('default_value', String),
-]
 
-class retro_core_options_intl(Structure):
-    pass
+class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
+    us: POINTER(retro_core_option_definition)
+    local: POINTER(retro_core_option_definition)
 
-retro_core_options_intl.__slots__ = [
-    'us',
-    'local',
-]
-retro_core_options_intl._fields_ = [
-    ('us', POINTER(retro_core_option_definition)),
-    ('local', POINTER(retro_core_option_definition)),
-]
 
-class retro_core_option_v2_category(Structure):
-    pass
+class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
+    key: c_char_p
+    desc: c_char_p
+    info: c_char_p
 
-retro_core_option_v2_category.__slots__ = [
-    'key',
-    'desc',
-    'info',
-]
-retro_core_option_v2_category._fields_ = [
-    ('key', String),
-    ('desc', String),
-    ('info', String),
-]
 
-class retro_core_option_v2_definition(Structure):
-    pass
+class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
+    key: c_char_p
+    desc: c_char_p
+    desc_categorized: c_char_p
+    info: c_char_p
+    info_categorized: c_char_p
+    category_key: c_char_p
+    values: retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
+    default_value: c_char_p
 
-retro_core_option_v2_definition.__slots__ = [
-    'key',
-    'desc',
-    'desc_categorized',
-    'info',
-    'info_categorized',
-    'category_key',
-    'values',
-    'default_value',
-]
-retro_core_option_v2_definition._fields_ = [
-    ('key', String),
-    ('desc', String),
-    ('desc_categorized', String),
-    ('info', String),
-    ('info_categorized', String),
-    ('category_key', String),
-    ('values', retro_core_option_value * int(128)),
-    ('default_value', String),
-]
 
-class retro_core_options_v2(Structure):
-    pass
+class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
+    categories: POINTER(retro_core_option_v2_category)
+    definitions: POINTER(retro_core_option_v2_definition)
 
-retro_core_options_v2.__slots__ = [
-    'categories',
-    'definitions',
-]
-retro_core_options_v2._fields_ = [
-    ('categories', POINTER(retro_core_option_v2_category)),
-    ('definitions', POINTER(retro_core_option_v2_definition)),
-]
 
-class retro_core_options_v2_intl(Structure):
-    pass
+class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
+    us: POINTER(retro_core_options_v2)
+    local: POINTER(retro_core_options_v2)
 
-retro_core_options_v2_intl.__slots__ = [
-    'us',
-    'local',
-]
-retro_core_options_v2_intl._fields_ = [
-    ('us', POINTER(retro_core_options_v2)),
-    ('local', POINTER(retro_core_options_v2)),
-]
 
 retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool, )
 
-class retro_core_options_update_display_callback(Structure):
-    pass
 
-retro_core_options_update_display_callback.__slots__ = [
-    'api',
-]
-retro_core_options_update_display_callback._fields_ = [
-    ('api', retro_core_options_update_display_callback_t),
-]
+class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
+    callback: retro_core_options_update_display_callback_t
+
 
 class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     data: c_void_p
@@ -2306,7 +2231,6 @@ RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = (1 << 0)
 RETRO_NETPACKET_UNSEQUENCED = (1 << 1)
-RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 RETRO_MEMORY_ACCESS_WRITE = (1 << 0)
 RETRO_MEMORY_ACCESS_READ = (1 << 1)
 RETRO_MEMORY_TYPE_CACHED = (1 << 0)
