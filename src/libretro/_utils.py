@@ -1,6 +1,6 @@
 import mmap
 from contextlib import contextmanager
-from ctypes import Structure, pythonapi, c_char_p, c_ssize_t, c_int, py_object
+from ctypes import *
 from os import PathLike
 from typing import Callable
 
@@ -46,5 +46,6 @@ pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
 pythonapi.PyMemoryView_FromMemory.restype = py_object
 
 
-def memoryview_at(address, size, readonly=False):
-    return pythonapi.PyMemoryView_FromMemory(address, size, 0x100 if readonly else 0x200)
+def memoryview_at(address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False):
+    flags = c_int(0x100 if readonly else 0x200)
+    return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
