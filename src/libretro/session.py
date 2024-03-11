@@ -280,8 +280,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_MESSAGE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_MESSAGE doesn't accept NULL")
+
+                message_ptr = cast(data, POINTER(retro_message))
+                return self._message.set_message(message_ptr.contents)
+
             case EnvironmentCall.SHUTDOWN:
                 # TODO: Implement
                 pass
