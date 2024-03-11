@@ -16,34 +16,8 @@ from .api.video import VideoCallbacks, SoftwareVideoState, VideoState
 from .defs import *
 
 
-def _full_power() -> retro_device_power:
-    return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
 
-
-def _to_bytes(value: str | bytes | None) -> bytes | None:
-    if isinstance(value, str):
-        return value.encode('utf-8')
-    return value
-
-def _array_from_null_terminated(ptr, when: Callable[[Structure], bool]) -> list[Structure]:
-    result: list[Structure] = []
-    i = 0
-    while when(ptr[i]):
-        result.append(ptr[i])
-        i += 1
-
-    return result
-
-@contextmanager
-def _mmap_rom(path: str | PathLike):
-    with open(path, "r+b", buffering=0) as f:
-        with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
-            view = memoryview(m)
-            yield view
-            view.release()
-            # If we don't release the memoryview manually,
-            # we'll get a BufferError when the context manager exits
-        f.close()
+import _utils
 
 class _DoNotLoad: pass
 
@@ -71,7 +45,7 @@ class Session(EnvironmentCallback):
             language: Language = Language.ENGLISH,
             target_refresh_rate: float = 60.0,
             jit_capable: bool = True,
-            device_power: DevicePower | None = _full_power,
+            device_power: DevicePower | None = _utils.full_power,
             playlist_dir: Directory | None = None
     ):
         if core is None:
@@ -94,17 +68,17 @@ class Session(EnvironmentCallback):
         self._is_shutdown: bool = False
         self._keyboard_callback: retro_keyboard_callback | None = None
         self._performance_level: int | None = None
-        self._system_dir = _to_bytes(system_dir)
+        self._system_dir = _utils.as_bytes(system_dir)
         self._support_no_game: bool | None = None
-        self._libretro_path: bytes = _to_bytes(self._core.path)
+        self._libretro_path: bytes = _utils.as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
         self._log_callback: LogCallback | None = log_callback
-        self._core_assets_dir = _to_bytes(core_assets_dir)
-        self._save_dir = _to_bytes(save_dir)
+        self._core_assets_dir = _utils.as_bytes(core_assets_dir)
+        self._save_dir = _utils.as_bytes(save_dir)
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._subsystem_info: Sequence[retro_subsystem_info] | None = None
         self._memory_maps: retro_memory_map | None = None
-        self._username = _to_bytes(username)
+        self._username = _utils.as_bytes(username)
         self._language = language
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
@@ -115,7 +89,8 @@ class Session(EnvironmentCallback):
         self._savestate_context: SavestateContext | None = SavestateContext.NORMAL
         self._jit_capable = jit_capable
         self._device_power = device_power
-        self._playlist_dir = _to_bytes(playlist_dir)
+        self._playlist_dir = _utils.as_bytes(playlist_dir)
+        self._pending_callback_exceptions: list[BaseException] = []
 
     def __enter__(self):
         api_version = self._core.api_version()
@@ -170,7 +145,7 @@ class Session(EnvironmentCallback):
                 # (RetroArch does this)
                 loaded = self._core.load_game(retro_game_info(path.encode(), None, 0, None))
             case str(path) | PathLike(path) if not need_fullpath:
-                with _mmap_rom(path) as content:
+                with _utils.mmap_file(path) as content:
                     # noinspection PyTypeChecker
                     # You can't directly get an address from a memoryview,
                     # so you need to resort to C-like casting
@@ -334,7 +309,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
                 pixfmt_ptr = cast(data, POINTER(retro_pixel_format))
-                return self._video.set_pixel_format(PixelFormat(pixfmt_ptr.contents))
+                return self._video.set_pixel_format(PixelFormat(pixfmt_ptr.contents.value))
 
             case EnvironmentCall.SET_INPUT_DESCRIPTORS:
                 # TODO: Implement
@@ -451,7 +426,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 
                 subsystem_info_ptr = cast(data, POINTER(retro_subsystem_info))
-                self._subsystem_info = _array_from_null_terminated(subsystem_info_ptr, lambda x: x.desc)
+                self._subsystem_info = _utils.array_from_null_terminated(subsystem_info_ptr, lambda x: x.desc)
                 return True
 
             case EnvironmentCall.SET_CONTROLLER_INFO:
@@ -572,7 +547,7 @@ class Session(EnvironmentCallback):
                 # The docs say that passing NULL here serves to query for support
 
                 override_ptr = cast(data, POINTER(retro_system_content_info_override))
-                self._content_info_override = _array_from_null_terminated(override_ptr, lambda x: x.extensions)
+                self._content_info_override = _utils.array_from_null_terminated(override_ptr, lambda x: x.extensions)
                 return True
 
             case EnvironmentCall.GET_GAME_INFO_EXT:
