@@ -1392,18 +1392,6 @@ class PixelFormat(IntEnum):
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
-    @property
-    def typecode(self) -> str:
-        match self:
-            case self.RGB1555:
-                return 'H'
-            case self.XRGB8888:
-                return 'L'
-            case self.RGB565:
-                return 'H'
-            case _:
-                raise ValueError(f"Unknown pixel format: {self}")
-
 
 retro_savestate_context = c_int
 
