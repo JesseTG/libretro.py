@@ -74,7 +74,7 @@ class SoftwareVideoState(VideoState):
     def refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
         if not self._frame or self._frame.buffer_info()[1] * self._frame.itemsize != pitch * height:
             # If we don't have a frame or the frame is not the right size, create a new one
-            self._frame = array(self._pixel_format.typecode, [0] * (pitch * height))
+            self._frame = array('B', [0] * (pitch * height))
 
         # Copy the data into the frame
         memmove(self._frame.buffer_info()[0], data, pitch * height)
