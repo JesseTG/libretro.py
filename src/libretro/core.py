@@ -1,10 +1,5 @@
+from ._utils import memoryview_at
 from .defs import *
-
-# When https://github.com/python/cpython/issues/112015 is merged,
-# use ctypes.memoryview_at instead of this hack
-# taken from https://stackoverflow.com/a/72968176/1089957
-pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
-pythonapi.PyMemoryView_FromMemory.restype = py_object
 
 
 class Core:
@@ -213,8 +208,7 @@ class Core:
             return None
 
         size = self.get_memory_size(id)
-        return pythonapi.PyMemoryView_FromMemory(data, size, 0x200)
-        # 0x200 = read/write, 0x100 = read-only
+        return memoryview_at(data, size, readonly=True)
 
     @property
     def path(self) -> str:

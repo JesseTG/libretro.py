@@ -1,6 +1,6 @@
 import mmap
 from contextlib import contextmanager
-from ctypes import Structure
+from ctypes import Structure, pythonapi, c_char_p, c_ssize_t, c_int, py_object
 from os import PathLike
 from typing import Callable
 
@@ -37,3 +37,14 @@ def mmap_file(path: str | PathLike):
             # If we don't release the memoryview manually,
             # we'll get a BufferError when the context manager exits
         f.close()
+
+
+# When https://github.com/python/cpython/issues/112015 is merged,
+# use ctypes.memoryview_at instead of this hack
+# taken from https://stackoverflow.com/a/72968176/1089957
+pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
+pythonapi.PyMemoryView_FromMemory.restype = py_object
+
+
+def memoryview_at(address, size, readonly=False):
+    return pythonapi.PyMemoryView_FromMemory(address, size, 0x100 if readonly else 0x200)
