@@ -21,17 +21,14 @@ def is_zeroed(struct: Structure) -> bool:
     return not any(getattr(struct, field) for field, _ in struct._fields_)
 
 
-def from_zero_terminated(ptr) -> tuple[Structure]:
+def from_zero_terminated(ptr):
     if not ptr:
-        return tuple[Structure]()
+        raise StopIteration()
 
-    result: list[Structure] = []
     i = 0
     while not is_zeroed(ptr[i]):
-        result.append(ptr[i])
+        yield ptr[i]
         i += 1
-
-    return tuple[Structure](result)
 
 
 @contextmanager
