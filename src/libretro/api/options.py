@@ -156,9 +156,9 @@ class StandardOptionState(OptionState):
         match callback:
             case None:
                 self._update_display_callback = None
-            case retro_core_options_update_display_callback(funptr) if not funptr:
+            case retro_core_options_update_display_callback(callback=_) if not callback:
                 self._update_display_callback = None
-            case retro_core_options_update_display_callback(funptr) if funptr:
+            case retro_core_options_update_display_callback(callback=callback):
                 self._update_display_callback = callback
             # TODO: Handle type errors
 
