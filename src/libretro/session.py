@@ -57,8 +57,6 @@ class Session(EnvironmentCallback):
             device_power: DevicePower,
             playlist_dir: Directory | None
     ):
-        # TODO: Make the above arguments all required; move defaults and optionals to the factory function
-
         if core is None:
             raise ValueError("Core cannot be None")
 
