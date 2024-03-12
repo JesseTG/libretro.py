@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from ctypes import Structure, c_char_p, c_uint, c_int8, string_at
 from enum import IntEnum
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, runtime_checkable
 from logging import Logger
 
 from ..h import *
@@ -43,6 +43,7 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
     progress: c_int8
 
 
+@runtime_checkable
 class MessageInterface(Protocol):
     @abstractmethod
     def version(self) -> int: ...

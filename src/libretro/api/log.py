@@ -4,7 +4,7 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from ctypes import CFUNCTYPE, Structure
 from enum import IntEnum
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from logging import Logger, LogRecord
 
 from ..h import *
@@ -39,6 +39,7 @@ class retro_log_callback(Structure, metaclass=FieldsFromTypeHints):
     log: retro_log_printf_t
 
 
+@runtime_checkable
 class LogCallback(Protocol):
     @abstractmethod
     def log(self, message: LogLevel, fmt: bytes, *args) -> None: ...
