@@ -1,9 +1,105 @@
-from abc import abstractmethod
-from io import FileIO
 import os
+
+from abc import abstractmethod
+from ctypes import *
+from enum import IntFlag, IntEnum
+from io import FileIO
 from typing import Protocol, Literal
-from ..retro import *
-from ..defs import *
+
+from ..retro import UNCHECKED, String, FieldsFromTypeHints
+from ..h import *
+
+
+class retro_vfs_file_handle(Structure):
+    pass
+
+
+class retro_vfs_dir_handle(Structure):
+    pass
+
+
+retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
+retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_file_handle)), String, c_uint, c_uint)
+retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
+retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
+retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
+retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
+retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
+retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
+retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
+retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
+retro_vfs_remove_t = CFUNCTYPE(c_int, String)
+retro_vfs_rename_t = CFUNCTYPE(c_int, String, String)
+retro_vfs_stat_t = CFUNCTYPE(c_int, String, POINTER(c_int32))
+retro_vfs_mkdir_t = CFUNCTYPE(c_int, String)
+retro_vfs_opendir_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_dir_handle)), String, c_bool)
+retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
+retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_dir_handle))
+retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
+retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
+
+
+class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
+    get_path: retro_vfs_get_path_t
+    open: retro_vfs_open_t
+    close: retro_vfs_close_t
+    size: retro_vfs_size_t
+    tell: retro_vfs_tell_t
+    seek: retro_vfs_seek_t
+    read: retro_vfs_read_t
+    write: retro_vfs_write_t
+    flush: retro_vfs_flush_t
+    remove: retro_vfs_remove_t
+    rename: retro_vfs_rename_t
+    truncate: retro_vfs_truncate_t
+    stat: retro_vfs_stat_t
+    mkdir: retro_vfs_mkdir_t
+    opendir: retro_vfs_opendir_t
+    readdir: retro_vfs_readdir_t
+    dirent_get_name: retro_vfs_dirent_get_name_t
+    dirent_is_dir: retro_vfs_dirent_is_dir_t
+    closedir: retro_vfs_closedir_t
+
+
+class retro_vfs_interface_info(Structure, metaclass=FieldsFromTypeHints):
+    required_interface_version: c_uint32
+    iface: POINTER(retro_vfs_interface)
+
+
+class VfsFileAccess(IntFlag):
+    READ = RETRO_VFS_FILE_ACCESS_READ
+    WRITE = RETRO_VFS_FILE_ACCESS_WRITE
+    READ_WRITE = RETRO_VFS_FILE_ACCESS_READ_WRITE
+    UPDATE_EXISTING = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+
+
+class VfsFileAccessHint(IntFlag):
+    NONE = RETRO_VFS_FILE_ACCESS_HINT_NONE
+    FREQUENT_ACCESS = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+
+
+class VfsSeekPosition(IntEnum):
+    START = RETRO_VFS_SEEK_POSITION_START
+    CURRENT = RETRO_VFS_SEEK_POSITION_CURRENT
+    END = RETRO_VFS_SEEK_POSITION_END
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+
+
+class VfsStat(IntFlag):
+    IS_VALID = RETRO_VFS_STAT_IS_VALID
+    IS_DIRECTORY = RETRO_VFS_STAT_IS_DIRECTORY
+    IS_CHARACTER_SPECIAL = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
 
 
 class FileHandle:
@@ -11,8 +107,10 @@ class FileHandle:
         self.file = file
         self._as_parameter_ = c_void_p(id(self))
 
+
 class DirectoryHandle:
     pass
+
 
 class FileSystemInterfaceV1(Protocol):
     @abstractmethod
