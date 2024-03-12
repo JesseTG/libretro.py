@@ -327,8 +327,8 @@ class StandardOptionState(OptionState):
                 self._update_display_callback = None
             case retro_core_options_update_display_callback(callback=c) if not c:
                 self._update_display_callback = None
-            case retro_core_options_update_display_callback(callback=_):
-                self._update_display_callback = callback
+            case retro_core_options_update_display_callback(callback=c):
+                self._update_display_callback = retro_core_options_update_display_callback(c)
             case _:
                 raise TypeError(f"Expected a retro_core_options_update_display_callback, got {callback!r}")
 
