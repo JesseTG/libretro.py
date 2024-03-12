@@ -3,6 +3,7 @@ from .defs import *
 
 from .api.environment import retro_environment_t
 from .api.input import retro_input_poll_t, retro_input_state_t
+from .api.system import retro_system_info, retro_system_av_info, Region
 
 
 class Core:

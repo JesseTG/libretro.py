@@ -452,98 +452,6 @@ class FieldsFromTypeHints(type(ctypes.Structure)):
 # End preamble
 
 
-RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
-
-
-class Rotation(IntEnum):
-    NONE = 0
-    NINETY = 1
-    ONE_EIGHTY = 2
-    TWO_SEVENTY = 3
-
-    def __init__(self, value):
-        self._type_ = 'I'
-
-
-retro_language = c_int
-RETRO_LANGUAGE_ENGLISH = 0
-RETRO_LANGUAGE_JAPANESE = 1
-RETRO_LANGUAGE_FRENCH = 2
-RETRO_LANGUAGE_SPANISH = 3
-RETRO_LANGUAGE_GERMAN = 4
-RETRO_LANGUAGE_ITALIAN = 5
-RETRO_LANGUAGE_DUTCH = 6
-RETRO_LANGUAGE_PORTUGUESE_BRAZIL = 7
-RETRO_LANGUAGE_PORTUGUESE_PORTUGAL = 8
-RETRO_LANGUAGE_RUSSIAN = 9
-RETRO_LANGUAGE_KOREAN = 10
-RETRO_LANGUAGE_CHINESE_TRADITIONAL = 11
-RETRO_LANGUAGE_CHINESE_SIMPLIFIED = 12
-RETRO_LANGUAGE_ESPERANTO = 13
-RETRO_LANGUAGE_POLISH = 14
-RETRO_LANGUAGE_VIETNAMESE = 15
-RETRO_LANGUAGE_ARABIC = 16
-RETRO_LANGUAGE_GREEK = 17
-RETRO_LANGUAGE_TURKISH = 18
-RETRO_LANGUAGE_SLOVAK = 19
-RETRO_LANGUAGE_PERSIAN = 20
-RETRO_LANGUAGE_HEBREW = 21
-RETRO_LANGUAGE_ASTURIAN = 22
-RETRO_LANGUAGE_FINNISH = 23
-RETRO_LANGUAGE_INDONESIAN = 24
-RETRO_LANGUAGE_SWEDISH = 25
-RETRO_LANGUAGE_UKRAINIAN = 26
-RETRO_LANGUAGE_CZECH = 27
-RETRO_LANGUAGE_CATALAN_VALENCIA = 28
-RETRO_LANGUAGE_CATALAN = 29
-RETRO_LANGUAGE_BRITISH_ENGLISH = 30
-RETRO_LANGUAGE_HUNGARIAN = 31
-RETRO_LANGUAGE_BELARUSIAN = 32
-RETRO_LANGUAGE_LAST = (RETRO_LANGUAGE_BELARUSIAN + 1)
-RETRO_LANGUAGE_DUMMY = 0x7fffffff
-
-
-class Language(IntEnum):
-    ENGLISH = RETRO_LANGUAGE_ENGLISH
-    JAPANESE = RETRO_LANGUAGE_JAPANESE
-    FRENCH = RETRO_LANGUAGE_FRENCH
-    SPANISH = RETRO_LANGUAGE_SPANISH
-    GERMAN = RETRO_LANGUAGE_GERMAN
-    ITALIAN = RETRO_LANGUAGE_ITALIAN
-    DUTCH = RETRO_LANGUAGE_DUTCH
-    PORTUGUESE_BRAZIL = RETRO_LANGUAGE_PORTUGUESE_BRAZIL
-    PORTUGUESE_PORTUGAL = RETRO_LANGUAGE_PORTUGUESE_PORTUGAL
-    RUSSIAN = RETRO_LANGUAGE_RUSSIAN
-    KOREAN = RETRO_LANGUAGE_KOREAN
-    CHINESE_TRADITIONAL = RETRO_LANGUAGE_CHINESE_TRADITIONAL
-    CHINESE_SIMPLIFIED = RETRO_LANGUAGE_CHINESE_SIMPLIFIED
-    ESPERANTO = RETRO_LANGUAGE_ESPERANTO
-    POLISH = RETRO_LANGUAGE_POLISH
-    VIETNAMESE = RETRO_LANGUAGE_VIETNAMESE
-    ARABIC = RETRO_LANGUAGE_ARABIC
-    GREEK = RETRO_LANGUAGE_GREEK
-    TURKISH = RETRO_LANGUAGE_TURKISH
-    SLOVAK = RETRO_LANGUAGE_SLOVAK
-    PERSIAN = RETRO_LANGUAGE_PERSIAN
-    HEBREW = RETRO_LANGUAGE_HEBREW
-    ASTURIAN = RETRO_LANGUAGE_ASTURIAN
-    FINNISH = RETRO_LANGUAGE_FINNISH
-    INDONESIAN = RETRO_LANGUAGE_INDONESIAN
-    SWEDISH = RETRO_LANGUAGE_SWEDISH
-    UKRAINIAN = RETRO_LANGUAGE_UKRAINIAN
-    CZECH = RETRO_LANGUAGE_CZECH
-    CATALAN_VALENCIA = RETRO_LANGUAGE_CATALAN_VALENCIA
-    CATALAN = RETRO_LANGUAGE_CATALAN
-    BRITISH_ENGLISH = RETRO_LANGUAGE_BRITISH_ENGLISH
-    HUNGARIAN = RETRO_LANGUAGE_HUNGARIAN
-    BELARUSIAN = RETRO_LANGUAGE_BELARUSIAN
-
-    def __init__(self, value):
-        self._type_ = 'I'
-
-
-
-
 class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     id: c_uint
@@ -604,7 +512,6 @@ class retro_audio_buffer_status_callback(Structure, metaclass=FieldsFromTypeHint
     callback: retro_audio_buffer_status_callback_t
 
 
-
 retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
 class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
@@ -655,37 +562,6 @@ class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=Fie
     get_image_label: retro_get_image_label_t
 
 
-
-
-
-retro_pixel_format = c_int
-RETRO_PIXEL_FORMAT_0RGB1555 = 0
-RETRO_PIXEL_FORMAT_XRGB8888 = 1
-RETRO_PIXEL_FORMAT_RGB565 = 2
-RETRO_PIXEL_FORMAT_UNKNOWN = 0x7fffffff
-
-
-class PixelFormat(IntEnum):
-    RGB1555 = RETRO_PIXEL_FORMAT_0RGB1555
-    XRGB8888 = RETRO_PIXEL_FORMAT_XRGB8888
-    RGB565 = RETRO_PIXEL_FORMAT_RGB565
-
-    def __init__(self, value):
-        self._type_ = 'I'
-
-    @property
-    def bytes_per_pixel(self) -> int:
-        match self:
-            case self.RGB1555:
-                return 2
-            case self.XRGB8888:
-                return 4
-            case self.RGB565:
-                return 2
-            case _:
-                raise ValueError(f"Unknown pixel format: {self}")
-
-
 class retro_input_descriptor(Structure):
     pass
 
@@ -705,60 +581,11 @@ retro_input_descriptor._fields_ = [
 ]
 
 
-class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
-    library_name: String
-    library_version: String
-    valid_extensions: String
-    need_fullpath: c_bool
-    block_extract: c_bool
-
-
-class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
-    base_width: c_uint
-    base_height: c_uint
-    max_width: c_uint
-    max_height: c_uint
-    aspect_ratio: c_float
-
-
-class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
-    fps: c_double
-    sample_rate: c_double
-
-
-class retro_system_av_info(Structure, metaclass=FieldsFromTypeHints):
-    geometry: retro_game_geometry
-    timing: retro_system_timing
-
-
-
-class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
-    data: c_void_p
-    width: c_uint
-    height: c_uint
-    pitch: c_size_t
-    format: retro_pixel_format
-    access_flags: c_uint
-    memory_flags: c_uint
-
-
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
 
 retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
 
 retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
-
-
-RETRO_REGION_NTSC = 0
-RETRO_REGION_PAL = 1
-
-
-class Region(IntEnum):
-    NTSC = RETRO_REGION_NTSC
-    PAL = RETRO_REGION_PAL
-
-    def __init__(self, value: int):
-        self._type_ = 'I'
 
 
 RETRO_MEMORY_MASK = 0xff

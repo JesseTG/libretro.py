@@ -1,7 +1,7 @@
 from ctypes import Structure, c_uint
 
-from ....retro import FieldsFromTypeHints
-from ....h import retro_hw_render_context_negotiation_interface_type
+from libretro.retro import FieldsFromTypeHints
+from libretro.h import retro_hw_render_context_negotiation_interface_type
 
 
 class retro_hw_render_context_negotiation_interface(Structure, metaclass=FieldsFromTypeHints):

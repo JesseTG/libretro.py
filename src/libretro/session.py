@@ -11,6 +11,7 @@ from .api.memory import retro_memory_map
 from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
+from .api.system import *
 from .api.throttle import *
 from .retro import retro_game_info
 from .api.log import retro_log_callback, LogCallback, StandardLogger
@@ -20,7 +21,7 @@ from .core import Core
 from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
 from .api.input import *
-from .api.video import VideoCallbacks, SoftwareVideoState, VideoState
+from .api.video import VideoCallbacks, SoftwareVideoState, VideoState, PixelFormat
 from .defs import *
 
 from ._utils import *

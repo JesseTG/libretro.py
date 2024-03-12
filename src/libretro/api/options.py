@@ -5,6 +5,7 @@ from typing import Protocol, Sequence, runtime_checkable, AnyStr, Literal, Mappi
 
 from .._utils import from_zero_terminated, as_bytes
 from ..retro import *
+from ..h import RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
 class retro_variable(Structure, metaclass=FieldsFromTypeHints):
