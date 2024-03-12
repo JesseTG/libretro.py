@@ -3,11 +3,12 @@ __docformat__ = "restructuredtext"
 # Begin preamble for Python
 
 import ctypes
+from abc import abstractmethod
 from enum import IntEnum, IntFlag, unique, CONFORM, EJECT
 import logging
 import sys
 from ctypes import *  # noqa: F401, F403
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints, Sequence, overload
 
 _int_types = (ctypes.c_int16, ctypes.c_int32)
 if hasattr(ctypes, "c_int64"):
@@ -541,185 +542,43 @@ class Language(IntEnum):
         self._type_ = 'I'
 
 
-class retro_memory_descriptor(Structure):
-    pass
-
-retro_memory_descriptor.__slots__ = [
-    'flags',
-    'ptr',
-    'offset',
-    'start',
-    'select',
-    'disconnect',
-    'len',
-    'addrspace',
-]
-retro_memory_descriptor._fields_ = [
-    ('flags', c_uint64),
-    ('ptr', c_void_p),
-    ('offset', c_size_t),
-    ('start', c_size_t),
-    ('select', c_size_t),
-    ('disconnect', c_size_t),
-    ('len', c_size_t),
-    ('addrspace', String),
-]
-
-class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
-    descriptors: POINTER(retro_memory_descriptor)
-    num_descriptors: c_uint
 
 
-class retro_controller_description(Structure):
-    _fields_ = [
-        ('desc', String),
-        ('id', c_uint),
-    ]
-
-    __slots__ = [f[0] for f in _fields_]
+class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
+    desc: c_char_p
+    id: c_uint
 
 
 class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
     types: POINTER(retro_controller_description)
     num_types: c_uint
 
+    @overload
+    def __getitem__(self, index: int) -> retro_controller_description: ...
 
-class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
-    extension: String
-    type: c_uint
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]: ...
 
+    def __getitem__(self, index):
+        if not self.types:
+            raise ValueError("No controller types available")
 
-class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
-    desc: String
-    valid_extensions: String
-    need_fullpath: c_bool
-    block_extract: c_bool
-    required: c_bool
-    memory: POINTER(retro_subsystem_memory_info)
-    num_memory: c_uint
+        match index:
+            case int(i):
+                if not (0 <= i < self.num_types):
+                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                return self.types[i]
 
+            case slice() as s:
+                s: slice
+                return self.types[s]
 
-class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
-    desc: String
-    ident: String
-    roms: POINTER(retro_subsystem_rom_info)
-    num_roms: c_uint
-    id: c_uint
+            case _:
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
+    def __len__(self):
+        return int(self.num_types)
 
-retro_perf_tick_t = c_uint64
-
-retro_time_t = c_int64
-
-class retro_perf_counter(Structure):
-    pass
-
-retro_perf_counter.__slots__ = [
-    'ident',
-    'start',
-    'total',
-    'call_cnt',
-    'registered',
-]
-retro_perf_counter._fields_ = [
-    ('ident', String),
-    ('start', retro_perf_tick_t),
-    ('total', retro_perf_tick_t),
-    ('call_cnt', retro_perf_tick_t),
-    ('registered', c_bool),
-]
-
-retro_perf_get_time_usec_t = CFUNCTYPE(UNCHECKED(retro_time_t), )
-
-retro_perf_get_counter_t = CFUNCTYPE(UNCHECKED(retro_perf_tick_t), )
-
-retro_get_cpu_features_t = CFUNCTYPE(c_uint64, )
-
-retro_perf_log_t = CFUNCTYPE(None, )
-
-retro_perf_register_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
-
-retro_perf_start_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
-
-retro_perf_stop_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
-
-class retro_perf_callback(Structure, metaclass=FieldsFromTypeHints):
-    get_time_usec: retro_perf_get_time_usec_t
-    get_cpu_features: retro_get_cpu_features_t
-    get_perf_counter: retro_perf_get_counter_t
-    perf_register: retro_perf_register_t
-    perf_start: retro_perf_start_t
-    perf_stop: retro_perf_stop_t
-    perf_log: retro_perf_log_t
-
-
-retro_sensor_action = c_int
-
-RETRO_SENSOR_ACCELEROMETER_ENABLE = 0
-
-RETRO_SENSOR_ACCELEROMETER_DISABLE = (RETRO_SENSOR_ACCELEROMETER_ENABLE + 1)
-
-RETRO_SENSOR_GYROSCOPE_ENABLE = (RETRO_SENSOR_ACCELEROMETER_DISABLE + 1)
-
-RETRO_SENSOR_GYROSCOPE_DISABLE = (RETRO_SENSOR_GYROSCOPE_ENABLE + 1)
-
-RETRO_SENSOR_ILLUMINANCE_ENABLE = (RETRO_SENSOR_GYROSCOPE_DISABLE + 1)
-
-RETRO_SENSOR_ILLUMINANCE_DISABLE = (RETRO_SENSOR_ILLUMINANCE_ENABLE + 1)
-
-RETRO_SENSOR_DUMMY = 0x7fffffff
-
-retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, retro_sensor_action, c_uint)
-
-retro_sensor_get_input_t = CFUNCTYPE(c_float, c_uint, c_uint)
-
-class retro_sensor_interface(Structure, metaclass=FieldsFromTypeHints):
-    set_sensor_state: retro_set_sensor_state_t
-    get_sensor_input: retro_sensor_get_input_t
-
-
-retro_camera_buffer = c_int
-
-RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0
-
-RETRO_CAMERA_BUFFER_RAW_FRAMEBUFFER = (RETRO_CAMERA_BUFFER_OPENGL_TEXTURE + 1)
-
-RETRO_CAMERA_BUFFER_DUMMY = 0x7fffffff
-
-retro_camera_start_t = CFUNCTYPE(c_bool, )
-
-retro_camera_stop_t = CFUNCTYPE(None, )
-
-retro_camera_lifetime_status_t = CFUNCTYPE(None, )
-
-retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(None, POINTER(c_uint32), c_uint, c_uint, c_size_t)
-
-retro_camera_frame_opengl_texture_t = CFUNCTYPE(None, c_uint, c_uint, POINTER(c_float))
-
-class retro_camera_callback(Structure, metaclass=FieldsFromTypeHints):
-    caps: c_uint64
-    width: c_uint
-    height: c_uint
-    start: retro_camera_start_t
-    stop: retro_camera_stop_t
-    frame_raw_framebuffer: retro_camera_frame_raw_framebuffer_t
-    frame_opengl_texture: retro_camera_frame_opengl_texture_t
-    initialized: retro_camera_lifetime_status_t
-    deinitialized: retro_camera_lifetime_status_t
-
-
-retro_rumble_effect = c_int
-
-RETRO_RUMBLE_STRONG = 0
-
-RETRO_RUMBLE_WEAK = 1
-
-RETRO_RUMBLE_DUMMY = 0x7fffffff
-
-retro_set_rumble_state_t = CFUNCTYPE(c_bool, c_uint, retro_rumble_effect, c_uint16)
-
-class retro_rumble_interface(Structure, metaclass=FieldsFromTypeHints):
-    set_rumble_state: retro_set_rumble_state_t
 
 retro_audio_callback_t = CFUNCTYPE(None, )
 
@@ -796,27 +655,7 @@ class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=Fie
     get_image_label: retro_get_image_label_t
 
 
-retro_netpacket_send_t = CFUNCTYPE(None, c_int, c_void_p, c_size_t, c_uint16, c_bool)
 
-retro_netpacket_start_t = CFUNCTYPE(None, c_uint16, retro_netpacket_send_t)
-
-retro_netpacket_receive_t = CFUNCTYPE(None, c_void_p, c_size_t, c_uint16)
-
-retro_netpacket_stop_t = CFUNCTYPE(None, )
-
-retro_netpacket_poll_t = CFUNCTYPE(None, )
-
-retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
-
-retro_netpacket_disconnected_t = CFUNCTYPE(None, c_uint16)
-
-class retro_netpacket_callback(Structure, metaclass=FieldsFromTypeHints):
-    start: retro_netpacket_start_t
-    receive: retro_netpacket_receive_t
-    stop: retro_netpacket_stop_t
-    poll: retro_netpacket_poll_t
-    connected: retro_netpacket_connected_t
-    disconnected: retro_netpacket_disconnected_t
 
 
 retro_pixel_format = c_int
@@ -847,25 +686,6 @@ class PixelFormat(IntEnum):
                 raise ValueError(f"Unknown pixel format: {self}")
 
 
-retro_savestate_context = c_int
-
-RETRO_SAVESTATE_CONTEXT_NORMAL = 0
-RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE = 1
-RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY = 2
-RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY = 3
-RETRO_SAVESTATE_CONTEXT_UNKNOWN = 0x7fffffff
-
-
-class SavestateContext(IntEnum):
-    NORMAL = RETRO_SAVESTATE_CONTEXT_NORMAL
-    RUNAHEAD_SAME_INSTANCE = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE
-    RUNAHEAD_SAME_BINARY = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY
-    ROLLBACK_NETPLAY = RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY
-
-    def __init__(self, value: int):
-        self._type_ = 'i'
-
-
 class retro_input_descriptor(Structure):
     pass
 
@@ -892,44 +712,6 @@ class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
     need_fullpath: c_bool
     block_extract: c_bool
 
-
-class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHints):
-    extensions: String
-    need_fullpath: c_bool
-    persistent_data: c_bool
-
-    def __repr__(self):
-        return f"retro_system_content_info_override({self.extensions}, {self.need_fullpath!r}, {self.persistent_data!r})"
-
-class retro_game_info_ext(Structure):
-    pass
-
-retro_game_info_ext.__slots__ = [
-    'full_path',
-    'archive_path',
-    'archive_file',
-    'dir',
-    'name',
-    'ext',
-    'meta',
-    'data',
-    'size',
-    'file_in_archive',
-    'persistent_data',
-]
-retro_game_info_ext._fields_ = [
-    ('full_path', String),
-    ('archive_path', String),
-    ('archive_file', String),
-    ('dir', String),
-    ('name', String),
-    ('ext', String),
-    ('meta', String),
-    ('data', c_void_p),
-    ('size', c_size_t),
-    ('file_in_archive', c_bool),
-    ('persistent_data', c_bool),
-]
 
 class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
     base_width: c_uint
@@ -982,6 +764,13 @@ class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     info: c_char_p
 
+    def __deepcopy__(self, _):
+        return retro_core_option_v2_category(
+            bytes(self.key.value) if self.key else None,
+            bytes(self.desc.value) if self.desc else None,
+            bytes(self.info.value) if self.info else None,
+        )
+
 
 class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
@@ -1021,69 +810,6 @@ class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     memory_flags: c_uint
 
 
-class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
-    ratio: c_float
-    fastforward: c_bool
-    notification: c_bool
-    inhibit_toggle: c_bool
-
-
-class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
-    mode: c_uint
-    rate: c_float
-
-# This one has no fields, it doesn't need the weight of a metaclass
-class retro_microphone(Structure):
-    pass
-
-retro_microphone_t = retro_microphone
-
-class retro_microphone_params(Structure, metaclass=FieldsFromTypeHints):
-    rate: c_uint
-
-
-retro_microphone_params_t = retro_microphone_params
-
-retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone_t)), POINTER(retro_microphone_params_t))
-
-retro_close_mic_t = CFUNCTYPE(None, POINTER(retro_microphone_t))
-
-retro_get_mic_params_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t), POINTER(retro_microphone_params_t))
-
-retro_set_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t), c_bool)
-
-retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone_t))
-
-retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone_t), POINTER(c_int16), c_size_t)
-
-class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
-    interface_version: c_uint
-    open_mic: retro_open_mic_t
-    close_mic: retro_close_mic_t
-    get_params: retro_get_mic_params_t
-    set_mic_state: retro_set_mic_state_t
-    get_mic_state: retro_get_mic_state_t
-    read_mic: retro_read_mic_t
-
-retro_power_state = c_int
-
-RETRO_POWERSTATE_UNKNOWN = 0
-
-RETRO_POWERSTATE_DISCHARGING = (RETRO_POWERSTATE_UNKNOWN + 1)
-
-RETRO_POWERSTATE_CHARGING = (RETRO_POWERSTATE_DISCHARGING + 1)
-
-RETRO_POWERSTATE_CHARGED = (RETRO_POWERSTATE_CHARGING + 1)
-
-RETRO_POWERSTATE_PLUGGED_IN = (RETRO_POWERSTATE_CHARGED + 1)
-
-class retro_device_power(Structure, metaclass=FieldsFromTypeHints):
-    state: retro_power_state
-    seconds: c_int
-    percent: c_int8
-
-
-
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
 
 retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
@@ -1110,89 +836,6 @@ RETRO_MEMORY_SYSTEM_RAM = 2
 RETRO_MEMORY_VIDEO_RAM = 3
 
 
-RETRO_SERIALIZATION_QUIRK_INCOMPLETE = (1 << 0)
-RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE = (1 << 1)
-RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE = (1 << 2)
-RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE = (1 << 3)
-RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION = (1 << 4)
-RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT = (1 << 5)
-RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT = (1 << 6)
-
-
-class SerializationQuirks(IntFlag):
-    INCOMPLETE = RETRO_SERIALIZATION_QUIRK_INCOMPLETE
-    MUST_INITIALIZE = RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE
-    CORE_VARIABLE_SIZE = RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE
-    FRONTEND_VARIABLE_SIZE = RETRO_SERIALIZATION_QUIRK_FRONT_VARIABLE_SIZE
-    SINGLE_SESSION = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION
-    ENDIAN_DEPENDENT = RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT
-    PLATFORM_DEPENDENT = RETRO_SERIALIZATION_QUIRK_PLATFORM_DEPENDENT
-
-
-RETRO_MEMDESC_CONST = (1 << 0)
-RETRO_MEMDESC_BIGENDIAN = (1 << 1)
-RETRO_MEMDESC_SYSTEM_RAM = (1 << 2)
-RETRO_MEMDESC_SAVE_RAM = (1 << 3)
-RETRO_MEMDESC_VIDEO_RAM = (1 << 4)
-RETRO_MEMDESC_ALIGN_2 = (1 << 16)
-RETRO_MEMDESC_ALIGN_4 = (2 << 16)
-RETRO_MEMDESC_ALIGN_8 = (3 << 16)
-RETRO_MEMDESC_MINSIZE_2 = (1 << 24)
-RETRO_MEMDESC_MINSIZE_4 = (2 << 24)
-RETRO_MEMDESC_MINSIZE_8 = (3 << 24)
-RETRO_SIMD_SSE = (1 << 0)
-RETRO_SIMD_SSE2 = (1 << 1)
-RETRO_SIMD_VMX = (1 << 2)
-RETRO_SIMD_VMX128 = (1 << 3)
-RETRO_SIMD_AVX = (1 << 4)
-RETRO_SIMD_NEON = (1 << 5)
-RETRO_SIMD_SSE3 = (1 << 6)
-RETRO_SIMD_SSSE3 = (1 << 7)
-RETRO_SIMD_MMX = (1 << 8)
-RETRO_SIMD_MMXEXT = (1 << 9)
-RETRO_SIMD_SSE4 = (1 << 10)
-RETRO_SIMD_SSE42 = (1 << 11)
-RETRO_SIMD_AVX2 = (1 << 12)
-RETRO_SIMD_VFPU = (1 << 13)
-RETRO_SIMD_PS = (1 << 14)
-RETRO_SIMD_AES = (1 << 15)
-RETRO_SIMD_VFPV3 = (1 << 16)
-RETRO_SIMD_VFPV4 = (1 << 17)
-RETRO_SIMD_POPCNT = (1 << 18)
-RETRO_SIMD_MOVBE = (1 << 19)
-RETRO_SIMD_CMOV = (1 << 20)
-RETRO_SIMD_ASIMD = (1 << 21)
-RETRO_SENSOR_ACCELEROMETER_X = 0
-RETRO_SENSOR_ACCELEROMETER_Y = 1
-RETRO_SENSOR_ACCELEROMETER_Z = 2
-RETRO_SENSOR_GYROSCOPE_X = 3
-RETRO_SENSOR_GYROSCOPE_Y = 4
-RETRO_SENSOR_GYROSCOPE_Z = 5
-RETRO_SENSOR_ILLUMINANCE = 6
-RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
-RETRO_NETPACKET_UNRELIABLE = 0
-RETRO_NETPACKET_RELIABLE = (1 << 0)
-RETRO_NETPACKET_UNSEQUENCED = (1 << 1)
 RETRO_MEMORY_ACCESS_WRITE = (1 << 0)
 RETRO_MEMORY_ACCESS_READ = (1 << 1)
 RETRO_MEMORY_TYPE_CACHED = (1 << 0)
-RETRO_THROTTLE_NONE = 0
-RETRO_THROTTLE_FRAME_STEPPING = 1
-RETRO_THROTTLE_FAST_FORWARD = 2
-RETRO_THROTTLE_SLOW_MOTION = 3
-RETRO_THROTTLE_REWINDING = 4
-RETRO_THROTTLE_VSYNC = 5
-RETRO_THROTTLE_UNBLOCKED = 6
-RETRO_MICROPHONE_INTERFACE_VERSION = 1
-RETRO_POWERSTATE_NO_ESTIMATE = (-1)
-
-
-class PowerState(IntEnum):
-    UNKNOWN = RETRO_POWERSTATE_UNKNOWN
-    DISCHARGING = RETRO_POWERSTATE_DISCHARGING
-    CHARGING = RETRO_POWERSTATE_CHARGING
-    CHARGED = RETRO_POWERSTATE_CHARGED
-    PLUGGED_IN = RETRO_POWERSTATE_PLUGGED_IN
-
-    def __init__(self, value: int):
-        self._type_ = 'I'

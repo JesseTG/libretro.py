@@ -5,11 +5,17 @@ import mmap
 from contextlib import contextmanager
 from ctypes import *
 
+from .api.content import *
 from .api.environment import EnvironmentCall
+from .api.memory import retro_memory_map
+from .api.options import OptionState, StandardOptionState
+from .api.power import retro_device_power, PowerState, DevicePower
+from .api.savestate import *
+from .api.throttle import *
 from .retro import retro_game_info
 from .api.log import retro_log_callback, LogCallback, StandardLogger
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface
-from .api.proc import *
+from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .core import Core
 from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
@@ -24,6 +30,10 @@ class _DoNotLoad: pass
 DoNotLoad = _DoNotLoad()
 
 
+def full_power() -> retro_device_power:
+    return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
+
+
 class Session(EnvironmentCallback):
     def __init__(
             self,
@@ -32,22 +42,24 @@ class Session(EnvironmentCallback):
             input_state: InputState,
             video: VideoState,
             # TODO: Support for an env override function
-            # TODO: Support for core options
 
-            content: Content | SpecialContent | _DoNotLoad | None = None,
-            overscan: bool = False,
-            message: MessageInterface | None = None,
-            system_dir: Directory | None = None,
-            log_callback: LogCallback | None = None,
-            core_assets_dir: Directory | None = None,
-            save_dir: Directory | None = None,
-            username: str | None = "libretro.py",
-            language: Language = Language.ENGLISH,
-            target_refresh_rate: float = 60.0,
-            jit_capable: bool = True,
-            device_power: DevicePower | None = full_power,
-            playlist_dir: Directory | None = None
+            content: Content | SpecialContent | _DoNotLoad | None,
+            overscan: bool,
+            message: MessageInterface,
+            options: OptionState,
+            system_dir: Directory | None,
+            log_callback: LogCallback,
+            core_assets_dir: Directory | None,
+            save_dir: Directory | None,
+            username: str | bytes | None,
+            language: Language,
+            target_refresh_rate: float,
+            jit_capable: bool,
+            device_power: DevicePower,
+            playlist_dir: Directory | None
     ):
+        # TODO: Make the above arguments all required; move defaults and optionals to the factory function
+
         if core is None:
             raise ValueError("Core cannot be None")
 
@@ -64,19 +76,21 @@ class Session(EnvironmentCallback):
         self._system_info: retro_system_info | None = None
 
         self._overscan = overscan
-        self._message: MessageInterface | None = message
+        self._message = message
         self._is_shutdown: bool = False
         self._keyboard_callback: retro_keyboard_callback | None = None
         self._performance_level: int | None = None
         self._system_dir = as_bytes(system_dir)
+        self._options: OptionState = options
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
-        self._log_callback: LogCallback | None = log_callback
+        self._log_callback: LogCallback = log_callback
         self._core_assets_dir = as_bytes(core_assets_dir)
         self._save_dir = as_bytes(save_dir)
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._subsystem_info: Sequence[retro_subsystem_info] | None = None
+        self._controller_infos: Sequence[retro_controller_info] | None = None
         self._memory_maps: retro_memory_map | None = None
         self._username = as_bytes(username)
         self._language = language
@@ -86,7 +100,7 @@ class Session(EnvironmentCallback):
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
         self._throttle_state: retro_throttle_state | None = None
-        self._savestate_context: SavestateContext | None = SavestateContext.NORMAL
+        self._savestate_context: SavestateContext = SavestateContext.NORMAL
         self._jit_capable = jit_capable
         self._device_power = device_power
         self._playlist_dir = as_bytes(playlist_dir)
@@ -248,6 +262,10 @@ class Session(EnvironmentCallback):
         return self._subsystem_info
 
     @property
+    def controller_info(self) -> Sequence[retro_controller_info] | None:
+        return self._controller_infos
+
+    @property
     def support_achievements(self) -> bool | None:
         return self._supports_achievements
 
@@ -289,8 +307,9 @@ class Session(EnvironmentCallback):
                 return self._message.set_message(message_ptr.contents)
 
             case EnvironmentCall.SHUTDOWN:
-                # TODO: Implement
-                pass
+                self._is_shutdown = True
+                # TODO: Make the other methods throw an exception if called after this
+                return True
 
             case EnvironmentCall.SET_PERFORMANCE_LEVEL:
                 if not data:
@@ -324,15 +343,30 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_DISK_CONTROL_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_VARIABLE:
+                if not data:
+                    return True  # Indicates that the core supports variables
+
                 # TODO: Implement
-                pass
+
+                return True
+
             case EnvironmentCall.SET_VARIABLES:
-                # TODO: Implement
-                pass
+                if not data:
+                    return True  # Indicates that the core supports this envcall
+
+                variables_ptr = cast(data, POINTER(retro_variable))
+                self._options.set_options(tuple(from_zero_terminated(variables_ptr)))
+                return True
+
             case EnvironmentCall.GET_VARIABLE_UPDATE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
+
+                update_ptr = cast(data, POINTER(c_bool))
+                #update_ptr.contents = self._options.variable_updated
+                return True
 
             case EnvironmentCall.SET_SUPPORT_NO_GAME:
                 if not data:
@@ -434,8 +468,14 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_CONTROLLER_INFO:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
+
+                controller_info_ptr = cast(data, POINTER(retro_controller_info))
+                controller_infos: tuple[retro_controller_info, ...] = tuple(from_zero_terminated(controller_info_ptr))
+                self._controller_infos = controller_infos
+
+                return True
             case EnvironmentCall.SET_MEMORY_MAPS:
                 # TODO: Implement
                 pass
@@ -510,14 +550,35 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_CORE_OPTIONS_VERSION:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
+
+                optversion_ptr = cast(data, POINTER(c_uint))
+                optversion_ptr.contents = c_uint(self._options.get_version())
+                return True
+
             case EnvironmentCall.SET_CORE_OPTIONS:
-                # TODO: Implement
-                pass
+                if not data:
+                    return True
+
+                if self._options.get_version() < 1:
+                    return False
+
+                options_ptr = cast(data, POINTER(retro_core_option_definition))
+                self._options.set_options(tuple(from_zero_terminated(options_ptr)))
+                return True
+
             case EnvironmentCall.SET_CORE_OPTIONS_INTL:
-                # TODO: Implement
-                pass
+                if not data:
+                    return True
+
+                if self._options.get_version() < 1:
+                    return False
+
+                options_intl_ptr = cast(data, POINTER(retro_core_options_intl))
+                self._options.set_options(options_intl_ptr.contents)
+                return True
+
             case EnvironmentCall.SET_CORE_OPTIONS_DISPLAY:
                 # TODO: Implement
                 pass
@@ -557,18 +618,52 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GET_GAME_INFO_EXT:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.SET_CORE_OPTIONS_V2:
-                # TODO: Implement
-                pass
+                if not data:
+                    return self._options.supports_categories
+
+                if self._options.get_version() < 2:
+                    return False
+
+                options_v2_ptr = cast(data, POINTER(retro_core_options_v2))
+                self._options.set_options(options_v2_ptr.contents)
+                return self._options.supports_categories
+
             case EnvironmentCall.SET_CORE_OPTIONS_V2_INTL:
-                # TODO: Implement
-                pass
+                if not data:
+                    return self._options.supports_categories
+
+                if self._options.get_version() < 2:
+                    return False
+
+                options_v2_intl_ptr = cast(data, POINTER(retro_core_options_v2_intl))
+                self._options.set_options(options_v2_intl_ptr.contents)
+                return self._options.supports_categories
+
             case EnvironmentCall.SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
-                # TODO: Implement
-                pass
+                option_display_callback_ptr = cast(data, POINTER(retro_core_options_update_display_callback))
+                if option_display_callback_ptr:
+                    self._options.set_update_display_callback(option_display_callback_ptr.contents)
+
+                return True
+
             case EnvironmentCall.SET_VARIABLE:
+                if not data:
+                    # NULL means we're just querying for support
+                    return True
+
+                var_ptr = cast(data, POINTER(retro_variable))
+                var: retro_variable = var_ptr.contents
+                if not (var.key and var.value):
+                    # Missing key or value is invalid
+                    return False
+
+                self._options
+
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_THROTTLE_STATE:
                 # TODO: Implement
                 pass
@@ -617,11 +712,19 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoCallbacks | None = None,
+        options: OptionState | None = None,
         overscan: bool = False,
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
         log_callback: LogCallback | None = None,
+        core_assets_dir: Directory | None = None,
         save_dir: Directory | None = None,
+        username: str | bytes | None = "libretro.py",
+        language: Language = Language.ENGLISH,
+        target_refresh_rate: float = 60.0,
+        jit_capable: bool = True,
+        device_power: DevicePower | None = full_power,
+        playlist_dir: Directory | None = None,
         ) -> Session:
     """
     Returns a Session with default state objects.
@@ -644,7 +747,16 @@ def default_session(
         content=content,
         overscan=overscan,
         message=message or LoggerMessageInterface(1, logger),
+        options=options or StandardOptionState(),
         system_dir=system_dir,
         log_callback=log_callback or StandardLogger(logger),
-        save_dir=save_dir
+        core_assets_dir=core_assets_dir,
+        save_dir=save_dir,
+        username=username,
+        language=language,
+        target_refresh_rate=target_refresh_rate,
+        jit_capable=jit_capable,
+        device_power=device_power,
+        playlist_dir=playlist_dir
     )
+

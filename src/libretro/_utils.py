@@ -2,13 +2,7 @@ import mmap
 from contextlib import contextmanager
 from ctypes import *
 from os import PathLike
-from typing import Callable, Iterator
-
-from .retro import retro_device_power, PowerState, RETRO_POWERSTATE_NO_ESTIMATE
-
-
-def full_power() -> retro_device_power:
-    return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
+from typing import Iterator
 
 
 def as_bytes(value: str | bytes | None) -> bytes | None:
