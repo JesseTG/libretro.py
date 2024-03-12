@@ -5,6 +5,7 @@ import mmap
 from contextlib import contextmanager
 from ctypes import *
 
+from .api.environment import EnvironmentCall
 from .retro import retro_game_info
 from .api.log import LogCallback, StandardLogger
 from .api.message import MessageInterface, LoggerMessageInterface

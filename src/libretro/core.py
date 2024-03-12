@@ -1,6 +1,8 @@
 from ._utils import memoryview_at
 from .defs import *
 
+from .api.environment import retro_environment_t
+
 
 class Core:
     """
