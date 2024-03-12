@@ -583,6 +583,9 @@ class Session(EnvironmentCallback):
                 refresh_rate_ptr.contents = self._target_refresh_rate
                 return True
 
+            case EnvironmentCall.GET_INPUT_BITMASKS:
+                return self._input.bitmasks_supported
+
             case EnvironmentCall.GET_CORE_OPTIONS_VERSION:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
