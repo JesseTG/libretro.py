@@ -541,70 +541,6 @@ class Language(IntEnum):
         self._type_ = 'I'
 
 
-
-
-
-
-
-
-
-
-
-retro_hw_render_interface_type = c_int
-
-RETRO_HW_RENDER_INTERFACE_VULKAN = 0
-
-RETRO_HW_RENDER_INTERFACE_D3D9 = 1
-
-RETRO_HW_RENDER_INTERFACE_D3D10 = 2
-
-RETRO_HW_RENDER_INTERFACE_D3D11 = 3
-
-RETRO_HW_RENDER_INTERFACE_D3D12 = 4
-
-RETRO_HW_RENDER_INTERFACE_GSKIT_PS2 = 5
-
-RETRO_HW_RENDER_INTERFACE_DUMMY = 0x7fffffff
-
-
-class retro_hw_render_interface(Structure, metaclass=FieldsFromTypeHints):
-    interface_type: retro_hw_render_interface_type
-    interface_version: c_uint
-
-
-retro_set_led_state_t = CFUNCTYPE(None, c_int, c_int)
-
-class retro_led_interface(Structure, metaclass=FieldsFromTypeHints):
-    set_led_state: retro_set_led_state_t
-
-retro_midi_input_enabled_t = CFUNCTYPE(c_bool, )
-
-retro_midi_output_enabled_t = CFUNCTYPE(c_bool, )
-
-retro_midi_read_t = CFUNCTYPE(c_bool, POINTER(c_uint8))
-
-retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
-
-retro_midi_flush_t = CFUNCTYPE(c_bool, )
-
-class retro_midi_interface(Structure, metaclass=FieldsFromTypeHints):
-    input_enabled: retro_midi_input_enabled_t
-    output_enabled: retro_midi_output_enabled_t
-    read: retro_midi_read_t
-    write: retro_midi_write_t
-    flush: retro_midi_flush_t
-
-retro_hw_render_context_negotiation_interface_type = c_int
-
-RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN = 0
-
-RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_DUMMY = 0x7fffffff
-
-class retro_hw_render_context_negotiation_interface(Structure, metaclass=FieldsFromTypeHints):
-    interface_type: retro_hw_render_context_negotiation_interface_type
-    interface_version: c_uint
-
-
 class retro_memory_descriptor(Structure):
     pass
 
@@ -669,14 +605,6 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
     roms: POINTER(retro_subsystem_rom_info)
     num_roms: c_uint
     id: c_uint
-
-
-retro_proc_address_t = CFUNCTYPE(None, )
-
-retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
-
-class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints):
-    get_proc_address: retro_get_proc_address_t
 
 
 retro_perf_tick_t = c_uint64
@@ -780,25 +708,6 @@ class retro_camera_callback(Structure, metaclass=FieldsFromTypeHints):
     deinitialized: retro_camera_lifetime_status_t
 
 
-retro_location_set_interval_t = CFUNCTYPE(None, c_uint, c_uint)
-
-retro_location_start_t = CFUNCTYPE(c_bool, )
-
-retro_location_stop_t = CFUNCTYPE(None, )
-
-retro_location_get_position_t = CFUNCTYPE(c_bool, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double))
-
-retro_location_lifetime_status_t = CFUNCTYPE(None, )
-
-class retro_location_callback(Structure, metaclass=FieldsFromTypeHints):
-    start: retro_location_start_t
-    stop: retro_location_stop_t
-    get_position: retro_location_get_position_t
-    set_interval: retro_location_set_interval_t
-    initialized: retro_location_lifetime_status_t
-    deinitialized: retro_location_lifetime_status_t
-
-
 retro_rumble_effect = c_int
 
 RETRO_RUMBLE_STRONG = 0
@@ -835,52 +744,6 @@ retro_audio_buffer_status_callback_t = CFUNCTYPE(None, c_bool, c_uint, c_bool)
 class retro_audio_buffer_status_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_audio_buffer_status_callback_t
 
-
-retro_hw_context_reset_t = CFUNCTYPE(None, )
-
-retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr, )
-
-retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
-
-retro_hw_context_type = c_int
-
-RETRO_HW_CONTEXT_NONE = 0
-
-RETRO_HW_CONTEXT_OPENGL = 1
-
-RETRO_HW_CONTEXT_OPENGLES2 = 2
-
-RETRO_HW_CONTEXT_OPENGL_CORE = 3
-
-RETRO_HW_CONTEXT_OPENGLES3 = 4
-
-RETRO_HW_CONTEXT_OPENGLES_VERSION = 5
-
-RETRO_HW_CONTEXT_VULKAN = 6
-
-RETRO_HW_CONTEXT_D3D11 = 7
-
-RETRO_HW_CONTEXT_D3D10 = 8
-
-RETRO_HW_CONTEXT_D3D12 = 9
-
-RETRO_HW_CONTEXT_D3D9 = 10
-
-RETRO_HW_CONTEXT_DUMMY = 0x7fffffff
-
-class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
-    context_type: retro_hw_context_type
-    context_reset: retro_hw_context_reset_t
-    get_current_framebuffer: retro_hw_get_current_framebuffer_t
-    get_proc_address: retro_hw_get_proc_address_t
-    depth: c_bool
-    stencil: c_bool
-    bottom_left_origin: c_bool
-    version_major: c_uint
-    version_minor: c_uint
-    cache_context: c_bool
-    context_destroy: retro_hw_context_reset_t
-    debug_context: c_bool
 
 
 retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)

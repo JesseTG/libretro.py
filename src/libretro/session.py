@@ -7,8 +7,9 @@ from ctypes import *
 
 from .api.environment import EnvironmentCall
 from .retro import retro_game_info
-from .api.log import LogCallback, StandardLogger
-from .api.message import MessageInterface, LoggerMessageInterface
+from .api.log import retro_log_callback, LogCallback, StandardLogger
+from .api.message import retro_message, MessageInterface, LoggerMessageInterface
+from .api.proc import *
 from .core import Core
 from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
