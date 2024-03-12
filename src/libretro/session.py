@@ -231,6 +231,10 @@ class Session(EnvironmentCallback):
         return self._system_dir
 
     @property
+    def options(self) -> OptionState:
+        return self._options
+
+    @property
     def support_no_game(self) -> bool | None:
         return self._support_no_game
 
@@ -344,19 +348,25 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.GET_VARIABLE:
-                if not data:
-                    return True  # Indicates that the core supports variables
+                if data:
+                    var_ptr = cast(data, POINTER(retro_variable))
+                    var: retro_variable = var_ptr.contents
 
-                # TODO: Implement
+                    result = self._options.get_variable(var.key)
+                    var.value = result
+                    # Either a bytes for an option or None
 
+                # This envcall supports passing NULL to query for support
                 return True
 
             case EnvironmentCall.SET_VARIABLES:
-                if not data:
-                    return True  # Indicates that the core supports this envcall
+                if data:
+                    variables_ptr = cast(data, POINTER(retro_variable))
+                    self._options.set_variables(tuple(from_zero_terminated(variables_ptr)))
+                else:
+                    self._options.set_variables(None)
 
-                variables_ptr = cast(data, POINTER(retro_variable))
-                self._options.set_options(tuple(from_zero_terminated(variables_ptr)))
+                # This envcall supports passing NULL to query for support
                 return True
 
             case EnvironmentCall.GET_VARIABLE_UPDATE:
@@ -364,7 +374,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
                 update_ptr = cast(data, POINTER(c_bool))
-                #update_ptr.contents = self._options.variable_updated
+                update_ptr.contents = self._options.variable_updated
                 return True
 
             case EnvironmentCall.SET_SUPPORT_NO_GAME:
@@ -553,34 +563,46 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
 
                 optversion_ptr = cast(data, POINTER(c_uint))
-                optversion_ptr.contents = c_uint(self._options.get_version())
+                optversion_ptr.contents = c_uint(self._options.version)
                 return True
 
             case EnvironmentCall.SET_CORE_OPTIONS:
-                if not data:
-                    return True
+                if data:
+                    if self._options.get_version() < 1:
+                        return False
 
-                if self._options.get_version() < 1:
-                    return False
+                    options_ptr = cast(data, POINTER(retro_core_option_definition))
+                    self._options.set_options(tuple(from_zero_terminated(options_ptr)))
+                else:
+                    self._options.set_options(None)
 
-                options_ptr = cast(data, POINTER(retro_core_option_definition))
-                self._options.set_options(tuple(from_zero_terminated(options_ptr)))
+                # This envcall supports passing NULL to reset the options
                 return True
 
             case EnvironmentCall.SET_CORE_OPTIONS_INTL:
-                if not data:
-                    return True
+                if data:
+                    if self._options.get_version() < 1:
+                        return False
 
-                if self._options.get_version() < 1:
-                    return False
+                    options_intl_ptr = cast(data, POINTER(retro_core_options_intl))
+                    self._options.set_options_intl(options_intl_ptr.contents)
+                else:
+                    self._options.set_options_intl(None)
 
-                options_intl_ptr = cast(data, POINTER(retro_core_options_intl))
-                self._options.set_options(options_intl_ptr.contents)
+                # This envcall supports passing NULL to reset the options
                 return True
 
             case EnvironmentCall.SET_CORE_OPTIONS_DISPLAY:
-                # TODO: Implement
-                pass
+                if data:
+                    opt_display_ptr = cast(data, POINTER(retro_core_option_display))
+                    opt_display: retro_core_option_display = opt_display_ptr.contents
+
+                    if opt_display.key:
+                        self._options.set_display(opt_display.key.value, opt_display.visible.value)
+
+                # This envcall supports passing NULL to query for support
+                return True
+
             case EnvironmentCall.GET_PREFERRED_HW_RENDER:
                 # TODO: Implement
                 pass
@@ -619,49 +641,44 @@ class Session(EnvironmentCallback):
                 pass
 
             case EnvironmentCall.SET_CORE_OPTIONS_V2:
-                if not data:
-                    return self._options.supports_categories
-
                 if self._options.get_version() < 2:
                     return False
 
-                options_v2_ptr = cast(data, POINTER(retro_core_options_v2))
-                self._options.set_options(options_v2_ptr.contents)
+                if data:
+                    options_v2_ptr = cast(data, POINTER(retro_core_options_v2))
+                    self._options.set_options_v2(options_v2_ptr.contents)
+                else:
+                    self._options.set_options_v2(None)
+
                 return self._options.supports_categories
 
             case EnvironmentCall.SET_CORE_OPTIONS_V2_INTL:
-                if not data:
-                    return self._options.supports_categories
-
                 if self._options.get_version() < 2:
                     return False
 
-                options_v2_intl_ptr = cast(data, POINTER(retro_core_options_v2_intl))
-                self._options.set_options(options_v2_intl_ptr.contents)
+                if data:
+                    options_v2_intl_ptr = cast(data, POINTER(retro_core_options_v2_intl))
+                    self._options.set_options_v2_intl(options_v2_intl_ptr.contents)
+                else:
+                    self._options.set_options_v2_intl(None)
+
                 return self._options.supports_categories
 
             case EnvironmentCall.SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
-                option_display_callback_ptr = cast(data, POINTER(retro_core_options_update_display_callback))
-                if option_display_callback_ptr:
+                if data:
+                    option_display_callback_ptr = cast(data, POINTER(retro_core_options_update_display_callback))
                     self._options.set_update_display_callback(option_display_callback_ptr.contents)
 
                 return True
 
             case EnvironmentCall.SET_VARIABLE:
-                if not data:
-                    # NULL means we're just querying for support
-                    return True
+                if data:
+                    var_ptr = cast(data, POINTER(retro_variable))
+                    var: retro_variable = var_ptr.contents
+                    return self._options.set_variable(var.key, var.value)
 
-                var_ptr = cast(data, POINTER(retro_variable))
-                var: retro_variable = var_ptr.contents
-                if not (var.key and var.value):
-                    # Missing key or value is invalid
-                    return False
-
-                self._options
-
-                # TODO: Implement
-                pass
+                # This envcall supports passing NULL to query for support
+                return True
 
             case EnvironmentCall.GET_THROTTLE_STATE:
                 # TODO: Implement
