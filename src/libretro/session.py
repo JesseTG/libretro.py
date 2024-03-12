@@ -60,6 +60,33 @@ class Session(EnvironmentCallback):
         if core is None:
             raise ValueError("Core cannot be None")
 
+        if not isinstance(audio, AudioCallbacks):
+            raise TypeError(f"Expected audio to match AudioCallbacks, not {type(audio)}")
+
+        if not isinstance(input_state, InputState):
+            raise TypeError(f"Expected input_state to match InputState, not {type(input_state)}")
+
+        if not isinstance(video, VideoState):
+            raise TypeError(f"Expected video to match VideoState, not {type(video)}")
+
+        if not isinstance(message, MessageInterface):
+            raise TypeError(f"Expected message to match MessageInterface, not {type(message)}")
+
+        if not isinstance(options, OptionState):
+            raise TypeError(f"Expected options to match OptionState, not {type(options)}")
+
+        if not isinstance(system_dir, (str, bytes, type(None))):
+            raise TypeError(f"Expected system_dir to be str, bytes, or None; got {type(system_dir)}")
+
+        if not isinstance(log_callback, LogCallback):
+            raise TypeError(f"Expected log_callback to match LogCallback, not {type(log_callback)}")
+
+        if not isinstance(core_assets_dir, (str, bytes, type(None))):
+            raise TypeError(f"Expected core_assets_dir to be str, bytes, or None; got {type(core_assets_dir)}")
+
+        if not isinstance(save_dir, (str, bytes, type(None))):
+            raise TypeError(f"Expected save_dir to be str, bytes, or None; got {type(save_dir)}")
+
         if isinstance(core, Core):
             self._core = core
         else:
