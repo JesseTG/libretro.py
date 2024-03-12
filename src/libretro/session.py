@@ -374,7 +374,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
                 update_ptr = cast(data, POINTER(c_bool))
-                update_ptr.contents = self._options.variable_updated
+                update_ptr.contents = c_bool(self._options.variable_updated)
                 return True
 
             case EnvironmentCall.SET_SUPPORT_NO_GAME:
@@ -598,7 +598,7 @@ class Session(EnvironmentCallback):
                     opt_display: retro_core_option_display = opt_display_ptr.contents
 
                     if opt_display.key:
-                        self._options.set_display(opt_display.key.value, opt_display.visible.value)
+                        self._options.set_display(opt_display.key, opt_display.visible)
 
                 # This envcall supports passing NULL to query for support
                 return True
