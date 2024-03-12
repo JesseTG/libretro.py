@@ -2,7 +2,7 @@ from abc import abstractmethod
 from copy import deepcopy
 from ctypes import *
 from collections.abc import MutableMapping
-from dataclasses import dataclass
+import re
 from typing import Protocol, Sequence, runtime_checkable, AnyStr, Literal, Mapping, overload
 
 from .._utils import from_zero_terminated, as_bytes, FieldsFromTypeHints
@@ -99,6 +99,9 @@ class retro_core_options_update_display_callback(Structure, metaclass=FieldsFrom
     callback: retro_core_options_update_display_callback_t
 
 
+_SET_VARS = re.compile(br"(?P<desc>[^;]+); (?P<values>.+)")
+
+
 @runtime_checkable
 class OptionState(Protocol):
     @abstractmethod
@@ -191,7 +194,6 @@ class StandardOptionState(OptionState):
         self._categories_intl: dict[bytes, retro_core_option_v2_category] = {}
         self._options_intl: dict[bytes, retro_core_option_v2_definition] = {}
 
-
     def get_variable(self, item: bytes) -> bytes | None:
         if not (self._options_us or self._options_intl) or not item:
             # Options can't be fetched until their definitions are set
@@ -217,12 +219,26 @@ class StandardOptionState(OptionState):
 
         return self._variables[key]
 
-
     def set_variables(self, variables: Sequence[retro_variable] | None):
-        # TODO: Parse the variables in each retro_variable
-        # TODO: Construct a retro_core_options_v2 from the parsed variables
+        self._categories_us.clear()
+        self._categories_intl.clear()
+        self._options_intl.clear()
+        self._options_us.clear()
 
-        pass
+        if variables:
+            for v in variables:
+                match = _SET_VARS.match(v.value)
+                desc: bytes = match["desc"]
+                values: list[bytes] = match["values"].split(b"|")
+                key = bytes(v.key)
+                optsarray: CoreOptionArray = CoreOptionArray()
+                for i, value in enumerate(values):
+                    optsarray[i] = retro_core_option_value(value, None)
+
+                opt = retro_core_option_v2_definition(key, desc, None, None, None, None, optsarray, values[0])
+                self._options_us[key] = opt
+
+        self._variables_dirty = True
 
     def get_variable_update(self) -> bool:
         return self._variables_dirty
