@@ -92,7 +92,7 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
     local: POINTER(retro_core_options_v2)
 
 
-retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool, )
+retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
 
 
 class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
