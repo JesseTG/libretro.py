@@ -161,11 +161,11 @@ class OptionState(Protocol):
 
     @property
     @abstractmethod
-    def variables(self) -> MutableMapping[bytes, bytes]: ...
+    def variables(self) -> MutableMapping[AnyStr, bytes]: ...
 
     @property
     @abstractmethod
-    def visibility(self) -> Mapping[bytes, bool]: ...
+    def visibility(self) -> Mapping[AnyStr, bool]: ...
 
     @property
     @abstractmethod
@@ -344,22 +344,23 @@ class StandardOptionState(OptionState):
     def supports_categories(self) -> bool:
         return self._categories_supported and self._version >= 2
 
-    class _VariableMapping(MutableMapping):
+    class _VariableMapping(MutableMapping[AnyStr, bytes]):
         def __init__(self, options: 'StandardOptionState'):
             self._options = options
 
-        def __getitem__(self, item: bytes) -> bytes:
-            # TODO: Implement (get current value or default)
-            return self._options._variables[item]
+        def __getitem__(self, key: AnyStr) -> bytes:
+            k = as_bytes(key)
+            return self._options._variables[k]
 
         def __setitem__(self, key: bytes, value: bytes):
-            self._options._variables[key] = value
+            k = as_bytes(key)
+            self._options._variables[k] = value
             if self._options._update_display_callback:
                 self._options._update_display_callback()
-            # TODO: Call options update callback
 
         def __delitem__(self, key: bytes):
-            del self._options._variables[key]
+            k = as_bytes(key)
+            del self._options._variables[k]
 
         def __iter__(self):
             return iter(self._options._variables)
@@ -368,12 +369,26 @@ class StandardOptionState(OptionState):
             return len(self._options._variables)
 
     @property
-    def variables(self) -> MutableMapping[bytes, bytes]:
+    def variables(self) -> MutableMapping[AnyStr, bytes]:
         return StandardOptionState._VariableMapping(self)
 
+    class _VisibilityMapping(Mapping[AnyStr, bool]):
+        def __init__(self, options: 'StandardOptionState'):
+            self._options = options
+
+        def __getitem__(self, key: AnyStr) -> bool:
+            k = as_bytes(key)
+            return self._options._visibility.get(k, True)
+
+        def __len__(self):
+            return len(self._options._visibility)
+
+        def __iter__(self):
+            return iter(self._options._visibility)
+
     @property
-    def visibility(self) -> Mapping[bytes, bool]:
-        return self._visibility
+    def visibility(self) -> Mapping[AnyStr, bool]:
+        return StandardOptionState._VisibilityMapping(self)
 
     @property
     def categories(self) -> Mapping[bytes, retro_core_option_v2_category] | None:
