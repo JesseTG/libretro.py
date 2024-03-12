@@ -2,6 +2,7 @@ from ._utils import memoryview_at
 from .defs import *
 
 from .api.environment import retro_environment_t
+from .api.input import retro_input_poll_t, retro_input_state_t
 
 
 class Core:
