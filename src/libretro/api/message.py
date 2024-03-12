@@ -1,10 +1,46 @@
 from abc import abstractmethod
-from typing import Protocol, NamedTuple
+from ctypes import Structure, c_char_p, c_uint, c_int8, string_at
+from enum import IntEnum
+from typing import Protocol, Sequence
 from logging import Logger
-import logging
 
-from ..retro import *
-from ..defs import *
+from ..h import *
+from ..retro import FieldsFromTypeHints
+from .log import LogLevel
+
+
+class MessageTarget(IntEnum):
+    ALL = RETRO_MESSAGE_TARGET_ALL
+    OSD = RETRO_MESSAGE_TARGET_OSD
+    LOG = RETRO_MESSAGE_TARGET_LOG
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+
+
+class MessageType(IntEnum):
+    NOTIFICATION = RETRO_MESSAGE_TYPE_NOTIFICATION
+    NOTIFICATION_ALT = RETRO_MESSAGE_TYPE_NOTIFICATION_ALT
+    STATUS = RETRO_MESSAGE_TYPE_STATUS
+    PROGRESS = RETRO_MESSAGE_TYPE_PROGRESS
+
+    def __init__(self, value: int):
+        self._type_ = 'I'
+
+
+class retro_message(Structure, metaclass=FieldsFromTypeHints):
+    msg: c_char_p
+    frames: c_uint
+
+
+class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
+    msg: c_char_p
+    duration: c_uint
+    priority: c_uint
+    level: retro_log_level
+    target: retro_message_target
+    type: retro_message_type
+    progress: c_int8
 
 
 class MessageInterface(Protocol):

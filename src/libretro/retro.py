@@ -725,40 +725,6 @@ retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), String)
 class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints):
     get_proc_address: retro_get_proc_address_t
 
-retro_log_level = c_int
-RETRO_LOG_DEBUG = 0
-RETRO_LOG_INFO = (RETRO_LOG_DEBUG + 1)
-RETRO_LOG_WARN = (RETRO_LOG_INFO + 1)
-RETRO_LOG_ERROR = (RETRO_LOG_WARN + 1)
-RETRO_LOG_DUMMY = 0x7fffffff
-
-
-class LogLevel(IntEnum):
-    DEBUG = RETRO_LOG_DEBUG
-    INFO = RETRO_LOG_INFO
-    WARNING = RETRO_LOG_WARN
-    ERROR = RETRO_LOG_ERROR
-
-    def __init__(self, value: int):
-        self._type_ = 'I'
-
-    @property
-    def logging_level(self) -> int:
-        match self:
-            case self.DEBUG:
-                return logging.DEBUG
-            case self.INFO:
-                return logging.INFO
-            case self.WARNING:
-                return logging.WARN
-            case self.ERROR:
-                return logging.ERROR
-
-
-retro_log_printf_t = CFUNCTYPE(None, retro_log_level, String)
-
-class retro_log_callback(Structure, metaclass=FieldsFromTypeHints):
-    log: retro_log_printf_t
 
 retro_perf_tick_t = c_uint64
 
@@ -1083,72 +1049,6 @@ class SavestateContext(IntEnum):
     def __init__(self, value: int):
         self._type_ = 'i'
 
-
-class retro_message(Structure):
-    pass
-
-retro_message.__slots__ = [
-    'msg',
-    'frames',
-]
-retro_message._fields_ = [
-    ('msg', String),
-    ('frames', c_uint),
-]
-
-retro_message_target = c_int
-RETRO_MESSAGE_TARGET_ALL = 0
-RETRO_MESSAGE_TARGET_OSD = (RETRO_MESSAGE_TARGET_ALL + 1)
-RETRO_MESSAGE_TARGET_LOG = (RETRO_MESSAGE_TARGET_OSD + 1)
-
-
-class MessageTarget(IntEnum):
-    ALL = RETRO_MESSAGE_TARGET_ALL
-    OSD = RETRO_MESSAGE_TARGET_OSD
-    LOG = RETRO_MESSAGE_TARGET_LOG
-
-    def __init__(self, value: int):
-        self._type_ = 'I'
-
-
-retro_message_type = c_int
-RETRO_MESSAGE_TYPE_NOTIFICATION = 0
-RETRO_MESSAGE_TYPE_NOTIFICATION_ALT = (RETRO_MESSAGE_TYPE_NOTIFICATION + 1)
-RETRO_MESSAGE_TYPE_STATUS = (RETRO_MESSAGE_TYPE_NOTIFICATION_ALT + 1)
-RETRO_MESSAGE_TYPE_PROGRESS = (RETRO_MESSAGE_TYPE_STATUS + 1)
-
-
-class MessageType(IntEnum):
-    NOTIFICATION = RETRO_MESSAGE_TYPE_NOTIFICATION
-    NOTIFICATION_ALT = RETRO_MESSAGE_TYPE_NOTIFICATION_ALT
-    STATUS = RETRO_MESSAGE_TYPE_STATUS
-    PROGRESS = RETRO_MESSAGE_TYPE_PROGRESS
-
-    def __init__(self, value: int):
-        self._type_ = 'I'
-
-
-class retro_message_ext(Structure):
-    pass
-
-retro_message_ext.__slots__ = [
-    'msg',
-    'duration',
-    'priority',
-    'level',
-    'target',
-    'type',
-    'progress',
-]
-retro_message_ext._fields_ = [
-    ('msg', String),
-    ('duration', c_uint),
-    ('priority', c_uint),
-    ('level', retro_log_level),
-    ('target', retro_message_target),
-    ('type', retro_message_type),
-    ('progress', c_int8),
-]
 
 class retro_input_descriptor(Structure):
     pass
