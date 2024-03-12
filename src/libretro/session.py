@@ -8,7 +8,7 @@ from ctypes import *
 from .api.content import *
 from .api.environment import EnvironmentCall
 from .api.memory import retro_memory_map
-from .api.options import OptionState, StandardOptionState
+from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
 from .api.throttle import *
