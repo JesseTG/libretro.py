@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag, EJECT
 
 from ...h import *
-from ...retro import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints
 
 
 class Key(IntEnum, boundary=EJECT):

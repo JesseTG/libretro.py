@@ -5,7 +5,7 @@ from typing import Protocol, Sequence
 from logging import Logger
 
 from ..h import *
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 from .log import LogLevel
 
 

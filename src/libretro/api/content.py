@@ -3,7 +3,7 @@ from ctypes import *
 from os import PathLike
 from typing import TypeAlias, NamedTuple
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 
 
 class retro_game_info(Structure, metaclass=FieldsFromTypeHints):

@@ -1,7 +1,7 @@
 from ctypes import *
 
 from ..h import retro_time_t, retro_perf_tick_t
-from ..retro import FieldsFromTypeHints, UNCHECKED
+from .._utils import FieldsFromTypeHints, UNCHECKED
 
 
 class retro_perf_counter(Structure, metaclass=FieldsFromTypeHints):

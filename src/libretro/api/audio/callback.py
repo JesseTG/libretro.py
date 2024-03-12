@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, c_bool, Structure, c_uint
 
-from ...retro import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints
 
 retro_audio_callback_t = CFUNCTYPE(None)
 retro_audio_set_state_callback_t = CFUNCTYPE(None, c_bool)

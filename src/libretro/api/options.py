@@ -1,10 +1,10 @@
 from abc import abstractmethod
+from ctypes import c_bool, c_char_p, POINTER, CFUNCTYPE, Structure
 from collections.abc import MappingView
 from dataclasses import dataclass
 from typing import Protocol, Sequence, runtime_checkable, AnyStr, Literal, Mapping
 
-from .._utils import from_zero_terminated, as_bytes
-from ..retro import *
+from .._utils import from_zero_terminated, as_bytes, FieldsFromTypeHints
 from ..h import RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 

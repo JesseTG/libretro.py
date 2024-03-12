@@ -1,7 +1,7 @@
 from ctypes import Structure, c_bool, c_double, c_float, c_uint
 from enum import IntEnum
 
-from ..retro import FieldsFromTypeHints, String
+from .._utils import FieldsFromTypeHints, String
 from ..h import *
 
 

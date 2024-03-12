@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, POINTER, c_bool, c_uint, c_size_t, Structure
 
-from ..retro import FieldsFromTypeHints, String
+from .._utils import FieldsFromTypeHints, String
 from .content import retro_game_info
 
 retro_set_eject_state_t = CFUNCTYPE(c_bool, c_bool)

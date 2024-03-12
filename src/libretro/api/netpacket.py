@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, c_bool, c_int, c_size_t, c_uint16, c_void_p, Structure
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 
 retro_netpacket_send_t = CFUNCTYPE(None, c_int, c_void_p, c_size_t, c_uint16, c_bool)
 retro_netpacket_start_t = CFUNCTYPE(None, c_uint16, retro_netpacket_send_t)

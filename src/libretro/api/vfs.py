@@ -6,7 +6,7 @@ from enum import IntFlag, IntEnum
 from io import FileIO
 from typing import Protocol, Literal
 
-from ..retro import UNCHECKED, String, FieldsFromTypeHints
+from .._utils import UNCHECKED, String, FieldsFromTypeHints
 from ..h import *
 
 

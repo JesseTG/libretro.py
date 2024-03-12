@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, POINTER, c_bool, c_double, c_uint, Structure
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 
 retro_location_set_interval_t = CFUNCTYPE(None, c_uint, c_uint)
 retro_location_start_t = CFUNCTYPE(c_bool, )

@@ -1,6 +1,6 @@
 from ctypes import *
 
-from ..retro import FieldsFromTypeHints, UNCHECKED
+from .._utils import FieldsFromTypeHints, UNCHECKED
 
 
 # This one has no fields, it doesn't need the weight of a metaclass

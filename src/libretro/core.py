@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from ctypes import *
-from ._utils import memoryview_at
-from .retro import String
+from ._utils import memoryview_at, String
 
 from .api.content import retro_game_info
 from .api.video import retro_video_refresh_t

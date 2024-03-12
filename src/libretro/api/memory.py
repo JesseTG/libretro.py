@@ -1,6 +1,6 @@
 from ctypes import *
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 
 class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     flags: c_uint64

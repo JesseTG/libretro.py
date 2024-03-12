@@ -8,7 +8,7 @@ from typing import Protocol
 from logging import Logger, LogRecord
 
 from ..h import *
-from ..retro import FieldsFromTypeHints, String
+from .._utils import FieldsFromTypeHints, String
 
 retro_log_printf_t = CFUNCTYPE(None, retro_log_level, String)
 

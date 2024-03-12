@@ -2,7 +2,7 @@ from collections.abc import Callable
 from ctypes import c_int, c_int8, Structure
 from enum import IntEnum
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 from ..h import *
 
 

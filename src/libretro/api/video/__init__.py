@@ -6,7 +6,7 @@ from typing import Protocol, runtime_checkable, final
 
 from ..system import retro_system_av_info, retro_game_geometry
 from ...h import *
-from ...retro import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints
 
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
 

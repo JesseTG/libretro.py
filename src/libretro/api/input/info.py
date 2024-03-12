@@ -1,7 +1,7 @@
 from ctypes import Structure, c_uint, c_char_p, POINTER
 from typing import Sequence, overload
 
-from ...retro import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints
 
 
 class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):

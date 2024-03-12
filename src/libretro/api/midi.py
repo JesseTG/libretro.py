@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, POINTER, c_bool, c_uint32, c_uint8, Structure
 
-from ..retro import FieldsFromTypeHints
+from .._utils import FieldsFromTypeHints
 
 retro_midi_input_enabled_t = CFUNCTYPE(c_bool, )
 retro_midi_output_enabled_t = CFUNCTYPE(c_bool, )

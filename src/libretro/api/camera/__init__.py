@@ -1,6 +1,6 @@
 from ctypes import *
 
-from ...retro import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints
 
 retro_camera_start_t = CFUNCTYPE(c_bool, )
 retro_camera_stop_t = CFUNCTYPE(None, )

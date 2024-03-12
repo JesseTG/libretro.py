@@ -1,8 +1,8 @@
 from ctypes import CFUNCTYPE, c_bool, c_uint, Structure
 
-from libretro.api.proc import retro_proc_address_t
-from libretro.h import retro_hw_context_type
-from libretro.retro import FieldsFromTypeHints, String, UNCHECKED, c_uintptr
+from ...api.proc import retro_proc_address_t
+from ...h import retro_hw_context_type
+from ..._utils import FieldsFromTypeHints, String, UNCHECKED, c_uintptr
 
 
 retro_hw_context_reset_t = CFUNCTYPE(None, )
