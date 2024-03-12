@@ -2,7 +2,7 @@ import mmap
 from contextlib import contextmanager
 from ctypes import *
 from os import PathLike
-from typing import Callable
+from typing import Callable, Iterator
 
 from .retro import retro_device_power, PowerState, RETRO_POWERSTATE_NO_ESTIMATE
 
@@ -21,14 +21,12 @@ def is_zeroed(struct: Structure) -> bool:
     return not any(getattr(struct, field) for field, _ in struct._fields_)
 
 
-def from_zero_terminated(ptr):
-    if not ptr:
-        raise StopIteration()
-
-    i = 0
-    while not is_zeroed(ptr[i]):
-        yield ptr[i]
-        i += 1
+def from_zero_terminated[S](ptr) -> Iterator[S]:
+    if ptr:
+        i = 0
+        while not is_zeroed(ptr[i]):
+            yield ptr[i]
+            i += 1
 
 
 @contextmanager
