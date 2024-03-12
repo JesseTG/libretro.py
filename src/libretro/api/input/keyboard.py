@@ -1,7 +1,9 @@
+from ctypes import c_uint, c_uint16, c_uint32, c_bool, CFUNCTYPE, Structure
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, EJECT
 
 from ...h import *
+from ...retro import FieldsFromTypeHints
 
 
 class Key(IntEnum, boundary=EJECT):
@@ -329,3 +331,10 @@ class KeyboardState:
             return getattr(self, Key(item).name.lower())
         else:
             return False
+
+
+retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
+
+
+class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
+    callback: retro_keyboard_event_t

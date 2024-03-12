@@ -452,149 +452,19 @@ class FieldsFromTypeHints(type(ctypes.Structure)):
 # End preamble
 
 
-class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
-    desc: c_char_p
-    id: c_uint
 
 
-class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
-    types: POINTER(retro_controller_description)
-    num_types: c_uint
-
-    @overload
-    def __getitem__(self, index: int) -> retro_controller_description: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]: ...
-
-    def __getitem__(self, index):
-        if not self.types:
-            raise ValueError("No controller types available")
-
-        match index:
-            case int(i):
-                if not (0 <= i < self.num_types):
-                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
-                return self.types[i]
-
-            case slice() as s:
-                s: slice
-                return self.types[s]
-
-            case _:
-                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
-
-    def __len__(self):
-        return int(self.num_types)
 
 
-retro_audio_callback_t = CFUNCTYPE(None, )
-
-retro_audio_set_state_callback_t = CFUNCTYPE(None, c_bool)
-
-class retro_audio_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_audio_callback_t
-    set_state: retro_audio_set_state_callback_t
 
 
-retro_usec_t = c_int64
-
-retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
-
-class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_frame_time_callback_t
-    reference: retro_usec_t
 
 
-retro_audio_buffer_status_callback_t = CFUNCTYPE(None, c_bool, c_uint, c_bool)
-
-class retro_audio_buffer_status_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_audio_buffer_status_callback_t
 
 
-retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
-
-class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_keyboard_event_t
 
 
-retro_set_eject_state_t = CFUNCTYPE(c_bool, c_bool)
-
-retro_get_eject_state_t = CFUNCTYPE(c_bool, )
-
-retro_get_image_index_t = CFUNCTYPE(c_uint, )
-
-retro_set_image_index_t = CFUNCTYPE(c_bool, c_uint)
-
-retro_get_num_images_t = CFUNCTYPE(c_uint, )
 
 
-class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
-    path: c_char_p
-    data: c_void_p
-    size: c_size_t
-    meta: c_char_p
 
 
-retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(retro_game_info))
-
-retro_add_image_index_t = CFUNCTYPE(c_bool, )
-
-retro_set_initial_image_t = CFUNCTYPE(c_bool, c_uint, String)
-
-retro_get_image_path_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
-
-retro_get_image_label_t = CFUNCTYPE(c_bool, c_uint, String, c_size_t)
-
-class retro_disk_control_callback(Structure, metaclass=FieldsFromTypeHints):
-    set_eject_state: retro_set_eject_state_t
-    get_eject_state: retro_get_eject_state_t
-    get_image_index: retro_get_image_index_t
-    set_image_index: retro_set_image_index_t
-    get_num_images: retro_get_num_images_t
-    replace_image_index: retro_replace_image_index_t
-    add_image_index: retro_add_image_index_t
-
-
-class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=FieldsFromTypeHints):
-    set_initial_image: retro_set_initial_image_t
-    get_image_path: retro_get_image_path_t
-    get_image_label: retro_get_image_label_t
-
-
-class retro_input_descriptor(Structure):
-    pass
-
-retro_input_descriptor.__slots__ = [
-    'port',
-    'device',
-    'index',
-    'id',
-    'description',
-]
-retro_input_descriptor._fields_ = [
-    ('port', c_uint),
-    ('device', c_uint),
-    ('index', c_uint),
-    ('id', c_uint),
-    ('description', String),
-]
-
-
-retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
-
-retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
-
-retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
-
-
-RETRO_MEMORY_MASK = 0xff
-RETRO_MEMORY_SAVE_RAM = 0
-RETRO_MEMORY_RTC = 1
-RETRO_MEMORY_SYSTEM_RAM = 2
-RETRO_MEMORY_VIDEO_RAM = 3
-
-
-RETRO_MEMORY_ACCESS_WRITE = (1 << 0)
-RETRO_MEMORY_ACCESS_READ = (1 << 1)
-RETRO_MEMORY_TYPE_CACHED = (1 << 0)

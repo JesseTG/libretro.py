@@ -1,9 +1,4 @@
-import itertools
-import logging
-import sys
-import mmap
-from contextlib import contextmanager
-from ctypes import *
+from collections.abc import Iterable
 
 from .api.content import *
 from .api.environment import EnvironmentCall
@@ -13,18 +8,20 @@ from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
-from .retro import retro_game_info
 from .api.log import retro_log_callback, LogCallback, StandardLogger
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .core import Core
-from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
+from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
 from .api.input import *
-from .api.video import VideoCallbacks, SoftwareVideoState, VideoState, PixelFormat
-from .defs import *
+from .api.input.info import retro_controller_info
+from .api.input.keyboard import *
+from .api.video import VideoCallbacks, SoftwareVideoState, VideoState, PixelFormat, retro_frame_time_callback
 
 from ._utils import *
+
+Directory = str | bytes
 
 class _DoNotLoad: pass
 

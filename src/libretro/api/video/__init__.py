@@ -8,6 +8,16 @@ from ..system import retro_system_av_info, retro_game_geometry
 from ...h import *
 from ...retro import FieldsFromTypeHints
 
+retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
+
+retro_usec_t = c_int64
+retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
+
+
+class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
+    callback: retro_frame_time_callback_t
+    reference: retro_usec_t
+
 
 class Rotation(IntEnum):
     NONE = 0

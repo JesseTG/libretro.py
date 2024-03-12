@@ -3,7 +3,11 @@ from ctypes import *
 from array import array
 from typing import Protocol, final, runtime_checkable
 
-from .._utils import memoryview_at
+from ..._utils import memoryview_at
+
+
+retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
+retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
 
 
 @runtime_checkable

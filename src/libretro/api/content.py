@@ -1,6 +1,24 @@
+from collections.abc import Sequence
 from ctypes import *
+from os import PathLike
+from typing import TypeAlias, NamedTuple
 
 from ..retro import FieldsFromTypeHints
+
+
+class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
+    path: c_char_p
+    data: c_void_p
+    size: c_size_t
+    meta: c_char_p
+
+
+Content: TypeAlias = str | bytes | PathLike | retro_game_info
+
+
+class SpecialContent(NamedTuple):
+    game_type: int
+    info: Sequence[Content]
 
 
 class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
