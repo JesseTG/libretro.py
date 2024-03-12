@@ -98,6 +98,12 @@ retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool, )
 class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_core_options_update_display_callback_t
 
+    def __call__(self) -> bool:
+        if not self.callback:
+            raise ValueError("No callback has been set")
+
+        return bool(self.callback())
+
 
 _SET_VARS = re.compile(br"(?P<desc>[^;]+); (?P<values>.+)")
 
@@ -144,6 +150,10 @@ class OptionState(Protocol):
     @property
     def version(self):
         return self.get_version()
+
+    @property
+    @abstractmethod
+    def update_display_callback(self) -> retro_core_options_update_display_callback | None: ...
 
     @property
     @abstractmethod
@@ -315,23 +325,51 @@ class StandardOptionState(OptionState):
         match callback:
             case None:
                 self._update_display_callback = None
-            case retro_core_options_update_display_callback(callback=_) if not callback:
+            case retro_core_options_update_display_callback(callback=c) if not c:
                 self._update_display_callback = None
-            case retro_core_options_update_display_callback(callback=callback):
+            case retro_core_options_update_display_callback(callback=_):
                 self._update_display_callback = callback
-            # TODO: Handle type errors
+            case _:
+                raise TypeError(f"Expected a retro_core_options_update_display_callback, got {callback!r}")
 
     def set_variable(self, item: AnyStr, value: AnyStr) -> bool:
         pass
         # TODO: Call the update display callback
 
     @property
+    def update_display_callback(self) -> retro_core_options_update_display_callback | None:
+        return self._update_display_callback
+
+    @property
     def supports_categories(self) -> bool:
         return self._categories_supported and self._version >= 2
 
+    class _VariableMapping(MutableMapping):
+        def __init__(self, options: 'StandardOptionState'):
+            self._options = options
+
+        def __getitem__(self, item: bytes) -> bytes:
+            # TODO: Implement (get current value or default)
+            return self._options._variables[item]
+
+        def __setitem__(self, key: bytes, value: bytes):
+            self._options._variables[key] = value
+            if self._options._update_display_callback:
+                self._options._update_display_callback()
+            # TODO: Call options update callback
+
+        def __delitem__(self, key: bytes):
+            del self._options._variables[key]
+
+        def __iter__(self):
+            return iter(self._options._variables)
+
+        def __len__(self):
+            return len(self._options._variables)
+
     @property
     def variables(self) -> MutableMapping[bytes, bytes]:
-        return self._variables
+        return StandardOptionState._VariableMapping(self)
 
     @property
     def visibility(self) -> Mapping[bytes, bool]:
