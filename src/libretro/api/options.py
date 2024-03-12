@@ -350,7 +350,8 @@ class StandardOptionState(OptionState):
 
         def __getitem__(self, key: AnyStr) -> bytes:
             k = as_bytes(key)
-            return self._options._variables[k]
+            default = self._options._options_us[k].default_value
+            return self._options._variables.get(k, default)
 
         def __setitem__(self, key: bytes, value: bytes):
             k = as_bytes(key)
@@ -362,11 +363,13 @@ class StandardOptionState(OptionState):
             k = as_bytes(key)
             del self._options._variables[k]
 
-        def __iter__(self):
-            return iter(self._options._variables)
-
         def __len__(self):
-            return len(self._options._variables)
+            return len(self._options._options_us)
+
+        def __iter__(self):
+            yield from self._options._options_us.keys()
+
+
 
     @property
     def variables(self) -> MutableMapping[AnyStr, bytes]:
@@ -381,10 +384,10 @@ class StandardOptionState(OptionState):
             return self._options._visibility.get(k, True)
 
         def __len__(self):
-            return len(self._options._visibility)
+            return len(self._options._options_us)
 
         def __iter__(self):
-            return iter(self._options._visibility)
+            yield from self._options._options_us.keys()
 
     @property
     def visibility(self) -> Mapping[AnyStr, bool]:
