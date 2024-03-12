@@ -316,7 +316,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_OVERSCAN doesn't accept NULL")
 
                 overscan_ptr = cast(data, POINTER(c_bool))
-                overscan_ptr.contents = self._overscan
+                overscan_ptr.contents.value = self._overscan
                 return True
 
             case EnvironmentCall.GET_CAN_DUPE:
@@ -324,7 +324,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CAN_DUPE doesn't accept NULL")
 
                 dupe_ptr = cast(data, POINTER(c_bool))
-                dupe_ptr.contents = self._video.can_dupe()
+                dupe_ptr.contents.value = self._video.can_dupe()
                 return True
 
             case EnvironmentCall.SET_MESSAGE:
@@ -377,7 +377,7 @@ class Session(EnvironmentCallback):
                     var_ptr = cast(data, POINTER(retro_variable))
                     var: retro_variable = var_ptr.contents
 
-                    result = self._options.get_variable(var.key)
+                    result = self._options.get_variable(string_at(var.key) if var.key else None)
                     var.value = result
                     # Either a bytes for an option or None
 
@@ -399,7 +399,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
                 update_ptr = cast(data, POINTER(c_bool))
-                update_ptr.contents = c_bool(self._options.variable_updated)
+                update_ptr.contents.value = self._options.variable_updated
                 return True
 
             case EnvironmentCall.SET_SUPPORT_NO_GAME:
@@ -433,7 +433,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
                 inputcaps_ptr = cast(data, POINTER(c_uint64))
-                inputcaps_ptr.contents = self._input.device_capabilities
+                inputcaps_ptr.contents.value = self._input.device_capabilities
                 return True
 
             case EnvironmentCall.GET_SENSOR_INTERFACE:
@@ -532,7 +532,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
                 language_ptr = cast(data, POINTER(retro_language))
-                language_ptr.contents = self._language
+                language_ptr.contents.value = self._language
                 return True
 
             case EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER:
@@ -580,7 +580,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
                 refresh_rate_ptr = cast(data, POINTER(c_float))
-                refresh_rate_ptr.contents = self._target_refresh_rate
+                refresh_rate_ptr.contents.value = self._target_refresh_rate
                 return True
 
             case EnvironmentCall.GET_INPUT_BITMASKS:
@@ -591,7 +591,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
 
                 optversion_ptr = cast(data, POINTER(c_uint))
-                optversion_ptr.contents = c_uint(self._options.version)
+                optversion_ptr.contents.value = self._options.version
                 return True
 
             case EnvironmentCall.SET_CORE_OPTIONS:
@@ -745,6 +745,8 @@ class Session(EnvironmentCallback):
                 playlist_dir_ptr = cast(data, POINTER(c_char_p))
                 playlist_dir_ptr.contents.value = self._playlist_dir
                 return True
+            case _:
+                print(f"Unhandled env call: {hex(cmd)}")
 
         # TODO: Define a way to override certain calls
         return False

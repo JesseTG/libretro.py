@@ -15,7 +15,9 @@ def as_bytes(value: str | bytes | None) -> bytes | None:
 
 
 def is_zeroed(struct: Structure) -> bool:
-    return not any(getattr(struct, field) for field, _ in struct._fields_)
+    view = memoryview_at(addressof(struct), sizeof(struct), True)
+
+    return not any(view)
 
 
 def from_zero_terminated[S](ptr) -> Iterator[S]:
@@ -45,7 +47,7 @@ pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
 pythonapi.PyMemoryView_FromMemory.restype = py_object
 
 
-def memoryview_at(address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False):
+def memoryview_at(address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False) -> memoryview:
     flags = c_int(0x100 if readonly else 0x200)
     return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
 
