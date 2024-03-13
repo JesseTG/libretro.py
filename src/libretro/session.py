@@ -655,9 +655,15 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_DISK_CONTROL_EXT_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_MESSAGE_INTERFACE_VERSION:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION doesn't accept NULL")
+
+                msgversion_ptr = cast(data, POINTER(c_uint))
+                msgversion_ptr.contents.value = self._message.version
+                return True
+
             case EnvironmentCall.SET_MESSAGE_EXT:
                 # TODO: Implement
                 pass

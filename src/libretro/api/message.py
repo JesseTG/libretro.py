@@ -45,6 +45,7 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
 
 @runtime_checkable
 class MessageInterface(Protocol):
+    @property
     @abstractmethod
     def version(self) -> int: ...
 
@@ -76,6 +77,7 @@ class LoggerMessageInterface(MessageInterface):
         self._messages: list[Message] = []
         self._message_exts: list[MessageExt] = []
 
+    @property
     def version(self) -> int:
         return self._version
 
