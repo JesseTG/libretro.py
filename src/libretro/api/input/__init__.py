@@ -279,7 +279,7 @@ class GeneratorInputState(InputState):
             # Yielding a LightGunState will expose it to the port's light gun device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case LightGunState() as light_gun_state, InputDevice.LIGHTGUN, _, id if 0 <= id < len(light_gun_state):
+            case LightGunState() as light_gun_state, InputDevice.LIGHTGUN, _, id if id in DeviceIdLightgun:
                 light_gun_state: LightGunState
                 return light_gun_state[id]
             case LightGunState(), _, _, _:
@@ -295,12 +295,15 @@ class GeneratorInputState(InputState):
                 # Index is ignored.
                 pointer_state: PointerState
                 return len(pointer_state.pointers)
-            case PointerState() as pointer_state, InputDevice.POINTER, index, (0 | 1 | 2) as id \
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.X \
                     if 0 <= index < len(pointer_state.pointers):
-                # The state of a specific touch will be exposed as RETRO_DEVICE_ID_POINTER_PRESSED on that index.
-                # Unused or invalid touches will return 0 (False).
-                # id=0 is X, id=1 is Y, id=2 is PRESSED
-                return pointer_state.pointers[index][id]
+                return pointer_state.pointers[index].x
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.Y \
+                    if 0 <= index < len(pointer_state.pointers):
+                return pointer_state.pointers[index].y
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.PRESSED \
+                    if 0 <= index < len(pointer_state.pointers):
+                return pointer_state.pointers[index].pressed
             case PointerState(), _, _, _:
                 return 0
 
