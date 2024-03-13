@@ -306,9 +306,9 @@ class Session(EnvironmentCallback):
     def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
         return self._content_info_override
 
-    def environment(self, cmd: EnvironmentCall, data: c_void_p) -> bool:
+    def environment(self, cmd: int, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
-        match cmd:
+        match EnvironmentCall(cmd):
             case EnvironmentCall.SET_ROTATION:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_ROTATION doesn't accept NULL")

@@ -52,7 +52,7 @@ class InputCallbacks(Protocol):
     def poll(self) -> None: ...
 
     @abstractmethod
-    def state(self, port: int, device: InputDevice, index: int, id: int) -> int: ...
+    def state(self, port: int, device: int, index: int, id: int) -> int: ...
 
 
 @runtime_checkable
@@ -163,8 +163,8 @@ class GeneratorInputState(InputState):
 
             self._last_poll_result = next(self._generator_state, None)
 
-    def state(self, port: int, device: InputDevice, index: int, id: int) -> int:
-        match (self._generator, self._last_poll_result, port, device):
+    def state(self, port: int, device: int, index: int, id: int) -> int:
+        match (self._generator, self._last_poll_result, port, InputDevice(device)):
             case(None, _, _, _) | (_, [], _, _):
                 # An unassigned generator or an empty result list will default to 0
                 return 0
