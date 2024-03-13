@@ -178,11 +178,30 @@ class Core:
     def serialize_size(self) -> int:
         return self._core.retro_serialize_size()
 
-    def serialize(self, data: bytearray) -> bool:
-        return self._core.retro_serialize(data, len(data))
+    def serialize(self, data: bytearray | memoryview) -> bool:
+        if data is None:
+            raise ValueError("data must not be None")
+
+        if not isinstance(data, (bytearray, memoryview)):
+            raise TypeError(f"data must be bytearray or memoryview, not {type(data).__name__}")
+
+        if isinstance(data, memoryview) and data.readonly:
+            raise ValueError("data must not be readonly")
+
+        arraytype: Array = c_char * len(data)
+
+        return self._core.retro_serialize(byref(arraytype.from_buffer(data)), len(data))
 
     def unserialize(self, data: bytes | bytearray | memoryview) -> bool:
-        return self._core.retro_unserialize(data, len(data))
+        if data is None:
+            raise ValueError("data must not be None")
+
+        if not isinstance(data, (bytes, bytearray, memoryview)):
+            raise TypeError(f"data must be bytes, bytearray or memoryview, not {type(data).__name__}")
+
+        arraytype: Array = c_char * len(data)
+
+        return self._core.retro_unserialize(byref(arraytype.from_buffer(data)), len(data))
 
     def cheat_reset(self):
         self._core.retro_cheat_reset()
