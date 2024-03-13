@@ -179,7 +179,7 @@ class KeyModifier(IntFlag):
         self._type_ = 'I'
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class KeyboardState:
     backspace: bool = False
     tab: bool = False

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import NamedTuple
 
 from ...h import *
 
@@ -22,8 +21,8 @@ class DeviceIdMouse(IntEnum):
         self._type_ = 'H'
 
 
-@dataclass
-class MouseState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class MouseState:
     x: int = 0
     y: int = 0
     left: bool = False

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import NamedTuple, Sequence
+from typing import Sequence
 
 from ...h import *
 
@@ -15,13 +15,13 @@ class DeviceIdPointer(IntEnum):
         self._type_ = 'H'
 
 
-@dataclass
-class Pointer(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class Pointer:
     x: int = 0
     y: int = 0
     pressed: bool = False
 
 
-@dataclass
-class PointerState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class PointerState:
     pointers: Sequence[Pointer] = ()

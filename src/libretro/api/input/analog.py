@@ -1,5 +1,5 @@
+from dataclasses import dataclass
 from enum import IntEnum
-from typing import NamedTuple
 
 from ...h import *
 
@@ -21,7 +21,8 @@ class DeviceIdAnalog(IntEnum):
         self._type_ = 'H'
 
 
-class AnalogState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class AnalogState:
     b: int = 0
     y: int = 0
     select: int = 0

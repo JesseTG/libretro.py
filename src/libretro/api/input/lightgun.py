@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import NamedTuple
 
 from ...h import *
 
 
-@dataclass
-class LightGunState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class LightGunState:
     screen_x: int = 0
     screen_y: int = 0
     is_offscreen: bool = False

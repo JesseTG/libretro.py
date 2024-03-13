@@ -3,7 +3,7 @@ from collections.abc import Iterator, Sequence
 from ctypes import CFUNCTYPE, c_int16, c_uint
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, CONFORM
-from typing import Callable, NamedTuple, Protocol, runtime_checkable, final
+from typing import Callable, Protocol, runtime_checkable, final
 
 from ...h import *
 from .analog import AnalogState, DeviceIndexAnalog, DeviceIdAnalog
@@ -70,8 +70,8 @@ class InputState(InputCallbacks, Protocol):
     def max_users(self) -> int: ...
 
 
-@dataclass(frozen=True)
-class Point(NamedTuple):
+@dataclass(frozen=True, order=True, slots=True)
+class Point:
     x: int = 0
     y: int = 0
 
@@ -96,8 +96,8 @@ class Direction(IntEnum):
                 return False
 
 
-@dataclass(frozen=True)
-class PortState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class PortState:
     joypad: JoypadState | None = None
     mouse: MouseState | None = None
     keyboard: KeyboardState | None = None

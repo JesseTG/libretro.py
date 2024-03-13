@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import NamedTuple
 
 from ...h import *
 
@@ -28,8 +27,8 @@ class DeviceIdJoypad(IntEnum):
         self._type_ = 'H'
 
 
-@dataclass
-class JoypadState(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class JoypadState:
     b: bool = False
     y: bool = False
     select: bool = False
