@@ -285,11 +285,13 @@ class Session(EnvironmentCallback):
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._proc_address_callback
 
-    def get_proc_address(self, sym: bytes, funtype: Type[ctypes._CFuncPtr] | None) -> retro_proc_address_t | Callable | None:
+    def get_proc_address(self, sym: AnyStr, funtype: Type[ctypes._CFuncPtr] | None) -> retro_proc_address_t | Callable | None:
         if not self._proc_address_callback or not sym:
             return None
 
-        proc = self._proc_address_callback.get_proc_address(sym)
+        name = as_bytes(sym)
+
+        proc = self._proc_address_callback.get_proc_address(name)
         if funtype:
             return funtype(proc)
 
