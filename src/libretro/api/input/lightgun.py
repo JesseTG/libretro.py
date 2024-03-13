@@ -5,7 +5,7 @@ from typing import NamedTuple
 from ...h import *
 
 
-@dataclass(frozen=True)
+@dataclass
 class LightGunState(NamedTuple):
     screen_x: int = 0
     screen_y: int = 0

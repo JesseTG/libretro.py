@@ -15,13 +15,13 @@ class DeviceIdPointer(IntEnum):
         self._type_ = 'H'
 
 
-@dataclass(frozen=True)
+@dataclass
 class Pointer(NamedTuple):
     x: int = 0
     y: int = 0
     pressed: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass
 class PointerState(NamedTuple):
     pointers: Sequence[Pointer] = ()

@@ -22,7 +22,7 @@ class DeviceIdMouse(IntEnum):
         self._type_ = 'H'
 
 
-@dataclass(frozen=True)
+@dataclass
 class MouseState(NamedTuple):
     x: int = 0
     y: int = 0
