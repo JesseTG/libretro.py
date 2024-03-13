@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterable
+from typing import Type
 
 from .api.content import *
 from .api.environment import EnvironmentCall
@@ -279,11 +280,15 @@ class Session(EnvironmentCallback):
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._proc_address_callback
 
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
-        if self._proc_address_callback is None or sym is None:
+    def get_proc_address(self, sym: bytes, funtype: Type[ctypes._CFuncPtr] | None) -> retro_proc_address_t | Callable | None:
+        if not self._proc_address_callback or not sym:
             return None
 
-        return self._proc_address_callback.get_proc_address(sym)
+        proc = self._proc_address_callback.get_proc_address(sym)
+        if funtype:
+            return funtype(proc)
+
+        return proc
 
     @property
     def subsystems(self) -> Sequence[retro_subsystem_info] | None:
