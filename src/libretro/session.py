@@ -62,31 +62,31 @@ class Session(EnvironmentCallback):
             raise ValueError("Core cannot be None")
 
         if not isinstance(audio, AudioCallbacks):
-            raise TypeError(f"Expected audio to match AudioCallbacks, not {type(audio)}")
+            raise TypeError(f"Expected audio to match AudioCallbacks, not {type(audio).__name__}")
 
         if not isinstance(input_state, InputState):
-            raise TypeError(f"Expected input_state to match InputState, not {type(input_state)}")
+            raise TypeError(f"Expected input_state to match InputState, not {type(input_state).__name__}")
 
         if not isinstance(video, VideoState):
-            raise TypeError(f"Expected video to match VideoState, not {type(video)}")
+            raise TypeError(f"Expected video to match VideoState, not {type(video).__name__}")
 
         if not isinstance(message, MessageInterface):
-            raise TypeError(f"Expected message to match MessageInterface, not {type(message)}")
+            raise TypeError(f"Expected message to match MessageInterface, not {type(message).__name__}")
 
         if not isinstance(options, OptionState):
-            raise TypeError(f"Expected options to match OptionState, not {type(options)}")
+            raise TypeError(f"Expected options to match OptionState, not {type(options).__name__}")
 
         if not isinstance(system_dir, (str, bytes, type(None))):
-            raise TypeError(f"Expected system_dir to be str, bytes, or None; got {type(system_dir)}")
+            raise TypeError(f"Expected system_dir to be str, bytes, or None; got {type(system_dir).__name__}")
 
         if not isinstance(log_callback, LogCallback):
-            raise TypeError(f"Expected log_callback to match LogCallback, not {type(log_callback)}")
+            raise TypeError(f"Expected log_callback to match LogCallback, not {type(log_callback).__name__}")
 
         if not isinstance(core_assets_dir, (str, bytes, type(None))):
-            raise TypeError(f"Expected core_assets_dir to be str, bytes, or None; got {type(core_assets_dir)}")
+            raise TypeError(f"Expected core_assets_dir to be str, bytes, or None; got {type(core_assets_dir).__name__}")
 
         if not isinstance(save_dir, (str, bytes, type(None))):
-            raise TypeError(f"Expected save_dir to be str, bytes, or None; got {type(save_dir)}")
+            raise TypeError(f"Expected save_dir to be str, bytes, or None; got {type(save_dir).__name__}")
 
         if isinstance(core, Core):
             self._core = core
