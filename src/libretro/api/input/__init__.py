@@ -118,7 +118,7 @@ class GeneratorInputState(InputState):
             self,
             generator: InputStateGenerator | None = None,
             device_capabilities: InputDeviceFlag = InputDeviceFlag.ALL,
-            bitmasks_supported: bool = False,
+            bitmasks_supported: bool = True,
             max_users: int = 8
     ):
         self._generator = generator
