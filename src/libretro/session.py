@@ -17,7 +17,7 @@ from .core import Core
 from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
 from .api.input import *
-from .api.input.info import retro_controller_info
+from .api.input.info import retro_controller_info, retro_input_descriptor
 from .api.input.keyboard import *
 from .api.video import VideoCallbacks, SoftwareVideoState, VideoState, PixelFormat, retro_frame_time_callback
 
@@ -106,6 +106,7 @@ class Session(EnvironmentCallback):
         self._keyboard_callback: retro_keyboard_callback | None = None
         self._performance_level: int | None = None
         self._system_dir = as_bytes(system_dir)
+        self._input_descriptors: Sequence[retro_input_descriptor] | None = None
         self._options: OptionState = options
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = as_bytes(self._core.path)
@@ -257,6 +258,10 @@ class Session(EnvironmentCallback):
         return self._system_dir
 
     @property
+    def input_descriptors(self) -> Sequence[retro_input_descriptor] | None:
+        return self._input_descriptors
+
+    @property
     def options(self) -> OptionState:
         return self._options
 
@@ -368,8 +373,13 @@ class Session(EnvironmentCallback):
                 return self._video.set_pixel_format(PixelFormat(pixfmt_ptr.contents.value))
 
             case EnvironmentCall.SET_INPUT_DESCRIPTORS:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS doesn't accept NULL")
+
+                inputdesc_ptr = cast(data, POINTER(retro_input_descriptor))
+                self._input_descriptors = tuple(from_zero_terminated(inputdesc_ptr))
+                return True
+
             case EnvironmentCall.SET_KEYBOARD_CALLBACK:
                 # TODO: Implement
                 pass
