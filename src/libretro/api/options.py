@@ -251,7 +251,7 @@ class StandardOptionState(OptionState):
         self._variables_dirty = True
 
     def get_variable_update(self) -> bool:
-        return self._variables_dirty
+        return bool(self._variables_dirty and self._options_us)
 
     def get_version(self) -> int:
         return self._version
