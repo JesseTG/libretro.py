@@ -235,7 +235,7 @@ class Core:
             return None
 
         size = self.get_memory_size(id)
-        return memoryview_at(data, size, readonly=True)
+        return memoryview_at(data, size, readonly=False)
 
     @property
     def path(self) -> str:
