@@ -2,6 +2,7 @@ from ctypes import c_uint, c_uint16, c_uint32, c_bool, CFUNCTYPE, Structure
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, EJECT
 
+from .info import InputDeviceState
 from ...h import *
 from ..._utils import FieldsFromTypeHints
 
@@ -147,7 +148,7 @@ class Key(IntEnum, boundary=EJECT):
     HELP = RETROK_HELP
     PRINT = RETROK_PRINT
     SYSREQ = RETROK_SYSREQ
-    BREAK = RETROK_BREAK
+    BREAK_ = RETROK_BREAK
     MENU = RETROK_MENU
     POWER = RETROK_POWER
     EURO = RETROK_EURO
@@ -159,10 +160,6 @@ class Key(IntEnum, boundary=EJECT):
 
     def is_modifier(self):
         return self in (Key.LCTRL, Key.RCTRL, Key.LSHIFT, Key.RSHIFT, Key.LALT, Key.RALT, Key.LMETA, Key.RMETA, Key.NUMLOCK, Key.CAPSLOCK, Key.SCROLLOCK)
-
-    @classmethod
-    def is_valid(cls, value: int) -> bool:
-        return value in cls.__members__.values()
 
 
 class KeyModifier(IntFlag):
@@ -180,7 +177,7 @@ class KeyModifier(IntFlag):
 
 
 @dataclass(frozen=True, slots=True)
-class KeyboardState:
+class KeyboardState(InputDeviceState):
     backspace: bool = False
     tab: bool = False
     clear: bool = False
@@ -327,7 +324,8 @@ class KeyboardState:
     oem_102: bool = False
 
     def __getitem__(self, item: int) -> bool:
-        if Key.is_valid(item):
+
+        if item in Key:
             return getattr(self, Key(item).name.lower())
         else:
             return False

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Iterator, Sequence
 from ctypes import CFUNCTYPE, c_int16, c_uint
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass
 from enum import IntEnum, IntFlag, CONFORM
 from typing import Callable, Protocol, runtime_checkable, final
 
@@ -96,6 +96,9 @@ class Direction(IntEnum):
                 return False
 
 
+DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
+
+
 @dataclass(frozen=True, slots=True)
 class PortState:
     joypad: JoypadState | None = None
@@ -105,8 +108,19 @@ class PortState:
     analog: AnalogState | None = None
     pointer: PointerState | None = None
 
+    def __getitem__(self, item) -> DeviceState | None:
+        match item:
+            case InputDevice.NONE: return None
+            case InputDevice.JOYPAD: return self.joypad
+            case InputDevice.MOUSE: return self.mouse
+            case InputDevice.KEYBOARD: return self.keyboard
+            case InputDevice.LIGHTGUN: return self.light_gun
+            case InputDevice.ANALOG: return self.analog
+            case InputDevice.POINTER: return self.pointer
+            case int(): raise IndexError(f"Index {item} is not a valid InputDevice")
+            case _: raise TypeError(f"Expected an int or InputDevice, got {item!r}")
 
-DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
+
 InputPollResult = PortState | DeviceState | Point | bool | int | None
 InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
 InputStateGenerator = Callable[[], InputStateIterator]
@@ -171,7 +185,8 @@ class GeneratorInputState(InputState):
             case _, _, port, device if not ((0 <= port < self.max_users) and (self.device_capabilities & device.flag)):
                 # Non-existent ports and unavailable devices will always return 0
                 return 0
-            case _, [*results], port, device if port < len(results):
+            case _, [*results], port, device if port < len(results) and not is_dataclass(results):
+                # TODO: This pattern is matching the various states (e.g. JoypadState)
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
@@ -203,9 +218,10 @@ class GeneratorInputState(InputState):
                 # return the mask as an integer
                 joypad_state: JoypadState
                 return joypad_state.mask
-            case JoypadState() as joypad_state, InputDevice.JOYPAD, _, id if 0 <= id < len(joypad_state):
+            case JoypadState() as joypad_state, InputDevice.JOYPAD, _, id if id in DeviceIdJoypad:
                 # When asking for a specific joypad button,
                 # return 1 (True) if its pressed and 0 (False) if not
+                # NOTE: id in DeviceInJoypad is perfectly valid
                 joypad_state: JoypadState
                 return joypad_state[id]
             case JoypadState(), _, _, _:
@@ -213,6 +229,7 @@ class GeneratorInputState(InputState):
                 return 0
 
             # Yielding a DeviceIdJoypad value will expose it as a button press on the joypad device.
+            # Except for MASK, that still returns 0 (there is no mask button)
             case DeviceIdJoypad(device_id), InputDevice.JOYPAD, _, id if device_id == id and id != DeviceIdJoypad.MASK:
                 return 1
             case DeviceIdJoypad(_), _, _, _:
@@ -225,7 +242,7 @@ class GeneratorInputState(InputState):
             # Yielding a MouseState will expose it to the port's mouse device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case MouseState() as mouse_state, InputDevice.MOUSE, _, id if 0 <= id < len(mouse_state):
+            case MouseState() as mouse_state, InputDevice.MOUSE, _, id if id in DeviceIdMouse:
                 # When asking for a specific mouse button,
                 # return 1 (True) if its pressed and 0 (False) if not
                 mouse_state: MouseState
@@ -245,7 +262,7 @@ class GeneratorInputState(InputState):
             # Yielding a KeyboardState will expose it to the port's keyboard device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case KeyboardState() as keyboard_state, InputDevice.KEYBOARD, _, id if Key.is_valid(id):
+            case KeyboardState() as keyboard_state, InputDevice.KEYBOARD, _, id if id in Key:
                 # KeyboardState overloads __getitem__ to return True for pressed keys
                 # and False for unpressed or invalid keys.
                 return keyboard_state[id]
@@ -254,7 +271,7 @@ class GeneratorInputState(InputState):
                 return 0
 
             # Yielding a Key value will expose it as a key press on the keyboard device.
-            case Key(key), InputDevice.KEYBOARD, _, id if key == id and Key.is_valid(id):
+            case Key(key), InputDevice.KEYBOARD, _, id if key == id and id in Key:
                 return 1
             case Key(_), _, _, _:  # When yielding a Key in all other cases, return 0
                 return 0

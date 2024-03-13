@@ -4,6 +4,13 @@ from typing import Sequence, overload
 from ..._utils import FieldsFromTypeHints
 
 
+class InputDeviceState:
+    """
+    Empty marker class for identifying input device states.
+    """
+    pass
+
+
 class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
     port: c_uint
     device: c_uint

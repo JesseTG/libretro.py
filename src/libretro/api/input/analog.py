@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
+from .info import InputDeviceState
 from ...h import *
 
 
@@ -22,7 +23,7 @@ class DeviceIdAnalog(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class AnalogState:
+class AnalogState(InputDeviceState):
     b: int = 0
     y: int = 0
     select: int = 0

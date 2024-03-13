@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Sequence
 
+from .info import InputDeviceState
 from ...h import *
 
 
@@ -23,5 +24,5 @@ class Pointer:
 
 
 @dataclass(frozen=True, slots=True)
-class PointerState:
+class PointerState(InputDeviceState):
     pointers: Sequence[Pointer] = ()

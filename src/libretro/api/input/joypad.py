@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
+from .info import InputDeviceState
 from ...h import *
 
 
@@ -28,7 +29,7 @@ class DeviceIdJoypad(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class JoypadState:
+class JoypadState(InputDeviceState):
     b: bool = False
     y: bool = False
     select: bool = False
@@ -45,6 +46,28 @@ class JoypadState:
     r2: bool = False
     l3: bool = False
     r3: bool = False
+
+    def __getitem__(self, item) -> bool | int:
+        match item:
+            case DeviceIdJoypad.B: return self.b
+            case DeviceIdJoypad.Y: return self.y
+            case DeviceIdJoypad.SELECT: return self.select
+            case DeviceIdJoypad.START: return self.start
+            case DeviceIdJoypad.UP: return self.up
+            case DeviceIdJoypad.DOWN: return self.down
+            case DeviceIdJoypad.LEFT: return self.left
+            case DeviceIdJoypad.RIGHT: return self.right
+            case DeviceIdJoypad.A: return self.a
+            case DeviceIdJoypad.X: return self.x
+            case DeviceIdJoypad.L: return self.l
+            case DeviceIdJoypad.R: return self.r
+            case DeviceIdJoypad.L2: return self.l2
+            case DeviceIdJoypad.R2: return self.r2
+            case DeviceIdJoypad.L3: return self.l3
+            case DeviceIdJoypad.R3: return self.r3
+            case DeviceIdJoypad.MASK: return self.mask
+            case int(): raise IndexError(f"Index {item} is not a valid DeviceIdJoypad")
+            case _: raise TypeError(f"Expected an int or DeviceIdJoypad, got {item!r}")
 
     @property
     def mask(self) -> int:

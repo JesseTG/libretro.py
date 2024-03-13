@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
+from .info import InputDeviceState
 from ...h import *
 
 
@@ -22,7 +23,7 @@ class DeviceIdMouse(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class MouseState:
+class MouseState(InputDeviceState):
     x: int = 0
     y: int = 0
     left: bool = False
@@ -34,3 +35,19 @@ class MouseState:
     horizontal_wheel_down: bool = False
     button4: bool = False
     button5: bool = False
+
+    def __getitem__(self, item) -> bool | int:
+        match item:
+            case DeviceIdMouse.X: return self.x
+            case DeviceIdMouse.Y: return self.y
+            case DeviceIdMouse.LEFT: return self.left
+            case DeviceIdMouse.RIGHT: return self.right
+            case DeviceIdMouse.WHEELUP: return self.wheel_up
+            case DeviceIdMouse.WHEELDOWN: return self.wheel_down
+            case DeviceIdMouse.MIDDLE: return self.middle
+            case DeviceIdMouse.HORIZ_WHEELUP: return self.horizontal_wheel_up
+            case DeviceIdMouse.HORIZ_WHEELDOWN: return self.horizontal_wheel_down
+            case DeviceIdMouse.BUTTON_4: return self.button4
+            case DeviceIdMouse.BUTTON_5: return self.button5
+            case int(): raise IndexError(f'Index {item!r} is not a valid DeviceIdMouse')
+            case _: raise KeyError(f'Expected an int or DeviceIdMouse, got {item!r}')
