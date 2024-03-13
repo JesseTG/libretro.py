@@ -292,11 +292,14 @@ class GeneratorInputState(InputState):
 
             # Yielding a specific number will unconditionally return it
             # to all devices, indexes, and IDs
-            case int() | bool() as value:
-                return int(value)
+            case bool(b), _, _, _:
+                return int(b)
+            case int(v), _, _, _:
+                return v
+
             # Yielding None will unconditionally return 0 for all devices, indexes, and IDs.
-            case None:
+            case None, _, _, _:
                 return 0
 
-            case _:
+            case _, _, _, _:
                 raise ValueError(f"Invalid input state: {result}")
