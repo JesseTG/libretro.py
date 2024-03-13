@@ -205,7 +205,7 @@ class StandardOptionState(OptionState):
         self._options_intl: dict[bytes, retro_core_option_v2_definition] = {}
 
     def get_variable(self, item: bytes) -> bytes | None:
-        if not (self._options_us or self._options_intl) or not item:
+        if not self._options_us or not item:
             # Options can't be fetched until their definitions are set
             return None
 
@@ -286,7 +286,12 @@ class StandardOptionState(OptionState):
         self._variables_dirty = True
 
     def set_display(self, var: AnyStr, visible: bool):
-        pass # TODO: Implement
+        if not var or not self._options_us:
+            # No good if any value was NULL or if no option was registered
+            return
+
+        key = as_bytes(var)
+        self._visibility[key] = visible
 
     def set_options_v2(self, options: retro_core_options_v2 | None):
         self._categories_intl.clear()
@@ -333,8 +338,21 @@ class StandardOptionState(OptionState):
                 raise TypeError(f"Expected a retro_core_options_update_display_callback, got {callback!r}")
 
     def set_variable(self, item: AnyStr, value: AnyStr) -> bool:
-        pass
-        # TODO: Call the update display callback
+        if not item or not value or not self._options_us:
+            # No good if any value was NULL or if no option was registered
+            return False
+
+        key = as_bytes(item)
+        if key not in self._options_us:
+            return False
+
+        val = as_bytes(value)
+        values: Array = self._options_us[key].values
+        if not any(val == string_at(v.value) for v in values):
+            return False
+
+        self._variables[key] = val
+        self._variables_dirty = True
 
     @property
     def update_display_callback(self) -> retro_core_options_update_display_callback | None:
@@ -359,6 +377,8 @@ class StandardOptionState(OptionState):
             if self._options._update_display_callback:
                 self._options._update_display_callback()
 
+            self._options._variables_dirty = True
+
         def __delitem__(self, key: bytes):
             k = as_bytes(key)
             del self._options._variables[k]
@@ -368,7 +388,6 @@ class StandardOptionState(OptionState):
 
         def __iter__(self):
             yield from self._options._options_us.keys()
-
 
 
     @property
