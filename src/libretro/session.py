@@ -13,7 +13,7 @@ from .api.throttle import *
 from .api.log import retro_log_callback, LogCallback, StandardLogger, retro_log_printf_t
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
-from .core import Core
+from .core import Core, CoreInterface
 from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
 from .api.input import *
