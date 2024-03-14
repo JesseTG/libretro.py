@@ -292,6 +292,10 @@ class Session(EnvironmentCallback):
         name = as_bytes(sym)
 
         proc = self._proc_address_callback.get_proc_address(name)
+
+        if not proc:
+            return None
+
         if funtype:
             return funtype(proc)
 
