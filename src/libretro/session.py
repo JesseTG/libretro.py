@@ -841,7 +841,7 @@ def default_session(
     elif isinstance(input_state, Callable):
         input_impl = GeneratorInputState(input_state)
 
-    options_impl: OptionState | None = None
+    options_impl: OptionState
     match options:
         case OptionState():
             options_impl = options
@@ -849,6 +849,8 @@ def default_session(
             options_impl = StandardOptionState(2, True, map)
         case None:
             options_impl = StandardOptionState()
+        case _:
+            raise TypeError(f"Expected options to be an OptionState or a Mapping, not {type(options).__name__}")
 
     vfs_impl: FileSystemInterface
     match vfs:
