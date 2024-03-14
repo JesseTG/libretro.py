@@ -250,6 +250,10 @@ class Session(EnvironmentCallback):
         return self._message
 
     @property
+    def is_shutdown(self) -> bool:
+        return self._is_shutdown
+
+    @property
     def system_directory(self) -> bytes | None:
         return self._system_dir
 
