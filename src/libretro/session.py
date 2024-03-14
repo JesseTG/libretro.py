@@ -10,7 +10,7 @@ from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
-from .api.log import retro_log_callback, LogCallback, StandardLogger
+from .api.log import retro_log_callback, LogCallback, StandardLogger, retro_log_printf_t
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .core import Core
@@ -785,7 +785,7 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoCallbacks | None = None,
-        options: OptionState | None = None,
+        options: OptionState | Mapping[AnyStr, AnyStr] | None = None,
         overscan: bool = False,
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
@@ -811,6 +811,15 @@ def default_session(
     elif isinstance(input_state, Callable):
         input_impl = GeneratorInputState(input_state)
 
+    options_impl: OptionState | None = None
+    match options:
+        case OptionState():
+            options_impl = options
+        case map if isinstance(map, Mapping):
+            options_impl = StandardOptionState(2, True, map)
+        case None:
+            options_impl = StandardOptionState()
+
     logger = logging.getLogger('libretro')
     return Session(
         core=core,
@@ -820,7 +829,7 @@ def default_session(
         content=content,
         overscan=overscan,
         message=message or LoggerMessageInterface(1, logger),
-        options=options or StandardOptionState(),
+        options=options_impl,
         system_dir=system_dir,
         log_callback=log_callback or StandardLogger(logger),
         core_assets_dir=core_assets_dir,
