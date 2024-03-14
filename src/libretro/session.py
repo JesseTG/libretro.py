@@ -30,6 +30,11 @@ class _DoNotLoad: pass
 DoNotLoad = _DoNotLoad()
 
 
+class CoreShutDownException(Exception):
+    def __init__(self, *args):
+        super().__init__("Core has been shut down", *args)
+
+
 def full_power() -> retro_device_power:
     return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
 
