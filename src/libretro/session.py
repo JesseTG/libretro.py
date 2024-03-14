@@ -11,7 +11,7 @@ from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
 from .api.log import retro_log_callback, LogCallback, StandardLogger
-from .api.message import retro_message, MessageInterface, LoggerMessageInterface
+from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .core import Core
 from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
@@ -667,8 +667,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_MESSAGE_EXT:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_MESSAGE_EXT doesn't accept NULL")
+
+                message_ext_ptr = cast(data, POINTER(retro_message_ext))
+                return self._message.set_message(message_ext_ptr.contents)
+
             case EnvironmentCall.SET_AUDIO_BUFFER_STATUS_CALLBACK:
                 # TODO: Implement
                 pass
