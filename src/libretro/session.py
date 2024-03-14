@@ -230,7 +230,7 @@ class Session(EnvironmentCallback):
         return False
 
     @property
-    def core(self) -> Core:
+    def core(self) -> CoreInterface:
         return self._core
 
     @property

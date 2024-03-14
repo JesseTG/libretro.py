@@ -1,5 +1,8 @@
+from abc import abstractmethod
 from collections.abc import Sequence
 from ctypes import *
+from typing import Protocol
+
 from ._utils import memoryview_at, String
 
 from .api.content import retro_game_info
@@ -10,7 +13,92 @@ from .api.input import retro_input_poll_t, retro_input_state_t
 from .api.system import retro_system_info, retro_system_av_info, Region
 
 
-class Core:
+class CoreInterface(Protocol):
+    @abstractmethod
+    def set_environment(self, env: retro_environment_t) -> None: ...
+
+    @abstractmethod
+    def set_video_refresh(self, video: retro_video_refresh_t) -> None: ...
+
+    @abstractmethod
+    def set_audio_sample(self, audio: retro_audio_sample_t) -> None: ...
+
+    @abstractmethod
+    def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None: ...
+
+    @abstractmethod
+    def set_input_poll(self, poll: retro_input_poll_t) -> None: ...
+
+    @abstractmethod
+    def set_input_state(self, state: retro_input_state_t) -> None: ...
+
+    @abstractmethod
+    def init(self) -> None: ...
+
+    @abstractmethod
+    def deinit(self) -> None: ...
+
+    @abstractmethod
+    def api_version(self) -> int: ...
+
+    @abstractmethod
+    def get_system_info(self) -> retro_system_info: ...
+
+    @abstractmethod
+    def get_system_av_info(self) -> retro_system_av_info: ...
+
+    @abstractmethod
+    def set_controller_port_device(self, port: int, device: int) -> None: ...
+
+    @abstractmethod
+    def reset(self) -> None: ...
+
+    @abstractmethod
+    def run(self) -> None: ...
+
+    @abstractmethod
+    def serialize_size(self) -> int: ...
+
+    @abstractmethod
+    def serialize(self, data: bytearray | memoryview) -> bool: ...
+
+    @abstractmethod
+    def unserialize(self, data: bytes | bytearray | memoryview) -> bool: ...
+
+    @abstractmethod
+    def cheat_reset(self) -> None: ...
+
+    @abstractmethod
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview) -> None: ...
+
+    @abstractmethod
+    def load_game(self, game: retro_game_info | None) -> bool: ...
+
+    @abstractmethod
+    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool: ...
+
+    @abstractmethod
+    def unload_game(self) -> None: ...
+
+    @abstractmethod
+    def get_region(self) -> Region: ...
+
+    @abstractmethod
+    def get_memory_data(self, id: int) -> c_void_p | None: ...
+
+    @abstractmethod
+    def get_memory_size(self, id: int) -> int: ...
+
+    def get_memory(self, id: int) -> memoryview | None:
+        data = self.get_memory_data(id)
+        if not data:
+            return None
+
+        size = self.get_memory_size(id)
+        return memoryview_at(data, size, readonly=False)
+
+
+class Core(CoreInterface):
     """
     A thin wrapper around a libretro core.
     Can be used to call the core's public interface,
@@ -228,14 +316,6 @@ class Core:
 
     def get_memory_size(self, id: int) -> int:
         return self._core.retro_get_memory_size(id)
-
-    def get_memory(self, id: int) -> memoryview | None:
-        data = self.get_memory_data(id)
-        if not data:
-            return None
-
-        size = self.get_memory_size(id)
-        return memoryview_at(data, size, readonly=False)
 
     @property
     def path(self) -> str:
