@@ -228,8 +228,15 @@ class GeneratorInputState(InputState):
                 return 0
 
             # Yielding a DeviceIdJoypad value will expose it as a button press on the joypad device.
-            # Except for MASK, that still returns 0 (there is no mask button)
-            case DeviceIdJoypad(device_id), InputDevice.JOYPAD, _, id if device_id == id and id != DeviceIdJoypad.MASK:
+            # Unless the yielded value is DeviceIdJoypad.MASK, as there's no mask button;
+            # so we return the flag value instead.
+            case DeviceIdJoypad(DeviceIdJoypad.MASK), _, _, _:
+                return 0
+            # Yield a button mask with just the one button set
+            case DeviceIdJoypad(device_id), InputDevice.JOYPAD, _, DeviceIdJoypad.MASK if self._bitmasks_supported:
+                return 1 << device_id
+            # Yield 1 for the pressed button
+            case DeviceIdJoypad(device_id), InputDevice.JOYPAD, _, id if device_id == id:
                 return 1
             case DeviceIdJoypad(_), _, _, _:
                 return 0
