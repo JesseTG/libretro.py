@@ -77,7 +77,7 @@ class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
             bytes(self.info) if self.info else None,
             bytes(self.info_categorized) if self.info_categorized else None,
             bytes(self.category_key) if self.category_key else None,
-            arraytype.from_buffer_copy(self.values),
+            arraytype.from_buffer_copy(self.values), # TODO: Need to copy the strings in values, too
             bytes(self.default_value) if self.default_value else None,
         )
 
