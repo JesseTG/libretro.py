@@ -11,7 +11,7 @@ from .joypad import JoypadState, DeviceIdJoypad
 from .keyboard import Key, KeyModifier, KeyboardState
 from .lightgun import LightGunState, DeviceIdLightgun
 from .mouse import MouseState, DeviceIdMouse
-from .pointer import PointerState, DeviceIdPointer
+from .pointer import PointerState, DeviceIdPointer, Pointer
 
 retro_input_poll_t = CFUNCTYPE(None, )
 retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
@@ -121,7 +121,7 @@ class PortState:
             case _: raise TypeError(f"Expected an int or InputDevice, got {item!r}")
 
 
-InputPollResult = PortState | DeviceState | Point | bool | int | None
+InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
 InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
 InputStateGenerator = Callable[[], InputStateIterator]
 
@@ -186,7 +186,6 @@ class GeneratorInputState(InputState):
                 # Non-existent ports and unavailable devices will always return 0
                 return 0
             case _, [*results], port, device if port < len(results) and not is_dataclass(results):
-                # TODO: This pattern is matching the various states (e.g. JoypadState)
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
@@ -307,7 +306,27 @@ class GeneratorInputState(InputState):
             case PointerState(), _, _, _:
                 return 0
 
+            case Pointer(x=x, y=_, pressed=_), InputDevice.POINTER, 0, DeviceIdPointer.X:
+                return x
+            case Pointer(x=_, y=y, pressed=_), InputDevice.POINTER, 0, DeviceIdPointer.Y:
+                return y
+            case Pointer(x=_, y=_, pressed=pressed), InputDevice.POINTER, 0, DeviceIdPointer.PRESSED:
+                return pressed
+            case Pointer(), InputDevice.POINTER, 0, DeviceIdPointer.COUNT:
+                return 1
+            case Pointer(), _, _, _:
+                return 0
+
             case _, InputDevice.NONE, _, _:
+                return 0
+
+            case Point(x=x, y=_), InputDevice.POINTER, 0, DeviceIdPointer.X:
+                return x
+            case Point(x=_, y=y), InputDevice.POINTER, 0, DeviceIdPointer.Y:
+                return y
+            case Point(x=_, y=_), InputDevice.POINTER, 0, DeviceIdPointer.COUNT:
+                return 1
+            case Point(), _, _, _:
                 return 0
 
             # Yielding a specific number will unconditionally return it
