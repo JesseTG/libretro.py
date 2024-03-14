@@ -112,7 +112,12 @@ class DirectoryHandle:
     pass
 
 
-class FileSystemInterfaceV1(Protocol):
+@runtime_checkable
+class FileSystemInterface(Protocol):
+    @property
+    @abstractmethod
+    def version(self) -> int: ...
+
     @abstractmethod
     def get_path(self, stream: FileHandle) -> bytes: ...
 
@@ -146,13 +151,9 @@ class FileSystemInterfaceV1(Protocol):
     @abstractmethod
     def rename(self, old_path: bytes, new_path: bytes) -> int: ...
 
-
-class FileSystemInterfaceV2(FileSystemInterfaceV1, Protocol):
     @abstractmethod
     def truncate(self, stream: FileHandle, length: int) -> int: ...
 
-
-class FileSystemInterfaceV3(FileSystemInterfaceV2, Protocol):
     @abstractmethod
     def stat(self, path: bytes, size: c_int32) -> VfsStat: ...
 
@@ -175,7 +176,7 @@ class FileSystemInterfaceV3(FileSystemInterfaceV2, Protocol):
     def closedir(self, dir: DirectoryHandle) -> int: ...
 
 
-class PythonFileSystemInterface(FileSystemInterfaceV3):
+class PythonFileSystemInterface(FileSystemInterface):
     def __init__(self, version: Literal[1, 2, 3] = 3):
         self._version = version
         self._file_handles: set[FileHandle] = set()
@@ -183,29 +184,33 @@ class PythonFileSystemInterface(FileSystemInterfaceV3):
 
         self._as_parameter_ = retro_vfs_interface()
         if version >= 1:
-            self._as_parameter_.get_path = self.get_path
-            self._as_parameter_.open = self.open
-            self._as_parameter_.close = self.close
-            self._as_parameter_.size = self.size
-            self._as_parameter_.tell = self.tell
-            self._as_parameter_.seek = self.seek
-            self._as_parameter_.read = self.read
-            self._as_parameter_.write = self.write
-            self._as_parameter_.flush = self.flush
-            self._as_parameter_.remove = self.remove
-            self._as_parameter_.rename = self.rename
+            self._as_parameter_.get_path = retro_vfs_get_path_t(self.get_path)
+            self._as_parameter_.open = retro_vfs_open_t(self.open)
+            self._as_parameter_.close = retro_vfs_close_t(self.close)
+            self._as_parameter_.size = retro_vfs_size_t(self.size)
+            self._as_parameter_.tell = retro_vfs_tell_t(self.tell)
+            self._as_parameter_.seek = retro_vfs_seek_t(self.seek)
+            self._as_parameter_.read = retro_vfs_read_t(self.read)
+            self._as_parameter_.write = retro_vfs_write_t(self.write)
+            self._as_parameter_.flush = retro_vfs_flush_t(self.flush)
+            self._as_parameter_.remove = retro_vfs_remove_t(self.remove)
+            self._as_parameter_.rename = retro_vfs_rename_t(self.rename)
 
         if version >= 2:
-            self._as_parameter_.truncate = self.truncate
+            self._as_parameter_.truncate = retro_vfs_truncate_t(self.truncate)
 
         if version >= 3:
-            self._as_parameter_.stat = self.stat
-            self._as_parameter_.mkdir = self.mkdir
-            self._as_parameter_.opendir = self.opendir
-            self._as_parameter_.readdir = self.readdir
-            self._as_parameter_.dirent_get_name = self.dirent_get_name
-            self._as_parameter_.dirent_is_dir = self.dirent_is_dir
-            self._as_parameter_.closedir = self.closedir
+            self._as_parameter_.stat = retro_vfs_stat_t(self.stat)
+            self._as_parameter_.mkdir = retro_vfs_mkdir_t(self.mkdir)
+            self._as_parameter_.opendir = retro_vfs_opendir_t(self.opendir)
+            self._as_parameter_.readdir = retro_vfs_readdir_t(self.readdir)
+            self._as_parameter_.dirent_get_name = retro_vfs_dirent_get_name_t(self.dirent_get_name)
+            self._as_parameter_.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.dirent_is_dir)
+            self._as_parameter_.closedir = retro_vfs_closedir_t(self.closedir)
+
+    @property
+    def version(self) -> int:
+        return self._version
 
     def get_path(self, stream: FileHandle) -> bytes | None:
         if not stream or stream not in self._file_handles:

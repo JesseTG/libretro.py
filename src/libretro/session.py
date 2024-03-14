@@ -13,6 +13,7 @@ from .api.throttle import *
 from .api.log import retro_log_callback, LogCallback, StandardLogger, retro_log_printf_t
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
+from .api.vfs import retro_vfs_interface_info, FileSystemInterface, PythonFileSystemInterface, retro_vfs_interface
 from .core import Core, CoreInterface
 from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
@@ -58,6 +59,7 @@ class Session(EnvironmentCallback):
             save_dir: Directory | None,
             username: str | bytes | None,
             language: Language,
+            vfs: FileSystemInterface,
             target_refresh_rate: float,
             jit_capable: bool,
             device_power: DevicePower,
@@ -126,6 +128,7 @@ class Session(EnvironmentCallback):
         self._username = as_bytes(username)
         self._language = language
         self._supports_achievements: bool | None = None
+        self._vfs: FileSystemInterface = vfs
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
         self._fastforwarding_override: retro_fastforwarding_override | None = None
@@ -589,9 +592,22 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_HW_SHARED_CONTEXT:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_VFS_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_VFS_INTERFACE doesn't accept NULL")
+
+                vfs_ptr = cast(data, POINTER(retro_vfs_interface_info))
+                vfs_info: retro_vfs_interface_info = vfs_ptr[0]
+
+                if vfs_info.required_interface_version > self._vfs.version:
+                    # If the core wants a higher version than what we offer...
+                    return False
+
+                vfs_info.required_interface_version = self._vfs.version
+                vfs_info.iface = pointer(retro_vfs_interface.from_param(self._vfs))
+                return True
+
             case EnvironmentCall.GET_LED_INTERFACE:
                 # TODO: Implement
                 pass
@@ -807,6 +823,7 @@ def default_session(
         save_dir: Directory | None = None,
         username: str | bytes | None = "libretro.py",
         language: Language = Language.ENGLISH,
+        vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
         target_refresh_rate: float = 60.0,
         jit_capable: bool = True,
         device_power: DevicePower | None = full_power,
@@ -833,6 +850,19 @@ def default_session(
         case None:
             options_impl = StandardOptionState()
 
+    vfs_impl: FileSystemInterface
+    match vfs:
+        case FileSystemInterface() as v:
+            vfs_impl = v
+        case None:
+            vfs_impl = PythonFileSystemInterface()
+        case 1 | 2 | 3 as version:
+            vfs_impl = PythonFileSystemInterface(version)
+        case int() as i:
+            raise ValueError(f"Expected a VFS version of 1, 2, or 3; got {i}")
+        case _:
+            raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
+
     logger = logging.getLogger('libretro')
     return Session(
         core=core,
@@ -849,6 +879,7 @@ def default_session(
         save_dir=save_dir,
         username=username,
         language=language,
+        vfs=vfs_impl,
         target_refresh_rate=target_refresh_rate,
         jit_capable=jit_capable,
         device_power=device_power,
