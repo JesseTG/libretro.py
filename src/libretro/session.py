@@ -2,6 +2,7 @@ import logging
 from collections.abc import Iterable
 from typing import Type
 
+from .api.av import AvEnableFlags
 from .api.content import *
 from .api.environment import EnvironmentCall
 from .api.memory import retro_memory_map
@@ -60,6 +61,7 @@ class Session(EnvironmentCallback):
             username: str | bytes | None,
             language: Language,
             vfs: FileSystemInterface,
+            av_enable: AvEnableFlags,
             target_refresh_rate: float,
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
@@ -131,6 +133,7 @@ class Session(EnvironmentCallback):
         self._language = language
         self._supports_achievements: bool | None = None
         self._vfs: FileSystemInterface = vfs
+        self._av_enable = av_enable
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
         self._fastforwarding_override: retro_fastforwarding_override | None = None
@@ -326,6 +329,14 @@ class Session(EnvironmentCallback):
     @property
     def support_achievements(self) -> bool | None:
         return self._supports_achievements
+
+    @property
+    def av_enable(self) -> AvEnableFlags:
+        return self._av_enable
+
+    @av_enable.setter
+    def av_enable(self, value: AvEnableFlags):
+        self._av_enable = value
 
     @property
     def fastforwarding_override(self) -> retro_fastforwarding_override | None:
@@ -621,9 +632,15 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GET_LED_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_AUDIO_VIDEO_ENABLE:
-                # TODO: Implement
-                pass
+                if data:
+                    av_enable_ptr = cast(data, POINTER(c_uint))
+                    av_enable_ptr[0] = self._av_enable
+
+                # This envcall supports passing NULL to query for support
+                return True
+
             case EnvironmentCall.GET_MIDI_INTERFACE:
                 # TODO: Implement
                 pass
@@ -864,6 +881,7 @@ def default_session(
         username: str | bytes | None = "libretro.py",
         language: Language = Language.ENGLISH,
         vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
+        av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
         target_refresh_rate: float = 60.0,
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
@@ -924,6 +942,7 @@ def default_session(
         username=username,
         language=language,
         vfs=vfs_impl,
+        av_enable=av_enable,
         target_refresh_rate=target_refresh_rate,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
