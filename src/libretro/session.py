@@ -62,6 +62,7 @@ class Session(EnvironmentCallback):
             vfs: FileSystemInterface,
             target_refresh_rate: float,
             throttle_state: retro_throttle_state,
+            savestate_context: SavestateContext,
             jit_capable: bool,
             device_power: DevicePower,
             playlist_dir: Directory | None
@@ -135,7 +136,7 @@ class Session(EnvironmentCallback):
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
         self._throttle_state: retro_throttle_state = throttle_state
-        self._savestate_context: SavestateContext = SavestateContext.NORMAL
+        self._savestate_context: SavestateContext = savestate_context
         self._jit_capable = jit_capable
         self._device_power = device_power
         self._playlist_dir = as_bytes(playlist_dir)
@@ -802,9 +803,13 @@ class Session(EnvironmentCallback):
 
                 return True
 
-            case EnvironmentCall.GET_SAVE_STATE_CONTEXT:
-                # TODO: Implement
-                pass
+            case EnvironmentCall.GET_SAVESTATE_CONTEXT:
+                if data:
+                    savestate_context_ptr = cast(data, POINTER(retro_savestate_context))
+                    savestate_context_ptr[0] = self._savestate_context
+
+                # This envcall supports passing NULL to query for support
+                return True
             case EnvironmentCall.GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
                 # TODO: Implement
                 pass
@@ -861,6 +866,7 @@ def default_session(
         vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
         target_refresh_rate: float = 60.0,
         throttle_state: retro_throttle_state | None = None,
+        savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
         device_power: DevicePower | None = full_power,
         playlist_dir: Directory | None = None,
@@ -920,6 +926,7 @@ def default_session(
         vfs=vfs_impl,
         target_refresh_rate=target_refresh_rate,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
+        savestate_context=savestate_context,
         jit_capable=jit_capable,
         device_power=device_power,
         playlist_dir=playlist_dir
