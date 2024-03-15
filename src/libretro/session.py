@@ -327,6 +327,10 @@ class Session(EnvironmentCallback):
         return self._controller_infos
 
     @property
+    def memory_maps(self) -> retro_memory_map | None:
+        return self._memory_maps
+
+    @property
     def support_achievements(self) -> bool | None:
         return self._supports_achievements
 
@@ -564,9 +568,17 @@ class Session(EnvironmentCallback):
                 self._controller_infos = controller_infos
 
                 return True
+
             case EnvironmentCall.SET_MEMORY_MAPS:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_MEMORY_MAPS doesn't accept NULL")
+
+                memorymaps_ptr = cast(data, POINTER(retro_memory_map))
+                memorymaps: retro_memory_map = memorymaps_ptr[0]
+
+                self._memory_maps = deepcopy(memorymaps)
+                return True
+
             case EnvironmentCall.SET_GEOMETRY:
                 # TODO: Implement
                 pass
