@@ -61,6 +61,7 @@ class Session(EnvironmentCallback):
             language: Language,
             vfs: FileSystemInterface,
             target_refresh_rate: float,
+            throttle_state: retro_throttle_state,
             jit_capable: bool,
             device_power: DevicePower,
             playlist_dir: Directory | None
@@ -133,7 +134,7 @@ class Session(EnvironmentCallback):
         self._target_refresh_rate = target_refresh_rate
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
-        self._throttle_state: retro_throttle_state | None = None
+        self._throttle_state: retro_throttle_state = throttle_state
         self._savestate_context: SavestateContext = SavestateContext.NORMAL
         self._jit_capable = jit_capable
         self._device_power = device_power
@@ -326,8 +327,16 @@ class Session(EnvironmentCallback):
         return self._supports_achievements
 
     @property
+    def fastforwarding_override(self) -> retro_fastforwarding_override | None:
+        return self._fastforwarding_override
+
+    @property
     def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
         return self._content_info_override
+
+    @property
+    def throttle_state(self) -> retro_throttle_state:
+        return self._throttle_state
 
     def environment(self, cmd: int, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
@@ -617,9 +626,14 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GET_MIDI_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_FASTFORWARDING:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
+
+                fastforwarding_ptr = cast(data, POINTER(c_bool))
+                fastforwarding_ptr[0] = self._throttle_state.mode.value == ThrottleMode.FAST_FORWARD
+                return True
 
             case EnvironmentCall.GET_TARGET_REFRESH_RATE:
                 if not data:
@@ -708,9 +722,21 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_MINIMUM_AUDIO_LATENCY:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.SET_FASTFORWARDING_OVERRIDE:
-                # TODO: Implement
-                pass
+                if data:
+                    fastforwarding_override_ptr = cast(data, POINTER(retro_fastforwarding_override))
+                    fastforwarding: retro_fastforwarding_override = fastforwarding_override_ptr[0]
+                    self._fastforwarding_override = retro_fastforwarding_override(
+                        fastforwarding.ratio,
+                        fastforwarding.fastforward,
+                        fastforwarding.notification,
+                        fastforwarding.inhibit_toggle
+                    )
+
+                # This envcall supports passing NULL to query for support
+                return True
+
             case EnvironmentCall.SET_CONTENT_INFO_OVERRIDE:
                 if not data:
                     return True
@@ -765,8 +791,17 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_THROTTLE_STATE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_THROTTLE_STATE doesn't accept NULL")
+
+                throttle_state_ptr = cast(data, POINTER(retro_throttle_state))
+                throttle_state: retro_throttle_state = throttle_state_ptr[0]
+
+                throttle_state.mode = self._throttle_state.mode
+                throttle_state.rate = self._throttle_state.rate
+
+                return True
+
             case EnvironmentCall.GET_SAVE_STATE_CONTEXT:
                 # TODO: Implement
                 pass
@@ -825,6 +860,7 @@ def default_session(
         language: Language = Language.ENGLISH,
         vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
         target_refresh_rate: float = 60.0,
+        throttle_state: retro_throttle_state | None = None,
         jit_capable: bool = True,
         device_power: DevicePower | None = full_power,
         playlist_dir: Directory | None = None,
@@ -883,6 +919,7 @@ def default_session(
         language=language,
         vfs=vfs_impl,
         target_refresh_rate=target_refresh_rate,
+        throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         jit_capable=jit_capable,
         device_power=device_power,
         playlist_dir=playlist_dir
