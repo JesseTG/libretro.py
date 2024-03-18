@@ -14,7 +14,7 @@ from .api.throttle import *
 from .api.log import retro_log_callback, LogCallback, StandardLogger, retro_log_printf_t
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
-from .api.vfs import retro_vfs_interface_info, FileSystemInterface, PythonFileSystemInterface, retro_vfs_interface
+from .api.vfs import retro_vfs_interface_info, FileSystemInterface, StandardFileSystemInterface, retro_vfs_interface
 from .core import Core, CoreInterface
 from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
@@ -929,9 +929,9 @@ def default_session(
         case FileSystemInterface() as v:
             vfs_impl = v
         case None:
-            vfs_impl = PythonFileSystemInterface()
+            vfs_impl = StandardFileSystemInterface()
         case 1 | 2 | 3 as version:
-            vfs_impl = PythonFileSystemInterface(version)
+            vfs_impl = StandardFileSystemInterface(version)
         case int() as i:
             raise ValueError(f"Expected a VFS version of 1, 2, or 3; got {i}")
         case _:
