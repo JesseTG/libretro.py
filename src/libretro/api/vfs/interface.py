@@ -94,6 +94,7 @@ class FileSystemInterface(Protocol):
             raise TypeError(f"Expected logger to be a Logger or None, got: {type(logger).__name__}")
 
         self._logger = logger
+        self._interface: retro_vfs_interface | None = None
 
     @property
     @abstractmethod
@@ -119,33 +120,34 @@ class FileSystemInterface(Protocol):
 
     @property
     def _as_parameter_(self) -> retro_vfs_interface:
-        interface: retro_vfs_interface = retro_vfs_interface()
-        if self.version >= 1:
-            interface.get_path = retro_vfs_get_path_t(self.__get_path)
-            interface.open = retro_vfs_open_t(self.__open)
-            interface.close = retro_vfs_close_t(self.__close)
-            interface.size = retro_vfs_size_t(self.__size)
-            interface.tell = retro_vfs_tell_t(self.__tell)
-            interface.seek = retro_vfs_seek_t(self.__seek)
-            interface.read = retro_vfs_read_t(self.__read)
-            interface.write = retro_vfs_write_t(self.__write)
-            interface.flush = retro_vfs_flush_t(self.__flush)
-            interface.remove = retro_vfs_remove_t(self.__remove)
-            interface.rename = retro_vfs_rename_t(self.__rename)
+        if not self._interface:
+            self._interface: retro_vfs_interface = retro_vfs_interface()
+            if self.version >= 1:
+                self._interface.get_path = retro_vfs_get_path_t(self.__get_path)
+                self._interface.open = retro_vfs_open_t(self.__open)
+                self._interface.close = retro_vfs_close_t(self.__close)
+                self._interface.size = retro_vfs_size_t(self.__size)
+                self._interface.tell = retro_vfs_tell_t(self.__tell)
+                self._interface.seek = retro_vfs_seek_t(self.__seek)
+                self._interface.read = retro_vfs_read_t(self.__read)
+                self._interface.write = retro_vfs_write_t(self.__write)
+                self._interface.flush = retro_vfs_flush_t(self.__flush)
+                self._interface.remove = retro_vfs_remove_t(self.__remove)
+                self._interface.rename = retro_vfs_rename_t(self.__rename)
 
-        if self.version >= 2:
-            interface.truncate = retro_vfs_truncate_t(self.__truncate)
+            if self.version >= 2:
+                self._interface.truncate = retro_vfs_truncate_t(self.__truncate)
 
-        if self.version >= 3:
-            interface.stat = retro_vfs_stat_t(self.__stat)
-            interface.mkdir = retro_vfs_mkdir_t(self.__mkdir)
-            interface.opendir = retro_vfs_opendir_t(self.__opendir)
-            interface.readdir = retro_vfs_readdir_t(self.__readdir)
-            interface.dirent_get_name = retro_vfs_dirent_get_name_t(self.__dirent_get_name)
-            interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.__dirent_is_dir)
-            interface.closedir = retro_vfs_closedir_t(self.__closedir)
+            if self.version >= 3:
+                self._interface.stat = retro_vfs_stat_t(self.__stat)
+                self._interface.mkdir = retro_vfs_mkdir_t(self.__mkdir)
+                self._interface.opendir = retro_vfs_opendir_t(self.__opendir)
+                self._interface.readdir = retro_vfs_readdir_t(self.__readdir)
+                self._interface.dirent_get_name = retro_vfs_dirent_get_name_t(self.__dirent_get_name)
+                self._interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.__dirent_is_dir)
+                self._interface.closedir = retro_vfs_closedir_t(self.__closedir)
 
-        return interface
+        return self._interface
 
     # These private methods are passed to the core as C function pointers in the _as_parameter_ property;
     # we can't propagate exceptions out of here, so we need to catch them and return error codes as appropriate.
