@@ -14,6 +14,7 @@ from ..._utils import as_bytes
 class StandardFileHandle(FileHandle):
     def __init__(self, path: VfsPath, mode: VfsFileAccess, hints: VfsFileAccessHint):
         super().__init__(path, mode, hints)
+        self._file: FileIO | None = None
         if not path:
             raise ValueError("Expected a non-empty path")
 
@@ -89,6 +90,7 @@ class StandardFileHandle(FileHandle):
 
 class StandardDirectoryHandle(DirectoryHandle):
     def __init__(self, path: VfsPath, include_hidden: bool):
+        super().__init__(path, include_hidden)
         self._dirent = os.scandir(path)
 
     def __del__(self):
@@ -120,7 +122,6 @@ class StandardFileSystemInterface(FileSystemInterface):
             handle = StandardFileHandle(path, mode, hints)
             return handle
         except OSError as e:
-            # TODO: Log error
             return None
 
     def remove(self, path: bytes) -> bool:
@@ -132,19 +133,22 @@ class StandardFileSystemInterface(FileSystemInterface):
         return True
 
     def stat(self, path: bytes) -> tuple[VfsStat, int] | None:
-        filestat = os.stat(path)
-        flags = VfsStat(0)
+        try:
+            filestat = os.stat(path)
+            flags = VfsStat(0)
 
-        if stat.S_ISREG(filestat.st_mode):
-            flags |= VfsStat.IS_VALID
+            if stat.S_ISREG(filestat.st_mode):
+                flags |= VfsStat.IS_VALID
 
-        if stat.S_ISDIR(filestat.st_mode):
-            flags |= VfsStat.IS_DIRECTORY
+            if stat.S_ISDIR(filestat.st_mode):
+                flags |= VfsStat.IS_DIRECTORY
 
-        if stat.S_ISCHR(filestat.st_mode):
-            flags |= VfsStat.IS_CHARACTER_SPECIAL
+            if stat.S_ISCHR(filestat.st_mode):
+                flags |= VfsStat.IS_CHARACTER_SPECIAL
 
-        return flags, filestat.st_size
+            return flags, filestat.st_size
+        except FileNotFoundError:
+            return VfsStat(0), 0
 
     def mkdir(self, path: bytes) -> VfsMkdirResult:
         try:

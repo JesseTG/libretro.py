@@ -1,3 +1,4 @@
+import ctypes
 from abc import abstractmethod
 from ctypes import *
 from logging import Logger
@@ -52,7 +53,7 @@ class DirEntry(NamedTuple):
 class DirectoryHandle(Protocol):
     @abstractmethod
     def __init__(self, dir: bytes, include_hidden: bool):
-        self._as_parameter_ = c_void_p(id(self))
+        self._as_parameter_ = id(self)
         self._current_dirent: DirEntry | None = None
 
     @abstractmethod
@@ -168,7 +169,7 @@ class FileSystemInterface(Protocol):
             case _ as result:
                 raise TypeError(f"Expected path to return a bytes, got: {type(result).__name__}")
 
-    def __open(self, path: bytes, mode: int, hints: int) -> POINTER(retro_vfs_file_handle) | None:
+    def __open(self, path: bytes, mode: int, hints: int) -> c_void_p | None:
         if not path:
             return None
 
@@ -186,7 +187,7 @@ class FileSystemInterface(Protocol):
         address = id(file)
         self.__file_handles[address] = file
 
-        return POINTER(retro_vfs_file_handle).from_address(address)
+        return address
 
     def __close(self, stream: POINTER(retro_vfs_file_handle)) -> int:
         if not stream:
@@ -284,9 +285,9 @@ class FileSystemInterface(Protocol):
         if not buffer:
             return -1
 
-        assert isinstance(buffer, c_void_p)
-        assert isinstance(length, int)
-        assert length >= 0
+        #assert isinstance(buffer, c_void_p), f"Expected a c_void_p, got: {type(buffer).__name__}"
+        assert isinstance(length, int), f"Expected an int, got: {type(length).__name__}"
+        assert length >= 0, f"Expected length to be non-negative, got: {length}"
 
         if length == 0:
             return 0
@@ -297,7 +298,7 @@ class FileSystemInterface(Protocol):
             if not handle:
                 return -1
 
-            assert isinstance(handle, FileHandle)
+            assert isinstance(handle, FileHandle), f"Expected a FileHandle, got: {type(handle).__name__}"
 
             memview = memoryview_at(buffer, length)
             bytes_read = handle.read(memview)
@@ -309,14 +310,14 @@ class FileSystemInterface(Protocol):
             # TODO: Log the exception
             return -1
 
-    def __write(self, stream: POINTER(retro_vfs_file_handle), buffer: c_void_p, length: int) -> int:
+    def __write(self, stream: POINTER(retro_vfs_file_handle), buffer: int, length: int) -> int:
         if not stream:
             return -1
 
         if not buffer:
             return -1
 
-        assert isinstance(buffer, c_void_p)
+        assert isinstance(buffer, int)
         assert isinstance(length, int)
         assert length >= 0
 
@@ -412,7 +413,7 @@ class FileSystemInterface(Protocol):
 
         match self.stat(path):
             case (VfsStat() | int() as flags), int(filesize):
-                if size:
+                if size and flags:
                     # size is allowed to be null!
                     size[0] = filesize
 
@@ -442,24 +443,28 @@ class FileSystemInterface(Protocol):
             # TODO: Log an error here
             return VfsMkdirResult.ERROR
 
-    def __opendir(self, path: bytes, include_hidden: bool) -> POINTER(retro_vfs_dir_handle) | None:
+    def __opendir(self, path: bytes, include_hidden: bool) -> c_void_p | None:
         if not path:
             return None
 
         assert isinstance(path, bytes)
         assert isinstance(include_hidden, bool)
 
-        dir = self.opendir(path, include_hidden)
-        if not dir:
-            return None
+        try:
+            dir = self.opendir(path, include_hidden)
+            if not dir:
+                return None
 
-        if not isinstance(dir, DirectoryHandle):
-            raise TypeError(f"Expected opendir to return a DirectoryHandle, got: {type(dir).__name__}")
+            if not isinstance(dir, DirectoryHandle):
+                raise TypeError(f"Expected opendir to return a DirectoryHandle, got: {type(dir).__name__}")
+        except:
+            # TODO: Log the exception
+            return None
 
         address = id(dir)
         self.__dir_handles[address] = dir
 
-        return POINTER(retro_vfs_dir_handle).from_address(address)
+        return address
 
     def __readdir(self, dir: POINTER(retro_vfs_dir_handle)) -> bool:
         if not dir:

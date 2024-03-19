@@ -937,7 +937,6 @@ def default_session(
         case _:
             raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
 
-    logger = logging.getLogger('libretro')
     return Session(
         core=core,
         audio=audio or ArrayAudioState(),
