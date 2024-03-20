@@ -1,4 +1,5 @@
 import logging
+
 from collections.abc import Iterable
 from logging import Logger
 from typing import Type
@@ -12,12 +13,12 @@ from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
-from .api.log import retro_log_callback, LogCallback, UnformattedLogger, retro_log_printf_t
+from .api.log import retro_log_callback, LogCallback, UnformattedLogger
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .api.vfs import retro_vfs_interface_info, FileSystemInterface, StandardFileSystemInterface, retro_vfs_interface
 from .core import Core, CoreInterface
-from libretro.api.audio import AudioCallbacks, AudioState, ArrayAudioState
+from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
 from .api.environment import EnvironmentCallback
 from .api.input import *
 from .api.input.info import retro_controller_info, retro_input_descriptor
@@ -29,6 +30,7 @@ from ._utils import *
 Directory = str | bytes
 
 class _DoNotLoad: pass
+
 
 DoNotLoad = _DoNotLoad()
 
@@ -112,7 +114,7 @@ class Session(EnvironmentCallback):
         self._system_av_info: retro_system_av_info | None = None
         self._system_info: retro_system_info | None = None
 
-        self._overscan = overscan
+        self._overscan = bool(overscan)
         self._message = message
         self._is_shutdown: bool = False
         self._keyboard_callback: retro_keyboard_callback | None = None
@@ -338,6 +340,10 @@ class Session(EnvironmentCallback):
     @property
     def av_enable(self) -> AvEnableFlags:
         return self._av_enable
+
+    @property
+    def vfs(self) -> FileSystemInterface:
+        return self._vfs
 
     @av_enable.setter
     def av_enable(self, value: AvEnableFlags):
