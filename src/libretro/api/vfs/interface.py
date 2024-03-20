@@ -548,4 +548,4 @@ class FileSystemInterface(Protocol):
             # TODO: Log the exception
             return -1
 
-__all__ = ['FileHandle', 'DirectoryHandle', 'FileSystemInterface']
+__all__ = ['FileHandle', 'DirectoryHandle', 'FileSystemInterface', 'DirEntry']
