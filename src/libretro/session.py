@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterable
+from logging import Logger
 from typing import Type
 
 from .api.av import AvEnableFlags
@@ -11,7 +12,7 @@ from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
-from .api.log import retro_log_callback, LogCallback, StandardLogger, retro_log_printf_t
+from .api.log import retro_log_callback, LogCallback, UnformattedLogger, retro_log_printf_t
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .api.vfs import retro_vfs_interface_info, FileSystemInterface, StandardFileSystemInterface, retro_vfs_interface
@@ -506,8 +507,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
                 log_ptr = cast(data, POINTER(retro_log_callback))
-                log_ptr.contents = self._log_callback._as_parameter_
-                # TODO: Is there a cleaner way to do this than using _as_parameter_?
+                log_ptr[0] = retro_log_callback.from_param(self._log_callback)
                 return True
 
             case EnvironmentCall.GET_PERF_INTERFACE:
@@ -887,7 +887,7 @@ def default_session(
         overscan: bool = False,
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
-        log_callback: LogCallback | None = None,
+        log_callback: LogCallback | str | Logger | None = None,
         core_assets_dir: Directory | None = None,
         save_dir: Directory | None = None,
         username: str | bytes | None = "libretro.py",
@@ -905,6 +905,9 @@ def default_session(
     Returns a Session with default state objects.
     """
 
+    logger = logging.getLogger('libretro')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
     input_impl: InputState | None = None
     if isinstance(input_state, InputState):
         input_impl = input_state
@@ -929,9 +932,9 @@ def default_session(
         case FileSystemInterface() as v:
             vfs_impl = v
         case None:
-            vfs_impl = StandardFileSystemInterface()
+            vfs_impl = StandardFileSystemInterface(logger=logger)
         case 1 | 2 | 3 as version:
-            vfs_impl = StandardFileSystemInterface(version)
+            vfs_impl = StandardFileSystemInterface(version, logger=logger)
         case int() as i:
             raise ValueError(f"Expected a VFS version of 1, 2, or 3; got {i}")
         case _:
@@ -947,7 +950,7 @@ def default_session(
         message=message or LoggerMessageInterface(1, logger),
         options=options_impl,
         system_dir=system_dir,
-        log_callback=log_callback or StandardLogger(logger),
+        log_callback=log_callback or UnformattedLogger(),
         core_assets_dir=core_assets_dir,
         save_dir=save_dir,
         username=username,
