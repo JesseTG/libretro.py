@@ -20,6 +20,8 @@ class VfsFileAccess(IntFlag):
     READ_WRITE = RETRO_VFS_FILE_ACCESS_READ_WRITE
     UPDATE_EXISTING = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
 
+    READ_WRITE_EXISTING = READ_WRITE | UPDATE_EXISTING
+
     def __init__(self, value: int):
         self._type_ = 'I'
 
@@ -32,7 +34,7 @@ class VfsFileAccess(IntFlag):
                 return 'wb'
             case VfsFileAccess.READ_WRITE:
                 return 'w+b'
-            case VfsFileAccess.UPDATE_EXISTING.__or__(VfsFileAccess.WRITE):
+            case VfsFileAccess.READ_WRITE_EXISTING:
                 return "r+b"
             case _:
                 raise ValueError(f"Invalid VfsFileAccess: {self}")
