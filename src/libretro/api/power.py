@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from ctypes import c_int, c_int8, Structure
+from dataclasses import dataclass
 from enum import IntEnum
 
 from .._utils import FieldsFromTypeHints
@@ -17,10 +18,17 @@ class PowerState(IntEnum):
         self._type_ = 'I'
 
 
+@dataclass(init=False)
 class retro_device_power(Structure, metaclass=FieldsFromTypeHints):
     state: retro_power_state
     seconds: c_int
     percent: c_int8
 
 
-DevicePower = retro_device_power | Callable[[], retro_device_power]
+DevicePower = Callable[[], retro_device_power]
+
+__all__ = [
+    'PowerState',
+    'retro_device_power',
+    'DevicePower',
+]

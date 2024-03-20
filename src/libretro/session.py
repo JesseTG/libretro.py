@@ -860,9 +860,16 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GET_MICROPHONE_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_DEVICE_POWER:
-                # TODO: Implement
-                pass
+                if data:
+                    device_power_ptr = cast(data, POINTER(retro_device_power))
+                    power = self._device_power()
+                    memmove(device_power_ptr, byref(power), sizeof(retro_device_power))
+
+                # This envcall supports passing NULL to query for support
+                return True
+
             case EnvironmentCall.SET_NETPACKET_INTERFACE:
                 # TODO: Implement
                 pass
@@ -904,7 +911,7 @@ def default_session(
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
-        device_power: DevicePower | None = full_power,
+        device_power: DevicePower | retro_device_power = full_power,
         playlist_dir: Directory | None = None,
         ) -> Session:
     """
@@ -946,6 +953,15 @@ def default_session(
         case _:
             raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
 
+    power_impl: DevicePower
+    match device_power:
+        case retro_device_power() as p:
+            power_impl = lambda: p
+        case p if callable(p):
+            power_impl = p
+        case _:
+            raise TypeError(f"Expected device_power to be a retro_device_power or a callable that returns one, not {type(device_power).__name__}")
+
     return Session(
         core=core,
         audio=audio or ArrayAudioState(),
@@ -967,7 +983,7 @@ def default_session(
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
         jit_capable=jit_capable,
-        device_power=device_power,
+        device_power=power_impl,
         playlist_dir=playlist_dir
     )
 
