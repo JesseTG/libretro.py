@@ -12,7 +12,7 @@ from ..._utils import memoryview_at
 class FileHandle(Protocol):
     @abstractmethod
     def __init__(self, path: VfsPath, mode: VfsFileAccess, hints: VfsFileAccessHint):
-        self._as_parameter_ = c_void_p(id(self))
+        self._as_parameter_ = id(self)
 
     @abstractmethod
     def close(self) -> bool: ...
