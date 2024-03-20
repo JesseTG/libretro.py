@@ -20,7 +20,6 @@ class UnformattedLogger(LogCallback):
         if self._logger is None:
             self._logger = logging.getLogger('libretro')
             self._logger.setLevel(logging.DEBUG)
-            self._logger.addHandler(logging.StreamHandler())
             self._logger.addFilter(_log_record)
 
     @property
@@ -29,4 +28,4 @@ class UnformattedLogger(LogCallback):
 
     def log(self, level: int, fmt: bytes, *args) -> None:
         lvl = LogLevel(level)
-        self._logger.log(lvl.logging_level, fmt)
+        self._logger.log(lvl.logging_level, fmt.decode().rstrip())
