@@ -351,6 +351,10 @@ class Session(EnvironmentCallback):
         self._av_enable = value
 
     @property
+    def serialization_quirks(self) -> SerializationQuirks | None:
+        return self._serialization_quirks
+
+    @property
     def vfs(self) -> FileSystemInterface:
         return self._vfs
 
@@ -630,9 +634,15 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.SET_SERIALIZATION_QUIRKS:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS doesn't accept NULL")
+
+                quirks_ptr = cast(data, POINTER(c_uint64))
+                self._serialization_quirks = SerializationQuirks(quirks_ptr[0])
+                return True
+
             case EnvironmentCall.SET_HW_SHARED_CONTEXT:
                 # TODO: Implement
                 pass
