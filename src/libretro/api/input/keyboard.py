@@ -324,7 +324,7 @@ class KeyboardState(InputDeviceState):
     oem_102: bool = False
 
     def __getitem__(self, item: int) -> bool:
-
+        # TODO: Handle the keys that share names with keywords
         if item in Key:
             return getattr(self, Key(item).name.lower())
         else:
