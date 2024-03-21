@@ -8,6 +8,9 @@ from .api.av import AvEnableFlags
 from .api.content import *
 from .api.environment import EnvironmentCall
 from .api.memory import retro_memory_map
+from .api.microphone.default import MicrophoneInputIterator, MicrophoneInputGenerator, GeneratorMicrophoneInterface
+from .api.microphone.defs import retro_microphone_interface
+from .api.microphone.interface import MicrophoneInterface
 from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
@@ -69,6 +72,7 @@ class Session(EnvironmentCallback):
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
             jit_capable: bool,
+            mic_interface: MicrophoneInterface,
             device_power: DevicePower,
             playlist_dir: Directory | None
     ):
@@ -144,6 +148,7 @@ class Session(EnvironmentCallback):
         self._throttle_state: retro_throttle_state = throttle_state
         self._savestate_context: SavestateContext = savestate_context
         self._jit_capable = jit_capable
+        self._mic_interface = mic_interface
         self._device_power = device_power
         self._playlist_dir = as_bytes(playlist_dir)
         self._pending_callback_exceptions: list[BaseException] = []
@@ -858,8 +863,17 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_MICROPHONE_INTERFACE:
-                # TODO: Implement
-                pass
+                if data:
+                    mic_interface_ptr = cast(data, POINTER(retro_microphone_interface))
+                    mic_interface: retro_microphone_interface = mic_interface_ptr[0]
+
+                    if mic_interface.interface_version != self._mic_interface.version:
+                        return False
+
+                    mic_interface_ptr[0] = retro_microphone_interface.from_param(self._mic_interface)
+
+                # This envcall supports passing NULL to query for support
+                return True
 
             case EnvironmentCall.GET_DEVICE_POWER:
                 if data:
@@ -911,6 +925,7 @@ def default_session(
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
+        mic_interface: MicrophoneInterface | MicrophoneInputIterator | MicrophoneInputGenerator | None = None,
         device_power: DevicePower | retro_device_power = full_power,
         playlist_dir: Directory | None = None,
         ) -> Session:
@@ -953,6 +968,17 @@ def default_session(
         case _:
             raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
 
+    mic_impl: MicrophoneInterface
+    match mic_interface:
+        case MicrophoneInterface() as m:
+            mic_impl = m
+        case m if callable(m):
+            mic_impl = GeneratorMicrophoneInterface(m)
+        case None:
+            mic_impl = GeneratorMicrophoneInterface()
+        case _:
+            raise TypeError(f"Expected mic_interface to be a MicrophoneInterface or None, not {type(mic_interface).__name__}")
+
     power_impl: DevicePower
     match device_power:
         case retro_device_power() as p:
@@ -983,6 +1009,7 @@ def default_session(
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
         jit_capable=jit_capable,
+        mic_interface=mic_impl,
         device_power=power_impl,
         playlist_dir=playlist_dir
     )

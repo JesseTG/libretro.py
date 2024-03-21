@@ -1,4 +1,5 @@
 from ctypes import *
+from dataclasses import dataclass
 
 from ..._utils import FieldsFromTypeHints, UNCHECKED
 
@@ -8,6 +9,7 @@ class retro_microphone(Structure):
     pass
 
 
+@dataclass(init=False)
 class retro_microphone_params(Structure, metaclass=FieldsFromTypeHints):
     rate: c_uint
 
@@ -20,6 +22,7 @@ retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone))
 retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t)
 
 
+@dataclass(init=False)
 class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
     interface_version: c_uint
     open_mic: retro_open_mic_t
@@ -28,6 +31,7 @@ class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
     set_mic_state: retro_set_mic_state_t
     get_mic_state: retro_get_mic_state_t
     read_mic: retro_read_mic_t
+
 
 __all__ = [
     'retro_microphone',
