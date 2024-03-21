@@ -1,4 +1,5 @@
 from ctypes import Structure, c_uint, c_char_p, POINTER
+from dataclasses import dataclass
 from typing import Sequence, overload
 
 from ..._utils import FieldsFromTypeHints
@@ -11,6 +12,7 @@ class InputDeviceState:
     pass
 
 
+@dataclass(init=False)
 class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
     port: c_uint
     device: c_uint
@@ -19,11 +21,13 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
     description: c_char_p
 
 
+@dataclass(init=False)
 class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     id: c_uint
 
 
+@dataclass(init=False)
 class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
     types: POINTER(retro_controller_description)
     num_types: c_uint
@@ -53,3 +57,11 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __len__(self):
         return int(self.num_types)
+
+
+__all__ = [
+    'InputDeviceState',
+    'retro_input_descriptor',
+    'retro_controller_description',
+    'retro_controller_info'
+]
