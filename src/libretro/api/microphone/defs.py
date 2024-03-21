@@ -1,6 +1,6 @@
 from ctypes import *
 
-from .._utils import FieldsFromTypeHints, UNCHECKED
+from ..._utils import FieldsFromTypeHints, UNCHECKED
 
 
 # This one has no fields, it doesn't need the weight of a metaclass
@@ -28,3 +28,15 @@ class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
     set_mic_state: retro_set_mic_state_t
     get_mic_state: retro_get_mic_state_t
     read_mic: retro_read_mic_t
+
+__all__ = [
+    'retro_microphone',
+    'retro_microphone_params',
+    'retro_open_mic_t',
+    'retro_close_mic_t',
+    'retro_get_mic_params_t',
+    'retro_set_mic_state_t',
+    'retro_get_mic_state_t',
+    'retro_read_mic_t',
+    'retro_microphone_interface'
+]
