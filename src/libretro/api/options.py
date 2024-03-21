@@ -247,7 +247,7 @@ class StandardOptionState(OptionState):
 
         value = self._variables[key]
 
-        if value not in (string_at(v.value) for v in self._options_us[key].values if v):
+        if value not in (string_at(v.value) for v in self._options_us[key].values if v.value):
             # For invalid values, return None
             return string_at(self._options_us[key].default_value)
 
