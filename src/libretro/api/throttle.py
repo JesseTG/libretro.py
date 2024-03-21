@@ -1,4 +1,5 @@
 from ctypes import *
+from dataclasses import dataclass
 from enum import IntEnum
 
 from .._utils import FieldsFromTypeHints
@@ -18,6 +19,7 @@ class ThrottleMode(IntEnum):
         self._type_ = 'I'
 
 
+@dataclass(init=False)
 class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
     ratio: c_float
     fastforward: c_bool
@@ -25,6 +27,14 @@ class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
     inhibit_toggle: c_bool
 
 
+@dataclass(init=False)
 class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
     mode: c_uint
     rate: c_float
+
+
+__all__ = [
+    'ThrottleMode',
+    'retro_fastforwarding_override',
+    'retro_throttle_state'
+]
