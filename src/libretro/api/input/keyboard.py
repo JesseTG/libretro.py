@@ -158,6 +158,7 @@ class Key(IntEnum, boundary=EJECT):
     def __init__(self, value):
         self._type_ = 'I'
 
+    @property
     def is_modifier(self):
         return self in (Key.LCTRL, Key.RCTRL, Key.LSHIFT, Key.RSHIFT, Key.LALT, Key.RALT, Key.LMETA, Key.RMETA, Key.NUMLOCK, Key.CAPSLOCK, Key.SCROLLOCK)
 
