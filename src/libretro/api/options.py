@@ -3,22 +3,38 @@ from copy import deepcopy
 from ctypes import *
 from collections.abc import MutableMapping
 import re
+from dataclasses import dataclass
 from typing import Protocol, Sequence, runtime_checkable, AnyStr, Literal, Mapping, overload
 
 from .._utils import from_zero_terminated, as_bytes, FieldsFromTypeHints
 from ..h import RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
+@dataclass(init=False)
 class retro_variable(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     value: c_char_p
 
+    def __deepcopy__(self, _):
+        return retro_variable(
+            bytes(self.key) if self.key else None,
+            bytes(self.value) if self.value else None,
+        )
 
+
+@dataclass(init=False)
 class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     visible: c_bool
 
+    def __deepcopy__(self, _):
+        return retro_core_option_display(
+            bytes(self.key) if self.key else None,
+            bool(self.visible),
+        )
 
+
+@dataclass(init=False)
 class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
     value: c_char_p
     label: c_char_p
@@ -32,6 +48,8 @@ class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
 
 CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
+
+@dataclass(init=False)
 class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -40,11 +58,13 @@ class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
     default_value: c_char_p
 
 
+@dataclass(init=False)
 class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
     us: POINTER(retro_core_option_definition)
     local: POINTER(retro_core_option_definition)
 
 
+@dataclass(init=False)
 class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -58,6 +78,7 @@ class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
+@dataclass(init=False)
 class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -82,11 +103,13 @@ class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
+@dataclass(init=False)
 class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
     categories: POINTER(retro_core_option_v2_category)
     definitions: POINTER(retro_core_option_v2_definition)
 
 
+@dataclass(init=False)
 class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
     us: POINTER(retro_core_options_v2)
     local: POINTER(retro_core_options_v2)
@@ -95,6 +118,7 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
 retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
 
 
+@dataclass(init=False)
 class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_core_options_update_display_callback_t
 
