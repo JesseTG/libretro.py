@@ -168,7 +168,7 @@ class MicrophoneInterface(Protocol):
             # TODO: Log error
             return False
 
-    def __read_mic(self, mic: POINTER(retro_microphone), frames: POINTER(c_int16), num_samples: c_size_t) -> int:
+    def __read_mic(self, mic: POINTER(retro_microphone), frames: POINTER(c_int16), num_samples: int) -> int:
         if not mic or not frames:
             return -1
 
@@ -180,6 +180,7 @@ class MicrophoneInterface(Protocol):
 
             assert isinstance(handle, MicrophoneInterface.__MicHandle)
             assert isinstance(handle.handle, Microphone)
+            assert num_samples >= 0
 
             if not handle.handle.get_state():
                 return -1
@@ -187,21 +188,22 @@ class MicrophoneInterface(Protocol):
             if not num_samples:
                 return 0
 
-            new_samples = handle.handle.read(num_samples.value)
+            new_samples = handle.handle.read(num_samples)
             if new_samples:
                 # If the generator yielded any samples...
                 handle.buffer.extendleft(new_samples)
 
-            byteview = memoryview_at(frames, num_samples)
+            byteview = memoryview_at(frames, num_samples * sizeof(c_int16))
+            # First get a view of the bytes so we can cast it to a view of 16-bit ints
             frameview = byteview.cast('h')  # signed 16-bit int
             assert len(frameview) == num_samples
 
-            samples_to_give = min(num_samples.value, len(handle.buffer))
+            samples_to_give = min(num_samples, len(handle.buffer))
             for i in range(samples_to_give):
                 frameview[i] = handle.buffer.pop()
 
             return samples_to_give
-        except:
+        except Exception as e:
             # TODO: Log error
             return -1
 
