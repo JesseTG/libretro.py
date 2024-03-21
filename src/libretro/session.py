@@ -341,13 +341,13 @@ class Session(EnvironmentCallback):
     def av_enable(self) -> AvEnableFlags:
         return self._av_enable
 
-    @property
-    def vfs(self) -> FileSystemInterface:
-        return self._vfs
-
     @av_enable.setter
     def av_enable(self, value: AvEnableFlags):
         self._av_enable = value
+
+    @property
+    def vfs(self) -> FileSystemInterface:
+        return self._vfs
 
     @property
     def fastforwarding_override(self) -> retro_fastforwarding_override | None:
