@@ -29,8 +29,8 @@ def from_zero_terminated[S](ptr) -> Iterator[S]:
 
 
 @contextmanager
-def mmap_file(path: str | PathLike):
-    with open(path, "r+b", buffering=0) as f:
+def mmap_file(path: str | PathLike, mode: str = "rb"):
+    with open(path, mode, buffering=0) as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
             view = memoryview(m)
             yield view
