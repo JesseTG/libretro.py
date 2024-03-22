@@ -75,6 +75,7 @@ class Session(EnvironmentCallback):
             av_enable: AvEnableFlags,
             midi: MidiInterface,
             target_refresh_rate: float,
+            max_users: int,
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
             jit_capable: bool,
@@ -152,6 +153,7 @@ class Session(EnvironmentCallback):
         self._midi = midi
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
+        self._max_users = max_users
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
         self._throttle_state: retro_throttle_state = throttle_state
@@ -171,7 +173,7 @@ class Session(EnvironmentCallback):
         self._core.set_audio_sample(self._audio.audio_sample)
         self._core.set_audio_sample_batch(self._audio.audio_sample_batch)
         self._core.set_input_poll(self._input.poll)
-        self._core.set_input_state(self._input.state)
+        self._core.set_input_state(self.__input_state)
         self._core.set_environment(self.environment)
         self._system_info = self._core.get_system_info()
 
@@ -374,6 +376,20 @@ class Session(EnvironmentCallback):
     @property
     def led(self) -> LedInterface:
         return self._led
+
+    @property
+    def max_users(self) -> int:
+        return self._max_users
+
+    @max_users.setter
+    def max_users(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Expected an integer number of users, got {type(value).__name__}")
+
+        if value < 0:
+            raise ValueError(f"Expected a non-negative number of users, got {value}")
+
+        self._max_users = int(value)
 
     @property
     def fastforwarding_override(self) -> retro_fastforwarding_override | None:
@@ -803,6 +819,14 @@ class Session(EnvironmentCallback):
                 message_ext_ptr = cast(data, POINTER(retro_message_ext))
                 return self._message.set_message(message_ext_ptr.contents)
 
+            case EnvironmentCall.GET_INPUT_MAX_USERS:
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS doesn't accept NULL")
+
+                max_users_ptr = cast(data, POINTER(c_uint))
+                max_users_ptr[0] = self._max_users
+                return True
+
             case EnvironmentCall.SET_AUDIO_BUFFER_STATUS_CALLBACK:
                 # TODO: Implement
                 pass
@@ -949,6 +973,13 @@ class Session(EnvironmentCallback):
         # TODO: Define a way to override certain calls
         return False
 
+    def __input_state(self, port: int, device: int, index: int, id: int) -> int:
+        if not (0 <= port < self._max_users):
+            # If querying the input state of a nonexistent player...
+            return 0
+
+        return self._input.state(port, device, index, id)
+
 
 def default_session(
         core: str,
@@ -971,6 +1002,7 @@ def default_session(
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
         midi: MidiInterface | None = None,
         target_refresh_rate: float = 60.0,
+        max_users: int = 8,
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
@@ -1058,6 +1090,7 @@ def default_session(
         av_enable=av_enable,
         midi=midi or GeneratorMidiInterface(),
         target_refresh_rate=target_refresh_rate,
+        max_users=max_users,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
         jit_capable=jit_capable,

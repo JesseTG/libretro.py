@@ -65,10 +65,6 @@ class InputState(InputCallbacks, Protocol):
     @abstractmethod
     def bitmasks_supported(self) -> bool: ...
 
-    @property
-    @abstractmethod
-    def max_users(self) -> int: ...
-
 
 @dataclass(frozen=True, order=True, slots=True)
 class Point:
@@ -133,14 +129,12 @@ class GeneratorInputState(InputState):
             generator: InputStateGenerator | None = None,
             device_capabilities: InputDeviceFlag = InputDeviceFlag.ALL,
             bitmasks_supported: bool = True,
-            max_users: int = 8
     ):
         self._generator = generator
         self._generator_state: Iterator[InputPollResult | Sequence[InputPollResult]] | None = None
         self._last_poll_result: InputPollResult = None
         self._device_capabilities = device_capabilities
         self._bitmasks_supported = bitmasks_supported
-        self._max_users = max_users
 
     @property
     def device_capabilities(self) -> InputDeviceFlag:
@@ -159,17 +153,6 @@ class GeneratorInputState(InputState):
     def bitmasks_supported(self, value: bool) -> None:
         self._bitmasks_supported = bool(value)
 
-    @property
-    def max_users(self) -> int:
-        return self._max_users
-
-    @max_users.setter
-    def max_users(self, value: int) -> None:
-        if value < 0:
-            raise ValueError(f"Expected a non-negative value of max_users, got {value}")
-
-        self._max_users = int(value)
-
     def poll(self) -> None:
         if self._generator:
             if self._generator_state is None:
@@ -182,8 +165,9 @@ class GeneratorInputState(InputState):
             case(None, _, _, _) | (_, [], _, _):
                 # An unassigned generator or an empty result list will default to 0
                 return 0
-            case _, _, port, device if not ((0 <= port < self.max_users) and (self.device_capabilities & device.flag)):
-                # Non-existent ports and unavailable devices will always return 0
+            case _, _, _, device if not (self.device_capabilities & device.flag):
+                # Unavailable devices will always return 0
+                # (Non-existent ports are enforced at the environment layer, not here)
                 return 0
             case _, [*results], port, device if port < len(results) and not is_dataclass(results):
                 # Yielding a sequence of result types
