@@ -12,6 +12,7 @@ from .api.memory import retro_memory_map
 from .api.microphone.default import MicrophoneInputIterator, MicrophoneInputGenerator, GeneratorMicrophoneInterface
 from .api.microphone.defs import retro_microphone_interface
 from .api.microphone.interface import MicrophoneInterface
+from .api.midi import *
 from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.savestate import *
@@ -70,6 +71,7 @@ class Session(EnvironmentCallback):
             vfs: FileSystemInterface,
             led: LedInterface,
             av_enable: AvEnableFlags,
+            midi: MidiInterface,
             target_refresh_rate: float,
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
@@ -144,6 +146,7 @@ class Session(EnvironmentCallback):
         self._vfs: FileSystemInterface = vfs
         self._led = led
         self._av_enable = av_enable
+        self._midi = midi
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
         self._fastforwarding_override: retro_fastforwarding_override | None = None
@@ -352,6 +355,10 @@ class Session(EnvironmentCallback):
     @av_enable.setter
     def av_enable(self, value: AvEnableFlags):
         self._av_enable = value
+
+    @property
+    def midi(self) -> MidiInterface:
+        return self._midi
 
     @property
     def serialization_quirks(self) -> SerializationQuirks | None:
@@ -686,8 +693,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_MIDI_INTERFACE:
-                # TODO: Implement
-                pass
+                if data:
+                    midi_ptr = cast(data, POINTER(retro_midi_interface))
+                    memmove(midi_ptr, byref(retro_midi_interface.from_param(self._midi)), sizeof(retro_midi_interface))
+
+                # This envcall supports passing NULL to query for support
+                return True
 
             case EnvironmentCall.GET_FASTFORWARDING:
                 if not data:
@@ -943,6 +954,7 @@ def default_session(
         vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
         led: LedInterface | None = None,
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
+        midi: MidiInterface | None = None,
         target_refresh_rate: float = 60.0,
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
@@ -1028,6 +1040,7 @@ def default_session(
         vfs=vfs_impl,
         led=led or DictLedInterface(),
         av_enable=av_enable,
+        midi=midi or GeneratorMidiInterface(),
         target_refresh_rate=target_refresh_rate,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
