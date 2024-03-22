@@ -8,6 +8,7 @@ from .api.av import AvEnableFlags
 from .api.content import *
 from .api.environment import EnvironmentCall
 from .api.led import retro_led_interface, LedInterface, DictLedInterface
+from .api.location import *
 from .api.memory import retro_memory_map
 from .api.microphone.default import MicrophoneInputIterator, MicrophoneInputGenerator, GeneratorMicrophoneInterface
 from .api.microphone.defs import retro_microphone_interface
@@ -64,6 +65,7 @@ class Session(EnvironmentCallback):
             options: OptionState,
             system_dir: Directory | None,
             log_callback: LogCallback,
+            location: LocationInterface,
             core_assets_dir: Directory | None,
             save_dir: Directory | None,
             username: str | bytes | None,
@@ -134,6 +136,7 @@ class Session(EnvironmentCallback):
         self._libretro_path: bytes = as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
         self._log_callback: LogCallback = log_callback
+        self._location = location
         self._core_assets_dir = as_bytes(core_assets_dir)
         self._save_dir = as_bytes(save_dir)
         self._proc_address_callback: retro_get_proc_address_interface | None = None
@@ -543,9 +546,19 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.GET_PERF_INTERFACE:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_LOCATION_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE doesn't accept NULL")
+
+                location_ptr = cast(data, POINTER(retro_location_callback))
+                location: retro_location_callback = location_ptr[0]
+
+                self._location.initialized = location.initialized
+                self._location.deinitialized = location.deinitialized
+
+                memmove(location_ptr, byref(retro_location_callback.from_param(self._location)), sizeof(retro_location_callback))
+                return True
 
             case EnvironmentCall.GET_CORE_ASSETS_DIRECTORY:
                 if self._core_assets_dir is None:
@@ -948,6 +961,7 @@ def default_session(
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
         log_callback: LogCallback | str | Logger | None = None,
+        location: LocationInterface | None = None,
         core_assets_dir: Directory | None = None,
         save_dir: Directory | None = None,
         username: str | bytes | None = "libretro.py",
@@ -1034,6 +1048,7 @@ def default_session(
         options=options_impl,
         system_dir=system_dir,
         log_callback=log_callback or UnformattedLogger(),
+        location=location or GeneratorLocationInterface(),
         core_assets_dir=core_assets_dir,
         save_dir=save_dir,
         username=username,
