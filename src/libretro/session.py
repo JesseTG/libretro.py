@@ -386,6 +386,7 @@ class Session(EnvironmentCallback):
 
     def environment(self, cmd: int, data: c_void_p) -> bool:
         # TODO: Allow overriding certain calls by passing a function to the constructor
+        # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
         match EnvironmentCall(cmd):
             case EnvironmentCall.SET_ROTATION:
                 if not data:
