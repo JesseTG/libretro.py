@@ -7,6 +7,7 @@ from typing import Type
 from .api.av import AvEnableFlags
 from .api.content import *
 from .api.environment import EnvironmentCall
+from .api.led import retro_led_interface, LedInterface, DictLedInterface
 from .api.memory import retro_memory_map
 from .api.microphone.default import MicrophoneInputIterator, MicrophoneInputGenerator, GeneratorMicrophoneInterface
 from .api.microphone.defs import retro_microphone_interface
@@ -67,6 +68,7 @@ class Session(EnvironmentCallback):
             username: str | bytes | None,
             language: Language,
             vfs: FileSystemInterface,
+            led: LedInterface,
             av_enable: AvEnableFlags,
             target_refresh_rate: float,
             throttle_state: retro_throttle_state,
@@ -140,6 +142,7 @@ class Session(EnvironmentCallback):
         self._language = language
         self._supports_achievements: bool | None = None
         self._vfs: FileSystemInterface = vfs
+        self._led = led
         self._av_enable = av_enable
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
@@ -357,6 +360,10 @@ class Session(EnvironmentCallback):
     @property
     def vfs(self) -> FileSystemInterface:
         return self._vfs
+
+    @property
+    def led(self) -> LedInterface:
+        return self._led
 
     @property
     def fastforwarding_override(self) -> retro_fastforwarding_override | None:
@@ -663,8 +670,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_LED_INTERFACE:
-                # TODO: Implement
-                pass
+                if data:
+                    led_ptr = cast(data, POINTER(retro_led_interface))
+                    memmove(led_ptr, byref(retro_led_interface.from_param(self._led)), sizeof(retro_led_interface))
+
+                # This envcall supports passing NULL to query for support
+                return True
 
             case EnvironmentCall.GET_AUDIO_VIDEO_ENABLE:
                 if data:
@@ -930,6 +941,7 @@ def default_session(
         username: str | bytes | None = "libretro.py",
         language: Language = Language.ENGLISH,
         vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
+        led: LedInterface | None = None,
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
         target_refresh_rate: float = 60.0,
         throttle_state: retro_throttle_state | None = None,
@@ -1014,6 +1026,7 @@ def default_session(
         username=username,
         language=language,
         vfs=vfs_impl,
+        led=led or DictLedInterface(),
         av_enable=av_enable,
         target_refresh_rate=target_refresh_rate,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
