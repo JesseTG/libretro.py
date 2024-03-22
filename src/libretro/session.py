@@ -16,6 +16,7 @@ from .api.microphone.interface import MicrophoneInterface
 from .api.midi import *
 from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
+from .api.rumble import *
 from .api.savestate import *
 from .api.system import *
 from .api.throttle import *
@@ -64,6 +65,7 @@ class Session(EnvironmentCallback):
             message: MessageInterface,
             options: OptionState,
             system_dir: Directory | None,
+            rumble: RumbleInterface | None,
             log_callback: LogCallback,
             location: LocationInterface,
             core_assets_dir: Directory | None,
@@ -136,6 +138,7 @@ class Session(EnvironmentCallback):
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
+        self._rumble = rumble
         self._log_callback: LogCallback = log_callback
         self._location = location
         self._core_assets_dir = as_bytes(core_assets_dir)
@@ -304,6 +307,10 @@ class Session(EnvironmentCallback):
     @property
     def support_no_game(self) -> bool | None:
         return self._support_no_game
+
+    @property
+    def rumble(self) -> RumbleInterface | None:
+        return self._rumble
 
     @property
     def log(self) -> LogCallback | None:
@@ -532,9 +539,15 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_AUDIO_CALLBACK:
                 # TODO: Implement
                 pass
+
             case EnvironmentCall.GET_RUMBLE_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE doesn't accept NULL")
+
+                rumble_ptr = cast(data, POINTER(retro_rumble_interface))
+                rumble: retro_rumble_interface = rumble_ptr[0]
+                rumble.set_rumble_state = retro_set_rumble_state_t(self.__set_rumble_state)
+                return True
 
             case EnvironmentCall.GET_INPUT_DEVICE_CAPABILITIES:
                 if not data:
@@ -973,12 +986,21 @@ class Session(EnvironmentCallback):
         # TODO: Define a way to override certain calls
         return False
 
+    # Need a wrapper method in Session so that we can filter out unacceptable ports
     def __input_state(self, port: int, device: int, index: int, id: int) -> int:
         if not (0 <= port < self._max_users):
             # If querying the input state of a nonexistent player...
             return 0
 
         return self._input.state(port, device, index, id)
+
+    # Need a wrapper method in Session so that we can filter out unacceptable ports
+    def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
+        if effect not in RumbleEffect or not (0 <= port < self._max_users):
+            # If setting the rumble state of a nonexistent player...
+            return False
+
+        return self._rumble.set_rumble_state(port, RumbleEffect(effect), strength)
 
 
 def default_session(
@@ -991,6 +1013,7 @@ def default_session(
         overscan: bool = False,
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
+        rumble: RumbleInterface | None = None,
         log_callback: LogCallback | str | Logger | None = None,
         location: LocationInterface | None = None,
         core_assets_dir: Directory | None = None,
@@ -1079,6 +1102,7 @@ def default_session(
         message=message or LoggerMessageInterface(1, logger),
         options=options_impl,
         system_dir=system_dir,
+        rumble=rumble or DefaultRumbleInterface(),
         log_callback=log_callback or UnformattedLogger(),
         location=location or GeneratorLocationInterface(),
         core_assets_dir=core_assets_dir,
