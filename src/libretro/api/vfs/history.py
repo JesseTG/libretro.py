@@ -235,6 +235,7 @@ class HistoryFileSystemInterface(FileSystemInterface):
     def history(self) -> Sequence[VfsOperation]:
         return tuple(self._history)
 
+
 __all__ = [
     'HistoryFileHandle',
     'HistoryDirectoryHandle',
