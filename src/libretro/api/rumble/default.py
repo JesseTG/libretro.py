@@ -42,7 +42,7 @@ class DefaultRumbleInterface(RumbleInterface):
         super().__init__()
         self._rumble_state: dict[int, RumbleState] = {}
 
-    def set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
+    def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
         self._rumble_state[port] = RumbleState(effect, strength)
         return True
 
@@ -56,4 +56,5 @@ class DefaultRumbleInterface(RumbleInterface):
 
 __all__ = [
     'DefaultRumbleInterface',
+    'RumbleState'
 ]
