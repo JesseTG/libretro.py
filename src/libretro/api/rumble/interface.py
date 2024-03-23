@@ -38,15 +38,7 @@ class RumbleInterface(Protocol):
         return self._set_rumble_state(port, RumbleEffect(effect), strength)
 
     def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
-        if effect not in RumbleEffect:
-            return False
-
-        try:
-            return self.set_rumble_state(port, RumbleEffect(effect), strength)
-        except Exception as e:
-            # TODO: Log the error properly
-            print(e)
-            return False
+        return self.set_rumble_state(port, RumbleEffect(effect), strength)
 
 
 __all__ = [
