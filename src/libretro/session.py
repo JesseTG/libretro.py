@@ -59,7 +59,7 @@ class Session(EnvironmentCallback):
             core: Core | str,
             audio: AudioState,
             input_state: InputState,
-            video: VideoState,
+            video: VideoCallbacks,
             # TODO: Support for an env override function
 
             content: Content | SpecialContent | _DoNotLoad | None,

@@ -1,8 +1,7 @@
 from ctypes import *
 from enum import IntEnum
 
-from ..proc import retro_proc_address_t
-from ..._utils import FieldsFromTypeHints, c_uintptr, UNCHECKED
+from ..._utils import FieldsFromTypeHints
 from ...h import *
 
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
@@ -56,26 +55,6 @@ class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     memory_flags: c_uint
 
 
-retro_hw_context_reset_t = CFUNCTYPE(None)
-retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
-retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
-
-
-class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
-    context_type: retro_hw_context_type
-    context_reset: retro_hw_context_reset_t
-    get_current_framebuffer: retro_hw_get_current_framebuffer_t
-    get_proc_address: retro_hw_get_proc_address_t
-    depth: c_bool
-    stencil: c_bool
-    bottom_left_origin: c_bool
-    version_major: c_uint
-    version_minor: c_uint
-    cache_context: c_bool
-    context_destroy: retro_hw_context_reset_t
-    debug_context: c_bool
-
-
 __all__ = [
     'retro_video_refresh_t',
     'retro_usec_t',
@@ -84,8 +63,4 @@ __all__ = [
     'Rotation',
     'PixelFormat',
     'retro_framebuffer',
-    'retro_hw_context_reset_t',
-    'retro_hw_get_current_framebuffer_t',
-    'retro_hw_get_proc_address_t',
-    'retro_hw_render_callback',
 ]
