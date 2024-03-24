@@ -15,6 +15,7 @@ from .api.microphone.defs import retro_microphone_interface
 from .api.microphone.interface import MicrophoneInterface
 from .api.midi import *
 from .api.options import *
+from .api.perf import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.rumble import *
 from .api.savestate import *
@@ -69,6 +70,7 @@ class Session(EnvironmentCallback):
             rumble: RumbleInterface | None,
             sensor: SensorInterface | None,
             log_callback: LogCallback,
+            perf: PerfInterface,
             location: LocationInterface,
             core_assets_dir: Directory | None,
             save_dir: Directory | None,
@@ -143,6 +145,7 @@ class Session(EnvironmentCallback):
         self._rumble = rumble
         self._sensor = sensor
         self._log_callback: LogCallback = log_callback
+        self._perf = perf
         self._location = location
         self._core_assets_dir = as_bytes(core_assets_dir)
         self._save_dir = as_bytes(save_dir)
@@ -583,8 +586,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_PERF_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_PERF_INTERFACE doesn't accept NULL")
+
+                perf_ptr = cast(data, POINTER(retro_perf_callback))
+                perf_ptr[0] = retro_perf_callback.from_param(self._perf)
+                return True
 
             case EnvironmentCall.GET_LOCATION_INTERFACE:
                 if not data:
@@ -1049,6 +1056,7 @@ def default_session(
         rumble: RumbleInterface | None = None,
         sensor: SensorInterface | None = None,
         log_callback: LogCallback | str | Logger | None = None,
+        perf: PerfInterface | None = None,
         location: LocationInterface | None = None,
         core_assets_dir: Directory | None = None,
         save_dir: Directory | None = None,
@@ -1139,6 +1147,7 @@ def default_session(
         rumble=rumble or DefaultRumbleInterface(),
         sensor=sensor or GeneratorSensorInterface(),
         log_callback=log_callback or UnformattedLogger(),
+        perf=perf or DefaultPerfInterface(),
         location=location or GeneratorLocationInterface(),
         core_assets_dir=core_assets_dir,
         save_dir=save_dir,
