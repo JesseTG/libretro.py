@@ -1,11 +1,12 @@
 import ctypes
 import mmap
 import sys
+from abc import abstractmethod
 
 from contextlib import contextmanager
 from ctypes import *
 from os import PathLike
-from typing import Iterator, get_type_hints
+from typing import Iterator, get_type_hints, Protocol, runtime_checkable
 
 
 def as_bytes(value: str | bytes | None) -> bytes | None:
@@ -467,3 +468,9 @@ class FieldsFromTypeHints(type(Structure)):
         namespace['_fields_'] = list(annotations.items())
         namespace['__slots__'] = list(annotations.keys())
         return type(Structure).__new__(cls, name, bases, namespace)
+
+
+@runtime_checkable
+class Pollable(Protocol):
+    @abstractmethod
+    def poll(self) -> None: ...

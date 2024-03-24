@@ -18,6 +18,7 @@ from .api.options import *
 from .api.power import retro_device_power, PowerState, DevicePower
 from .api.rumble import *
 from .api.savestate import *
+from .api.sensor import *
 from .api.system import *
 from .api.throttle import *
 from .api.log import retro_log_callback, LogCallback, UnformattedLogger
@@ -66,6 +67,7 @@ class Session(EnvironmentCallback):
             options: OptionState,
             system_dir: Directory | None,
             rumble: RumbleInterface | None,
+            sensor: SensorInterface | None,
             log_callback: LogCallback,
             location: LocationInterface,
             core_assets_dir: Directory | None,
@@ -139,6 +141,7 @@ class Session(EnvironmentCallback):
         self._libretro_path: bytes = as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
         self._rumble = rumble
+        self._sensor = sensor
         self._log_callback: LogCallback = log_callback
         self._location = location
         self._core_assets_dir = as_bytes(core_assets_dir)
@@ -558,8 +561,15 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_SENSOR_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE doesn't accept NULL")
+
+                sensor_ptr = cast(data, POINTER(retro_sensor_interface))
+                sensor: retro_sensor_interface = sensor_ptr[0]
+                sensor.get_sensor_input = retro_sensor_get_input_t(self.__get_sensor_input)
+                sensor.set_sensor_state = retro_set_sensor_state_t(self.__set_sensor_state)
+                return True
+
             case EnvironmentCall.GET_CAMERA_INTERFACE:
                 # TODO: Implement
                 pass
@@ -986,6 +996,15 @@ class Session(EnvironmentCallback):
         # TODO: Define a way to override certain calls
         return False
 
+    def __input_poll(self) -> None:
+        self._input.poll()
+
+        if isinstance(self._sensor, Pollable):
+            self._sensor.poll()
+
+        if isinstance(self._mic_interface, Pollable):
+            self._mic_interface.poll()
+
     # Need a wrapper method in Session so that we can filter out unacceptable ports
     def __input_state(self, port: int, device: int, index: int, id: int) -> int:
         if not (0 <= port < self._max_users):
@@ -1002,6 +1021,20 @@ class Session(EnvironmentCallback):
 
         return self._rumble.set_rumble_state(port, RumbleEffect(effect), strength)
 
+    def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
+        if action not in SensorAction or not (0 <= port < self._max_users):
+            # If setting the sensor state of a nonexistent player or sensor...
+            return False
+
+        return self._sensor.set_sensor_state(port, SensorAction(action), rate)
+
+    def __get_sensor_input(self, port: int, sensor: int) -> float:
+        if sensor not in Sensor or not (0 <= port < self._max_users):
+            # If querying the input of a nonexistent player or sensor...
+            return 0.0
+
+        return self._sensor.get_sensor_input(port, Sensor(sensor))
+
 
 def default_session(
         core: str,
@@ -1014,6 +1047,7 @@ def default_session(
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
         rumble: RumbleInterface | None = None,
+        sensor: SensorInterface | None = None,
         log_callback: LogCallback | str | Logger | None = None,
         location: LocationInterface | None = None,
         core_assets_dir: Directory | None = None,
@@ -1103,6 +1137,7 @@ def default_session(
         options=options_impl,
         system_dir=system_dir,
         rumble=rumble or DefaultRumbleInterface(),
+        sensor=sensor or GeneratorSensorInterface(),
         log_callback=log_callback or UnformattedLogger(),
         location=location or GeneratorLocationInterface(),
         core_assets_dir=core_assets_dir,
