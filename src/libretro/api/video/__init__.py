@@ -12,9 +12,6 @@ class VideoCallbacks(Protocol):
     @abstractmethod
     def refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None: ...
 
-
-@runtime_checkable
-class VideoState(VideoCallbacks, Protocol):
     @abstractmethod
     def set_rotation(self, rotation: int) -> bool: ...
 
@@ -32,7 +29,7 @@ class VideoState(VideoCallbacks, Protocol):
 
 
 @final
-class SoftwareVideoState(VideoState):
+class SoftwareVideoState(VideoCallbacks):
     def __init__(self):
         self._frame: array | None = None
         self._pixel_format: PixelFormat = PixelFormat.RGB1555

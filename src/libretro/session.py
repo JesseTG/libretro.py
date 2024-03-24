@@ -32,7 +32,7 @@ from .api.environment import EnvironmentCallback
 from .api.input import *
 from .api.input.info import retro_controller_info, retro_input_descriptor
 from .api.input.keyboard import *
-from .api.video import VideoCallbacks, SoftwareVideoState, VideoState, PixelFormat, retro_frame_time_callback
+from .api.video import *
 
 from ._utils import *
 
@@ -98,8 +98,8 @@ class Session(EnvironmentCallback):
         if not isinstance(input_state, InputState):
             raise TypeError(f"Expected input_state to match InputState, not {type(input_state).__name__}")
 
-        if not isinstance(video, VideoState):
-            raise TypeError(f"Expected video to match VideoState, not {type(video).__name__}")
+        if not isinstance(video, VideoCallbacks):
+            raise TypeError(f"Expected video to match VideoCallbacks, not {type(video).__name__}")
 
         if not isinstance(message, MessageInterface):
             raise TypeError(f"Expected message to match MessageInterface, not {type(message).__name__}")
