@@ -81,6 +81,8 @@ class Session(EnvironmentCallback):
             av_enable: AvEnableFlags,
             midi: MidiInterface,
             target_refresh_rate: float,
+            preferred_hw: HardwareContext | None,
+            driver_switch_enable: bool,
             max_users: int,
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
@@ -162,6 +164,8 @@ class Session(EnvironmentCallback):
         self._midi = midi
         self._serialization_quirks: SerializationQuirks | None = None
         self._target_refresh_rate = target_refresh_rate
+        self._preferred_hw = preferred_hw
+        self._driver_switch_enable = bool(driver_switch_enable)
         self._max_users = max_users
         self._fastforwarding_override: retro_fastforwarding_override | None = None
         self._content_info_override: Sequence[retro_system_content_info_override] | None = None
@@ -825,8 +829,16 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_PREFERRED_HW_RENDER:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER doesn't accept NULL")
+
+                preferred_hw_ptr = cast(data, POINTER(retro_hw_context_type))
+                preferred_hw_ptr[0] = self._preferred_hw
+
+                # This envcall returns True if the core supports the call
+                # *and* the frontend can switch video drivers
+                return self._driver_switch_enable
+
             case EnvironmentCall.GET_DISK_CONTROL_INTERFACE_VERSION:
                 # TODO: Implement
                 pass
@@ -1067,6 +1079,8 @@ def default_session(
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
         midi: MidiInterface | None = None,
         target_refresh_rate: float = 60.0,
+        preferred_hw: HardwareContext | None = HardwareContext.NONE,
+        driver_switch_enable: bool = False,
         max_users: int = 8,
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
@@ -1158,6 +1172,8 @@ def default_session(
         av_enable=av_enable,
         midi=midi or GeneratorMidiInterface(),
         target_refresh_rate=target_refresh_rate,
+        preferred_hw=preferred_hw,
+        driver_switch_enable=driver_switch_enable,
         max_users=max_users,
         throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
         savestate_context=savestate_context,
