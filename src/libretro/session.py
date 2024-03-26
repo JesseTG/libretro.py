@@ -63,7 +63,7 @@ class Session(EnvironmentCallback):
             video: VideoDriver,
             # TODO: Support for an env override function
 
-            content: Content | SpecialContent | _DoNotLoad | None,
+            content: Content | SubsystemContent | _DoNotLoad | None,
             overscan: bool,
             message: MessageInterface,
             options: OptionState,
@@ -254,7 +254,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("Core requires a full path, but none was provided")
 
                 loaded = self._core.load_game(retro_game_info(None, rom, len(rom), None))
-            case SpecialContent(game_type=game_type, info=infos):
+            case SubsystemContent(game_type=game_type, info=infos):
                 if not self._subsystem_info:
                     raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
 
@@ -1130,7 +1130,7 @@ class Session(EnvironmentCallback):
 
 def default_session(
         core: str | Core | CDLL | PathLike,
-        content: str | SpecialContent | _DoNotLoad | None = None,
+        content: str | SubsystemContent | _DoNotLoad | None = None,
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoDriver | None = None,

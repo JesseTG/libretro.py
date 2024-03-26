@@ -26,8 +26,8 @@ class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
 Content: TypeAlias = str | bytes | PathLike | retro_game_info
 
 
-class SpecialContent(NamedTuple):
-    game_type: int
+class SubsystemContent(NamedTuple):
+    game_type: int | str | bytes
     info: Sequence[Content]
 
 
