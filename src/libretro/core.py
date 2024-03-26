@@ -12,6 +12,8 @@ from .api.environment import retro_environment_t
 from .api.input import retro_input_poll_t, retro_input_state_t
 from .api.system import retro_system_info
 
+# TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
+# (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
 
 class CoreInterface(Protocol):
     @abstractmethod
