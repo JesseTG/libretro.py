@@ -1,5 +1,5 @@
 from ctypes import *
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 
 from ..._utils import FieldsFromTypeHints
 from ...h import *
@@ -44,6 +44,41 @@ class PixelFormat(IntEnum):
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
+    @property
+    def pixel_typecode(self) -> str:
+        match self:
+            case self.RGB1555:
+                return 'H'
+            case self.XRGB8888:
+                return 'L'
+            case self.RGB565:
+                return 'H'
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
+    @property
+    def pillow_mode(self) -> str:
+        match self:
+            case self.RGB1555:
+                return 'BGR;15'
+            case self.XRGB8888:
+                return 'RGBX'
+            case self.RGB565:
+                return 'BGR;16'
+            case _:
+                raise ValueError(f"Unknown pixel format: {self}")
+
+
+class MemoryAccess(IntFlag):
+    NONE = 0
+    WRITE = RETRO_MEMORY_ACCESS_WRITE
+    READ = RETRO_MEMORY_ACCESS_READ
+
+
+class MemoryType(IntFlag):
+    NONE = 0
+    CACHED = RETRO_MEMORY_TYPE_CACHED
+
 
 class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     data: c_void_p
@@ -62,5 +97,7 @@ __all__ = [
     'retro_frame_time_callback',
     'Rotation',
     'PixelFormat',
+    'MemoryAccess',
+    'MemoryType',
     'retro_framebuffer',
 ]

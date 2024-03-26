@@ -1,16 +1,9 @@
-from ctypes import Structure, c_bool, c_double, c_float, c_uint
+from ctypes import Structure, c_bool, c_double, c_float, c_uint, c_char_p
+from dataclasses import dataclass
 from enum import IntEnum
 
-from .._utils import FieldsFromTypeHints, String
+from .._utils import FieldsFromTypeHints
 from ..h import *
-
-
-class Region(IntEnum):
-    NTSC = RETRO_REGION_NTSC
-    PAL = RETRO_REGION_PAL
-
-    def __init__(self, value: int):
-        self._type_ = 'I'
 
 
 class Language(IntEnum):
@@ -52,27 +45,10 @@ class Language(IntEnum):
         self._type_ = 'I'
 
 
+@dataclass(init=False)
 class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
-    library_name: String
-    library_version: String
-    valid_extensions: String
+    library_name: c_char_p
+    library_version: c_char_p
+    valid_extensions: c_char_p
     need_fullpath: c_bool
     block_extract: c_bool
-
-
-class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
-    base_width: c_uint
-    base_height: c_uint
-    max_width: c_uint
-    max_height: c_uint
-    aspect_ratio: c_float
-
-
-class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
-    fps: c_double
-    sample_rate: c_double
-
-
-class retro_system_av_info(Structure, metaclass=FieldsFromTypeHints):
-    geometry: retro_game_geometry
-    timing: retro_system_timing

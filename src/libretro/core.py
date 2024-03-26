@@ -4,13 +4,13 @@ from ctypes import *
 from typing import Protocol
 
 from ._utils import memoryview_at, String
-
+from .api.av import Region, retro_system_av_info
 from .api.content import retro_game_info
 from .api.video import retro_video_refresh_t
 from .api.audio import retro_audio_sample_t, retro_audio_sample_batch_t
 from .api.environment import retro_environment_t
 from .api.input import retro_input_poll_t, retro_input_state_t
-from .api.system import retro_system_info, retro_system_av_info, Region
+from .api.system import retro_system_info
 
 
 class CoreInterface(Protocol):

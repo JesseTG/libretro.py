@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from logging import Logger
 from typing import Type
 
-from .api.av import AvEnableFlags
+from .api.av import *
 from .api.content import *
 from .api.environment import EnvironmentCall
 from .api.led import retro_led_interface, LedInterface, DictLedInterface
@@ -59,7 +59,7 @@ class Session(EnvironmentCallback):
             core: Core | str,
             audio: AudioState,
             input_state: InputState,
-            video: VideoCallbacks,
+            video: VideoDriver,
             # TODO: Support for an env override function
 
             content: Content | SpecialContent | _DoNotLoad | None,
@@ -100,8 +100,8 @@ class Session(EnvironmentCallback):
         if not isinstance(input_state, InputState):
             raise TypeError(f"Expected input_state to match InputState, not {type(input_state).__name__}")
 
-        if not isinstance(video, VideoCallbacks):
-            raise TypeError(f"Expected video to match VideoCallbacks, not {type(video).__name__}")
+        if not isinstance(video, VideoDriver):
+            raise TypeError(f"Expected video to be a VideoDriver, got {type(video).__name__}")
 
         if not isinstance(message, MessageInterface):
             raise TypeError(f"Expected message to match MessageInterface, not {type(message).__name__}")
@@ -141,6 +141,7 @@ class Session(EnvironmentCallback):
         self._system_dir = as_bytes(system_dir)
         self._input_descriptors: Sequence[retro_input_descriptor] | None = None
         self._options: OptionState = options
+        self._hw_render: retro_hw_render_callback | None = None
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = as_bytes(self._core.path)
         self._frame_time_callback: retro_frame_time_callback | None = None
@@ -244,18 +245,19 @@ class Session(EnvironmentCallback):
                     del array_type
                     # Need to clear all outstanding pointers, or else mmap will raise a BufferError
 
+            # TODO: case bytes(path) if path is a valid path
             case bytes(rom) | bytearray(rom) | memoryview(rom):
                 # For test cases that provide ROM data directly
                 if need_fullpath:
                     raise ValueError("Core requires a full path, but none was provided")
 
                 loaded = self._core.load_game(retro_game_info(None, rom, len(rom), None))
-            case SpecialContent(content_type, special_content):
+            case SpecialContent(game_type=game_type, info=infos):
                 if not self._subsystem_info:
                     raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
 
-                # TODO
-                #loaded = self._core.load_game_special(content_type, content)
+                # TODO: Verify conditions
+                loaded = self._core.load_game_special(game_type, infos)
             case None:
                 if not self._support_no_game:
                     raise RuntimeError("No content provided and core did not indicate support for no game.")
@@ -264,6 +266,9 @@ class Session(EnvironmentCallback):
 
         if not loaded:
             raise RuntimeError("Failed to load game")
+
+        self._system_av_info = self._core.get_system_av_info()
+        self._video.set_system_av_info(self._system_av_info)
 
         return self
 
@@ -287,7 +292,7 @@ class Session(EnvironmentCallback):
         return self._input
 
     @property
-    def video(self) -> VideoCallbacks:
+    def video(self) -> VideoDriver:
         return self._video
 
     @property
@@ -428,8 +433,8 @@ class Session(EnvironmentCallback):
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_ROTATION doesn't accept NULL")
 
-                rotation_ptr = cast(data, POINTER(c_uint))
-                return self._video.set_rotation(rotation_ptr.contents)
+                rotation = cast(data, POINTER(c_uint))[0]
+                return self._video.set_rotation(Rotation(rotation))
 
             case EnvironmentCall.GET_OVERSCAN:
                 if not data:
@@ -444,7 +449,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CAN_DUPE doesn't accept NULL")
 
                 dupe_ptr = cast(data, POINTER(c_bool))
-                dupe_ptr.contents.value = self._video.can_dupe()
+                dupe_ptr.contents.value = self._video.can_dupe
                 return True
 
             case EnvironmentCall.SET_MESSAGE:
@@ -480,7 +485,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
                 pixfmt_ptr = cast(data, POINTER(retro_pixel_format))
-                return self._video.set_pixel_format(PixelFormat(pixfmt_ptr.contents.value))
+                return self._video.set_pixel_format(PixelFormat(pixfmt_ptr[0]))
 
             case EnvironmentCall.SET_INPUT_DESCRIPTORS:
                 if not data:
@@ -496,6 +501,23 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_DISK_CONTROL_INTERFACE:
                 # TODO: Implement
                 pass
+
+            case EnvironmentCall.SET_HW_RENDER | EnvironmentCall.SET_HW_RENDER_EXPERIMENTAL:
+                if not data:
+                    return False  # Callback doesn't support NULL
+
+                hwrender_ptr = cast(data, POINTER(retro_hw_render_callback))
+                hwrender: retro_hw_render_callback = hwrender_ptr[0]
+
+                ok = self._video.init_callback(hwrender_ptr[0])
+
+                # TODO: Initialize a context based on the interface type
+                # TODO: Account for the old ABI (see RETRO_ENVIRONMENT_EXPERIMENTAL)
+
+                self._hw_render = retro_hw_render_callback()
+                # TODO: Initialize the video driver
+                pass  # TODO: Implement
+                # Where should the video driver be initialized?
 
             case EnvironmentCall.GET_VARIABLE:
                 if data:
@@ -631,8 +653,15 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_SYSTEM_AV_INFO:
-                # TODO: Implement
-                pass
+                if not data:
+                    return False
+
+                av_info_ptr = cast(data, POINTER(retro_system_av_info))
+                av_info: retro_system_av_info = av_info_ptr[0]
+                self._video.set_system_av_info(av_info)
+                self._system_av_info = deepcopy(av_info)
+                # TODO: Implement for audio drivers
+                return True
 
             case EnvironmentCall.SET_PROC_ADDRESS_CALLBACK:
                 if not data:
@@ -673,8 +702,12 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_GEOMETRY:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_SET_GEOMETRY doesn't accept NULL")
+
+                geom: retro_game_geometry = cast(data, POINTER(retro_game_geometry))[0]
+                self._video.set_geometry(geom)
+                return True
 
             case EnvironmentCall.GET_USERNAME:
                 if self._username is None:
@@ -695,11 +728,37 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER doesn't accept NULL")
+
+                core_fb_ptr = cast(data, POINTER(retro_framebuffer))
+                core_fb: retro_framebuffer = core_fb_ptr[0]
+
+                width = core_fb.width
+                height = core_fb.height
+                access = core_fb.access_flags
+                fb = self._video.get_software_framebuffer(int(width), int(height), MemoryAccess(access))
+                if not fb:
+                    return False
+
+                core_fb.data = fb.data
+                core_fb.pitch = fb.pitch
+                core_fb.format = fb.format
+                core_fb.memory_flags = fb.memory_flags
+                return True
+
             case EnvironmentCall.GET_HW_RENDER_INTERFACE:
-                # TODO: Implement
-                pass
+                if not data:
+                    raise ValueError("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE doesn't accept NULL")
+
+                hwrender_interface = self._video.hw_render_interface
+                if not hwrender_interface:
+                    # This video driver doesn't provide (or need) a hardware render interface
+                    return False
+
+                hwrenderptr_ptr = cast(data, POINTER(POINTER(retro_hw_render_interface)))
+                hwrenderptr_ptr[0] = pointer(hwrender_interface)
+                return True
 
             case EnvironmentCall.SET_SUPPORT_ACHIEVEMENTS:
                 if not data:
@@ -722,8 +781,8 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_HW_SHARED_CONTEXT:
-                # TODO: Implement
-                pass
+                self._video.set_shared_context()
+                return True
 
             case EnvironmentCall.GET_VFS_INTERFACE:
                 if not data:
@@ -1056,11 +1115,11 @@ class Session(EnvironmentCallback):
 
 
 def default_session(
-        core: str,
+        core: str | Core | CDLL | PathLike,
         content: str | SpecialContent | _DoNotLoad | None = None,
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
-        video: VideoCallbacks | None = None,
+        video: VideoDriver | None = None,
         options: OptionState | Mapping[AnyStr, AnyStr] | None = None,
         overscan: bool = False,
         message: MessageInterface | None = None,
@@ -1092,6 +1151,17 @@ def default_session(
     """
     Returns a Session with default state objects.
     """
+
+    core_impl: Core
+    match core:
+        case str(path) | PathLike(path) | CDLL(path):
+            # Load a private copy of the core
+            core_impl = Core(path)
+        case Core() as c:
+            # Use the provided core
+            core_impl = c
+        case _:
+            raise TypeError(f"Expected core to be a string, path, Core, or CDLL; got {type(core).__name__}")
 
     logger = logging.getLogger('libretro')
     logger.setLevel(logging.DEBUG)
@@ -1149,10 +1219,10 @@ def default_session(
             raise TypeError(f"Expected device_power to be a retro_device_power or a callable that returns one, not {type(device_power).__name__}")
 
     return Session(
-        core=core,
+        core=core_impl,
         audio=audio or ArrayAudioState(),
         input_state=input_impl or GeneratorInputState(),
-        video=video or SoftwareVideoState(),
+        video=video or PillowVideoDriver(),
         content=content,
         overscan=overscan,
         message=message or LoggerMessageInterface(1, logger),

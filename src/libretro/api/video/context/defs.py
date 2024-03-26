@@ -10,7 +10,7 @@ from ....h import *
 class HardwareContext(IntEnum):
     NONE = RETRO_HW_CONTEXT_NONE
     OPENGL = RETRO_HW_CONTEXT_OPENGL
-    OENGLES2 = RETRO_HW_CONTEXT_OPENGLES2
+    OPENGLES2 = RETRO_HW_CONTEXT_OPENGLES2
     OPENGL_CORE = RETRO_HW_CONTEXT_OPENGL_CORE
     OPENGLES3 = RETRO_HW_CONTEXT_OPENGLES3
     OPENGLES_VERSION = RETRO_HW_CONTEXT_OPENGLES_VERSION
@@ -43,6 +43,22 @@ class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
     cache_context: c_bool
     context_destroy: retro_hw_context_reset_t
     debug_context: c_bool
+
+    def __deepcopy__(self, _):
+        return retro_hw_render_callback(
+            self.context_type,
+            self.context_reset,
+            self.get_current_framebuffer,
+            self.get_proc_address,
+            self.depth,
+            self.stencil,
+            self.bottom_left_origin,
+            self.version_major,
+            self.version_minor,
+            self.cache_context,
+            self.context_destroy,
+            self.debug_context,
+        )
 
 
 __all__ = [
