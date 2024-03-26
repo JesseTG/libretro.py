@@ -1,209 +1,20 @@
-from abc import abstractmethod
-from copy import deepcopy
-from ctypes import *
-from collections.abc import MutableMapping
 import re
-from dataclasses import dataclass
-from typing import Protocol, Sequence, runtime_checkable, AnyStr, Literal, Mapping, overload
+from collections.abc import Mapping, Sequence, MutableMapping
+from copy import deepcopy
+from ctypes import string_at, Array
+from typing import AnyStr
 
-from .._utils import from_zero_terminated, as_bytes, FieldsFromTypeHints
-from ..h import RETRO_NUM_CORE_OPTION_VALUES_MAX
-
-
-@dataclass(init=False)
-class retro_variable(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    value: c_char_p
-
-    def __deepcopy__(self, _):
-        return retro_variable(
-            bytes(self.key) if self.key else None,
-            bytes(self.value) if self.value else None,
-        )
-
-
-@dataclass(init=False)
-class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    visible: c_bool
-
-    def __deepcopy__(self, _):
-        return retro_core_option_display(
-            bytes(self.key) if self.key else None,
-            bool(self.visible),
-        )
-
-
-@dataclass(init=False)
-class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
-    value: c_char_p
-    label: c_char_p
-
-    def __deepcopy__(self, _):
-        return retro_core_option_value(
-            bytes(self.value) if self.value else None,
-            bytes(self.label) if self.label else None,
-        )
-
-
-CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
-
-
-@dataclass(init=False)
-class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    info: c_char_p
-    values: retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
-    default_value: c_char_p
-
-
-@dataclass(init=False)
-class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
-    us: POINTER(retro_core_option_definition)
-    local: POINTER(retro_core_option_definition)
-
-
-@dataclass(init=False)
-class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    info: c_char_p
-
-    def __deepcopy__(self, _):
-        return retro_core_option_v2_category(
-            bytes(self.key) if self.key else None,
-            bytes(self.desc) if self.desc else None,
-            bytes(self.info) if self.info else None,
-        )
-
-
-@dataclass(init=False)
-class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    desc_categorized: c_char_p
-    info: c_char_p
-    info_categorized: c_char_p
-    category_key: c_char_p
-    values: retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
-    default_value: c_char_p
-
-    def __deepcopy__(self, _):
-        arraytype = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
-        return retro_core_option_v2_definition(
-            bytes(self.key) if self.key else None,
-            bytes(self.desc) if self.desc else None,
-            bytes(self.desc_categorized) if self.desc_categorized else None,
-            bytes(self.info) if self.info else None,
-            bytes(self.info_categorized) if self.info_categorized else None,
-            bytes(self.category_key) if self.category_key else None,
-            arraytype.from_buffer_copy(self.values), # TODO: Need to copy the strings in values, too
-            bytes(self.default_value) if self.default_value else None,
-        )
-
-
-@dataclass(init=False)
-class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
-    categories: POINTER(retro_core_option_v2_category)
-    definitions: POINTER(retro_core_option_v2_definition)
-
-
-@dataclass(init=False)
-class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
-    us: POINTER(retro_core_options_v2)
-    local: POINTER(retro_core_options_v2)
-
-
-retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
-
-
-@dataclass(init=False)
-class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_core_options_update_display_callback_t
-
-    def __call__(self) -> bool:
-        if not self.callback:
-            raise ValueError("No callback has been set")
-
-        return bool(self.callback())
-
+from .driver import OptionDriver
+from .defs import *
+from ..._utils import as_bytes, from_zero_terminated
 
 _SET_VARS = re.compile(br"(?P<desc>[^;]+); (?P<values>.+)")
 
 
-@runtime_checkable
-class OptionState(Protocol):
-    @abstractmethod
-    def get_variable(self, item: bytes) -> bytes | None: ...
-
-    @abstractmethod
-    def set_variables(self, variables: Sequence[retro_variable] | None): ...
-
-    @abstractmethod
-    def get_variable_update(self) -> bool: ...
-
-    @abstractmethod
-    def get_version(self) -> int: ...
-
-    @abstractmethod
-    def set_options(self, options: Sequence[retro_core_option_definition] | None): ...
-
-    @abstractmethod
-    def set_options_intl(self, options: retro_core_options_intl | None): ...
-
-    @abstractmethod
-    def set_display(self, var: bytes, visible: bool): ...
-
-    @abstractmethod
-    def set_options_v2(self, options: retro_core_options_v2 | None): ...
-
-    @abstractmethod
-    def set_options_v2_intl(self, options: retro_core_options_v2_intl | None): ...
-
-    @abstractmethod
-    def set_update_display_callback(self, callback: retro_core_options_update_display_callback | None): ...
-
-    @abstractmethod
-    def set_variable(self, var: bytes, value: bytes) -> bool: ...
-
-    @property
-    def variable_updated(self) -> bool:
-        return self.get_variable_update()
-
-    @property
-    def version(self):
-        return self.get_version()
-
-    @property
-    @abstractmethod
-    def update_display_callback(self) -> retro_core_options_update_display_callback | None: ...
-
-    @property
-    @abstractmethod
-    def supports_categories(self) -> bool: ...
-
-    @property
-    @abstractmethod
-    def variables(self) -> MutableMapping[AnyStr, bytes]: ...
-
-    @property
-    @abstractmethod
-    def visibility(self) -> Mapping[AnyStr, bool]: ...
-
-    @property
-    @abstractmethod
-    def categories(self) -> Mapping[bytes, retro_core_option_v2_category] | None: ...
-
-    @property
-    @abstractmethod
-    def definitions(self) -> Mapping[bytes, retro_core_option_v2_definition] | None: ...
-
-
-class StandardOptionState(OptionState):
+class DictOptionDriver(OptionDriver):
     def __init__(
             self,
-            version: Literal[0, 1, 2] = 2,
+            version: int = 2,
             categories_supported: bool | None = None,
             variables: Mapping[AnyStr, AnyStr] | None = None,
     ):
@@ -387,7 +198,7 @@ class StandardOptionState(OptionState):
         return self._categories_supported and self._version >= 2
 
     class _VariableMapping(MutableMapping[AnyStr, bytes]):
-        def __init__(self, options: 'StandardOptionState'):
+        def __init__(self, options: 'DictOptionDriver'):
             self._options = options
 
         def __getitem__(self, key: AnyStr) -> bytes:
@@ -413,13 +224,12 @@ class StandardOptionState(OptionState):
         def __iter__(self):
             yield from self._options._options_us.keys()
 
-
     @property
     def variables(self) -> MutableMapping[AnyStr, bytes]:
-        return StandardOptionState._VariableMapping(self)
+        return DictOptionDriver._VariableMapping(self)
 
     class _VisibilityMapping(Mapping[AnyStr, bool]):
-        def __init__(self, options: 'StandardOptionState'):
+        def __init__(self, options: 'DictOptionDriver'):
             self._options = options
 
         def __getitem__(self, key: AnyStr) -> bool:
@@ -434,7 +244,7 @@ class StandardOptionState(OptionState):
 
     @property
     def visibility(self) -> Mapping[AnyStr, bool]:
-        return StandardOptionState._VisibilityMapping(self)
+        return DictOptionDriver._VisibilityMapping(self)
 
     @property
     def categories(self) -> Mapping[bytes, retro_core_option_v2_category] | None:
@@ -444,3 +254,7 @@ class StandardOptionState(OptionState):
     def definitions(self) -> Mapping[bytes, retro_core_option_v2_definition] | None:
         return self._options_us
 
+
+__all__ = [
+    "DictOptionDriver",
+]

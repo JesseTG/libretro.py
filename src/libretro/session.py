@@ -3,7 +3,7 @@ import logging
 from collections.abc import Iterable
 from logging import Logger
 from types import TracebackType
-from typing import Type
+from typing import Type, AnyStr
 
 from .api.av import *
 from .api.content import *
@@ -64,7 +64,7 @@ class Session(EnvironmentCallback):
             content: Content | SubsystemContent | _DoNotLoad | None,
             overscan: bool,
             message: MessageInterface,
-            options: OptionState,
+            options: OptionDriver,
             system_dir: Directory | None,
             rumble: RumbleInterface | None,
             sensor: SensorInterface | None,
@@ -105,8 +105,8 @@ class Session(EnvironmentCallback):
         if not isinstance(message, MessageInterface):
             raise TypeError(f"Expected message to match MessageInterface, not {type(message).__name__}")
 
-        if not isinstance(options, OptionState):
-            raise TypeError(f"Expected options to match OptionState, not {type(options).__name__}")
+        if not isinstance(options, OptionDriver):
+            raise TypeError(f"Expected options to be an OptionDriver, got {type(options).__name__}")
 
         if not isinstance(system_dir, (str, bytes, type(None))):
             raise TypeError(f"Expected system_dir to be str, bytes, or None; got {type(system_dir).__name__}")
@@ -139,7 +139,7 @@ class Session(EnvironmentCallback):
         self._performance_level: int | None = None
         self._system_dir = as_bytes(system_dir)
         self._input_descriptors: Sequence[retro_input_descriptor] | None = None
-        self._options: OptionState = options
+        self._options: OptionDriver = options
         self._hw_render: retro_hw_render_callback | None = None
         self._support_no_game: bool | None = None
         self._libretro_path: bytes = as_bytes(self._core.path)
@@ -330,7 +330,7 @@ class Session(EnvironmentCallback):
         return self._input_descriptors
 
     @property
-    def options(self) -> OptionState:
+    def options(self) -> OptionDriver:
         return self._options
 
     @property
@@ -1130,7 +1130,7 @@ def default_session(
         audio: AudioCallbacks | None = None,
         input_state: InputCallbacks | InputStateIterator | InputStateGenerator | None = None,
         video: VideoDriver | None = None,
-        options: OptionState | Mapping[AnyStr, AnyStr] | None = None,
+        options: OptionDriver | Mapping[AnyStr, AnyStr] | None = None,
         overscan: bool = False,
         message: MessageInterface | None = None,
         system_dir: Directory | None = None,
@@ -1184,14 +1184,14 @@ def default_session(
     elif isinstance(input_state, Callable):
         input_impl = GeneratorInputState(input_state)
 
-    options_impl: OptionState
+    options_impl: OptionDriver
     match options:
-        case OptionState():
+        case OptionDriver():
             options_impl = options
         case map if isinstance(map, Mapping):
-            options_impl = StandardOptionState(2, True, map)
+            options_impl = DictOptionDriver(2, True, map)
         case None:
-            options_impl = StandardOptionState()
+            options_impl = DictOptionDriver()
         case _:
             raise TypeError(f"Expected options to be an OptionState or a Mapping, not {type(options).__name__}")
 
