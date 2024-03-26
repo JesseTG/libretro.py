@@ -2,6 +2,7 @@ import logging
 
 from collections.abc import Iterable
 from logging import Logger
+from types import TracebackType
 from typing import Type
 
 from .api.av import *
@@ -177,6 +178,7 @@ class Session(EnvironmentCallback):
         self._device_power = device_power
         self._playlist_dir = as_bytes(playlist_dir)
         self._pending_callback_exceptions: list[BaseException] = []
+        self._is_exited = False
 
     def __enter__(self):
         api_version = self._core.api_version()
@@ -272,15 +274,25 @@ class Session(EnvironmentCallback):
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType):
         if self._content is not DoNotLoad:
             self._core.unload_game()
+
         self._core.deinit()
         del self._core
-        return False
+        self._is_exited = True
+        return isinstance(exc_val, CoreShutDownException)
+        # Returning True from a context manage suppresses the exception;
+        # if the core shut down then core methods should raise a CoreShutDownException,
+        # which is not an error.
+        # If exc_val is None, then there never was an exception.
+        # If exc_val is any other error, then it should be propagated after cleaning up the core.
 
     @property
     def core(self) -> CoreInterface:
+        if self._is_exited or self._is_shutdown:
+            raise CoreShutDownException()
+
         return self._core
 
     @property
@@ -302,6 +314,10 @@ class Session(EnvironmentCallback):
     @property
     def is_shutdown(self) -> bool:
         return self._is_shutdown
+
+    @property
+    def is_exited(self) -> bool:
+        return self._is_exited
 
     @property
     def system_directory(self) -> bytes | None:
@@ -461,7 +477,6 @@ class Session(EnvironmentCallback):
 
             case EnvironmentCall.SHUTDOWN:
                 self._is_shutdown = True
-                # TODO: Make the other methods throw an exception if called after this
                 return True
 
             case EnvironmentCall.SET_PERFORMANCE_LEVEL:
@@ -1253,3 +1268,10 @@ def default_session(
         playlist_dir=playlist_dir
     )
 
+
+__all__ = [
+    'Session',
+    'default_session',
+    'DoNotLoad',
+    'CoreShutDownException',
+]
