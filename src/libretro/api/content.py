@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from ctypes import *
 from dataclasses import dataclass
 from os import PathLike
-from typing import TypeAlias, NamedTuple
+from typing import TypeAlias, NamedTuple, overload
 
 from .._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer
 
@@ -53,6 +53,32 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
     memory: POINTER(retro_subsystem_memory_info)
     num_memory: c_uint
 
+    def __len__(self):
+        return int(self.num_types)
+
+    @overload
+    def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]: ...
+
+    def __getitem__(self, index):
+        if not self.memory:
+            raise ValueError("No subsystem ROM memory types available")
+
+        match index:
+            case int(i):
+                if not (0 <= i < self.num_memory):
+                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                return self.memory[i]
+
+            case slice() as s:
+                s: slice
+                return self.memory[s]
+
+            case _:
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
+
     def __deepcopy__(self, memo):
         return retro_subsystem_rom_info(
             desc=bytes(self.desc) if self.desc else None,
@@ -72,6 +98,32 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
     roms: POINTER(retro_subsystem_rom_info)
     num_roms: c_uint
     id: c_uint
+
+    def __len__(self):
+        return int(self.num_roms)
+
+    @overload
+    def __getitem__(self, index: int) -> retro_subsystem_rom_info: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]: ...
+
+    def __getitem__(self, index):
+        if not self.roms:
+            raise ValueError("No subsystem ROM types available")
+
+        match index:
+            case int(i):
+                if not (0 <= i < self.num_roms):
+                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                return self.roms[i]
+
+            case slice() as s:
+                s: slice
+                return self.roms[s]
+
+            case _:
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __deepcopy__(self, memo):
         return retro_subsystem_info(
