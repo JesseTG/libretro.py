@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from copy import deepcopy
 from ctypes import Structure, c_char_p, c_uint, c_int8, string_at
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Protocol, Sequence, runtime_checkable
 from logging import Logger
@@ -29,17 +30,19 @@ class MessageType(IntEnum):
         self._type_ = 'I'
 
 
+@dataclass(init=False)
 class retro_message(Structure, metaclass=FieldsFromTypeHints):
     msg: c_char_p
     frames: c_uint
 
     def __deepcopy__(self, memodict):
         return retro_message(
-            msg=bytes(self.msg),
-            frames=int(self.frames)
+            msg=bytes(self.msg) if self.msg else None,
+            frames=self.frames
         )
 
 
+@dataclass(init=False)
 class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
     msg: c_char_p
     duration: c_uint
@@ -49,15 +52,15 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
     type: retro_message_type
     progress: c_int8
 
-    def __deepcopy__(self, memodict):
+    def __deepcopy__(self, _):
         return retro_message_ext(
-            msg=bytes(self.msg),
-            duration=int(self.duration),
-            priority=int(self.priority),
-            level=LogLevel(int(self.level)),
-            target=MessageTarget(int(self.target)),
-            type=MessageType(int(self.type)),
-            progress=int(self.progress)
+            msg=bytes(self.msg) if self.msg else None,
+            duration=self.duration,
+            priority=self.priority,
+            level=self.level,
+            target=self.target,
+            type=self.type,
+            progress=self.progress
         )
 
 

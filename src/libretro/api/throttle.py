@@ -26,11 +26,22 @@ class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
     notification: c_bool
     inhibit_toggle: c_bool
 
+    def __deepcopy__(self, _):
+        return retro_fastforwarding_override(
+            self.ratio,
+            self.fastforward,
+            self.notification,
+            self.inhibit_toggle
+        )
+
 
 @dataclass(init=False)
 class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
     mode: c_uint
     rate: c_float
+
+    def __deepcopy__(self, _):
+        return retro_throttle_state(self.mode, self.rate)
 
 
 __all__ = [

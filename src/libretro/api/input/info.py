@@ -2,7 +2,7 @@ from ctypes import Structure, c_uint, c_char_p, POINTER
 from dataclasses import dataclass
 from typing import Sequence, overload
 
-from ..._utils import FieldsFromTypeHints
+from ..._utils import FieldsFromTypeHints, deepcopy_array
 
 
 class InputDeviceState:
@@ -20,17 +20,38 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
     id: c_uint
     description: c_char_p
 
+    def __deepcopy__(self, _):
+        return retro_input_descriptor(
+            port=self.port,
+            device=self.device,
+            index=self.index,
+            id=self.id,
+            description=bytes(self.description) if self.description else None
+        )
+
 
 @dataclass(init=False)
 class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     id: c_uint
 
+    def __deepcopy__(self, _):
+        return retro_controller_description(
+            desc=bytes(self.desc) if self.desc else None,
+            id=self.id
+        )
+
 
 @dataclass(init=False)
 class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
     types: POINTER(retro_controller_description)
     num_types: c_uint
+
+    def __deepcopy__(self, memo):
+        return retro_controller_info(
+            types=deepcopy_array(self.types, self.num_types, memo) if self.types else None,
+            num_types=self.num_types
+        )
 
     @overload
     def __getitem__(self, index: int) -> retro_controller_description: ...

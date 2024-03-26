@@ -24,6 +24,13 @@ class retro_device_power(Structure, metaclass=FieldsFromTypeHints):
     seconds: c_int
     percent: c_int8
 
+    def __deepcopy__(self, _):
+        return retro_device_power(
+            state=self.state,
+            seconds=self.seconds,
+            percent=self.percent
+        )
+
 
 DevicePower = Callable[[], retro_device_power]
 

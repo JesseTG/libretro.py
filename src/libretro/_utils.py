@@ -4,9 +4,10 @@ import sys
 from abc import abstractmethod
 
 from contextlib import contextmanager
+from copy import deepcopy
 from ctypes import *
 from os import PathLike
-from typing import Iterator, get_type_hints, Protocol, runtime_checkable
+from typing import Iterator, get_type_hints, Protocol, runtime_checkable, TypeAlias
 
 
 def as_bytes(value: str | bytes | None) -> bytes | None:
@@ -27,6 +28,32 @@ def from_zero_terminated[S](ptr) -> Iterator[S]:
         while not is_zeroed(ptr[i]):
             yield ptr[i]
             i += 1
+
+
+Pointer: TypeAlias = ctypes._Pointer
+
+
+def deepcopy_array(array: Pointer, length: int, memo):
+    if not array:
+        return None
+
+    arraytype = array._type_ * length
+    return arraytype(*(deepcopy(array[i], memo) for i in range(length)))
+
+
+def deepcopy_buffer(ptr: c_void_p | int, size: int) -> c_void_p | None:
+    if ptr is not None and not isinstance(ptr, (c_void_p, int)):
+        raise TypeError(f"Expected c_void_p or int, got {type(ptr).__name__}")
+
+    if not ptr:
+        return None
+
+    if not size:
+        return None
+
+    arraytype: Array = c_uint8 * size
+    data = arraytype.from_buffer_copy(c_void_p(ptr))
+    return cast(data, c_void_p)
 
 
 @contextmanager

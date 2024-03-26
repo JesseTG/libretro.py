@@ -507,7 +507,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS doesn't accept NULL")
 
                 inputdesc_ptr = cast(data, POINTER(retro_input_descriptor))
-                self._input_descriptors = tuple(from_zero_terminated(inputdesc_ptr))
+                self._input_descriptors = tuple(deepcopy(s) for s in from_zero_terminated(inputdesc_ptr))
                 return True
 
             case EnvironmentCall.SET_KEYBOARD_CALLBACK:
@@ -549,7 +549,7 @@ class Session(EnvironmentCallback):
             case EnvironmentCall.SET_VARIABLES:
                 if data:
                     variables_ptr = cast(data, POINTER(retro_variable))
-                    self._options.set_variables(tuple(from_zero_terminated(variables_ptr)))
+                    self._options.set_variables(tuple(deepcopy(s) for s in from_zero_terminated(variables_ptr)))
                 else:
                     self._options.set_variables(None)
 
@@ -683,8 +683,7 @@ class Session(EnvironmentCallback):
                     self._proc_address_callback = None
                 else:
                     procaddress_ptr = cast(data, POINTER(retro_get_proc_address_interface))
-                    interface: retro_get_proc_address_interface = procaddress_ptr.contents
-                    self._proc_address_callback = retro_get_proc_address_interface(interface.get_proc_address)
+                    self._proc_address_callback = deepcopy(procaddress_ptr[0])
 
                 return True
 
@@ -693,7 +692,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 
                 subsystem_info_ptr = cast(data, POINTER(retro_subsystem_info))
-                self._subsystem_info = tuple(from_zero_terminated(subsystem_info_ptr))
+                self._subsystem_info = tuple(deepcopy(s) for s in from_zero_terminated(subsystem_info_ptr))
                 return True
 
             case EnvironmentCall.SET_CONTROLLER_INFO:
@@ -701,7 +700,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
 
                 controller_info_ptr = cast(data, POINTER(retro_controller_info))
-                controller_infos: tuple[retro_controller_info, ...] = tuple(from_zero_terminated(controller_info_ptr))
+                controller_infos = tuple(deepcopy(s) for s in from_zero_terminated(controller_info_ptr))
                 self._controller_infos = controller_infos
 
                 return True
