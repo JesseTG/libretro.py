@@ -473,7 +473,8 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_SET_MESSAGE doesn't accept NULL")
 
                 message_ptr = cast(data, POINTER(retro_message))
-                return self._message.set_message(message_ptr.contents)
+                message: retro_message = message_ptr[0]
+                return self._message.set_message(message)
 
             case EnvironmentCall.SHUTDOWN:
                 self._is_shutdown = True
@@ -483,8 +484,7 @@ class Session(EnvironmentCallback):
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL doesn't accept NULL")
 
-                perflevel_ptr = cast(data, POINTER(c_uint))
-                self._performance_level = perflevel_ptr.contents.value
+                self._performance_level = cast(data, POINTER(c_uint))[0]
                 return True
 
             case EnvironmentCall.GET_SYSTEM_DIRECTORY:
@@ -492,7 +492,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY doesn't accept NULL")
 
                 sysdir_ptr = cast(data, POINTER(c_char_p))
-                sysdir_ptr.contents.value = self._system_dir
+                sysdir_ptr[0] = self._system_dir
                 return True
 
             case EnvironmentCall.SET_PIXEL_FORMAT:
@@ -561,15 +561,14 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
                 update_ptr = cast(data, POINTER(c_bool))
-                update_ptr.contents.value = self._options.variable_updated
+                update_ptr[0] = self._options.variable_updated
                 return True
 
             case EnvironmentCall.SET_SUPPORT_NO_GAME:
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
-                support_no_game_ptr = cast(data, POINTER(c_bool))
-                self._support_no_game = support_no_game_ptr.contents.value
+                self._support_no_game = cast(data, POINTER(c_bool))[0]
                 return True
 
             case EnvironmentCall.GET_LIBRETRO_PATH:
@@ -577,7 +576,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH doesn't accept NULL")
 
                 libretro_path_ptr = cast(data, POINTER(c_char_p))
-                libretro_path_ptr.contents.value = self._libretro_path
+                libretro_path_ptr[0] = self._libretro_path
                 return True
 
             case EnvironmentCall.SET_FRAME_TIME_CALLBACK:
@@ -601,7 +600,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
                 inputcaps_ptr = cast(data, POINTER(c_uint64))
-                inputcaps_ptr.contents.value = self._input.device_capabilities
+                inputcaps_ptr[0] = self._input.device_capabilities
                 return True
 
             case EnvironmentCall.GET_SENSOR_INTERFACE:
@@ -654,7 +653,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY doesn't accept NULL")
 
                 core_assets_dir_ptr = cast(data, POINTER(c_char_p))
-                core_assets_dir_ptr.contents.value = self._core_assets_dir
+                core_assets_dir_ptr[0] = self._core_assets_dir
                 return True
 
             case EnvironmentCall.GET_SAVE_DIRECTORY:
@@ -664,7 +663,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY doesn't accept NULL")
 
                 save_dir_ptr = cast(data, POINTER(c_char_p))
-                save_dir_ptr.contents.value = self._save_dir
+                save_dir_ptr[0] = self._save_dir
                 return True
 
             case EnvironmentCall.SET_SYSTEM_AV_INFO:
@@ -730,7 +729,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_USERNAME doesn't accept NULL")
 
                 username_ptr = cast(data, POINTER(c_char_p))
-                username_ptr.contents.value = self._username
+                username_ptr[0] = self._username
                 return True
 
             case EnvironmentCall.GET_LANGUAGE:
@@ -738,7 +737,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
                 language_ptr = cast(data, POINTER(retro_language))
-                language_ptr.contents.value = self._language
+                language_ptr[0] = self._language
                 return True
 
             case EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER:
@@ -778,8 +777,7 @@ class Session(EnvironmentCallback):
                 if not data:
                     raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS doesn't accept NULL")
 
-                supports_achievements_ptr = cast(data, POINTER(c_bool))
-                self._supports_achievements = supports_achievements_ptr.contents.value
+                self._supports_achievements = cast(data, POINTER(c_bool))[0]
                 return True
 
             case EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
@@ -850,7 +848,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
                 refresh_rate_ptr = cast(data, POINTER(c_float))
-                refresh_rate_ptr.contents.value = self._target_refresh_rate
+                refresh_rate_ptr[0] = self._target_refresh_rate
                 return True
 
             case EnvironmentCall.GET_INPUT_BITMASKS:
@@ -861,7 +859,7 @@ class Session(EnvironmentCallback):
                     raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
 
                 optversion_ptr = cast(data, POINTER(c_uint))
-                optversion_ptr.contents.value = self._options.version
+                optversion_ptr[0] = self._options.version
                 return True
 
             case EnvironmentCall.SET_CORE_OPTIONS:
