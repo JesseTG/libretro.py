@@ -791,7 +791,7 @@ class Session(EnvironmentCallback):
                 return True
 
             case EnvironmentCall.SET_HW_SHARED_CONTEXT:
-                self._video.set_shared_context()
+                self._video.shared_context = True
                 return True
 
             case EnvironmentCall.GET_VFS_INTERFACE:
