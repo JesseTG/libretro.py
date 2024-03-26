@@ -13,6 +13,9 @@ class retro_microphone(Structure):
 class retro_microphone_params(Structure, metaclass=FieldsFromTypeHints):
     rate: c_uint
 
+    def __deepcopy__(self, _):
+        return retro_microphone_params(self.rate)
+
 
 retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone)), POINTER(retro_microphone_params))
 retro_close_mic_t = CFUNCTYPE(None, POINTER(retro_microphone))
@@ -31,6 +34,17 @@ class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
     set_mic_state: retro_set_mic_state_t
     get_mic_state: retro_get_mic_state_t
     read_mic: retro_read_mic_t
+
+    def __deepcopy__(self, _):
+        return retro_microphone_interface(
+            self.interface_version,
+            self.open_mic,
+            self.close_mic,
+            self.get_params,
+            self.set_mic_state,
+            self.get_mic_state,
+            self.read_mic
+        )
 
 
 __all__ = [

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Sequence
 from collections import deque
-from ctypes import POINTER, c_void_p, cast, byref, c_size_t, c_int16, memmove, sizeof
+from ctypes import POINTER, c_void_p, cast, byref, c_int16, memmove, sizeof
 from typing import Protocol, runtime_checkable, NamedTuple
 
 from .defs import *
@@ -47,7 +47,7 @@ class Microphone(Protocol):
 
 
 @runtime_checkable
-class MicrophoneInterface(Protocol):
+class MicrophoneDriver(Protocol):
     # We want to keep the samples in a queue so that generators
     # don't have to be mindful of yielding the exact right amount of samples
     class __MicHandle(NamedTuple):
@@ -64,7 +64,7 @@ class MicrophoneInterface(Protocol):
         interface.set_mic_state = retro_set_mic_state_t(self.__set_state)
         interface.get_mic_state = retro_get_mic_state_t(self.__get_state)
         interface.read_mic = retro_read_mic_t(self.__read_mic)
-        self.__microphones: dict[int, MicrophoneInterface.__MicHandle] = {}
+        self.__microphones: dict[int, MicrophoneDriver.__MicHandle] = {}
         self._as_parameter_ = interface
 
     @property
@@ -85,7 +85,7 @@ class MicrophoneInterface(Protocol):
             raise TypeError(f"Expected a Microphone, got {type(mic).__name__}")
 
         address = id(mic)
-        self.__microphones[address] = MicrophoneInterface.__MicHandle(mic, deque())
+        self.__microphones[address] = MicrophoneDriver.__MicHandle(mic, deque())
 
         return address
 
@@ -99,7 +99,7 @@ class MicrophoneInterface(Protocol):
             if not handle:
                 return
 
-            assert isinstance(handle, MicrophoneInterface.__MicHandle)
+            assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
 
             handle.handle.close()
@@ -118,7 +118,7 @@ class MicrophoneInterface(Protocol):
             if not handle:
                 return False
 
-            assert isinstance(handle, MicrophoneInterface.__MicHandle)
+            assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
             returned_params = handle.handle.get_params()
 
@@ -144,7 +144,7 @@ class MicrophoneInterface(Protocol):
             if not handle:
                 return False
 
-            assert isinstance(handle, MicrophoneInterface.__MicHandle)
+            assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
             return handle.handle.set_state(state)
         except Exception as e:
@@ -161,7 +161,7 @@ class MicrophoneInterface(Protocol):
             if not handle:
                 return False
 
-            assert isinstance(handle, MicrophoneInterface.__MicHandle)
+            assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
             return handle.handle.get_state()
         except Exception as e:
@@ -178,7 +178,7 @@ class MicrophoneInterface(Protocol):
             if not handle:
                 return -1
 
-            assert isinstance(handle, MicrophoneInterface.__MicHandle)
+            assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
             assert num_samples >= 0
 
@@ -208,4 +208,4 @@ class MicrophoneInterface(Protocol):
             return -1
 
 
-__all__ = ['Microphone', 'MicrophoneInterface']
+__all__ = ['Microphone', 'MicrophoneDriver']

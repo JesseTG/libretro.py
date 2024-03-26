@@ -2,7 +2,7 @@ from array import array
 from collections.abc import Sequence, Iterator, Callable
 
 from .defs import retro_microphone_params
-from .interface import *
+from .driver import Microphone, MicrophoneDriver
 
 from ...h import RETRO_MICROPHONE_INTERFACE_VERSION
 
@@ -75,7 +75,7 @@ class GeneratorMicrophone(Microphone):
         return buffer
 
 
-class GeneratorMicrophoneInterface(MicrophoneInterface):
+class GeneratorMicrophoneDriver(MicrophoneDriver):
     def __init__(self, generator: MicrophoneInputGenerator | None = None):
         super().__init__()
         self._generator = generator
@@ -90,7 +90,7 @@ class GeneratorMicrophoneInterface(MicrophoneInterface):
 
 __all__ = [
     'GeneratorMicrophone',
-    'GeneratorMicrophoneInterface',
+    'GeneratorMicrophoneDriver',
     'MicrophoneInput',
     'MicrophoneInputIterator',
     'MicrophoneInputGenerator'

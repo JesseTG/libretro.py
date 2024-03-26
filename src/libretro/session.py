@@ -11,9 +11,7 @@ from .api.environment import EnvironmentCall
 from .api.led import retro_led_interface, LedInterface, DictLedInterface
 from .api.location import *
 from .api.memory import retro_memory_map
-from .api.microphone.default import MicrophoneInputIterator, MicrophoneInputGenerator, GeneratorMicrophoneInterface
-from .api.microphone.defs import retro_microphone_interface
-from .api.microphone.interface import MicrophoneInterface
+from .api.microphone import *
 from .api.midi import *
 from .api.options import *
 from .api.perf import *
@@ -88,7 +86,7 @@ class Session(EnvironmentCallback):
             throttle_state: retro_throttle_state,
             savestate_context: SavestateContext,
             jit_capable: bool,
-            mic_interface: MicrophoneInterface,
+            mic_interface: MicrophoneDriver,
             device_power: DevicePower,
             playlist_dir: Directory | None
     ):
@@ -1156,7 +1154,7 @@ def default_session(
         throttle_state: retro_throttle_state | None = None,
         savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
-        mic_interface: MicrophoneInterface | MicrophoneInputIterator | MicrophoneInputGenerator | None = None,
+        mic_interface: MicrophoneDriver | MicrophoneInputIterator | MicrophoneInputGenerator | None = None,
         device_power: DevicePower | retro_device_power = full_power,
         playlist_dir: Directory | None = None,
         ) -> Session:
@@ -1210,16 +1208,16 @@ def default_session(
         case _:
             raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
 
-    mic_impl: MicrophoneInterface
+    mic_impl: MicrophoneDriver
     match mic_interface:
-        case MicrophoneInterface() as m:
+        case MicrophoneDriver() as m:
             mic_impl = m
         case m if callable(m):
-            mic_impl = GeneratorMicrophoneInterface(m)
+            mic_impl = GeneratorMicrophoneDriver(m)
         case None:
-            mic_impl = GeneratorMicrophoneInterface()
+            mic_impl = GeneratorMicrophoneDriver()
         case _:
-            raise TypeError(f"Expected mic_interface to be a MicrophoneInterface or None, not {type(mic_interface).__name__}")
+            raise TypeError(f"Expected mic_interface to be a MicrophoneDriver or None, not {type(mic_interface).__name__}")
 
     power_impl: DevicePower
     match device_power:
