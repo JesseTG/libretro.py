@@ -953,6 +953,7 @@ class Session(EnvironmentCallback):
                     return True
                 # The docs say that passing NULL here serves to query for support
 
+                # TODO: If an extension is listed multiple times, only register the first
                 override_ptr = cast(data, POINTER(retro_system_content_info_override))
                 self._content_info_override = tuple(from_zero_terminated(override_ptr))
                 return True
