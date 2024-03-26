@@ -320,3 +320,9 @@ class Core(CoreInterface):
     @property
     def path(self) -> str:
         return self._core._name
+
+
+__all__ = [
+    "CoreInterface",
+    "Core",
+]
