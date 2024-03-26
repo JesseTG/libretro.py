@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from os import PathLike
 from typing import TypeAlias, NamedTuple, overload, Any
 
-from .._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file
+from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file
 
 
 @dataclass(init=False)
