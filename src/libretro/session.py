@@ -1143,7 +1143,7 @@ def default_session(
         save_dir: Directory | None = None,
         username: str | bytes | None = "libretro.py",
         language: Language = Language.ENGLISH,
-        vfs: FileSystemInterface | Literal[1, 2, 3] | None = None,
+        vfs: FileSystemInterface | int | None = None,
         led: LedInterface | None = None,
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
         midi: MidiInterface | None = None,
