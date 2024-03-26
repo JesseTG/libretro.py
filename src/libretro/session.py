@@ -231,19 +231,8 @@ class Session(EnvironmentCallback):
                 # (RetroArch does this)
                 loaded = self._core.load_game(retro_game_info(path.encode(), None, 0, None))
             case str(path) | PathLike(path) if not need_fullpath:
-                with mmap_file(path) as content:
-                    # noinspection PyTypeChecker
-                    # You can't directly get an address from a memoryview,
-                    # so you need to resort to C-like casting
-                    array_type: Array = c_ubyte * len(content)
-                    buffer_array = array_type.from_buffer(content)
-
-                    info = retro_game_info(path.encode(), addressof(buffer_array), len(content), None)
+                with map_content(path) as info:
                     loaded = self._core.load_game(info)
-                    del info
-                    del buffer_array
-                    del array_type
-                    # Need to clear all outstanding pointers, or else mmap will raise a BufferError
 
             # TODO: case bytes(path) if path is a valid path
             case bytes(rom) | bytearray(rom) | memoryview(rom):

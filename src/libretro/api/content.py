@@ -1,10 +1,11 @@
-from collections.abc import Sequence
+from collections.abc import Sequence, Generator
+from contextlib import contextmanager
 from ctypes import *
 from dataclasses import dataclass
 from os import PathLike
-from typing import TypeAlias, NamedTuple, overload
+from typing import TypeAlias, NamedTuple, overload, Any
 
-from .._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer
+from .._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file
 
 
 @dataclass(init=False)
@@ -181,6 +182,43 @@ class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
+@contextmanager
+def map_content(content: Content | None) -> Generator[retro_game_info | None, Any, None]:
+    match content:
+        case None:
+            yield None
+        case retro_game_info() as info:
+            yield info
+        case retro_game_info_ext() as info_ext:
+            yield retro_game_info(
+                path=info_ext.full_path,
+                data=info_ext.data,
+                size=info_ext.size,
+                meta=info_ext.meta
+            )
+        case str(path) | PathLike(path):
+            with mmap_file(path) as contentview:
+                # noinspection PyTypeChecker
+                # You can't directly get an address from a memoryview,
+                # so you need to resort to C-like casting
+                array_type: type[Array] = c_ubyte * len(contentview)
+                buffer_array = array_type.from_buffer(contentview)
+
+                info = retro_game_info(path.encode(), addressof(buffer_array), len(contentview), None)
+                yield info
+                del info
+                del buffer_array
+                del array_type
+                # Need to clear all outstanding pointers, or else mmap will raise a BufferError
+        case bytes(data) | bytearray(data) | memoryview(data):
+            # noinspection PyTypeChecker
+            array_type: type[Array] = c_ubyte * len(data)
+            buffer_array = array_type.from_buffer(data)
+            yield retro_game_info(data=addressof(buffer_array), size=len(data))
+        case _:
+            raise TypeError(f"Expected a content path, data, or retro_game_info object, got {type(content).__name__}")
+
+
 __all__ = [
     'Content',
     'ContentData',
@@ -191,5 +229,6 @@ __all__ = [
     'retro_subsystem_rom_info',
     'retro_subsystem_info',
     'retro_system_content_info_override',
-    'retro_game_info_ext'
+    'retro_game_info_ext',
+    'map_content'
 ]
