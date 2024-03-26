@@ -23,7 +23,9 @@ class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-Content: TypeAlias = str | bytes | PathLike | retro_game_info
+ContentPath = str | PathLike
+ContentData = bytes | bytearray | memoryview
+Content: TypeAlias = ContentPath | ContentData | retro_game_info
 
 
 class SubsystemContent(NamedTuple):
@@ -181,6 +183,8 @@ class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
 
 __all__ = [
     'Content',
+    'ContentData',
+    'ContentPath',
     'SubsystemContent',
     'retro_game_info',
     'retro_subsystem_memory_info',
