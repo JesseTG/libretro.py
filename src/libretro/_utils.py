@@ -37,7 +37,7 @@ def deepcopy_array(array: Pointer, length: int, memo):
     if not array:
         return None
 
-    arraytype = array._type_ * length
+    arraytype: type[Array] = array._type_ * length
     return arraytype(*(deepcopy(array[i], memo) for i in range(length)))
 
 
@@ -51,7 +51,7 @@ def deepcopy_buffer(ptr: c_void_p | int, size: int) -> c_void_p | None:
     if not size:
         return None
 
-    arraytype: Array = c_uint8 * size
+    arraytype: type[Array] = c_uint8 * size
     data = arraytype.from_buffer_copy(c_void_p(ptr))
     return cast(data, c_void_p)
 
