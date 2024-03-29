@@ -3,7 +3,7 @@ from ctypes import c_void_p, c_bool, c_uint, CFUNCTYPE
 from enum import IntEnum, unique
 from typing import Protocol
 
-from ..h import *
+from ...h import *
 
 
 @unique
@@ -96,3 +96,10 @@ retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
 class EnvironmentCallback(Protocol):
     @abstractmethod
     def environment(self, cmd: int, data: c_void_p) -> bool: ...
+
+
+__all__ = [
+    'EnvironmentCall',
+    'retro_environment_t',
+    'EnvironmentCallback',
+]

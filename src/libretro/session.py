@@ -7,7 +7,7 @@ from typing import Type, AnyStr
 
 from .api.av import *
 from .api.content import *
-from .api.environment import EnvironmentCall
+from .api.environment import *
 from .api.led import retro_led_interface, LedInterface, DictLedInterface
 from .api.location import *
 from .api.memory import retro_memory_map
@@ -27,7 +27,6 @@ from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
 from .api.vfs import retro_vfs_interface_info, FileSystemInterface, StandardFileSystemInterface, retro_vfs_interface
 from .core import Core, CoreInterface
 from .api.audio import AudioCallbacks, AudioState, ArrayAudioState
-from .api.environment import EnvironmentCallback
 from .api.input import *
 from .api.input.info import retro_controller_info, retro_input_descriptor
 from .api.input.keyboard import *
