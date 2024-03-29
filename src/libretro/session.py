@@ -269,9 +269,9 @@ class Session(EnvironmentCallback):
         del self._core
         self._is_exited = True
         return isinstance(exc_val, CoreShutDownException)
-        # Returning True from a context manage suppresses the exception;
-        # if the core shut down then core methods should raise a CoreShutDownException,
-        # which is not an error.
+        # Returning True from a context manager suppresses the exception
+        # and continues from the end of the `with` block.
+        # If the core shut down then core methods should raise a CoreShutDownException.
         # If exc_val is None, then there never was an exception.
         # If exc_val is any other error, then it should be propagated after cleaning up the core.
 
