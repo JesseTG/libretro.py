@@ -1,5 +1,7 @@
 from collections.abc import Mapping, Callable, KeysView
 from ctypes import c_void_p
+from types import MappingProxyType
+from typing import TypedDict
 
 from .driver import *
 from .defs import *
@@ -10,7 +12,7 @@ EnvironmentCallbackFunction = Callable[[c_void_p], bool]
 
 class DictEnvironmentDriver(EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
     def __init__(self, envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
-        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = dict(envcalls)
+        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = MappingProxyType(envcalls)
 
     def __getitem__(self, __key: EnvironmentCall) -> EnvironmentCallbackFunction:
         return self._envcalls[__key]
