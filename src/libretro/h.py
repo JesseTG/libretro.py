@@ -1,4 +1,4 @@
-from ctypes import c_int, c_uint64, c_int64, c_void_p, cast
+from ctypes import c_int, c_uint64, c_int64, c_void_p, cast, c_uint
 
 RETRO_API_VERSION = 1
 RETRO_DEVICE_TYPE_SHIFT = 8
@@ -465,7 +465,7 @@ RETRO_HW_CONTEXT_D3D12 = 9
 RETRO_HW_CONTEXT_D3D9 = 10
 RETRO_HW_CONTEXT_DUMMY = 0x7fffffff
 
-retro_av_enable_flags = c_int
+retro_av_enable_flags = c_uint
 RETRO_AV_ENABLE_VIDEO = (1 << 0),
 RETRO_AV_ENABLE_AUDIO = (1 << 1),
 RETRO_AV_ENABLE_FAST_SAVESTATES = (1 << 2),
