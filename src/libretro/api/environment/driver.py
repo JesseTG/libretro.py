@@ -186,3 +186,8 @@ class EnvironmentDriver(Protocol):
     def set_netpacket_interface(self, interface: POINTER(retro_netpacket_callback)) -> bool: return False
 
     def get_playlist_directory(self, dir: POINTER(c_char_p)) -> bool: return False
+
+
+__all__ = [
+    'EnvironmentDriver',
+]

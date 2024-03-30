@@ -1,0 +1,38 @@
+from collections.abc import Mapping, Callable, KeysView
+from ctypes import c_void_p
+
+from .driver import *
+from .defs import *
+
+
+EnvironmentCallbackFunction = Callable[[c_void_p], bool]
+
+
+class DictEnvironmentDriver(EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
+    def __init__(self, envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
+        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = dict(envcalls)
+
+    def __getitem__(self, __key: EnvironmentCall) -> EnvironmentCallbackFunction:
+        return self._envcalls[__key]
+
+    def __len__(self):
+        return len(self._envcalls)
+
+    def __iter__(self) -> KeysView[EnvironmentCall]:
+        return self._envcalls.keys()
+
+    def environment(self, cmd: int, data: c_void_p) -> bool:
+        if cmd not in EnvironmentCall:
+            return False
+
+        envcall = EnvironmentCall(cmd)
+        if envcall in self._envcalls:
+            return self._envcalls[envcall](data)
+
+        return False
+
+
+__all__ = [
+    'EnvironmentCallbackFunction',
+    'DictEnvironmentDriver',
+]
