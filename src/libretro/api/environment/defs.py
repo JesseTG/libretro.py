@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from ctypes import c_void_p, c_bool, c_uint, CFUNCTYPE
+from ctypes import c_bool, c_uint, CFUNCTYPE
 from enum import IntEnum, unique
 from typing import Protocol
 
