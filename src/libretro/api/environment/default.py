@@ -10,22 +10,22 @@ from ..content.defs import retro_subsystem_info, retro_game_info_ext, retro_syst
 from ..disk import retro_disk_control_callback, retro_disk_control_ext_callback
 from ..input.info import retro_controller_info, retro_input_descriptor
 from ..input.keyboard import retro_keyboard_callback
-from ..led import retro_led_interface
-from ..location import retro_location_callback
-from ..log import retro_log_callback
+from ..led.defs import retro_led_interface
+from ..location.defs import retro_location_callback
+from ..log.defs import retro_log_callback
 from ..memory import retro_memory_map
 from ..message import retro_message, retro_message_ext
-from ..microphone import retro_microphone_interface
-from ..midi import retro_midi_interface
+from ..microphone.defs import retro_microphone_interface
+from ..midi.defs import retro_midi_interface
 from ..netpacket import retro_netpacket_callback
-from ..options import *
-from ..perf import retro_perf_callback
+from ..options.defs import *
+from ..perf.defs import retro_perf_callback
 from ..power import retro_device_power
 from ..proc import retro_get_proc_address_interface
-from ..rumble import retro_rumble_interface
-from ..sensor import retro_sensor_interface
+from ..rumble.defs import retro_rumble_interface
+from ..sensor.defs import retro_sensor_interface
 from ..throttle import retro_throttle_state, retro_fastforwarding_override
-from ..vfs import retro_vfs_interface_info
+from ..vfs.defs import retro_vfs_interface_info
 from ..video.defs import *
 from ..video.render.defs import *
 from ..video.context.defs import *
