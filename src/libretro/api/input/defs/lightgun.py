@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from .info import InputDeviceState
-from ...h import *
+from .device import InputDeviceState
+from ....h import *
 
 
 class DeviceIdLightgun(IntEnum):
@@ -86,3 +86,6 @@ class LightGunState(InputDeviceState):
             case DeviceIdLightgun.Y: return self.y
             case int(): raise IndexError(f'Index {item!r} is not a valid DeviceIdLightgun')
             case _: raise KeyError(f'Expected an int or DeviceIdLightgun, got {item!r}')
+
+
+__all__ = ['DeviceIdLightgun', 'LightGunState']

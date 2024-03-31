@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from .info import InputDeviceState
-from ...h import *
+from .device import InputDeviceState
+from ....h import *
 
 
 class DeviceIndexAnalog(IntEnum):
@@ -45,3 +45,6 @@ class AnalogState(InputDeviceState):
     left_y: int = 0
     right_x: int = 0
     right_y: int = 0
+
+
+__all__ = ['DeviceIndexAnalog', 'DeviceIdAnalog', 'AnalogState']

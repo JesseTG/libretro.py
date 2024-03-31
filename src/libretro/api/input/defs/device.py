@@ -1,15 +1,43 @@
-from ctypes import Structure, c_uint, c_char_p, POINTER
+from ctypes import Structure, c_char_p, POINTER, CFUNCTYPE, c_int16
 from dataclasses import dataclass
+from enum import IntFlag, IntEnum, CONFORM
 from typing import Sequence, overload
 
-from ..._utils import FieldsFromTypeHints, deepcopy_array
+from ....h import *
+from ...._utils import FieldsFromTypeHints, deepcopy_array
 
 
-class InputDeviceState:
-    """
-    Empty marker class for identifying input device states.
-    """
-    pass
+retro_input_poll_t = CFUNCTYPE(None)
+retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
+
+
+class InputDeviceFlag(IntFlag, boundary=CONFORM):
+    NONE = 1 << RETRO_DEVICE_NONE
+    JOYPAD = 1 << RETRO_DEVICE_JOYPAD
+    MOUSE = 1 << RETRO_DEVICE_MOUSE
+    KEYBOARD = 1 << RETRO_DEVICE_KEYBOARD
+    LIGHTGUN = 1 << RETRO_DEVICE_LIGHTGUN
+    ANALOG = 1 << RETRO_DEVICE_ANALOG
+    POINTER = 1 << RETRO_DEVICE_POINTER
+
+    ALL = JOYPAD | MOUSE | KEYBOARD | LIGHTGUN | ANALOG | POINTER
+
+
+class InputDevice(IntEnum):
+    NONE = RETRO_DEVICE_NONE
+    JOYPAD = RETRO_DEVICE_JOYPAD
+    MOUSE = RETRO_DEVICE_MOUSE
+    KEYBOARD = RETRO_DEVICE_KEYBOARD
+    LIGHTGUN = RETRO_DEVICE_LIGHTGUN
+    ANALOG = RETRO_DEVICE_ANALOG
+    POINTER = RETRO_DEVICE_POINTER
+
+    def __init__(self, value: int):
+        self._type_ = 'H'
+
+    @property
+    def flag(self) -> InputDeviceFlag:
+        return InputDeviceFlag(1 << self.value)
 
 
 @dataclass(init=False)
@@ -80,9 +108,20 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
         return int(self.num_types)
 
 
+class InputDeviceState:
+    """
+    Empty marker class for identifying input device states.
+    """
+    pass
+
+
 __all__ = [
-    'InputDeviceState',
+    'InputDeviceFlag',
+    'InputDevice',
+    'retro_input_poll_t',
+    'retro_input_state_t',
     'retro_input_descriptor',
     'retro_controller_description',
-    'retro_controller_info'
+    'retro_controller_info',
+    'InputDeviceState',
 ]

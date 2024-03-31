@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from .info import InputDeviceState
-from ...h import *
+from .device import InputDeviceState
+from ....h import *
 
 
 class DeviceIdMouse(IntEnum):
@@ -51,3 +51,6 @@ class MouseState(InputDeviceState):
             case DeviceIdMouse.BUTTON_5: return self.button5
             case int(): raise IndexError(f'Index {item!r} is not a valid DeviceIdMouse')
             case _: raise KeyError(f'Expected an int or DeviceIdMouse, got {item!r}')
+
+
+__all__ = ['DeviceIdMouse', 'MouseState']

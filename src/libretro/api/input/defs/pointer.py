@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Sequence
 
-from .info import InputDeviceState
-from ...h import *
+from .device import InputDeviceState
+from ....h import *
 
 
 class DeviceIdPointer(IntEnum):
@@ -26,3 +26,6 @@ class Pointer:
 @dataclass(frozen=True, slots=True)
 class PointerState(InputDeviceState):
     pointers: Sequence[Pointer] = ()
+
+
+__all__ = ['DeviceIdPointer', 'Pointer', 'PointerState']

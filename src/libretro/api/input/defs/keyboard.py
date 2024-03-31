@@ -1,10 +1,10 @@
-from ctypes import c_uint, c_uint16, c_uint32, c_bool, CFUNCTYPE, Structure
+from ctypes import c_uint16, c_uint32, c_bool, CFUNCTYPE, Structure
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, EJECT
 
-from .info import InputDeviceState
-from ...h import *
-from ..._utils import FieldsFromTypeHints
+from .device import InputDeviceState
+from ....h import *
+from ...._utils import FieldsFromTypeHints
 
 
 class Key(IntEnum, boundary=EJECT):
@@ -335,5 +335,23 @@ class KeyboardState(InputDeviceState):
 retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
 
+@dataclass(init=False)
 class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_keyboard_event_t
+
+    def __deepcopy__(self, _):
+        return retro_keyboard_callback(callback=self.callback)
+
+    def __call__(self, pressed: bool, keycode: int, character: int, key_modifiers: KeyModifier) -> None:
+
+        if self.callback:
+            self.callback(pressed, keycode, character, key_modifiers)
+
+
+__all__ = [
+    'Key',
+    'KeyModifier',
+    'KeyboardState',
+    'retro_keyboard_event_t',
+    'retro_keyboard_callback',
+]

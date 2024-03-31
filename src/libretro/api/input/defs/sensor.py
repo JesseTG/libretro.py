@@ -2,8 +2,8 @@ from ctypes import *
 from dataclasses import dataclass
 from enum import IntEnum
 
-from ...h import *
-from ..._utils import FieldsFromTypeHints
+from ....h import *
+from ...._utils import FieldsFromTypeHints
 
 retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, retro_sensor_action, c_uint)
 retro_sensor_get_input_t = CFUNCTYPE(c_float, c_uint, c_uint)

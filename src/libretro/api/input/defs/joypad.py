@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from .info import InputDeviceState
-from ...h import *
+from .device import InputDeviceState
+from ....h import *
 
 
 class DeviceIdJoypad(IntEnum):
@@ -87,3 +87,6 @@ class JoypadState(InputDeviceState):
             | (self.r2 << 13) \
             | (self.l3 << 14) \
             | (self.r3 << 15)
+
+
+__all__ = ['DeviceIdJoypad', 'JoypadState']
