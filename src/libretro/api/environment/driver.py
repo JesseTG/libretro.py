@@ -76,7 +76,7 @@ class EnvironmentDriver(Protocol):
 
     def _get_rumble_interface(self, data: POINTER(retro_rumble_interface)) -> bool: return False
 
-    def _get_input_device_capabilites(self, capabilities: POINTER(c_uint64)) -> bool: return False
+    def _get_input_device_capabilities(self, capabilities: POINTER(c_uint64)) -> bool: return False
 
     def _get_sensor_interface(self, interface: POINTER(retro_sensor_interface)) -> bool: return False
 

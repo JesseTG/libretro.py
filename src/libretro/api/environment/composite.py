@@ -417,7 +417,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # so that drivers can be swapped out without the risk of crashes
 
     @override
-    def _get_input_device_capabilites(self, caps_ptr: POINTER(c_uint64)) -> bool:
+    def _get_input_device_capabilities(self, caps_ptr: POINTER(c_uint64)) -> bool:
         if not caps_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
