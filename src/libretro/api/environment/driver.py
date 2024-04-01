@@ -31,6 +31,7 @@ from ...h import *
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal,PyShadowingNames
+@runtime_checkable
 class EnvironmentDriver(Protocol):
     @abstractmethod
     def environment(self, cmd: int, data: c_void_p) -> bool: ...
