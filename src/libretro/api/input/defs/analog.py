@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from .device import InputDeviceState
-from .. import DeviceIdJoypad
+from .joypad import DeviceIdJoypad
 from ....h import *
 
 
