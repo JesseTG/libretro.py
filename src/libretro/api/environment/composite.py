@@ -31,6 +31,8 @@ from ..vfs import *
 from ..video import *
 from ..._utils import as_bytes, from_zero_terminated
 
+# TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
+
 
 class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     class Args(TypedDict, total=False):
@@ -1072,6 +1074,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_game_info_ext(self, info_ptr: POINTER(retro_game_info_ext)) -> bool:
+        if not self._content:
+            return False
+
+        if not info_ptr:
+            return False
+
+        info_ext = self.content.info_ext
+
+
+        info_ptr[0] = pointer(self._content.info_ext[0])
+
         # TODO: Implement in refactored ContentDriver
         return False
 
