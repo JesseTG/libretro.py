@@ -230,7 +230,7 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             self._set_content_info_override(cast(data, POINTER(retro_system_content_info_override))),
 
             EnvironmentCall.GET_GAME_INFO_EXT: lambda data:
-            self._get_game_info_ext(cast(data, POINTER(retro_game_info_ext))),
+            self._get_game_info_ext(cast(data, POINTER(POINTER(retro_game_info_ext)))),
 
             EnvironmentCall.SET_CORE_OPTIONS_V2: lambda data:
             self._set_core_options_v2(cast(data, POINTER(retro_core_options_v2))),
