@@ -5,5 +5,3 @@ from .keyboard import *
 from .lightgun import *
 from .mouse import *
 from .pointer import *
-from .rumble import *
-from .sensor import *

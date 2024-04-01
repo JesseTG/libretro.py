@@ -343,7 +343,6 @@ class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
         return retro_keyboard_callback(callback=self.callback)
 
     def __call__(self, pressed: bool, keycode: int, character: int, key_modifiers: KeyModifier) -> None:
-
         if self.callback:
             self.callback(pressed, keycode, character, key_modifiers)
 
