@@ -41,7 +41,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         message: MessageInterface | None
         options: OptionDriver | None
         path: PathDriver | None
-        log_callback: LogCallback | None
+        log: LogDriver | None
         perf: PerfInterface | None
         location: LocationInterface | None
         user: UserDriver | None
@@ -71,7 +71,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._path = kwargs.get('path')
         self._options = kwargs.get('options')
         self._support_no_game: bool | None = None
-        self._log = kwargs.get('log_callback')
+        self._log = kwargs.get('log')
         self._perf = kwargs.get('perf')
         self._location = kwargs.get('location')
         self._proc_address_callback: retro_get_proc_address_interface | None = None
@@ -95,6 +95,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         self._rumble: retro_rumble_interface | None = None
         self._sensor: retro_sensor_interface | None = None
+        self._log_cb: retro_log_callback | None = None
 
     @property
     def audio(self) -> AudioDriver:
@@ -448,12 +449,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False # TODO: Implement
 
     @property
-    def log(self) -> LogCallback | None:
+    def log(self) -> LogDriver | None:
         return self._log
 
     @log.setter
-    def log(self, value: LogCallback) -> None:
-        if not isinstance(value, LogCallback):
+    def log(self, value: LogDriver) -> None:
+        if not isinstance(value, LogDriver):
             raise TypeError(f"Expected LogCallback, got {type(value).__name__}")
 
         self._log = value
@@ -470,10 +471,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not log_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
-        log_ptr[0] = retro_log_callback.from_param(self._log)
-        # TODO: Provide private entry-point wrapper functions for this callback
-        # so that drivers can be swapped out without the risk of crashes
+        if not self._log_cb:
+            self._log_cb = retro_log_callback(log=self.__log)
+
+        log_ptr[0] = self._log_cb
         return True
+
+    def __log(self, level: int, message: bytes):
+        if self._log:
+            self._log.log(LogLevel(level), message)
 
     @property
     def perf(self) -> PerfInterface | None:

@@ -2,12 +2,11 @@ import logging
 from collections.abc import Sequence
 from logging import Logger, LogRecord
 
-
-from .interface import LogCallback
+from .driver import *
 from .defs import *
 
 
-class UnformattedLogger(LogCallback):
+class UnformattedLogDriver(LogDriver):
     def __init__(self, logger: Logger | None = None):
         super().__init__()
         self._logger = logger
@@ -26,6 +25,8 @@ class UnformattedLogger(LogCallback):
     def records(self) -> Sequence[LogRecord]:
         return self._records
 
-    def log(self, level: int, fmt: bytes, *args) -> None:
-        lvl = LogLevel(level)
-        self._logger.log(lvl.logging_level, fmt.decode().rstrip())
+    def log(self, level: LogLevel, fmt: bytes, *args) -> None:
+        self._logger.log(level.logging_level, fmt.decode().rstrip())
+
+
+__all__ = ['UnformattedLogDriver']
