@@ -21,6 +21,7 @@ from ..message import *
 from ..microphone import MicrophoneDriver
 from ..midi import MidiInterface
 from ..options import OptionDriver
+from ..path import *
 from ..perf import PerfInterface
 from ..power import *
 from ..savestate import SavestateContext, SerializationQuirks
@@ -39,12 +40,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         overscan: bool | None
         message: MessageInterface | None
         options: OptionDriver | None
-        system_dir: str | bytes | PathLike | None
+        path: PathDriver | None
         log_callback: LogCallback | None
         perf: PerfInterface | None
         location: LocationInterface | None
-        core_assets_dir: str | bytes | PathLike | None
-        save_dir: str | bytes | PathLike | None
         user: UserDriver | None
         vfs: FileSystemInterface | None
         led: LedInterface | None
@@ -58,7 +57,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         jit_capable: bool | None
         mic_interface: MicrophoneDriver | None
         device_power: DevicePower | None
-        playlist_dir: str | bytes | PathLike | None
 
     @override
     def __init__(self, kwargs: Args):
@@ -70,14 +68,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._message = kwargs.get('message')
         self._shutdown = False
         self._performance_level: int | None = None
-        self._system_dir = as_bytes(kwargs.get('system_dir'))
+        self._path = kwargs.get('path')
         self._options = kwargs.get('options')
         self._support_no_game: bool | None = None
         self._log = kwargs.get('log_callback')
         self._perf = kwargs.get('perf')
         self._location = kwargs.get('location')
-        self._core_assets_dir = as_bytes(kwargs.get('core_assets_dir'))
-        self._save_dir = as_bytes(kwargs.get('save_dir'))
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._subsystem_info: Sequence[retro_subsystem_info] | None = None
         self._memory_maps: retro_memory_map | None = None
@@ -96,7 +92,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._jit_capable = kwargs.get('jit_capable')
         self._mic_interface = kwargs.get('mic_interface')
         self._device_power = kwargs.get('device_power')
-        self._playlist_dir = kwargs.get('playlist_dir')
 
         self._rumble: retro_rumble_interface | None = None
         self._sensor: retro_sensor_interface | None = None
@@ -127,6 +122,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @user.deleter
     def user(self) -> None:
         self._user = None
+
+    @property
+    def path(self) -> PathDriver | None:
+        return self._path
 
     @property
     def rotation(self) -> Rotation:
@@ -230,27 +229,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._performance_level = level_ptr[0]
         return True
 
-    @property
-    def system_dir(self) -> bytes | None:
-        return self._system_dir
-
-    @system_dir.setter
-    def system_dir(self, value: str | bytes | PathLike) -> None:
-        self._system_dir = as_bytes(value)
-
-    @system_dir.deleter
-    def system_dir(self) -> None:
-        self._system_dir = None
-
     @override
     def _get_system_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
-        if self._system_dir is None:
+        if self._path is None or self._path.system_dir is None:
             return False
 
         if not dir_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._system_dir
+        dir_ptr[0] = self._path.system_dir
         return True
 
     @property
@@ -366,8 +353,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _get_libretro_path(self, path: POINTER(c_char_p)) -> bool:
-        return False  # TODO: Implement in a new PathDriver
+    def _get_libretro_path(self, path_ptr: POINTER(c_char_p)) -> bool:
+        if not self._path or not self._path.libretro_path:
+            return False
+
+        if not path_ptr:
+            raise ValueError("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH doesn't accept NULL")
+
+        path_ptr[0] = self._path.libretro_path
+        return True
 
     @override
     def _set_frame_time_callback(self, callback: POINTER(retro_frame_time_callback)) -> bool:
@@ -537,50 +531,26 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Provide a private entry-point wrapper functions for this callback
         # so that drivers can be swapped out without the risk of crashes
 
-    @property
-    def core_assets_dir(self) -> bytes:
-        return self._core_assets_dir
-
-    @core_assets_dir.setter
-    def core_assets_dir(self, value: str | bytes | PathLike) -> None:
-        self._core_assets_dir = as_bytes(value)
-
-    @core_assets_dir.deleter
-    def core_assets_dir(self) -> None:
-        self._core_assets_dir = None
-
     @override
     def _get_core_assets_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
-        if self._core_assets_dir is None:
+        if self._path is None or self._path.core_assets_dir is None:
             return False
 
         if not dir_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._core_assets_dir
+        dir_ptr[0] = self._path.core_assets_dir
         return True
-
-    @property
-    def save_dir(self) -> bytes:
-        return self._save_dir
-
-    @save_dir.setter
-    def save_dir(self, value: str | bytes | PathLike) -> None:
-        self._save_dir = as_bytes(value)
-
-    @save_dir.deleter
-    def save_dir(self) -> None:
-        self._save_dir = None
 
     @override
     def _get_save_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
-        if self._save_dir is None:
+        if self._path is None or self._path.save_dir is None:
             return False
 
         if not dir_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._save_dir
+        dir_ptr[0] = self._path.save_dir
         return True
 
     @override
@@ -1282,27 +1252,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_netpacket_interface(self, interface: POINTER(retro_netpacket_callback)) -> bool:
         return False  # TODO: Implement
 
-    @property
-    def playlist_directory(self) -> bytes | None:
-        return self._playlist_dir
-
-    @playlist_directory.setter
-    def playlist_directory(self, value: str | bytes | PathLike) -> None:
-        self._playlist_dir = as_bytes(value)
-
-    @playlist_directory.deleter
-    def playlist_directory(self) -> None:
-        self._playlist_dir = None
-
     @override
     def _get_playlist_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
-        if self._playlist_dir is None:
+        if self._path is None or self._path.playlist_dir is None:
             return False
 
         if not dir_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._playlist_dir
+        dir_ptr[0] = self._path.playlist_dir
         return True
 
 
