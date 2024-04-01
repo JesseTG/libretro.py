@@ -302,9 +302,12 @@ class Core(CoreInterface):
         return self._core.retro_load_game(byref(game) if game else None)
 
     def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
-        GameInfoArray: Array = retro_game_info * len(info)
-        info_array = GameInfoArray(*info)
-        return self._core.retro_load_game_special(game_type, info_array, len(info))
+        if isinstance(info, Array):
+            return self._core.retro_load_game_special(game_type, info, len(info))
+        else:
+            GameInfoArray: type[Array] = retro_game_info * len(info)
+            info_array = GameInfoArray(*info)
+            return self._core.retro_load_game_special(game_type, info_array, len(info))
 
     def unload_game(self):
         self._core.retro_unload_game()
