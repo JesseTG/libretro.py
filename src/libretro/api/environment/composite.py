@@ -97,7 +97,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._sensor: retro_sensor_interface | None = None
 
     @property
-    def audio(self) -> AudioState:
+    def audio(self) -> AudioDriver:
         return self._audio
 
     @property
