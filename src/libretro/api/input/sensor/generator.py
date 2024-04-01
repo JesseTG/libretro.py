@@ -21,6 +21,73 @@ class SensorState:
 
 
 @dataclass(slots=True)
+class PortSensorState:
+    accelerometer: SensorState = field(default_factory=SensorState)
+    gyroscope: SensorState = field(default_factory=SensorState)
+    illuminance: SensorState = field(default_factory=SensorState)
+
+    @overload
+    def __getitem__(self, item: SensorType) -> SensorState: ...
+
+    @overload
+    def __getitem__(self, item: SensorAction) -> bool: ...
+
+    def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
+        match item:
+            case SensorType.ACCELEROMETER:
+                return self.accelerometer
+            case SensorType.GYROSCOPE:
+                return self.gyroscope
+            case SensorType.ILLUMINANCE:
+                return self.illuminance
+            case SensorAction.ACCELEROMETER_ENABLE:
+                return self.accelerometer.enabled
+            case SensorAction.GYROSCOPE_ENABLE:
+                return self.gyroscope.enabled
+            case SensorAction.ILLUMINANCE_ENABLE:
+                return self.illuminance.enabled
+            case SensorAction.ACCELEROMETER_DISABLE:
+                return not self.accelerometer.enabled
+            case SensorAction.GYROSCOPE_DISABLE:
+                return not self.gyroscope.enabled
+            case SensorAction.ILLUMINANCE_DISABLE:
+                return not self.illuminance.enabled
+            case _:
+                raise TypeError(f"Expected a SensorType or SensorAction, got {type(item).__name__}")
+
+    @overload
+    def __setitem__(self, key: SensorType, value: SensorState): ...
+
+    @overload
+    def __setitem__(self, key: SensorAction, value: bool): ...
+
+    def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
+        match key, value:
+            case SensorType.ACCELEROMETER, SensorState(s):
+                self.accelerometer = SensorState(s.enabled, s.rate)
+            case SensorType.GYROSCOPE, SensorState(s):
+                self.gyroscope = SensorState(s.enabled, s.rate)
+            case SensorType.ILLUMINANCE, SensorState(s):
+                self.illuminance = SensorState(s.enabled, s.rate)
+            case SensorAction.ACCELEROMETER_ENABLE, bool(value):
+                self.accelerometer.enabled = value
+            case SensorAction.GYROSCOPE_ENABLE, bool(value):
+                self.gyroscope.enabled = value
+            case SensorAction.ILLUMINANCE_ENABLE, bool(value):
+                self.illuminance.enabled = value
+            case SensorAction.ACCELEROMETER_DISABLE, bool(value):
+                self.accelerometer.enabled = not value
+            case SensorAction.GYROSCOPE_DISABLE, bool(value):
+                self.gyroscope.enabled = not value
+            case SensorAction.ILLUMINANCE_DISABLE, bool(value):
+                self.illuminance.enabled = not value
+            case (SensorType(k) | SensorAction(k)), _:
+                raise TypeError(f"Cannot set {k} from {type(value).__name__}")
+            case _, _:
+                raise TypeError(f"Expected a SensorType or SensorAction, got {type(key).__name__}")
+
+
+@dataclass(slots=True)
 class PortState:
     accelerometer: SensorState = field(default_factory=SensorState)
     gyroscope: SensorState = field(default_factory=SensorState)

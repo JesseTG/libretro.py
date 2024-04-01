@@ -9,8 +9,9 @@ from ..av.defs import *
 from ..camera import *
 from ..content.defs import *
 from ..disk import *
-from ..input.info import *
-from ..input.keyboard import *
+from ..input.rumble.defs import *
+from ..input.sensor.defs import *
+from ..input.defs import *
 from ..led import *
 from ..location import *
 from ..log import *
@@ -23,8 +24,6 @@ from ..options.defs import *
 from ..perf import *
 from ..power import retro_device_power
 from ..proc import *
-from ..rumble import *
-from ..sensor import *
 from ..throttle import retro_throttle_state, retro_fastforwarding_override
 from ..vfs import *
 from ..video import *

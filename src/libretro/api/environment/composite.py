@@ -6,65 +6,40 @@ from os import PathLike
 from typing import TypedDict, Required, override, Type, AnyStr
 
 import _ctypes
-from _ctypes import POINTER
 
-from .. import LogCallback
-from ..content import SubsystemContent, Content
-from ..input import InputState
-from ..led import LedInterface
-from ..location import LocationInterface
+from .default import *
+from ..audio import *
+from ..av import *
+from ..camera import *
+from ..content import *
+from ..input import *
+from ..input.rumble import retro_rumble_interface, retro_set_rumble_state_t
+from ..led import *
+from ..location import *
+from ..log import *
+from ..message import *
 from ..microphone import MicrophoneDriver
 from ..midi import MidiInterface
 from ..options import OptionDriver
 from ..perf import PerfInterface
-from ..rumble import RumbleInterface, retro_set_rumble_state_t
+from ..power import *
 from ..savestate import SavestateContext, SerializationQuirks
-from ..sensor import SensorInterface
 from ..system import Language
-from ..vfs import FileSystemInterface, retro_vfs_interface
-from ..._utils import as_bytes, from_zero_terminated
-
-from ...api.audio import *
-from ...api.audio.callback import *
-from ...api.av.defs import *
-from ...api.camera import retro_camera_callback
-from ...api.content import retro_game_info_ext, retro_system_content_info_override, retro_subsystem_info
-from ...api.disk import retro_disk_control_ext_callback, retro_disk_control_callback
-from ...api.environment.default import DefaultEnvironmentDriver
-from ...api.input.info import retro_controller_info, retro_input_descriptor
-from ...api.input.keyboard import retro_keyboard_callback
-from ...api.led import retro_led_interface
-from ...api.location import retro_location_callback
-from ...api.log import retro_log_callback
-from ...api.memory import retro_memory_map
-from ...api.message import retro_message_ext, retro_message, MessageInterface
-from ...api.microphone import retro_microphone_interface
-from ...api.midi import retro_midi_interface
-from ...api.netpacket import retro_netpacket_callback
-from ...api.options import *
-from ...api.perf import retro_perf_callback
-from ...api.power import retro_device_power, DevicePower
-from ...api.proc import retro_get_proc_address_interface
-from ...api.rumble import retro_rumble_interface
-from ...api.sensor import retro_sensor_interface
-from ...api.throttle import retro_throttle_state, retro_fastforwarding_override, ThrottleMode
-from ...api.vfs import retro_vfs_interface_info
-from ...api.video import *
-from ...h import retro_savestate_context, retro_hw_context_type, retro_av_enable_flags, retro_language, \
-    retro_pixel_format
+from ..throttle import *
+from ..vfs import *
+from ..video import *
+from ..._utils import as_bytes, from_zero_terminated, as_array
 
 
 class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     class Args(TypedDict, total=False):
         audio: Required[AudioState]
-        input: Required[InputState]
+        input: Required[InputDriver]
         video: Required[VideoDriver]
         overscan: bool | None
         message: MessageInterface | None
         options: OptionDriver | None
         system_dir: str | bytes | PathLike | None
-        rumble: RumbleInterface | None
-        sensor: SensorInterface | None
         log_callback: LogCallback | None
         perf: PerfInterface | None
         location: LocationInterface | None
@@ -79,7 +54,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         target_refresh_rate: float | None
         preferred_hw: HardwareContext | None
         driver_switch_enable: bool | None
-        max_users: int | None
         throttle_state: retro_throttle_state | None
         savestate_context: SavestateContext | None
         jit_capable: bool | None
@@ -98,11 +72,8 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._shutdown = False
         self._performance_level: int | None = None
         self._system_dir = as_bytes(kwargs.get('system_dir'))
-        self._input_descriptors: Sequence[retro_input_descriptor] | None = None
         self._options = kwargs.get('options')
         self._support_no_game: bool | None = None
-        self._rumble = kwargs.get('rumble')
-        self._sensor = kwargs.get('sensor')
         self._log = kwargs.get('log_callback')
         self._perf = kwargs.get('perf')
         self._location = kwargs.get('location')
@@ -110,7 +81,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._save_dir = as_bytes(kwargs.get('save_dir'))
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._subsystem_info: Sequence[retro_subsystem_info] | None = None
-        self._controller_infos: Sequence[retro_controller_info] | None = None
         self._memory_maps: retro_memory_map | None = None
         self._username = kwargs.get('username')
         self._language = kwargs.get('language')
@@ -123,7 +93,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._target_refresh_rate = kwargs.get('target_refresh_rate')
         self._preferred_hw = kwargs.get('preferred_hw')
         self._driver_switch_enable = kwargs.get('driver_switch_enable')
-        self._max_users = kwargs.get('max_users')
         self._throttle_state = kwargs.get('throttle_state')
         self._savestate_context = kwargs.get('savestate_context')
         self._jit_capable = kwargs.get('jit_capable')
@@ -131,12 +100,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._device_power = kwargs.get('device_power')
         self._playlist_dir = kwargs.get('playlist_dir')
 
+        self._rumble: retro_rumble_interface | None = None
+        self._sensor: retro_sensor_interface | None = None
+
     @property
     def audio(self) -> AudioState:
         return self._audio
 
     @property
-    def input(self) -> InputState:
+    def input(self) -> InputDriver:
         return self._input
 
     @property
@@ -154,7 +126,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         rot: Rotation = Rotation(rotation_ptr[0])
         return self._video.set_rotation(rot)
-
 
     @property
     def overscan(self) -> bool | None:
@@ -283,24 +254,28 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def input_descriptors(self) -> Sequence[retro_input_descriptor] | None:
-        return self._input_descriptors
-
-    @input_descriptors.deleter
-    def input_descriptors(self) -> None:
-        self._input_descriptors = None
+        return self._input.descriptors
 
     @override
     def _set_input_descriptors(self, descriptors_ptr: POINTER(retro_input_descriptor)) -> bool:
-        # TODO: Move input descriptor state to a new InputDriver
         if not descriptors_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS doesn't accept NULL")
 
-        self._input_descriptors = tuple(deepcopy(s) for s in from_zero_terminated(descriptors_ptr))
+        descriptors: tuple[retro_input_descriptor, ...] = tuple(deepcopy(d) for d in from_zero_terminated(retro_input_descriptor))
+        self._input.set_descriptors(descriptors)
         return True
 
+    @property
+    def keyboard_callback(self) -> retro_keyboard_callback | None:
+        return self._input.keyboard_callback
+
     @override
-    def _set_keyboard_callback(self, callback: POINTER(retro_keyboard_callback)) -> bool:
-        return False  # TODO: Implement
+    def _set_keyboard_callback(self, callback_ptr: POINTER(retro_keyboard_callback)) -> bool:
+        if not callback_ptr:
+            raise ValueError("RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK doesn't accept NULL")
+
+        self._input.keyboard_callback = deepcopy(callback_ptr[0])
+        return True
 
     @override
     def _set_disk_control_interface(self, callback: POINTER(retro_disk_control_callback)) -> bool:
@@ -379,7 +354,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_libretro_path(self, path: POINTER(c_char_p)) -> bool:
-        return False  # TODO: Implement
+        return False  # TODO: Implement in a new PathDriver
 
     @override
     def _set_frame_time_callback(self, callback: POINTER(retro_frame_time_callback)) -> bool:
@@ -389,39 +364,39 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_audio_callback(self, callback: POINTER(retro_audio_callback)) -> bool:
         return False  # TODO: Implement
 
-    @property
-    def rumble(self) -> RumbleInterface | None:
-        return self._rumble
-
-    @rumble.setter
-    def rumble(self, value: RumbleInterface) -> None:
-        if not isinstance(value, RumbleInterface):
-            raise TypeError(f"Expected RumbleInterface, got {type(value).__name__}")
-
-        self._rumble = value
-
-    @rumble.deleter
-    def rumble(self) -> None:
-        self._rumble = None
-
     @override
-    def _get_rumble_interface(self, data: POINTER(retro_rumble_interface)) -> bool:
-        if not self._rumble:
-            return False
-
-        if not data:
+    def _get_rumble_interface(self, rumble_ptr: POINTER(retro_rumble_interface)) -> bool:
+        if not rumble_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE doesn't accept NULL")
 
-        # TODO: Reimplement after refactoring the input driver
-        # TODO: Provide a private entry-point wrapper functions for this callback
-        # so that drivers can be swapped out without the risk of crashes
+        if not self._input.rumble:
+            return False
+
+        if not self._rumble:
+            self._rumble = retro_rumble_interface(self.__set_rumble_state)
+            # So that even if the rumble/input drivers are swapped out,
+            # the core still has valid function pointers tied to non-GC'd callable objects
+
+        rumble_ptr[0] = self._rumble
+        return True
+
+    @retro_set_rumble_state_t
+    def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
+        if not self._input.rumble:
+            return False
+
+        return self._input.rumble.set_rumble_state(port, RumbleEffect(effect), strength)
 
     @override
     def _get_input_device_capabilities(self, caps_ptr: POINTER(c_uint64)) -> bool:
         if not caps_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
-        caps_ptr[0] = self._input.device_capabilities
+        caps = self._input.device_capabilities
+        if caps is None:
+            return False
+
+        caps_ptr[0] = caps
         return True
 
     @override
@@ -429,10 +404,33 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not sensor_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE doesn't accept NULL")
 
-        # TODO: Reimplement after refactoring the sensor driver
-        # TODO: Provide a private entry-point wrapper functions for this callback
-        # so that drivers can be swapped out without the risk of crashes
-        return False
+        if not self._input.sensor:
+            return False
+
+        if not self._sensor:
+            self._sensor = retro_sensor_interface(
+                set_sensor_state=self.__set_sensor_state,
+                get_sensor_input=self.__get_sensor_input
+            )
+            # So that even if the sensor/input drivers are swapped out,
+            # the core still has valid function pointers tied to non-GC'd callable objects
+
+        sensor_ptr[0] = self._sensor
+        return True
+
+    @retro_set_sensor_state_t
+    def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
+        if not self._input.sensor:
+            return False
+
+        return self._input.sensor.set_sensor_state(port, SensorAction(action), rate)
+
+    @retro_sensor_get_input_t
+    def __get_sensor_input(self, port: int, id: int) -> float:
+        if not self._input.sensor:
+            return 0.0
+
+        return self._input.sensor.get_sensor_input(port, Sensor(id))
 
     @override
     def _get_camera_interface(self, interface: POINTER(retro_camera_callback)) -> bool:
@@ -637,7 +635,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def controller_info(self) -> Sequence[retro_controller_info] | None:
-        return self._controller_infos
+        return self._input.controller_info
 
     @override
     def _set_controller_info(self, info_ptr: POINTER(retro_controller_info)) -> bool:
@@ -645,7 +643,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
 
         controller_infos = tuple(deepcopy(s) for s in from_zero_terminated(info_ptr))
-        self._controller_infos = controller_infos
+        self._input.controller_info = controller_infos
 
         return True
 
@@ -939,12 +937,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Move to a new AV driver
 
     @property
-    def input_bitmasks(self) -> bool:
+    def input_bitmasks(self) -> bool | None:
         return self._input.bitmasks_supported
 
     @override
     def _get_input_bitmasks(self) -> bool:
-        return self._input.bitmasks_supported
+        return bool(self._input.bitmasks_supported)
 
     @property
     def core_options_version(self) -> int | None:
@@ -1066,8 +1064,16 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._message.set_message(message_ext_ptr[0])
 
     @override
-    def _get_input_max_users(self, max_users: POINTER(c_uint)) -> bool:
-        return False  # TODO: Define in the refactored input drivers instead
+    def _get_input_max_users(self, max_users_ptr: POINTER(c_uint)) -> bool:
+        if not max_users_ptr:
+            raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS doesn't accept NULL")
+
+        max_users = self._input.max_users
+        if max_users is None:
+            return False
+
+        max_users_ptr[0] = max_users
+        return True
 
     @override
     def _set_audio_buffer_status_callback(self, callback: POINTER(retro_audio_buffer_status_callback)) -> bool:
@@ -1313,3 +1319,8 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         dir_ptr[0] = self._playlist_dir
         return True
+
+
+__all__ = [
+    "CompositeEnvironmentDriver"
+]
