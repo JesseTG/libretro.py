@@ -5,7 +5,7 @@ from typing import Protocol
 
 from ._utils import memoryview_at, String
 from .api.av import Region, retro_system_av_info
-from .api.content import retro_game_info, retro_system_info
+from .api.content import retro_game_info, retro_system_info, retro_subsystem_info
 from .api.video import retro_video_refresh_t
 from .api.audio import retro_audio_sample_t, retro_audio_sample_batch_t
 from .api.environment import retro_environment_t
@@ -301,13 +301,30 @@ class Core(CoreInterface):
     def load_game(self, game: retro_game_info | None) -> bool:
         return self._core.retro_load_game(byref(game) if game else None)
 
-    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
+    def load_game_special(self, game_type: int | retro_subsystem_info, info: Sequence[retro_game_info]) -> bool:
+        _type: int
+        match game_type:
+            case int():
+                _type = game_type
+            case retro_subsystem_info():
+                _type = game_type.id
+            case _:
+                raise TypeError(f"Expected int or retro_subsystem_info, got {type(game_type).__name__}")
+
+        _array: Array[retro_game_info]
+
         if isinstance(info, Array):
-            return self._core.retro_load_game_special(game_type, info, len(info))
-        else:
+            _array = info
+        elif isinstance(info, Sequence):
             GameInfoArray: type[Array] = retro_game_info * len(info)
-            info_array = GameInfoArray(*info)
-            return self._core.retro_load_game_special(game_type, info_array, len(info))
+            _array = GameInfoArray(*info)
+        else:
+            raise TypeError(f"Expected a Sequence or ctypes Array of retro_game_info, got {type(info).__name__}")
+
+        if not all(isinstance(i, retro_game_info) for i in info):
+            raise TypeError("All elements of info must be retro_game_info instances")
+
+        return self._core.retro_load_game_special(_type, _array, len(_array))
 
     def unload_game(self):
         self._core.retro_unload_game()
