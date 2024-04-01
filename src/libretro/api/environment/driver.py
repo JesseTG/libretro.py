@@ -162,7 +162,7 @@ class EnvironmentDriver(Protocol):
 
     def _set_content_info_override(self, override: POINTER(retro_system_content_info_override)) -> bool: return False
 
-    def _get_game_info_ext(self, info: POINTER(retro_game_info_ext)) -> bool: return False
+    def _get_game_info_ext(self, info: POINTER(POINTER(retro_game_info_ext))) -> bool: return False
 
     def _set_core_options_v2(self, options: POINTER(retro_core_options_v2)) -> bool: return False
 

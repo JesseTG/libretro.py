@@ -1071,7 +1071,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False # TODO: Implement in refactoed ContentDriver
 
     @override
-    def _get_game_info_ext(self, info: POINTER(retro_game_info_ext)) -> bool:
+    def _get_game_info_ext(self, info_ptr: POINTER(retro_game_info_ext)) -> bool:
         # TODO: Implement in refactored ContentDriver
         return False
 
