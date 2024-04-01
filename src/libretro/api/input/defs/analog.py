@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from .device import InputDeviceState
+from .. import DeviceIdJoypad
 from ....h import *
 
 
@@ -41,10 +42,41 @@ class AnalogState(InputDeviceState):
     l3: int = 0
     r3: int = 0
 
-    left_x: int = 0
-    left_y: int = 0
-    right_x: int = 0
-    right_y: int = 0
+    lstick: tuple[int, int] = (0, 0)
+    rstick: tuple[int, int] = (0, 0)
+
+    @property
+    def left_x(self) -> int:
+        return self.lstick[0]
+
+    @property
+    def left_y(self) -> int:
+        return self.lstick[1]
+
+    @property
+    def right_x(self) -> int:
+        return self.rstick[0]
+
+    def __getitem__(self, item) -> int:
+        match item:
+            case DeviceIdJoypad.B: return self.b
+            case DeviceIdJoypad.Y: return self.y
+            case DeviceIdJoypad.SELECT: return self.select
+            case DeviceIdJoypad.START: return self.start
+            case DeviceIdJoypad.UP: return self.up
+            case DeviceIdJoypad.DOWN: return self.down
+            case DeviceIdJoypad.LEFT: return self.left
+            case DeviceIdJoypad.RIGHT: return self.right
+            case DeviceIdJoypad.A: return self.a
+            case DeviceIdJoypad.X: return self.x
+            case DeviceIdJoypad.L: return self.l
+            case DeviceIdJoypad.R: return self.r
+            case DeviceIdJoypad.L2: return self.l2
+            case DeviceIdJoypad.R2: return self.r2
+            case DeviceIdJoypad.L3: return self.l3
+            case DeviceIdJoypad.R3: return self.r3
+            case int(): raise IndexError(f"Index {item} is not a valid DeviceIdJoypad")
+            case _: raise TypeError(f"Expected an int or DeviceIdJoypad, got {item!r}")
 
 
 __all__ = ['DeviceIndexAnalog', 'DeviceIdAnalog', 'AnalogState']
