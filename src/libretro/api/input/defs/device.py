@@ -1,11 +1,12 @@
 from ctypes import Structure, c_char_p, POINTER, CFUNCTYPE, c_int16
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, CONFORM
-from typing import Sequence, overload
+from typing import Sequence, overload, NewType
 
 from ....h import *
 from ...._utils import FieldsFromTypeHints, deepcopy_array
 
+Port = NewType('Port', int)
 
 retro_input_poll_t = CFUNCTYPE(None)
 retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
@@ -124,4 +125,5 @@ __all__ = [
     'retro_controller_description',
     'retro_controller_info',
     'InputDeviceState',
+    'Port',
 ]
