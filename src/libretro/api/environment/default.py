@@ -4,13 +4,12 @@ from typing import override
 
 from .dict import DictEnvironmentDriver
 from .defs import *
-from ..audio.callback import retro_audio_callback, retro_audio_buffer_status_callback
+from ..audio import *
 from ..av.defs import retro_game_geometry, retro_system_av_info
 from ..camera import retro_camera_callback
 from ..content.defs import retro_subsystem_info, retro_game_info_ext, retro_system_content_info_override
 from ..disk import retro_disk_control_callback, retro_disk_control_ext_callback
-from ..input.info import retro_controller_info, retro_input_descriptor
-from ..input.keyboard import retro_keyboard_callback
+from ..input import *
 from ..led.defs import retro_led_interface
 from ..location.defs import retro_location_callback
 from ..log.defs import retro_log_callback
@@ -23,8 +22,6 @@ from ..options.defs import *
 from ..perf.defs import retro_perf_callback
 from ..power import retro_device_power
 from ..proc import retro_get_proc_address_interface
-from ..rumble.defs import retro_rumble_interface
-from ..sensor.defs import retro_sensor_interface
 from ..throttle import retro_throttle_state, retro_fastforwarding_override
 from ..vfs.defs import retro_vfs_interface_info
 from ..video.defs import *
@@ -99,7 +96,7 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             self._get_rumble_interface(cast(data, POINTER(retro_rumble_interface))),
 
             EnvironmentCall.GET_INPUT_DEVICE_CAPABILITIES: lambda data:
-            self._get_input_device_capabilites(cast(data, POINTER(c_uint64))),
+            self._get_input_device_capabilities(cast(data, POINTER(c_uint64))),
 
             EnvironmentCall.GET_SENSOR_INTERFACE: lambda data:
             self._get_sensor_interface(cast(data, POINTER(retro_sensor_interface))),
