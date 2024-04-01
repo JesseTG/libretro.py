@@ -9,6 +9,24 @@ from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap
 
 
 @dataclass(init=False)
+class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
+    library_name: c_char_p
+    library_version: c_char_p
+    valid_extensions: c_char_p
+    need_fullpath: c_bool
+    block_extract: c_bool
+
+    def __deepcopy__(self, _):
+        return retro_system_info(
+            library_name=bytes(self.library_name) if self.library_name else None,
+            library_version=bytes(self.library_version) if self.library_version else None,
+            valid_extensions=bytes(self.valid_extensions) if self.valid_extensions else None,
+            need_fullpath=self.need_fullpath,
+            block_extract=self.block_extract
+        )
+
+
+@dataclass(init=False)
 class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
     path: c_char_p
     data: c_void_p
@@ -220,6 +238,7 @@ def map_content(content: Content | None) -> Generator[retro_game_info | None, An
 
 
 __all__ = [
+    'retro_system_info',
     'Content',
     'ContentData',
     'ContentPath',
