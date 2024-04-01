@@ -47,16 +47,16 @@ class InputDriver(Protocol):
     def keyboard_callback(self) -> None:
         self.set_keyboard_callback(None)
 
-    @abstractmethod
     @property
+    @abstractmethod
     def rumble(self) -> RumbleInterface | None: ...
 
     @property
     @abstractmethod
     def device_capabilities(self) -> InputDeviceFlag | None: ...
 
-    @abstractmethod
     @property
+    @abstractmethod
     def sensor(self) -> SensorInterface | None: ...
 
     @abstractmethod
