@@ -34,7 +34,7 @@ from ..._utils import as_bytes, from_zero_terminated
 
 class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     class Args(TypedDict, total=False):
-        audio: Required[AudioState]
+        audio: Required[AudioDriver]
         input: Required[InputDriver]
         video: Required[VideoDriver]
         overscan: bool | None
@@ -368,8 +368,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False  # TODO: Implement
 
     @override
-    def _set_audio_callback(self, callback: POINTER(retro_audio_callback)) -> bool:
-        return False  # TODO: Implement
+    def _set_audio_callback(self, callback_ptr: POINTER(retro_audio_callback)) -> bool:
+        if callback_ptr:
+            return self._audio.set_callbacks(deepcopy(callback_ptr[0]))
+        else:
+            # envcall allows passing NULL to query for support
+            return self._audio.set_callbacks(None)
 
     @override
     def _get_rumble_interface(self, rumble_ptr: POINTER(retro_rumble_interface)) -> bool:
@@ -558,10 +562,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not info_ptr:
             return False
 
+        # TODO: Provide a way to disable this envcall
         av_info: retro_system_av_info = info_ptr[0]
         self._video.set_system_av_info(av_info)
+        self._audio.set_system_av_info(av_info)
         self._system_av_info = deepcopy(av_info)
-        # TODO: Implement for audio drivers
         return True
 
     @property
@@ -1031,12 +1036,20 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _set_audio_buffer_status_callback(self, callback: POINTER(retro_audio_buffer_status_callback)) -> bool:
-        return False  # TODO: Implement
+    def _set_audio_buffer_status_callback(self, callback_ptr: POINTER(retro_audio_buffer_status_callback)) -> bool:
+        if callback_ptr:
+            self._audio.buffer_status = deepcopy(callback_ptr[0])
+        else:
+            self._audio.buffer_status = None
+
+        return True
 
     @override
-    def _set_minimum_audio_latency(self, latency: POINTER(c_uint)) -> bool:
-        return False # TODO: Implement
+    def _set_minimum_audio_latency(self, latency_ptr: POINTER(c_uint)) -> bool:
+        if latency_ptr:
+            return self._audio.set_minimum_latency(latency_ptr[0])
+        else:
+            return self._audio.set_minimum_latency(None)
 
     @override
     def _set_fastforwarding_override(self, override_ptr: POINTER(retro_fastforwarding_override)) -> bool:
