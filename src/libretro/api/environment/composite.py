@@ -24,8 +24,8 @@ from ..options import OptionDriver
 from ..perf import PerfInterface
 from ..power import *
 from ..savestate import SavestateContext, SerializationQuirks
-from ..system import Language
 from ..throttle import *
+from ..user import *
 from ..vfs import *
 from ..video import *
 from ..._utils import as_bytes, from_zero_terminated
@@ -45,8 +45,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         location: LocationInterface | None
         core_assets_dir: str | bytes | PathLike | None
         save_dir: str | bytes | PathLike | None
-        username: str | bytes | None
-        language: Language | None
+        user: UserDriver | None
         vfs: FileSystemInterface | None
         led: LedInterface | None
         av_enable: AvEnableFlags | None
@@ -82,8 +81,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._subsystem_info: Sequence[retro_subsystem_info] | None = None
         self._memory_maps: retro_memory_map | None = None
-        self._username = kwargs.get('username')
-        self._language = kwargs.get('language')
+        self._user = kwargs.get('user')
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
         self._vfs = kwargs.get('vfs')
@@ -114,6 +112,21 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def video(self) -> VideoDriver:
         return self._video
+
+    @property
+    def user(self) -> UserDriver | None:
+        return self._user
+
+    @user.setter
+    def user(self, value: UserDriver | None) -> None:
+        if value is not None and not isinstance(value, UserDriver):
+            raise TypeError(f"Expected UserDriver or None, got {type(value)}")
+
+        self._user = value
+
+    @user.deleter
+    def user(self) -> None:
+        self._user = None
 
     @property
     def rotation(self) -> Rotation:
@@ -673,54 +686,26 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._video.set_geometry(geom)
         return True
 
-    @property
-    def username(self) -> bytes | None:
-        return self._username
-
-    @username.setter
-    def username(self, value: str | bytes) -> None:
-        self._username = as_bytes(value)
-
-    @username.deleter
-    def username(self) -> None:
-        self._username = None
-
     def _get_username(self, username_ptr: POINTER(c_char_p)) -> bool:
-        if self._username is None:
+        if self._user is None or self._user.username is None:
             return False
 
         if not username_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_USERNAME doesn't accept NULL")
 
-        username_ptr[0] = self._username
+        username_ptr[0] = self._user.username
         return True
-
-    @property
-    def language(self) -> Language | None:
-        return self._language
-
-    @language.setter
-    def language(self, value: Language) -> None:
-        if not isinstance(value, (int, Language)):
-            raise TypeError(f"Expected Language, got {type(value).__name__}")
-
-        self._language = Language(value)
-
-    @language.deleter
-    def language(self) -> None:
-        self._language = None
 
     @override
     def _get_language(self, language_ptr: POINTER(retro_language)) -> bool:
-        if self._language is None:
+        if self._user is None or self._user.language is None:
             return False
 
         if not language_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
-        language_ptr[0] = self._language
+        language_ptr[0] = self._user.language
         return True
-        # TODO: Move to a UserDriver
 
     @override
     def _get_current_software_framebuffer(self, framebuffer_ptr: POINTER(retro_framebuffer)) -> bool:
