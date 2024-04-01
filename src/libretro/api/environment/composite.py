@@ -22,7 +22,7 @@ from ..microphone import MicrophoneDriver
 from ..midi import MidiInterface
 from ..options import OptionDriver
 from ..path import *
-from ..perf import PerfInterface
+from ..perf import *
 from ..power import *
 from ..savestate import SavestateContext, SerializationQuirks
 from ..throttle import *
@@ -42,7 +42,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         options: OptionDriver | None
         path: PathDriver | None
         log: LogDriver | None
-        perf: PerfInterface | None
+        perf: PerfDriver | None
         location: LocationInterface | None
         user: UserDriver | None
         vfs: FileSystemInterface | None
@@ -482,12 +482,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             self._log.log(LogLevel(level), message)
 
     @property
-    def perf(self) -> PerfInterface | None:
+    def perf(self) -> PerfDriver | None:
         return self._perf
 
     @perf.setter
-    def perf(self, value: PerfInterface) -> None:
-        if not isinstance(value, PerfInterface):
+    def perf(self, value: PerfDriver) -> None:
+        if not isinstance(value, PerfDriver):
             raise TypeError(f"Expected PerfInterface, got {type(value).__name__}")
 
         self._perf = value

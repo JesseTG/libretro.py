@@ -6,7 +6,7 @@ from .defs import *
 
 
 @runtime_checkable
-class PerfInterface(Protocol):
+class PerfDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_perf_callback()
@@ -63,4 +63,4 @@ class PerfInterface(Protocol):
         self.perf_stop(counter[0])
 
 
-__all__ = ["PerfInterface"]
+__all__ = ["PerfDriver"]

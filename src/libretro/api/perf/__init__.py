@@ -1,3 +1,3 @@
 from .defs import *
-from .interface import *
+from .driver import *
 from .default import *

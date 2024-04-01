@@ -5,7 +5,7 @@ from .defs import *
 from .interface import *
 
 
-class DefaultPerfInterface(PerfInterface):
+class DefaultPerfDriver(PerfDriver):
     def __init__(self):
         super().__init__()
         self._perf_counters: dict[bytes, retro_perf_counter] = {}
@@ -72,4 +72,4 @@ class DefaultPerfInterface(PerfInterface):
                 print(f"{counter.ident}: Not called")
 
 
-__all__ = ["DefaultPerfInterface"]
+__all__ = ["DefaultPerfDriver"]
