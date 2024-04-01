@@ -28,7 +28,7 @@ from ..system import Language
 from ..throttle import *
 from ..vfs import *
 from ..video import *
-from ..._utils import as_bytes, from_zero_terminated, as_array
+from ..._utils import as_bytes, from_zero_terminated
 
 
 class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
