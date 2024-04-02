@@ -166,8 +166,6 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
     def extensions(self) -> Iterator[bytes]:
         for rom in self:
             yield from rom.extensions
-            
-    
 
 
 class Subsystems(Sequence[retro_subsystem_info]):
