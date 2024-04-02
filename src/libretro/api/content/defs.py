@@ -1,11 +1,13 @@
-from collections.abc import Sequence, Generator
+
+import os
+from collections.abc import Sequence, Generator, Mapping, Iterator
 from contextlib import contextmanager
 from ctypes import *
 from dataclasses import dataclass
 from os import PathLike
 from typing import TypeAlias, NamedTuple, overload, Any
 
-from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file
+from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file, as_bytes
 
 
 @dataclass(init=False)
@@ -110,6 +112,11 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
             memory=deepcopy_array(self.memory, self.num_memory, memo) if self.memory else None,
             num_memory=self.num_memory
         )
+    
+    @property
+    def extensions(self) -> Iterator[bytes]:
+        if self.valid_extensions:
+            yield from self.valid_extensions.split(b'|')
 
 
 @dataclass(init=False)
@@ -155,6 +162,44 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
             id=self.id
         )
 
+    @property
+    def extensions(self) -> Iterator[bytes]:
+        for rom in self:
+            yield from rom.extensions
+            
+    
+
+
+class Subsystems(Sequence[retro_subsystem_info]):
+    def __init__(self, subsystems: Sequence[retro_subsystem_info]):
+        if not isinstance(subsystems, Sequence):
+            raise TypeError(f"Expected a sequence of retro_subsystem_info objects, got {type(subsystems).__name__}")
+
+        if not all(isinstance(subsystem, retro_subsystem_info) for subsystem in subsystems):
+            raise TypeError("All elements in the sequence must be retro_subsystem_info objects")
+
+        self._subsystems = tuple(subsystems)
+        self._subsystems_by_ident = {bytes(subsystem.ident): subsystem for subsystem in subsystems}
+
+    def __getitem__(self, item: int | str | bytes) -> retro_subsystem_info:
+        length = len(self._subsystems)
+        match item:
+            case int() if -length <= item < length:
+                return self._subsystems[item]
+            case int():
+                raise IndexError(f"Expected {-length} <= index < {length}, got {item}")
+            case str() | bytes():
+                ident = as_bytes(item)
+                if ident in self._subsystems_by_ident:
+                    return self._subsystems_by_ident[ident]
+
+                raise KeyError(f"Subsystem with identifier {item!r} not found")
+            case _:
+                raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
+
+    def __len__(self):
+        return len(self._subsystems)
+
 
 @dataclass(init=False)
 class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHints):
@@ -168,6 +213,29 @@ class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHint
             need_fullpath=self.need_fullpath,
             persistent_data=self.persistent_data
         )
+
+
+class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
+    def __init__(self, overrides: Sequence[retro_system_content_info_override]):
+        if not isinstance(overrides, Sequence):
+            raise TypeError(f"Expected a sequence of retro_system_content_info_override objects, got {type(overrides).__name__}")
+
+        if not all(isinstance(override, retro_system_content_info_override) for override in overrides):
+            raise TypeError("All elements in the sequence must be retro_system_content_info_override objects")
+
+        self._overrides = tuple(overrides)
+
+    def __getitem__(self, item: int) -> retro_system_content_info_override:
+        return self._overrides[item]
+
+    def __len__(self):
+        return len(self._overrides)
+
+    @property
+    def extensions(self) -> Iterator[bytes]:
+        for override in self:
+            if override.extensions:
+                yield from override.extensions.split(b'|')
 
 
 @dataclass(init=False)
@@ -237,6 +305,22 @@ def map_content(content: Content | None) -> Generator[retro_game_info | None, An
             raise TypeError(f"Expected a content path, data, or retro_game_info object, got {type(content).__name__}")
 
 
+def get_extension(content: str | PathLike | retro_game_info | retro_game_info_ext) -> bytes | None:
+    match content:
+        case str() | PathLike() as path:
+            _, e = os.path.splitext(os.fsencode(path))
+            return e.removeprefix(b'.')
+        case bytes() | bytearray() | memoryview() | retro_game_info(path=None):
+            return None
+        case retro_game_info(path=path):
+            _, ext = os.path.splitext(path)
+            return ext.removeprefix(b".")
+        case retro_game_info_ext():
+            return content.ext
+        case _:
+            raise TypeError(f"Expected a str, path-like, buffer, retro_game_info, retro_game_info_ext object, o None; got {type(content).__name__}")
+
+
 __all__ = [
     'retro_system_info',
     'Content',
@@ -249,5 +333,8 @@ __all__ = [
     'retro_subsystem_info',
     'retro_system_content_info_override',
     'retro_game_info_ext',
-    'map_content'
+    'map_content',
+    'get_extension',
+    'Subsystems',
+    'ContentInfoOverrides'
 ]
