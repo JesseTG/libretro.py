@@ -1,12 +1,13 @@
 
 import os
-from collections.abc import Sequence, Generator, Mapping, Iterator
+from collections.abc import Sequence, Generator, Mapping, Iterator, Buffer
 from contextlib import contextmanager
 from ctypes import *
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
 from typing import TypeAlias, NamedTuple, overload, Any
+from zipfile import Path as ZipPath
 
 from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file, as_bytes
 
@@ -50,8 +51,8 @@ class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-ContentPath = str | PathLike
-ContentData = bytes | bytearray | memoryview
+ContentPath = str | PathLike | ZipPath
+ContentData = bytes | bytearray | memoryview | Buffer
 Content: TypeAlias = ContentPath | ContentData | retro_game_info
 
 
