@@ -8,32 +8,6 @@ from typing import Protocol, runtime_checkable, AnyStr, TypeAlias, NamedTuple, B
 
 from .defs import *
 
-SetContentArgs: TypeAlias = Content | SubsystemContent | None
-SetSubsystemsArgs = Sequence[retro_subsystem_info] | None
-
-ParsedContent: TypeAlias = retro_game_info | Sequence[retro_game_info] | None
-
-
-class ContentInfo(NamedTuple):
-    need_fullpath: bool
-    persistent_data: bool
-
-
-class MappedContent:
-    def __init__(self, content: Content):
-        self._content: retro_game_info = content
-
-    def __del__(self):
-        self.release()
-
-    def release(self) -> None:
-        # TODO: Clear the data
-        pass
-
-    @property
-    def content(self) -> retro_game_info:
-        return self._content
-
 
 class ContentAttributes(NamedTuple):
     block_extract: bool
@@ -227,11 +201,7 @@ class ContentDriver(Protocol):
 
 
 __all__ = [
-    "ParsedContent",
     "ContentDriver",
-    "ContentInfo",
-    "SetContentArgs",
-    "SetSubsystemsArgs",
     "LoadedContentFile",
     "LoadedContent"
 ]
