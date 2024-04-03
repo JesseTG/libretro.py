@@ -39,6 +39,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         audio: Required[AudioDriver]
         input: Required[InputDriver]
         video: Required[VideoDriver]
+        content: ContentDriver | None
         overscan: bool | None
         message: MessageInterface | None
         options: OptionDriver | None
@@ -66,18 +67,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._audio = kwargs['audio']
         self._input = kwargs['input']
         self._video = kwargs['video']
+        self._content = kwargs.get('content')
         self._overscan = kwargs.get('overscan')
         self._message = kwargs.get('message')
         self._shutdown = False
         self._performance_level: int | None = None
         self._path = kwargs.get('path')
         self._options = kwargs.get('options')
-        self._support_no_game: bool | None = None
         self._log = kwargs.get('log')
         self._perf = kwargs.get('perf')
         self._location = kwargs.get('location')
         self._proc_address_callback: retro_get_proc_address_interface | None = None
-        self._subsystem_info: Sequence[retro_subsystem_info] | None = None
         self._memory_maps: retro_memory_map | None = None
         self._user = kwargs.get('user')
         self._supports_achievements: bool | None = None
@@ -110,6 +110,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def video(self) -> VideoDriver:
         return self._video
+
+    @property
+    def content(self) -> ContentDriver | None:
+        return self._content
 
     @property
     def user(self) -> UserDriver | None:
@@ -345,14 +349,20 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def support_no_game(self) -> bool | None:
-        return self._support_no_game
+        if not self._content:
+            return None
+
+        return self._content.support_no_game
 
     @override
     def _set_support_no_game(self, support_ptr: POINTER(c_bool)) -> bool:
+        if not self._content:
+            return False
+
         if not support_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
-        self._support_no_game = cast(support_ptr, POINTER(c_bool))[0]
+        self._content.set_support_no_game(support_ptr[0])
         return True
 
     @override
@@ -368,7 +378,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_frame_time_callback(self, callback: POINTER(retro_frame_time_callback)) -> bool:
-        return False  # TODO: Implement
+        return False  # TODO: Implement in TimingDriver
 
     @override
     def _set_audio_callback(self, callback_ptr: POINTER(retro_audio_callback)) -> bool:
@@ -619,14 +629,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def subsystem_info(self) -> Sequence[retro_subsystem_info] | None:
-        return self._subsystem_info
+        if not self._content:
+            return None
+
+        return self._content.subsystem_info
 
     @override
     def _set_subsystem_info(self, info_ptr: POINTER(retro_subsystem_info)) -> bool:
         if not info_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 
-        self._subsystem_info = tuple(deepcopy(s) for s in from_zero_terminated(info_ptr))
+        self._content.subsystem_info = tuple(deepcopy(s) for s in from_zero_terminated(info_ptr))
         return True
 
     @property
@@ -877,7 +890,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
 
         fastforwarding_ptr[0] = self._throttle_state.mode.value == ThrottleMode.FAST_FORWARD
-        return True
+        return True # TODO: Move to TimingDriver
 
     @property
     def target_refresh_rate(self) -> float | None:
@@ -901,8 +914,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         refresh_rate_ptr = cast(rate_ptr, POINTER(c_float))
         refresh_rate_ptr[0] = self._target_refresh_rate
-        return True
-        # TODO: Move to a new AV driver
+        return True # TODO: Move to TimingDriver
 
     @property
     def input_bitmasks(self) -> bool | None:
@@ -1069,8 +1081,16 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _set_content_info_override(self, override: POINTER(retro_system_content_info_override)) -> bool:
-        return False # TODO: Implement in refactoed ContentDriver
+    def _set_content_info_override(self, overrides_ptr: POINTER(retro_system_content_info_override)) -> bool:
+        if not self._content:
+            return False
+
+        if not overrides_ptr:
+            # This envcall supports passing NULL to query for support
+            return True
+
+        self._content.overrides = tuple(deepcopy(o) for o in from_zero_terminated(overrides_ptr))
+        return True
 
     @override
     def _get_game_info_ext(self, info_ptr: POINTER(retro_game_info_ext)) -> bool:
@@ -1086,7 +1106,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         info_ptr[0] = pointer(self._content.info_ext[0])
 
         # TODO: Implement in refactored ContentDriver
-        return False
+        return True
 
     @override
     def _set_core_options_v2(self, options_ptr: POINTER(retro_core_options_v2)) -> bool:
