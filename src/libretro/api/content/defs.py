@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from ctypes import *
 from dataclasses import dataclass
 from os import PathLike
+from types import MappingProxyType
 from typing import TypeAlias, NamedTuple, overload, Any
 
 from ..._utils import FieldsFromTypeHints, deepcopy_array, deepcopy_buffer, mmap_file, as_bytes
@@ -26,6 +27,11 @@ class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
             need_fullpath=self.need_fullpath,
             block_extract=self.block_extract
         )
+
+    @property
+    def extensions(self) -> Iterator[bytes]:
+        if self.valid_extensions:
+            yield from self.valid_extensions.split(b'|')
 
 
 @dataclass(init=False)
@@ -167,6 +173,20 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
         for rom in self:
             yield from rom.extensions
 
+    @property
+    def by_extensions(self) -> Iterator[tuple[bytes, retro_subsystem_rom_info]]:
+        for info in self:
+            for ext in info.extensions:
+                yield ext, info
+
+    def by_extension(self, ext: str | bytes) -> retro_subsystem_rom_info:
+        ext = as_bytes(ext).removeprefix(b'.')
+        for info in self:
+            if ext in info.extensions:
+                return info
+
+        raise KeyError(f"Subsystem ROM with extension {ext!r} not found")
+
 
 class Subsystems(Sequence[retro_subsystem_info]):
     def __init__(self, subsystems: Sequence[retro_subsystem_info]):
@@ -195,6 +215,18 @@ class Subsystems(Sequence[retro_subsystem_info]):
             case _:
                 raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
 
+    def __contains__(self, item: str | bytes | retro_subsystem_info):
+        match item:
+            case str(ident) | bytes(ident):
+                return as_bytes(ident) in self._subsystems_by_ident
+            case retro_subsystem_info():
+                return item in self._subsystems
+            case _:
+                raise TypeError(f"Expected a str, bytes, or retro_subsystem_info object; got {type(item).__name__}")
+
+    def __iter__(self):
+        return iter(self._subsystems)
+
     def __len__(self):
         return len(self._subsystems)
 
@@ -212,6 +244,10 @@ class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHint
             persistent_data=self.persistent_data
         )
 
+    def get_extensions(self) -> Iterator[bytes]:
+        if self.extensions:
+            yield from self.extensions.split(b'|')
+
 
 class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
     def __init__(self, overrides: Sequence[retro_system_content_info_override]):
@@ -222,18 +258,60 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
             raise TypeError("All elements in the sequence must be retro_system_content_info_override objects")
 
         self._overrides = tuple(overrides)
+        overrides_by_ext: dict[bytes, retro_system_content_info_override] = {}
+        for o in self._overrides:
+            for e in o.get_extensions():
+                if e not in overrides_by_ext:
+                    # If this isn't a duplicate override...
+                    overrides_by_ext[e] = o
+                    # If an extension is listed more than once in a RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE call,
+                    # only the first occurrence is used.
 
-    def __getitem__(self, item: int) -> retro_system_content_info_override:
-        return self._overrides[item]
+        self._overrides_by_ext = MappingProxyType(overrides_by_ext)
+
+    def __getitem__(self, item: int | slice | str | bytes) -> retro_system_content_info_override:
+        match item:
+            case int() if -len(self) <= item < len(self):
+                return self._overrides[item]
+            case int():
+                raise IndexError(f"Expected {-len(self)} <= index < {len(self)}, got {item}")
+            case slice() as s:
+                return self._overrides[s]
+            case str() | bytes():
+                ext = as_bytes(item).removeprefix(b'.')
+                if ext in self._overrides_by_ext:
+                    return self._overrides_by_ext[ext]
+
+                raise KeyError(f"Override for extension {item!r} not found")
+            case _:
+                raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
+
+    def __contains__(self, item: str | bytes | retro_system_content_info_override) -> bool:
+        """
+        Tests if the given item is in the overrides list.
+
+        :param item: The item to test.
+            If a ``retro_system_content_info_override`` object, looks for an exact match.
+            If a ``str`` or ``bytes`` object,
+            looks for a ``retro_system_content_info_override`` with a matching extension.
+        """
+        match item:
+            case str(ext) | bytes(ext):
+                return as_bytes(ext).removeprefix(b'.') in self._overrides_by_ext
+            case retro_system_content_info_override():
+                return item in self._overrides
+            case _:
+                raise TypeError(f"Expected a str, bytes, or retro_system_content_info_override object; got {type(item).__name__}")
+
+    def __iter__(self):
+        return iter(self._overrides)
 
     def __len__(self):
         return len(self._overrides)
 
     @property
-    def extensions(self) -> Iterator[bytes]:
-        for override in self:
-            if override.extensions:
-                yield from override.extensions.split(b'|')
+    def by_extension(self) -> Mapping[bytes, retro_system_content_info_override]:
+        return self._overrides_by_ext
 
 
 @dataclass(init=False)
@@ -303,7 +381,7 @@ def map_content(content: Content | None) -> Generator[retro_game_info | None, An
             raise TypeError(f"Expected a content path, data, or retro_game_info object, got {type(content).__name__}")
 
 
-def get_extension(content: str | PathLike | retro_game_info | retro_game_info_ext) -> bytes | None:
+def get_extension(content: Content | retro_game_info_ext) -> bytes | None:
     match content:
         case str() | PathLike() as path:
             _, e = os.path.splitext(os.fsencode(path))
@@ -316,7 +394,7 @@ def get_extension(content: str | PathLike | retro_game_info | retro_game_info_ex
         case retro_game_info_ext():
             return content.ext
         case _:
-            raise TypeError(f"Expected a str, path-like, buffer, retro_game_info, retro_game_info_ext object, o None; got {type(content).__name__}")
+            raise TypeError(f"Expected a str, path-like, buffer, retro_game_info, or retro_game_info_ext object; got {type(content).__name__}")
 
 
 __all__ = [
