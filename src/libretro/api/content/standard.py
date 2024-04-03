@@ -116,20 +116,22 @@ class StandardContentDriver(ContentDriver):
             if subsystem and ext not in subsysrom.extensions:
                 raise ContentError(f"Content extension '{ext!r}' is not supported by the {subsysrom.desc!r} ROM of subsystem {subsystem.ident!r}")
 
-        need_fullpath = self.__needs_fullpath(ext, subsysrom)
-        persistent_data = self.__is_data_persistent(ext)
-        block_extract = self.__should_block_extract(ext, subsysrom)
-        is_required = self.__is_required(ext, subsysrom)
+        attributes = ContentAttributes(
+            block_extract=self.__should_block_extract(ext, subsysrom),
+            persistent_data=self.__is_data_persistent(ext),
+            need_fullpath=self.__needs_fullpath(ext, subsysrom),
+            required=self.__is_required(ext, subsysrom),
+        )
 
-        match content, need_fullpath, persistent_data:
+        match content, attributes:
             # For test cases that create a retro_game_info manually
-            case retro_game_info(info), True, _ if not info.path:
+            case retro_game_info(info), ContentAttributes(need_fullpath=True) if not info.path:
                 # If trying to use a manually-created game info that needs a full path, but didn't give one...
                 raise ValueError("Core needs a full path, but none was provided")
-            case retro_game_info(info), False, _ if not info.data:
+            case retro_game_info(info), ContentAttributes(need_fullpath=False) if not info.data:
                 # If trying to use a manually-created game info that doesn't need a full path, but didn't give data...
                 raise ValueError("Core needs retro_game_info to include data, but none was provided")
-            case retro_game_info(info), _, persistent_data:
+            case retro_game_info(info), ContentAttributes(persistent_data=persistent_data):
                 yield LoadedContentFile(
                     info=info,
                     info_ext=None,  # TODO: Given a retro_game_info, construct a retro_game_info_ext
@@ -137,10 +139,10 @@ class StandardContentDriver(ContentDriver):
                 )
 
             # For test cases with content that needs a full path, but load their own data
-            case str(path) | PathLike(path), True, _:
+            case str(path) | PathLike(path), ContentAttributes(need_fullpath=True):
                 loaded_info = retro_game_info(os.fsencode(path), None, 0, None)
 
-            case str(path) | PathLike(path), False, persistent:
+            case str(path) | PathLike(path), ContentAttributes(need_fullpath=False, persistent_data=persistent_data):
                 w = map_content(path)
                 # TODO: Validate that info matches system_info and content overrides
                 # TODO: Create a content_ext
@@ -149,13 +151,13 @@ class StandardContentDriver(ContentDriver):
                     info.data = None
 
             # For test cases that provide ROM data directly
-            case bytes() | bytearray() | memoryview(), True, _:
+            case bytes() | bytearray() | memoryview(), ContentAttributes(need_fullpath=False):
                 raise ValueError("Core requires a full path, but only raw data was provided")
 
-            case bytes(rom) | bytearray(rom) | memoryview(rom), False, _:
+            case bytes(rom) | bytearray(rom) | memoryview(rom), ContentAttributes(need_fullpath=False):
                 loaded = self._core.load_game(retro_game_info(None, rom, len(rom), None))
 
-            case SubsystemContent(), _, _ if not self._subsystems:
+            case SubsystemContent(), _ if not self._subsystems:
                 raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
 
             case SubsystemContent(game_type=str(ident) | bytes(ident), info=infos) as subsystem_content:
@@ -192,6 +194,8 @@ class StandardContentDriver(ContentDriver):
 
             if loaded_info_ext:
                 loaded_info_ext.data = None
+
+        # TODO: Clear the saved retro_game_info and retro_game_info_ext structs unless they're marked as persistent
 
     @override
     def set_system_info(self, info: retro_system_info | None) -> None:

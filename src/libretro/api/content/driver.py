@@ -203,6 +203,7 @@ class ContentDriver(Protocol):
 
 __all__ = [
     "ContentDriver",
+    "ContentAttributes",
     "LoadedContentFile",
     "LoadedContent",
     "ContentError",
