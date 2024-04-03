@@ -111,10 +111,10 @@ class StandardContentDriver(ContentDriver):
         ext = get_extension(content)
         if ext is not None:
             if not subsystem and ext not in self._system_info.extensions:
-                raise ValueError(f"Content extension '{ext!r}' is not supported by the system")
+                raise ContentError(f"Content extension '{ext!r}' is not supported by the system")
 
             if subsystem and ext not in subsysrom.extensions:
-                raise ValueError(f"Content extension '{ext!r}' is not supported by the {subsysrom.desc!r} ROM of subsystem {subsystem.ident!r}")
+                raise ContentError(f"Content extension '{ext!r}' is not supported by the {subsysrom.desc!r} ROM of subsystem {subsystem.ident!r}")
 
         need_fullpath = self.__needs_fullpath(ext, subsysrom)
         persistent_data = self.__is_data_persistent(ext)
