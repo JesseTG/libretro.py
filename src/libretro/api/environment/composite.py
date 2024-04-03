@@ -1100,12 +1100,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not info_ptr:
             return False
 
-        info_ext = self.content.info_ext
+        info_ext: Array[retro_game_info_ext] | None = self._content.game_info_ext
+        if info_ext is None:
+            return False
 
-
-        info_ptr[0] = pointer(self._content.info_ext[0])
-
-        # TODO: Implement in refactored ContentDriver
+        info_ptr[0] = pointer(info_ext)
         return True
 
     @override
