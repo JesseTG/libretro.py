@@ -2,7 +2,7 @@ import ctypes
 import mmap
 import sys
 from abc import abstractmethod
-
+from collections.abc import Buffer
 from contextlib import contextmanager
 from copy import deepcopy
 from ctypes import *
@@ -66,6 +66,15 @@ def mmap_file(path: str | PathLike, mode: str = "rb"):
             # If we don't release the memoryview manually,
             # we'll get a BufferError when the context manager exits
         f.close()
+
+
+def addressof_buffer(buffer: Buffer) -> int:
+    if not isinstance(buffer, Buffer):
+        raise TypeError(f"Expected Buffer, got {type(buffer).__name__}")
+    array_type: type[Array] = c_ubyte * len(buffer)
+    buffer_array = array_type.from_buffer(buffer)
+
+    return ctypes.addressof(buffer_array)
 
 
 # When https://github.com/python/cpython/issues/112015 is merged,
