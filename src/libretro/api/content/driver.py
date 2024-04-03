@@ -2,6 +2,7 @@ import os.path
 from abc import abstractmethod
 from collections.abc import Sequence, Mapping, Iterator, Generator, Iterable
 from contextlib import contextmanager, ExitStack, AbstractContextManager
+from ctypes import Array
 from enum import Enum, auto
 from os import PathLike
 from typing import Protocol, runtime_checkable, AnyStr, TypeAlias, NamedTuple, BinaryIO
@@ -117,6 +118,13 @@ class ContentDriver(Protocol):
     @property
     @abstractmethod
     def enable_extended_info(self) -> bool: ...
+
+    @abstractmethod
+    def get_game_info_ext(self) -> Array[retro_game_info_ext] | None: ...
+
+    @property
+    def game_info_ext(self) -> Array[retro_game_info_ext] | None:
+        return self.get_game_info_ext()
 
     @abstractmethod
     def set_system_info(self, info: retro_system_info | None) -> None: ...
