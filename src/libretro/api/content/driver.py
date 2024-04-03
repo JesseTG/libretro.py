@@ -68,6 +68,10 @@ class LoadedContentFile:
 LoadedContent = tuple[retro_subsystem_info | None, Sequence[LoadedContentFile] | None]
 
 
+class ContentError(RuntimeError):
+    pass
+
+
 @runtime_checkable
 class ContentDriver(Protocol):
     @contextmanager
@@ -211,5 +215,6 @@ class ContentDriver(Protocol):
 __all__ = [
     "ContentDriver",
     "LoadedContentFile",
-    "LoadedContent"
+    "LoadedContent",
+    "ContentError",
 ]
