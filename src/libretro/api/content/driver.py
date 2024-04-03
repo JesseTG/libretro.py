@@ -74,48 +74,37 @@ class ContentError(RuntimeError):
 
 @runtime_checkable
 class ContentDriver(Protocol):
-    @contextmanager
-    def load(self, content: Content | SubsystemContent | None) -> AbstractContextManager[LoadedContent]:
-        if not self.system_info:
-            raise RuntimeError("System info not set")
-
-        with ExitStack() as stack:
-            loaded_content: Sequence[LoadedContentFile] | None
-            subsystem: retro_subsystem_info | None = None
-            match content:
-                case SubsystemContent(game_type=game_type, info=info):
-                    subsystem = self.__get_subsystem(game_type)
-                    if len(info) != len(subsystem):
-                        raise ValueError(f"Subsystem {subsystem.ident!r} needs {len(subsystem)} ROMs, got {len(info)}")
-
-                    i: int
-                    c: Content
-                    loaded_content = [stack.enter_context(self._load(i, subsystem, subsystem[i])) for (i, c) in enumerate(info)]
-                case str() | PathLike() | bytes() | bytearray() | memoryview() | retro_game_info():
-                    loaded_content = [stack.enter_context(self._load(content))]
-                case None if self.support_no_game:
-                    loaded_content = []
-                case None:
-                    raise ValueError("No content provided and core did not register support for no-content mode")
-                case _:
-                    raise TypeError(f"Expected a content path, data buffer, SubsystemContent, or retro_game_info; got {type(content).__name__}")
-
-            yield subsystem, loaded_content
-
     @abstractmethod
-    def _load(
-        self,
-        content: Content,
-        subsystem: retro_subsystem_info | None = None,
-        subsysrom: retro_subsystem_rom_info | None = None
-    ) -> AbstractContextManager[LoadedContentFile]:
+    def load(self, content: Content | SubsystemContent | None) -> AbstractContextManager[LoadedContent]:
         """
-        TODO load stuff
+        Loads all content files.
+
+        The ``content`` parameter may be one of the following:
+
+        - ``None``, which will result in no content being loaded.
+        - A ``zipfile.Path`` object representing a file within a ZIP archive.
+        - A ``str`` or a ``PathLike`` object representing a file path.
+          The loaded content will not be part of a subsystem.
+          If ``self.system_info.needs_fullpath`` is ``False``
+          and no override for this extension defines ``need_fullpath`` as ``True``,
+          the driver will load the content as a file.
+          Otherwise, the path will be provided to the core without opening the file.
+        - A ``bytes``, ``bytearray``, ``memoryview``, or ``Buffer`` object that represents content data.
+          The loaded content will be passed directly to the core without being set to a path.
+        - A ``retro_game_info`` object, which will be passed to the core as-is.
 
         :param content: The content to load.
-        :param subsystem: The subsystem that content is being loaded for, defaults to ``None``.
-            TODO write more
-        :param subsysrom: The subsystem ROM that content is being loaded for, defaults to ``None``.
+        :raises FileNotFoundError: If ``content`` is a path to a non-existent file.
+        :raises ContentError: If loading ``None`` and the core requires content,
+            or if ``content`` is a ``retro_game_info``
+            whose attributes are inconsistent with `needs_fullpath` and `block_extract`.
+        :raises RuntimeError: If called before ``system_info`` is set.
+        :return: A context manager that yields a tuple containing the subsystem info and a sequence of loaded content files.
+            Non-persistent content files will be closed when the context manager exits.
+
+        .. note::
+            All files not marked as persistent will be closed when the context manager exits.
+            The ones that are persistent will be closed when the driver is destroyed.
         """
         ...
 

@@ -1,22 +1,37 @@
 import os
 from contextlib import ExitStack, AbstractContextManager, contextmanager
-from ctypes import c_ubyte, Array, addressof
+from ctypes import c_ubyte, addressof, Array, c_void_p
 from os import PathLike
-from typing import Mapping, AnyStr, Sequence, Iterator, override
+from typing import Mapping, AnyStr, Sequence, Iterator, override, NamedTuple, BinaryIO
+from zipfile import Path as ZipPath
 
 from .driver import *
 from .defs import *
 from ..._utils import as_bytes
 
 
+class _PersistentBuffer(NamedTuple):
+    ptr: c_void_p
+    backing: BinaryIO
+
+
 class StandardContentDriver(ContentDriver):
+
     def __init__(self, enable_extended_info: bool = True):
         self._subsystems: Subsystems | None = None
         self._overrides: ContentInfoOverrides | None = None
         self._content: Sequence[retro_game_info] | None = None
+        self._content_ext: Array[retro_game_info_ext] | None = None
         self._system_info: retro_system_info | None = None
         self._support_no_game: bool | None = None
         self._enable_extended_info = bool(enable_extended_info)
+        self._persistent_buffers: set[_PersistentBuffer] = set()
+
+    def __del__(self):
+        for buf in self._persistent_buffers:
+            del buf.ptr
+            buf.backing.close()
+            del buf.backing
 
     @property
     @override
@@ -27,22 +42,68 @@ class StandardContentDriver(ContentDriver):
     def enable_extended_info(self, value: bool) -> None:
         self._enable_extended_info = bool(value)
 
+    def get_game_info_ext(self) -> Array[retro_game_info_ext] | None:
+        if not self._enable_extended_info:
+            return None
+
+        if not self._content:
+            return None
+
+        if not self._content_ext:
+            arraytype: type[Array] = retro_game_info_ext * len(self._content)
+            self._content_ext = arraytype()
+
+            for i, info in enumerate(self._content):
+                self._content_ext[i] = retro_game_info_ext(
+                )
+
+        return self._content_ext
+
     @contextmanager
-    @override
+    def load(self, content: Content | SubsystemContent | None) -> AbstractContextManager[LoadedContent]:
+        if not self.system_info:
+            raise RuntimeError("System info not set")
+
+        with ExitStack() as stack:
+            loaded_content: Sequence[LoadedContentFile] | None
+            subsystem: retro_subsystem_info | None = None
+            match content:
+                case SubsystemContent(game_type=game_type, info=info):
+                    subsystem = self.__get_subsystem(game_type)
+                    if len(info) != len(subsystem):
+                        raise ValueError(f"Subsystem {subsystem.ident!r} needs exactly {len(subsystem)} ROMs, got {len(info)}")
+
+                    i: int
+                    c: Content
+                    loaded_content = [stack.enter_context(self._load(i, subsystem, subsystem[i])) for (i, c) in enumerate(info)]
+                case ZipPath() | str() | PathLike() | bytes() | bytearray() | memoryview() | retro_game_info():
+                    loaded_content = [stack.enter_context(self._load(content))]
+                case None if self.support_no_game:
+                    loaded_content = []
+                case None:
+                    raise ValueError("No content provided and core did not register support for no-content mode")
+                case _:
+                    raise TypeError(f"Expected a content path, data buffer, SubsystemContent, or retro_game_info; got {type(content).__name__}")
+
+            yield subsystem, loaded_content
+
+    @contextmanager
     def _load(
         self,
         content: Content,
         subsystem: retro_subsystem_info | None = None,
         subsysrom: retro_subsystem_rom_info | None = None
     ) -> AbstractContextManager[LoadedContentFile]:
-        if subsystem and not subsysrom:
-            raise ValueError("subsystem ROM info must be provided when loading subsystem content")
-
-        if subsysrom and not subsystem:
-            raise ValueError("subsystem must be specified when loading subsystem content")
-
-        if subsystem and not self._subsystems:
-            raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
+        """
+        :param content: The content to load
+        :param subsystem: The subsystem we're using for this session, if any
+        :param subsysrom: The descriptor for the ROM type we're using, if any
+        """
+        match subsystem, subsysrom, self._subsystems:
+            case (retro_subsystem_info(), _, None) | (_, retro_subsystem_rom_info(), None):
+                raise RuntimeError("Subsystem info or ROM info was provided, but the core didn't register subsystems")
+            case (retro_subsystem_info(), None, _) | (None, retro_subsystem_rom_info(), _):
+                raise ContentError("Subsystem info and subsystem ROM info must both be provided when loading subsystem content")
 
         loaded_info: retro_game_info | None = None
         loaded_info_ext: retro_game_info_ext | None = None
@@ -55,10 +116,10 @@ class StandardContentDriver(ContentDriver):
             if subsystem and ext not in subsysrom.extensions:
                 raise ValueError(f"Content extension '{ext!r}' is not supported by the {subsysrom.desc!r} ROM of subsystem {subsystem.ident!r}")
 
-        # TODO: Handle retro_subsystem_rom_info.required
-        # TODO: Handle retro_subsystem_rom_info.block_extract and retro_system_info.block_extract
-        need_fullpath = self.__needs_fullpath(ext, subsystem)
+        need_fullpath = self.__needs_fullpath(ext, subsysrom)
         persistent_data = self.__is_data_persistent(ext)
+        block_extract = self.__should_block_extract(ext, subsysrom)
+        is_required = self.__is_required(ext, subsysrom)
 
         match content, need_fullpath, persistent_data:
             # For test cases that create a retro_game_info manually
@@ -158,48 +219,38 @@ class StandardContentDriver(ContentDriver):
     def get_overrides(self) -> ContentInfoOverrides | None:
         return self._overrides
 
-    def __needs_fullpath(
-        self,
-        extension: bytes | str | None,
-        subsystem: bytes | str | retro_subsystem_info | None = None
-    ) -> bool:
-        if not self._system_info:
-            raise RuntimeError("System info not set")
+    def __needs_fullpath(self, ext: bytes | None, subsysrom: retro_subsystem_rom_info | None = None) -> bool:
+        assert self._system_info is not None
+        assert ext is None or isinstance(ext, bytes)
+        assert subsysrom is None or isinstance(subsysrom, retro_subsystem_rom_info)
+        # These params should've been validated by the caller
 
-        if subsystem and not self._subsystems:
-            raise ValueError(f"Subsystem ROM info provided, but none were registered by the core")
-
-        ext: bytes
-        match as_bytes(extension).removeprefix(b'.'), subsystem, self._overrides:
+        match ext, subsysrom, self._overrides:
             case None, _, _:
                 # If loading any content from in-memory...
                 return False
-            case bytes(ext), _, ContentInfoOverrides(overrides) if ext in overrides:
+            case bytes(), _, ContentInfoOverrides(overrides) if ext in overrides:
                 # If loading a content file with a specially-treated extension...
                 overrides: ContentInfoOverrides
                 return overrides[ext].need_fullpath
-            case bytes(ext), None, _ if ext in self._system_info.extensions:
+            case bytes(), None, _ if ext.removeprefix(b'.') in self._system_info.extensions:
                 # If loading a regular content file with no relevant overrides...
                 return self._system_info.need_fullpath
-            case bytes(ext), None, _:
+            case bytes(), None, _:
                 # No overrides were found, and the extension's not in the system info.
                 raise ValueError(f"Can't determine if regular content extension '{ext!r}' needs a full path (it's not in the overrides or system info)")
-            case bytes(ext), retro_subsystem_info(subsys), _:
+            case bytes(), retro_subsystem_rom_info(), _:
                 # If loading subsystem content with no relevant overrides, and the active subsystem is given directly...
-                subsys: retro_subsystem_info
-                return subsys.by_extension(ext).need_fullpath
-            case bytes(ext), bytes(ident) | str(ident), _:
-                # If loading subsystem content with no relevant overrides, and the active subsystem is given by ident...
-                return self._subsystems[ident].by_extension(ext).need_fullpath
+                return subsysrom.need_fullpath
             case _, _, _:
-                raise ValueError(f"Can't determine if subsystem content extension '{extension!r}' needs a full path")
+                raise ValueError(f"Can't determine if subsystem content extension '{ext!r}' needs a full path")
 
-    def __is_data_persistent(self, extension: bytes | str | None) -> bool:
-        if not self._system_info:
-            raise RuntimeError("System info not set")
+    def __is_data_persistent(self, ext: bytes | None) -> bool:
+        assert self._system_info is not None
+        assert ext is None or isinstance(ext, bytes)
+        # These params should've been validated by the caller
 
-        ext: bytes
-        match as_bytes(extension).removeprefix(b'.'), self._overrides:
+        match ext, self._overrides:
             case None, _:
                 # If loading any content from in-memory...
                 return True
@@ -211,7 +262,45 @@ class StandardContentDriver(ContentDriver):
                 # If loading a regular content file with no relevant overrides...
                 return False  # Regular content is not guaranteed to be persistent
             case _, _:
-                raise ValueError(f"Can't determine if subsystem content extension '{extension!r}' has persistent data")
+                raise ValueError(f"Can't determine if subsystem content extension '{ext!r}' has persistent data")
+
+    def __should_block_extract(self, ext: bytes | None, subsysrom: retro_subsystem_rom_info | None = None) -> bool:
+        assert self._system_info is not None
+        assert ext is None or isinstance(ext, bytes)
+        assert subsysrom is None or isinstance(subsysrom, retro_subsystem_rom_info)
+        # These params should've been validated by the caller
+
+        # NOTE: retro_content_info_override does not have block_extract
+        match ext, subsysrom:
+            case (None, _) | (_, None):
+                # If loading any content from in-memory or if not using a subsystem...
+                return self._system_info.block_extract
+            case bytes(), retro_subsystem_rom_info():
+                # If loading a subsystem ROM...
+                overrides: ContentInfoOverrides
+                return subsysrom.block_extract
+            case _, _:
+                raise ValueError(f"Can't determine if subsystem content extension '{ext!r}' should block extraction")
+
+    def __is_required(self, ext: bytes | None, subsysrom: retro_subsystem_rom_info | None = None) -> bool:
+        assert self._system_info is not None
+        assert ext is None or isinstance(ext, bytes)
+        assert subsysrom is None or isinstance(subsysrom, retro_subsystem_rom_info)
+        # These params should've been validated by the caller
+
+        # NOTE: retro_content_info_override and retro_system_info do not have required,
+        # but retro_system_info does use RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME
+
+        match ext, subsysrom:
+            case (None, _) | (_, None):
+                # If loading any content from in-memory or if not using a subsystem...
+                return self._system_info.required
+            case bytes(), retro_subsystem_rom_info():
+                # If loading a subsystem ROM...
+                overrides: ContentInfoOverrides
+                return subsysrom.required
+            case _, _:
+                raise ValueError(f"Can't determine if subsystem content extension '{ext!r}' is required")
 
 
 __all__ = [
