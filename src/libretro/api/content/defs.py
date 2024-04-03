@@ -384,6 +384,9 @@ def map_content(content: Content | None) -> Generator[retro_game_info | None, An
 
 def get_extension(content: Content | retro_game_info_ext) -> bytes | None:
     match content:
+        case ZipPath() as zippath:
+            zippath: ZipPath
+            return zippath.suffix.encode().removeprefix(b'.')
         case str() | PathLike() as path:
             _, e = os.path.splitext(os.fsencode(path))
             return e.removeprefix(b'.')
