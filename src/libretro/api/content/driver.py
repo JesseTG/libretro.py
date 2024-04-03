@@ -18,39 +18,15 @@ class ContentAttributes(NamedTuple):
 
 
 class LoadedContentFile:
-    def __init__(self, info: retro_game_info, info_ext: retro_game_info_ext | None = None, persistent: bool = False, io: BinaryIO | None = None):
+    def __init__(self, info: retro_game_info, info_ext: retro_game_info_ext | None = None):
         if not isinstance(info, retro_game_info):
             raise TypeError(f"Expected retro_game_info, got {type(info).__name__}")
 
         if info_ext is not None and not isinstance(info_ext, retro_game_info_ext):
             raise TypeError(f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}")
 
-        if io is not None and not isinstance(io, BinaryIO):
-            raise TypeError(f"Expected BinaryIO or None, got {type(io).__name__}")
-
         self._info = info
         self._info_ext = info_ext
-        self._io = io
-        self._persistent = bool(persistent)
-
-    def __del__(self):
-        self.close()
-
-    def close(self):
-        # Gotta clean up the pointers first,
-        # since they may be holding on to references to the mapped buffer
-        # (and freeing a mapped memory buffer before the pointers are cleared
-        # may result in an exception)
-        if self._info.data:
-            self._info.data = None
-
-        if self._info_ext:
-            self._info_ext.data = None
-
-        if self._io:
-            self._io.close()
-
-            del self._io
 
     @property
     def info(self) -> retro_game_info:
@@ -59,10 +35,6 @@ class LoadedContentFile:
     @property
     def info_ext(self) -> retro_game_info_ext | None:
         return self._info_ext
-
-    @property
-    def persistent_data(self) -> bool:
-        return self._persistent
 
 
 LoadedContent = tuple[retro_subsystem_info | None, Sequence[LoadedContentFile] | None]
