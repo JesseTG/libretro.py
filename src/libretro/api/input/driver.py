@@ -77,9 +77,23 @@ class InputDriver(Protocol):
     @abstractmethod
     def bitmasks_supported(self) -> bool | None: ...
 
-    @property
     @abstractmethod
-    def max_users(self) -> int | None: ...
+    def get_max_users(self) -> int | None: ...
+
+    @abstractmethod
+    def set_max_users(self, max_users: int | None) -> None: ...
+
+    @property
+    def max_users(self) -> int | None:
+        return self.get_max_users()
+
+    @max_users.setter
+    def max_users(self, max_users: int) -> None:
+        self.set_max_users(max_users)
+
+    @max_users.deleter
+    def max_users(self) -> None:
+        self.set_max_users(None)
 
 
 __all__ = [

@@ -1,6 +1,7 @@
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import override
 
 from .rumble import *
 from .sensor import *
@@ -113,17 +114,21 @@ class GeneratorInputDriver(InputDriver):
     def bitmasks_supported(self) -> None:
         self._bitmasks_supported = None
 
-    @property
-    def max_users(self) -> int | None:
+    @override
+    def set_max_users(self, max_users: int | None) -> None:
+        match max_users:
+            case int(i) if i >= 0:
+                self._max_users = int(i)
+            case int(i):
+                raise ValueError(f"Expected None or a non-negative int, got {i}")
+            case None:
+                self._max_users = None
+            case _:
+                raise TypeError(f"Expected None or a non-negative int, got {max_users!r}")
+
+    @override
+    def get_max_users(self) -> int | None:
         return self._max_users
-
-    @max_users.setter
-    def max_users(self, value: int) -> None:
-        self._max_users = int(value)
-
-    @max_users.deleter
-    def max_users(self) -> None:
-        self._max_users = None
 
     def poll(self) -> None:
         if self._input_generator:
