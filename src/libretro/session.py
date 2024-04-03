@@ -109,7 +109,6 @@ class Session:
             content: Sequence[LoadedContentFile] | None
             match subsystem, content:
                 case (_, None | []):
-                    # TODO: Can a subsystem accept no-content?
                     loaded = self._core.load_game(None)
                 case None, [info]:
                     # Loading exactly one regular content file
