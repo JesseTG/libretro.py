@@ -19,3 +19,13 @@ class retro_camera_callback(Structure, metaclass=FieldsFromTypeHints):
     frame_opengl_texture: retro_camera_frame_opengl_texture_t
     initialized: retro_camera_lifetime_status_t
     deinitialized: retro_camera_lifetime_status_t
+
+
+__all__ = [
+    'retro_camera_start_t',
+    'retro_camera_stop_t',
+    'retro_camera_lifetime_status_t',
+    'retro_camera_frame_raw_framebuffer_t',
+    'retro_camera_frame_opengl_texture_t',
+    'retro_camera_callback',
+]

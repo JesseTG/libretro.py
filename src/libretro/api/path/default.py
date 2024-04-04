@@ -2,13 +2,12 @@ from os import PathLike, fsencode
 from typing import override
 
 from .driver import PathDriver
-from ... import Core
 
 
 class DefaultPathDriver(PathDriver):
     def __init__(
         self,
-        corepath: str | bytes | PathLike | Core | None,
+        corepath: str | bytes | PathLike | None,
         system: str | bytes | PathLike | None = None,
         assets: str | bytes | PathLike | None = None,
         save: str | bytes | PathLike | None = None,
@@ -16,8 +15,6 @@ class DefaultPathDriver(PathDriver):
     ):
         self._libretro: bytes | None
         match corepath:
-            case Core() as core:
-                self._libretro = core.path.encode()
             case str():
                 self._libretro = corepath.encode()
             case bytes() | None:

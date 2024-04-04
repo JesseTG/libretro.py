@@ -23,3 +23,9 @@ class SavestateContext(IntEnum):
 
     def __init__(self, value: int):
         self._type_ = 'i'
+
+
+__all__ = [
+    'SerializationQuirks',
+    'SavestateContext',
+]

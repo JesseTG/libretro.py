@@ -51,3 +51,9 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
             descriptors=descriptors,
             num_descriptors=self.num_descriptors.value
         )
+
+
+__all__ = [
+    "retro_memory_descriptor",
+    "retro_memory_map",
+]

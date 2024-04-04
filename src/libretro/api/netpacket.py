@@ -18,3 +18,15 @@ class retro_netpacket_callback(Structure, metaclass=FieldsFromTypeHints):
     poll: retro_netpacket_poll_t
     connected: retro_netpacket_connected_t
     disconnected: retro_netpacket_disconnected_t
+
+
+__all__ = [
+    "retro_netpacket_callback",
+    'retro_netpacket_send_t',
+    'retro_netpacket_start_t',
+    'retro_netpacket_receive_t',
+    'retro_netpacket_stop_t',
+    'retro_netpacket_poll_t',
+    'retro_netpacket_connected_t',
+    'retro_netpacket_disconnected_t',
+]

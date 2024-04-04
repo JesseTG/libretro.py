@@ -2,7 +2,7 @@ from time import time_ns, process_time_ns
 from typing import Mapping
 
 from .defs import *
-from .interface import *
+from .driver import *
 
 
 class DefaultPerfDriver(PerfDriver):

@@ -20,3 +20,10 @@ class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints)
 
     def __deepcopy__(self, _):
         return retro_get_proc_address_interface(self.get_proc_address)
+
+
+__all__ = [
+    "retro_get_proc_address_interface",
+    'retro_proc_address_t',
+    'retro_get_proc_address_t',
+]

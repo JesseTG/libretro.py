@@ -272,3 +272,7 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
 
         super().__init__(envcalls)
 
+
+__all__ = [
+    'DefaultEnvironmentDriver',
+]

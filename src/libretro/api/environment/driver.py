@@ -1,16 +1,11 @@
 from abc import abstractmethod
-from ctypes import c_void_p, POINTER, c_uint, c_bool, c_char_p, c_uint64, c_float
-from enum import auto, Flag
-from typing import Protocol
+from ctypes import POINTER, c_bool, c_char_p, c_float
+from typing import Protocol, runtime_checkable
 
-from .defs import *
-from ..audio import AudioDriver
 from ..audio.defs import *
-from ..av.defs import *
 from ..camera import *
 from ..content import *
 from ..disk import *
-from ..input import InputDriver
 from ..input.rumble.defs import *
 from ..input.sensor.defs import *
 from ..input.defs import *
@@ -22,14 +17,11 @@ from ..message import *
 from ..microphone import retro_microphone_interface
 from ..midi import *
 from ..netpacket import retro_netpacket_callback
-from ..options import OptionDriver
 from ..options.defs import *
-from ..path import PathDriver
 from ..perf import *
 from ..power import retro_device_power
 from ..proc import *
 from ..throttle import retro_throttle_state, retro_fastforwarding_override
-from ..user import UserDriver
 from ..vfs import *
 from ..video import *
 from ...h import *
