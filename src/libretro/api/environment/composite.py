@@ -50,7 +50,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         path: PathDriver | None
         log: LogDriver | None
         perf: PerfDriver | None
-        location: LocationInterface | None
+        location: LocationDriver | None
         user: UserDriver | None
         vfs: FileSystemInterface | None
         led: LedDriver | None
