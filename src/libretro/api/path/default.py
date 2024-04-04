@@ -7,7 +7,7 @@ from .driver import PathDriver
 class DefaultPathDriver(PathDriver):
     def __init__(
         self,
-        corepath: str | bytes | PathLike | None,
+        corepath: str | bytes | PathLike | None = None,
         system: str | bytes | PathLike | None = None,
         assets: str | bytes | PathLike | None = None,
         save: str | bytes | PathLike | None = None,
