@@ -1,4 +1,5 @@
 from ctypes import *
+from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 
 from ..._utils import FieldsFromTypeHints
@@ -9,9 +10,13 @@ retro_usec_t = c_int64
 retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
 
 
+@dataclass(init=False)
 class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_frame_time_callback_t
     reference: retro_usec_t
+
+    def __deepcopy__(self, _):
+        return retro_frame_time_callback(self.callback, int(self.reference))
 
 
 class Rotation(IntEnum):
@@ -80,6 +85,7 @@ class MemoryType(IntFlag):
     CACHED = RETRO_MEMORY_TYPE_CACHED
 
 
+@dataclass(init=False)
 class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     data: c_void_p
     width: c_uint

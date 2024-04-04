@@ -1,4 +1,6 @@
+from copy import deepcopy
 from ctypes import *
+from dataclasses import dataclass
 from enum import IntFlag, IntEnum
 from os import PathLike
 
@@ -61,6 +63,7 @@ retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
 retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
 
 
+@dataclass(init=False)
 class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
     get_path: retro_vfs_get_path_t
     open: retro_vfs_open_t
@@ -82,10 +85,40 @@ class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
     dirent_is_dir: retro_vfs_dirent_is_dir_t
     closedir: retro_vfs_closedir_t
 
+    def __deepcopy__(self, _):
+        return retro_vfs_interface(
+            self.get_path,
+            self.open,
+            self.close,
+            self.size,
+            self.tell,
+            self.seek,
+            self.read,
+            self.write,
+            self.flush,
+            self.remove,
+            self.rename,
+            self.truncate,
+            self.stat,
+            self.mkdir,
+            self.opendir,
+            self.readdir,
+            self.dirent_get_name,
+            self.dirent_is_dir,
+            self.closedir
+        )
 
+
+@dataclass(init=False)
 class retro_vfs_interface_info(Structure, metaclass=FieldsFromTypeHints):
     required_interface_version: c_uint32
     iface: POINTER(retro_vfs_interface)
+
+    def __deepcopy__(self, memo):
+        return retro_vfs_interface_info(
+            int(self.required_interface_version),
+            deepcopy(self.iface[0]) if self.iface else None
+        )
 
 
 class VfsFileAccessHint(IntFlag):

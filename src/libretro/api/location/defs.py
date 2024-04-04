@@ -1,4 +1,5 @@
 from ctypes import CFUNCTYPE, POINTER, c_bool, c_double, c_uint, Structure
+from dataclasses import dataclass
 
 from ..._utils import FieldsFromTypeHints
 
@@ -10,6 +11,7 @@ retro_location_get_position_t = CFUNCTYPE(c_bool, c_double_p, c_double_p, c_doub
 retro_location_lifetime_status_t = CFUNCTYPE(None)
 
 
+@dataclass(init=False)
 class retro_location_callback(Structure, metaclass=FieldsFromTypeHints):
     start: retro_location_start_t
     stop: retro_location_stop_t
@@ -17,6 +19,16 @@ class retro_location_callback(Structure, metaclass=FieldsFromTypeHints):
     set_interval: retro_location_set_interval_t
     initialized: retro_location_lifetime_status_t
     deinitialized: retro_location_lifetime_status_t
+
+    def __deepcopy__(self, _):
+        return retro_location_callback(
+            self.start,
+            self.stop,
+            self.get_position,
+            self.set_interval,
+            self.initialized,
+            self.deinitialized
+        )
 
 
 __all__ = [
