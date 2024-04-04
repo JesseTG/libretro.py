@@ -68,7 +68,6 @@ class Session:
 
         self._content = content
         self._system_av_info: retro_system_av_info | None = None
-        self._loaded_content: Sequence[LoadedContentFile] | None = None
 
         self._pending_callback_exceptions: list[BaseException] = []
         self._is_exited = False
@@ -126,7 +125,6 @@ class Session:
         if not loaded:
             raise RuntimeError("Failed to load game")
 
-        self._loaded_content = content
         self._system_av_info = self._core.get_system_av_info()
         self._environment.video.set_system_av_info(self._system_av_info)
         self._environment.audio.set_system_av_info(self._system_av_info)

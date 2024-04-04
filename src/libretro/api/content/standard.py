@@ -1,18 +1,34 @@
 import os
+from collections.abc import Sequence
 from contextlib import ExitStack, AbstractContextManager, contextmanager
-from ctypes import c_ubyte, addressof, Array, c_void_p
+from ctypes import Array, c_void_p
 from os import PathLike
-from typing import Mapping, AnyStr, Sequence, Iterator, override, NamedTuple, BinaryIO
+from tempfile import TemporaryDirectory
+from typing import override
 from zipfile import Path as ZipPath
 
 from .driver import *
 from .defs import *
-from ..._utils import as_bytes
+from ..._utils import mmap_file, addressof_buffer
 
 
-class _PersistentBuffer(NamedTuple):
-    ptr: c_void_p
-    backing: BinaryIO
+class _PersistentBuffer:
+    def __init__(self, ptr: c_void_p, backing: AbstractContextManager | None):
+        self.ptr = ptr
+        self.backing = backing
+
+    def __del__(self):
+        self.close()
+
+    def close(self) -> None:
+        if self.backing:
+            self.backing.__exit__(None, None, None)
+            del self.backing
+            self.backing = None
+
+        if self.ptr:
+            del self.ptr
+            self.ptr = None
 
 
 class StandardContentDriver(ContentDriver):
@@ -28,10 +44,7 @@ class StandardContentDriver(ContentDriver):
         self._persistent_buffers: set[_PersistentBuffer] = set()
 
     def __del__(self):
-        for buf in self._persistent_buffers:
-            del buf.ptr
-            buf.backing.close()
-            del buf.backing
+        self._persistent_buffers.clear()
 
     @property
     @override
@@ -49,14 +62,6 @@ class StandardContentDriver(ContentDriver):
         if not self._content:
             return None
 
-        if not self._content_ext:
-            arraytype: type[Array] = retro_game_info_ext * len(self._content)
-            self._content_ext = arraytype()
-
-            for i, info in enumerate(self._content):
-                self._content_ext[i] = retro_game_info_ext(
-                )
-
         return self._content_ext
 
     @contextmanager
@@ -65,7 +70,7 @@ class StandardContentDriver(ContentDriver):
             raise RuntimeError("System info not set")
 
         with ExitStack() as stack:
-            loaded_content: Sequence[LoadedContentFile] | None
+            loaded_content: Sequence[LoadedContentFile | None] | None
             subsystem: retro_subsystem_info | None = None
             match content:
                 case SubsystemContent(game_type=game_type, info=info):
@@ -75,7 +80,7 @@ class StandardContentDriver(ContentDriver):
 
                     i: int
                     c: Content
-                    loaded_content = [stack.enter_context(self._load(i, subsystem, subsystem[i])) for (i, c) in enumerate(info)]
+                    loaded_content = [stack.enter_context(self._load(c, subsystem, subsystem[i])) for (i, c) in enumerate(info)]
                 case ZipPath() | str() | PathLike() | bytes() | bytearray() | memoryview() | retro_game_info():
                     loaded_content = [stack.enter_context(self._load(content))]
                 case None if self.support_no_game:
@@ -85,7 +90,19 @@ class StandardContentDriver(ContentDriver):
                 case _:
                     raise TypeError(f"Expected a content path, data buffer, SubsystemContent, or retro_game_info; got {type(content).__name__}")
 
+            # Now that we've loaded all the content, let's create the extended info array
+            content_ext_type: type[Array] = retro_game_info_ext * len(loaded_content)
+            self._content_ext = content_ext_type()
+            for i, c in enumerate(loaded_content):
+                self._content_ext[i] = c or retro_game_info_ext()
+
+            # Now we hand off the loaded content to retro_load_game...
             yield subsystem, loaded_content
+            # ...and now that retro_load_game has finished, let's clean up the loaded content
+            # (but persistent buffers will be kept open in self._persistent_buffers)
+
+            del self._content_ext
+            del loaded_content
 
     @contextmanager
     def _load(
@@ -93,7 +110,7 @@ class StandardContentDriver(ContentDriver):
         content: Content,
         subsystem: retro_subsystem_info | None = None,
         subsysrom: retro_subsystem_rom_info | None = None
-    ) -> AbstractContextManager[LoadedContentFile]:
+    ) -> AbstractContextManager[LoadedContentFile | None]:
         """
         :param content: The content to load
         :param subsystem: The subsystem we're using for this session, if any
@@ -104,9 +121,6 @@ class StandardContentDriver(ContentDriver):
                 raise RuntimeError("Subsystem info or ROM info was provided, but the core didn't register subsystems")
             case (retro_subsystem_info(), None, _) | (None, retro_subsystem_rom_info(), _):
                 raise ContentError("Subsystem info and subsystem ROM info must both be provided when loading subsystem content")
-
-        loaded_info: retro_game_info | None = None
-        loaded_info_ext: retro_game_info_ext | None = None
 
         ext = get_extension(content)
         if ext is not None:
@@ -123,79 +137,125 @@ class StandardContentDriver(ContentDriver):
             required=self.__is_required(ext, subsysrom),
         )
 
+        def _make_game_info_ext(info: retro_game_info) -> retro_game_info_ext:
+            # The frontend can lie to the core and say it extracted the content from an archive
+            path: bytes | None
+            path, sep, archive_file = info.path.partition(b'#') if info.path else (None, None, None)
+            # path will be the content path if content is not in an archive
+            # path will be the archive path if content *is* in an archive
+
+            file_in_archive = bool(sep and archive_file)
+            _dir = os.path.dirname(path) if path else None
+            name = os.path.basename(path) if path else None
+            return retro_game_info_ext(
+                full_path=info.path if not file_in_archive else None,
+                archive_path=path or None,  # Will be None if file_in_archive is False
+                archive_file=archive_file or None,  # Will be None if file_in_archive is False
+                dir=_dir,  # Will be the content dirname if not an archive
+                name=name,
+                ext=ext.lower(),
+                meta=info.meta,
+                data=info.data,
+                size=info.size,
+                file_in_archive=file_in_archive,
+                persistent_data=attributes.persistent_data,
+            )
+
+        loaded_info: retro_game_info | None = None
+        loaded_info_ext: retro_game_info_ext | None = None
         match content, attributes:
-            # For test cases that create a retro_game_info manually
-            case retro_game_info(info), ContentAttributes(need_fullpath=True) if not info.path:
+            # For test cases that create a retro_game_info manually.
+            case retro_game_info(path=None), ContentAttributes(need_fullpath=True):
                 # If trying to use a manually-created game info that needs a full path, but didn't give one...
                 raise ValueError("Core needs a full path, but none was provided")
-            case retro_game_info(info), ContentAttributes(need_fullpath=False) if not info.data:
+            case retro_game_info(data=None), ContentAttributes(need_fullpath=False):
                 # If trying to use a manually-created game info that doesn't need a full path, but didn't give data...
                 raise ValueError("Core needs retro_game_info to include data, but none was provided")
+            case retro_game_info(path=None, data=None), _:
+                raise ValueError("Core needs a full path or data, but neither was provided")
             case retro_game_info(info), ContentAttributes(persistent_data=persistent_data):
-                yield LoadedContentFile(
-                    info=info,
-                    info_ext=None,  # TODO: Given a retro_game_info, construct a retro_game_info_ext
-                    persistent=persistent_data,
-                )
+                info: retro_game_info
 
-            # For test cases with content that needs a full path, but load their own data
+                loaded_info = info
+                loaded_info_ext = _make_game_info_ext(info)
+
+                if persistent_data:
+                    self._persistent_buffers.add(_PersistentBuffer(c_void_p(info.data), None))
+
+                # Give the loaded content to the environment
+                yield LoadedContentFile(loaded_info, loaded_info_ext)
+
+            case ZipPath(zippath), ContentAttributes(need_fullpath=True, block_extract=False, persistent_data=False):
+                # If the core needs a full path...
+                zippath: ZipPath
+                with TemporaryDirectory() as tmp:
+                    tmpfile = zippath.root.extract(zippath.at, tmp)
+                    loaded_info = retro_game_info(os.fsencode(tmpfile), None, 0, None)
+                    loaded_info_ext = _make_game_info_ext(loaded_info)
+                    yield LoadedContentFile(loaded_info, loaded_info_ext)
+            case ZipPath(zippath), ContentAttributes(need_fullpath=True, block_extract=True):
+                # If the core needs a full path and we're blocking extraction...
+                raise ContentError(f"Cannot extract {zippath}; core requires a full path, but block_extract is enabled")
+            case ZipPath(zippath), ContentAttributes(need_fullpath=False): # TODO: Is block_extract significant here?
+                path = f'{zippath.filename}#{zippath.name}'.encode()
+                data = zippath.read_bytes()
+                loaded_info = retro_game_info(path, addressof_buffer(data), len(data), None)
+                loaded_info_ext = _make_game_info_ext(loaded_info)
+
+                if attributes.persistent_data:
+                    self._persistent_buffers.add(_PersistentBuffer(c_void_p(loaded_info.data), None))
+
+                yield LoadedContentFile(loaded_info, loaded_info_ext)
+
+            # For test cases that provide content by path
             case str(path) | PathLike(path), ContentAttributes(need_fullpath=True):
                 loaded_info = retro_game_info(os.fsencode(path), None, 0, None)
-
-            case str(path) | PathLike(path), ContentAttributes(need_fullpath=False, persistent_data=persistent_data):
-                w = map_content(path)
-                # TODO: Validate that info matches system_info and content overrides
-                # TODO: Create a content_ext
-                with map_content(path) as info:
-                    yield info
-                    info.data = None
+                loaded_info_ext = _make_game_info_ext(loaded_info)
+                yield LoadedContentFile(loaded_info, loaded_info_ext)
+                # There's no data to persist, so no cleanup needed
+            case str(path) | PathLike(path), ContentAttributes(persistent_data=False):
+                with mmap_file(path) as view:
+                    loaded_info = retro_game_info(os.fsencode(path), addressof_buffer(view), len(view), None)
+                    loaded_info_ext = _make_game_info_ext(loaded_info)
+                    yield LoadedContentFile(loaded_info, loaded_info_ext)
+                    # Content is not persistent, so just let the with statement clean up the view
+            case str(path) | PathLike(path), ContentAttributes(persistent_data=True):
+                context = mmap_file(path)
+                view = context.__enter__()
+                loaded_info = retro_game_info(os.fsencode(path), addressof_buffer(view), len(view), None)
+                loaded_info_ext = _make_game_info_ext(loaded_info)
+                self._persistent_buffers.add(_PersistentBuffer(c_void_p(addressof_buffer(view)), context))
+                yield LoadedContentFile(loaded_info, loaded_info_ext)
+                # Content is persistent, so the view (and backing file) will be cleaned up in __del__ later
 
             # For test cases that provide ROM data directly
-            case bytes() | bytearray() | memoryview(), ContentAttributes(need_fullpath=False):
+            case bytes() | bytearray() | memoryview(), ContentAttributes(need_fullpath=True):
                 raise ValueError("Core requires a full path, but only raw data was provided")
+            case bytes(rom) | bytearray(rom) | memoryview(rom), ContentAttributes(persistent_data=persistent_data):
+                loaded_info = retro_game_info(None, addressof_buffer(rom), len(rom), None)
+                loaded_info_ext = _make_game_info_ext(loaded_info)
 
-            case bytes(rom) | bytearray(rom) | memoryview(rom), ContentAttributes(need_fullpath=False):
-                loaded = self._core.load_game(retro_game_info(None, rom, len(rom), None))
+                if persistent_data:
+                    self._persistent_buffers.add(_PersistentBuffer(c_void_p(loaded_info.data), None))
 
-            case SubsystemContent(), _ if not self._subsystems:
-                raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
+                yield LoadedContentFile(loaded_info, loaded_info_ext)
 
-            case SubsystemContent(game_type=str(ident) | bytes(ident), info=infos) as subsystem_content:
-                idents = tuple(as_bytes(s.ident) for s in self._subsystems)
-                if as_bytes(ident) not in idents:
-                    raise ValueError(f"Content with unregistered subsystem ident {ident!r} can't be loaded by the core")
+            # For test cases that provide no content for certain subsystems
+            case None, ContentAttributes(required=False):
+                # Optional subsystem content that isn't provided should be repesented as zeroed-out retro_game_infos
+                # (Optional *regular* content is handled up in load())
+                yield LoadedContentFile(retro_game_info(), retro_game_info_ext())
+            case None, _:
+                raise ContentError("No content provided and core did not indicate support for no game.")
+            case e, _:
+                raise TypeError(f"Unexpected content type: {type(e).__name__}")
 
-                typeid = tuple(s.id for s in self._subsystem_info if as_bytes(s.ident) == as_bytes(ident))
-                assert len(typeid) > 0
-
-                #with self.map_content(subsystem_content) as content:
-                #    pass
-
-                # TODO: Verify conditions
-                loaded = self._core.load_game_special(typeid[0], infos)
-
-            case SubsystemContent(game_type=int(game_type), info=infos):
-                ids = tuple(int(s.id) for s in self._subsystem_info)
-                if game_type not in ids:
-                    raise ValueError(f"Content with unregistered subsystem type {game_type} can't be loaded by the core")
-
-                # TODO: Verify conditions
-                loaded = self._core.load_game_special(game_type, infos)
-
-            case None if self._support_no_game:
-                loaded = self._core.load_game(None)
-
-            case None:
-                raise RuntimeError("No content provided and core did not indicate support for no game.")
-
-        if not persistent_data:
+        if not attributes.persistent_data:
             if loaded_info:
                 loaded_info.data = None
 
             if loaded_info_ext:
                 loaded_info_ext.data = None
-
-        # TODO: Clear the saved retro_game_info and retro_game_info_ext structs unless they're marked as persistent
 
     @override
     def set_system_info(self, info: retro_system_info | None) -> None:
