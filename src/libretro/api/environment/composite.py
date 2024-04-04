@@ -526,13 +526,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def location(self) -> LocationInterface | None:
+    def location(self) -> LocationDriver | None:
         return self._location
 
     @location.setter
-    def location(self, value: LocationInterface) -> None:
-        if not isinstance(value, LocationInterface):
-            raise TypeError(f"Expected LocationInterface, got {type(value).__name__}")
+    def location(self, value: LocationDriver) -> None:
+        if not isinstance(value, LocationDriver):
+            raise TypeError(f"Expected LocationDriver, got {type(value).__name__}")
 
         self._location = value
 
