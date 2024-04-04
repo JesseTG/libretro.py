@@ -8,7 +8,7 @@ from typing import Type, AnyStr, Any
 from .api.av import *
 from .api.content import *
 from .api.environment import *
-from .api.led import retro_led_interface, LedInterface, DictLedInterface
+from .api.led import retro_led_interface, LedDriver, DictLedDriver
 from .api.location import *
 from .api.memory import retro_memory_map
 from .api.microphone import *
@@ -261,7 +261,7 @@ class Session:
         self._environment.av_enable = value
 
     @property
-    def midi(self) -> MidiInterface:
+    def midi(self) -> MidiDriver:
         return self._environment.midi
 
     @property
@@ -273,7 +273,7 @@ class Session:
         return self._environment.vfs
 
     @property
-    def led(self) -> LedInterface:
+    def led(self) -> LedDriver:
         return self._environment.led
 
     @property
@@ -312,15 +312,15 @@ def default_session(
         sensor: SensorInterface | None = None,
         log_callback: LogDriver | str | Logger | None = None,
         perf: PerfDriver | None = None,
-        location: LocationInterface | None = None,
+        location: LocationDriver | None = None,
         core_assets_dir: Directory | None = None,
         save_dir: Directory | None = None,
         username: str | bytes | None = "libretro.py",
         language: Language = Language.ENGLISH,
         vfs: FileSystemInterface | int | None = None,
-        led: LedInterface | None = None,
+        led: LedDriver | None = None,
         av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
-        midi: MidiInterface | None = None,
+        midi: MidiDriver | None = None,
         target_refresh_rate: float = 60.0,
         preferred_hw: HardwareContext | None = HardwareContext.NONE,
         driver_switch_enable: bool = False,
@@ -417,15 +417,15 @@ def default_session(
         sensor=sensor or GeneratorSensorInterface(),
         log_callback=log_callback or UnformattedLogDriver(),
         perf=perf or DefaultPerfDriver(),
-        location=location or GeneratorLocationInterface(),
+        location=location or GeneratorLocationDriver(),
         core_assets_dir=core_assets_dir,
         save_dir=save_dir,
         username=username,
         language=language,
         vfs=vfs_impl,
-        led=led or DictLedInterface(),
+        led=led or DictLedDriver(),
         av_enable=av_enable,
-        midi=midi or GeneratorMidiInterface(),
+        midi=midi or GeneratorMidiDriver(),
         target_refresh_rate=target_refresh_rate,
         preferred_hw=preferred_hw,
         driver_switch_enable=driver_switch_enable,

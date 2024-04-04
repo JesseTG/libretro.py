@@ -53,9 +53,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         location: LocationInterface | None
         user: UserDriver | None
         vfs: FileSystemInterface | None
-        led: LedInterface | None
+        led: LedDriver | None
         av_enable: AvEnableFlags | None
-        midi: MidiInterface | None
+        midi: MidiDriver | None
         target_refresh_rate: float | None
         preferred_hw: HardwareContext | None
         driver_switch_enable: bool | None
@@ -812,13 +812,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def led(self) -> LedInterface | None:
+    def led(self) -> LedDriver | None:
         return self._led
 
     @led.setter
-    def led(self, value: LedInterface) -> None:
-        if not isinstance(value, LedInterface):
-            raise TypeError(f"Expected LedInterface, got {type(value).__name__}")
+    def led(self, value: LedDriver) -> None:
+        if not isinstance(value, LedDriver):
+            raise TypeError(f"Expected LedDriver, got {type(value).__name__}")
 
         self._led = value
 
@@ -860,12 +860,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Derive this from the audio, video, and state drivers
 
     @property
-    def midi(self) -> MidiInterface | None:
+    def midi(self) -> MidiDriver | None:
         return self._midi
 
     @midi.setter
-    def midi(self, value: MidiInterface) -> None:
-        if not isinstance(value, MidiInterface):
+    def midi(self, value: MidiDriver) -> None:
+        if not isinstance(value, MidiDriver):
             raise TypeError(f"Expected MidiInterface, got {type(value).__name__}")
 
         self._midi = value

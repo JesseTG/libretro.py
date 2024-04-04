@@ -15,7 +15,7 @@ class Position(NamedTuple):
 
 
 @runtime_checkable
-class LocationInterface(Protocol):
+class LocationDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_location_callback()
@@ -93,6 +93,6 @@ class LocationInterface(Protocol):
 
 
 __all__ = [
-    'LocationInterface',
+    'LocationDriver',
     'Position',
 ]

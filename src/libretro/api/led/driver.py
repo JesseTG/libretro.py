@@ -5,7 +5,7 @@ from .defs import *
 
 
 @runtime_checkable
-class LedInterface(Protocol):
+class LedDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_led_interface()
@@ -20,5 +20,11 @@ class LedInterface(Protocol):
     def __setitem__(self, key: int, value: int):
         self.set_led_state(int(key), int(value))
 
+    @abstractmethod
+    def get_led_state(self, led: int) -> int: ...
 
-__all__ = ['LedInterface']
+    def __getitem__(self, key: int) -> int:
+        return self.get_led_state(int(key))
+
+
+__all__ = ['LedDriver']

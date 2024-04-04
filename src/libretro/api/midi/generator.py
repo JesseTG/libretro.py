@@ -2,7 +2,7 @@ from collections import deque
 from collections.abc import Iterator, Callable, Sequence
 from typing import NamedTuple
 
-from .interface import *
+from .driver import *
 
 MidiIterator = Iterator[int | None]
 MidiGenerator = Callable[[], MidiIterator]
@@ -13,7 +13,7 @@ class MidiWrite(NamedTuple):
     delta_time: int
 
 
-class GeneratorMidiInterface(MidiInterface):
+class GeneratorMidiDriver(MidiDriver):
     def __init__(self, generator: MidiGenerator | None = None):
         super().__init__()
         self._generator = generator
@@ -69,4 +69,4 @@ class GeneratorMidiInterface(MidiInterface):
         return True
 
 
-__all__ = ['GeneratorMidiInterface']
+__all__ = ['GeneratorMidiDriver']

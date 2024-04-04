@@ -1,12 +1,12 @@
 from collections.abc import Callable, Iterator
 
-from .interface import *
+from .driver import *
 
 LocationInputIterator = Iterator[Position | None]
 LocationInputGenerator = Callable[[], LocationInputIterator]
 
 
-class GeneratorLocationInterface(LocationInterface):
+class GeneratorLocationDriver(LocationDriver):
     def __init__(self, generator: LocationInputGenerator | None = None):
         super().__init__()
         self._generator = generator
@@ -64,4 +64,4 @@ class GeneratorLocationInterface(LocationInterface):
         return self._distance
 
 
-__all__ = ['GeneratorLocationInterface', 'LocationInputGenerator', 'LocationInputIterator']
+__all__ = ['GeneratorLocationDriver', 'LocationInputGenerator', 'LocationInputIterator']

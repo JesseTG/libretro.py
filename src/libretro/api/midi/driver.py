@@ -7,7 +7,7 @@ from .defs import *
 
 
 @runtime_checkable
-class MidiInterface(Protocol):
+class MidiDriver(Protocol):
     def __init__(self):
         self._as_parameter_ = retro_midi_interface()
         self._as_parameter_.input_enabled = retro_midi_input_enabled_t(self.__input_enabled)
@@ -66,4 +66,4 @@ class MidiInterface(Protocol):
         return self.flush()
 
 
-__all__ = ['MidiInterface']
+__all__ = ['MidiDriver']
