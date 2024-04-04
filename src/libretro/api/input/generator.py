@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
@@ -19,6 +19,7 @@ class Point:
 DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
 InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
 InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
+InputStateIterable = Iterable[InputPollResult | Sequence[InputPollResult]]
 InputStateGenerator = Callable[[], InputStateIterator]
 
 
@@ -402,5 +403,6 @@ __all__ = [
     'InputPollResult',
     'InputStateIterator',
     'InputStateGenerator',
+    'InputStateIterable',
     'Point',
 ]
