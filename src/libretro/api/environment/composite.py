@@ -102,6 +102,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._rumble: retro_rumble_interface | None = None
         self._sensor: retro_sensor_interface | None = None
         self._log_cb: retro_log_callback | None = None
+        self._led_cb: retro_led_interface | None = None
 
     @property
     def audio(self) -> AudioDriver:
@@ -830,11 +831,19 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not self._led:
             return False
 
-        if led_ptr:
-            memmove(led_ptr, byref(retro_led_interface.from_param(self._led)), sizeof(retro_led_interface))
+        if not led_ptr:
+            # This envcall supports passing NULL to query for support
+            return True
 
-        # This envcall supports passing NULL to query for support
+        if not self._led_cb:
+            self._led_cb = retro_led_interface(self.__set_led_state)
+
+        led_ptr[0] = self._led_cb
         return True
+
+    def __set_led_state(self, led: int, state: int) -> None:
+        if self._led:
+            self._led.set_led_state(led, state)
 
     @property
     def av_enable(self) -> AvEnableFlags | None:
