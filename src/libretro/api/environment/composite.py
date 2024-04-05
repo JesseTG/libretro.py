@@ -63,7 +63,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         savestate_context: SavestateContext | None
         jit_capable: bool | None
         mic_interface: MicrophoneDriver | None
-        device_power: DevicePower | None
+        device_power: PowerDriver | None
 
     @override
     def __init__(self, kwargs: Args):
@@ -1286,13 +1286,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def power(self) -> retro_device_power | None:
+    def power(self) -> PowerDriver | None:
         return self._device_power
 
     @power.setter
-    def power(self, value: retro_device_power) -> None:
-        if not isinstance(value, retro_device_power):
-            raise TypeError(f"Expected retro_device_power, got {type(value).__name__}")
+    def power(self, value: PowerDriver) -> None:
+        if not isinstance(value, PowerDriver):
+            raise TypeError(f"Expected PowerDriver, got {type(value).__name__}")
 
         self._device_power = value
 
@@ -1306,11 +1306,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         if power_ptr:
-            memmove(power_ptr, byref(self._device_power), sizeof(retro_device_power))
+            power_ptr[0] = self._device_power.device_power
 
         # This envcall supports passing NULL to query for support
         return True
-        # TODO: Add a PowerDriver
 
     @override
     def _set_netpacket_interface(self, interface: POINTER(retro_netpacket_callback)) -> bool:

@@ -21,7 +21,7 @@ from .api.midi import MidiDriver
 from .api.options import *
 from .api.path import PathDriver, DefaultPathDriver
 from .api.perf import PerfDriver, DefaultPerfDriver
-from .api.power import DevicePower
+from .api.power.driver import PowerDriver
 from .api.savestate import SavestateContext
 from .api.throttle import retro_throttle_state
 from .api.user import UserDriver, DefaultUserDriver
@@ -73,7 +73,7 @@ HardwareContextArg = _OptionalArg[HardwareContext]
 ThrottleStateArg = _OptionalArg[retro_throttle_state]
 SavestateContextArg = _OptionalArg[SavestateContext]
 MicDriverArg = _OptionalArg[MicrophoneDriver]
-PowerDriverArg = _OptionalArg[DevicePower]
+PowerDriverArg = _OptionalArg[PowerDriver]
 
 
 class RequiredError(RuntimeError):
@@ -110,7 +110,7 @@ class _SessionBuilderArgs(TypedDict):
     savestate_context: _OptionalFactory[SavestateContext] # TODO: Replace with some driver (not sure what yet)
     jit_capable: _OptionalFactory[bool] # TODO: Replace with some driver (not sure what yet)
     mic: _OptionalFactory[MicrophoneDriver]
-    power: _OptionalFactory[DevicePower] # TODO: Replace with PowerDriver
+    power: _OptionalFactory[PowerDriver]
 
 
 class SessionBuilder:

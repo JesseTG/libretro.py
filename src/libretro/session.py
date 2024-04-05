@@ -15,7 +15,7 @@ from .api.microphone import *
 from .api.midi import *
 from .api.options import *
 from .api.perf import *
-from .api.power import retro_device_power, PowerState, DevicePower
+from .api.power import *
 from .api.savestate import *
 from .api.throttle import *
 from .api.log import *
@@ -29,6 +29,7 @@ from .api.input import *
 from .api.video import *
 
 from ._utils import *
+from .h import *
 
 Directory = str | bytes
 
@@ -329,7 +330,7 @@ def default_session(
         savestate_context: SavestateContext = SavestateContext.NORMAL,
         jit_capable: bool = True,
         mic_interface: MicrophoneDriver | MicrophoneInputIterator | MicrophoneInputGenerator | None = None,
-        device_power: DevicePower | retro_device_power = full_power,
+        device_power: PowerDriver | retro_device_power = full_power,
         playlist_dir: Directory | None = None,
         ) -> Session:
     """

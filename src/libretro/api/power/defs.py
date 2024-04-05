@@ -3,8 +3,8 @@ from ctypes import c_int, c_int8, Structure
 from dataclasses import dataclass
 from enum import IntEnum
 
-from .._utils import FieldsFromTypeHints
-from ..h import *
+from ..._utils import FieldsFromTypeHints
+from ...h import *
 
 
 class PowerState(IntEnum):
