@@ -6,17 +6,6 @@ from ..._utils import FieldsFromTypeHints
 from ...h import *
 
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
-retro_usec_t = c_int64
-retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
-
-
-@dataclass(init=False)
-class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_frame_time_callback_t
-    reference: retro_usec_t
-
-    def __deepcopy__(self, _):
-        return retro_frame_time_callback(self.callback, int(self.reference))
 
 
 class Rotation(IntEnum):
@@ -98,9 +87,6 @@ class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
 
 __all__ = [
     'retro_video_refresh_t',
-    'retro_usec_t',
-    'retro_frame_time_callback_t',
-    'retro_frame_time_callback',
     'Rotation',
     'PixelFormat',
     'MemoryAccess',

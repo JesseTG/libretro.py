@@ -17,7 +17,7 @@ from .api.options import *
 from .api.perf import *
 from .api.power import *
 from .api.savestate import *
-from .api.throttle import *
+from .api.timing import *
 from .api.log import *
 from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
 from .api.proc import retro_get_proc_address_interface, retro_proc_address_t

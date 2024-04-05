@@ -23,7 +23,7 @@ from .api.path import PathDriver, DefaultPathDriver
 from .api.perf import PerfDriver, DefaultPerfDriver
 from .api.power.driver import PowerDriver
 from .api.savestate import SavestateContext
-from .api.throttle import retro_throttle_state
+from .api.timing.defs import retro_throttle_state
 from .api.user import UserDriver, DefaultUserDriver
 from .api.vfs import FileSystemInterface, StandardFileSystemInterface
 from .api.video import VideoDriver, ArrayVideoDriver, HardwareContext

@@ -21,7 +21,7 @@ from ..options.defs import *
 from ..perf import *
 from ..power import retro_device_power
 from ..proc import *
-from ..throttle import retro_throttle_state, retro_fastforwarding_override
+from ..timing import *
 from ..vfs import *
 from ..video import *
 from ...h import *

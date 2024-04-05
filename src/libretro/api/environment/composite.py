@@ -29,7 +29,7 @@ from ..perf import *
 from ..power import *
 from ..proc import *
 from ..savestate import SavestateContext, SerializationQuirks
-from ..throttle import *
+from ..timing import *
 from ..user import *
 from ..vfs import *
 from ..video import *

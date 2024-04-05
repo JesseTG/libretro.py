@@ -22,7 +22,7 @@ from ..options.defs import *
 from ..perf.defs import retro_perf_callback
 from ..power import retro_device_power
 from ..proc import retro_get_proc_address_interface
-from ..throttle import retro_throttle_state, retro_fastforwarding_override
+from ..timing import *
 from ..vfs.defs import retro_vfs_interface_info
 from ..video.defs import *
 from ..video.render.defs import *
