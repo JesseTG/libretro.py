@@ -20,6 +20,8 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
     FAST_SAVESTATES = RETRO_AV_ENABLE_FAST_SAVESTATES
     HARD_DISABLE_AUDIO = RETRO_AV_ENABLE_HARD_DISABLE_AUDIO
 
+    ALL = VIDEO | AUDIO | FAST_SAVESTATES | HARD_DISABLE_AUDIO
+
 
 @dataclass(init=False)
 class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
