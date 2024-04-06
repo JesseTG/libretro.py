@@ -16,14 +16,15 @@ from .api.location import LocationInputGenerator, GeneratorLocationDriver
 from .api.location.driver import LocationDriver
 from .api.log import LogDriver, UnformattedLogDriver
 from .api.message import MessageInterface, LoggerMessageInterface
-from .api.microphone import MicrophoneDriver
+from .api.microphone import MicrophoneDriver, GeneratorMicrophoneDriver
 from .api.midi import MidiDriver, GeneratorMidiDriver
 from .api.options import OptionDriver, DictOptionDriver
 from .api.path import PathDriver, DefaultPathDriver
 from .api.perf import PerfDriver, DefaultPerfDriver
-from .api.power.driver import PowerDriver
+from .api.power import retro_device_power, PowerState
+from .api.power.driver import PowerDriver, ConstantPowerDriver
 from .api.savestate import SavestateContext
-from .api.timing.defs import retro_throttle_state
+from .api.timing.defs import retro_throttle_state, ThrottleMode
 from .api.user import UserDriver, DefaultUserDriver
 from .api.vfs import FileSystemInterface, StandardFileSystemInterface
 from .api.video import VideoDriver, ArrayVideoDriver, HardwareContext
@@ -68,7 +69,7 @@ FileSystemArg = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
 LedDriverArg = _OptionalArg[LedDriver]
 AvEnableFlagsArg = _OptionalArg[AvEnableFlags]
 MidiDriverArg = _OptionalArg[MidiDriver]
-FloatArg = _OptionalArg[float]
+FloatArg = _OptionalArg[float | int]
 HardwareContextArg = _OptionalArg[HardwareContext]
 ThrottleStateArg = _OptionalArg[retro_throttle_state]
 SavestateContextArg = _OptionalArg[SavestateContext]
@@ -504,6 +505,142 @@ class SessionBuilder:
 
         return self
 
+    def with_target_refresh_rate(self, rate: FloatArg) -> Self:
+        match rate:
+            case float() | int():
+                self._args["target_refresh_rate"] = lambda: rate
+            case func if callable(func):
+                self._args["target_refresh_rate"] = func
+            case _DefaultType.DEFAULT:
+                self._args["target_refresh_rate"] = lambda: 60.0
+            case None:
+                self._args["target_refresh_rate"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected float, a callable that returns one, DEFAULT, or None; got {type(rate).__name__}"
+                )
+
+        return self
+
+    def with_preferred_hw(self, hw: HardwareContextArg) -> Self:
+        match hw:
+            case HardwareContext():
+                self._args["preferred_hw"] = lambda: hw
+            case func if callable(func):
+                self._args["preferred_hw"] = func
+            case _DefaultType.DEFAULT:
+                self._args["preferred_hw"] = _nothing
+            case None:
+                self._args["preferred_hw"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected HardwareContext, a callable that returns one, DEFAULT, or None; got {type(hw).__name__}"
+                )
+
+        return self
+
+    def with_driver_switch_enable(self, enable: BoolArg) -> Self:
+        match enable:
+            case bool():
+                self._args["driver_switch_enable"] = lambda: enable
+            case func if callable(func):
+                self._args["driver_switch_enable"] = func
+            case _DefaultType.DEFAULT:
+                self._args["driver_switch_enable"] = lambda: False
+            case None:
+                self._args["driver_switch_enable"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected bool, a callable that returns one, DEFAULT, or None; got {type(enable).__name__}"
+                )
+
+        return self
+
+    def with_throttle(self, state: ThrottleStateArg) -> Self:
+        match state:
+            case retro_throttle_state():
+                self._args["throttle"] = lambda: state
+            case func if callable(func):
+                self._args["throttle"] = func
+            case _DefaultType.DEFAULT:
+                self._args["throttle"] = lambda: retro_throttle_state(ThrottleMode.UNBLOCKED, 0.0)
+            case None:
+                self._args["throttle"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected retro_throttle_state, a callable that returns one, DEFAULT, or None; got {type(state).__name__}"
+                )
+
+        return self
+
+    def with_savestate_context(self, context: SavestateContextArg) -> Self:
+        match context:
+            case SavestateContext():
+                self._args["savestate_context"] = lambda: context
+            case func if callable(func):
+                self._args["savestate_context"] = func
+            case _DefaultType.DEFAULT:
+                self._args["savestate_context"] = lambda: SavestateContext.NORMAL
+            case None:
+                self._args["savestate_context"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected SavestateContext, a callable that returns one, DEFAULT, or None; got {type(context).__name__}"
+                )
+
+        return self
+
+    def with_jit_capable(self, capable: BoolArg) -> Self:
+        match capable:
+            case bool():
+                self._args["jit_capable"] = lambda: capable
+            case func if callable(func):
+                self._args["jit_capable"] = func
+            case _DefaultType.DEFAULT:
+                self._args["jit_capable"] = lambda: True
+            case None:
+                self._args["jit_capable"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected bool, a callable that returns one, DEFAULT, or None; got {type(capable).__name__}"
+                )
+
+        return self
+
+    def with_mic(self, mic: MicDriverArg) -> Self:
+        match mic:
+            case MicrophoneDriver():
+                self._args["mic"] = lambda: mic
+            case func if callable(func):
+                self._args["mic"] = func
+            case _DefaultType.DEFAULT:
+                self._args["mic"] = GeneratorMicrophoneDriver
+            case None:
+                self._args["mic"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected MicrophoneDriver, a callable that returns one, DEFAULT, or None; got {type(mic).__name__}"
+                )
+
+        return self
+
+    def with_power(self, power: PowerDriverArg) -> Self:
+        match power:
+            case PowerDriver():
+                self._args["power"] = lambda: power
+            case func if callable(func):
+                self._args["power"] = func
+            case _DefaultType.DEFAULT:
+                self._args["power"] = lambda: ConstantPowerDriver(retro_device_power(PowerState.PLUGGED_IN, 0, 100))
+            case None:
+                self._args["power"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected PowerDriver, a callable that returns one, DEFAULT, or None; got {type(power).__name__}"
+                )
+
+        return self
+
     def build(self) -> Session:
         """
         Constructs a Session object with the provided arguments.
@@ -561,6 +698,14 @@ def defaults(core: CoreArg) -> SessionBuilder:
         .with_led(DEFAULT)
         .with_av_mask(DEFAULT)
         .with_midi(DEFAULT)
+        .with_target_refresh_rate(DEFAULT)
+        .with_preferred_hw(DEFAULT)
+        .with_driver_switch_enable(DEFAULT)
+        .with_throttle(DEFAULT)
+        .with_savestate_context(DEFAULT)
+        .with_jit_capable(DEFAULT)
+        .with_mic(DEFAULT)
+        .with_power(DEFAULT)
     )
 
 
