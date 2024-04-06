@@ -639,6 +639,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_subsystem_info(self, info_ptr: POINTER(retro_subsystem_info)) -> bool:
+        if not self._content:
+            return False
+
         if not info_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 

@@ -12,13 +12,13 @@ from .api.content import *
 from .api.environment.composite import CompositeEnvironmentDriver
 from .api.input import *
 from .api.led import LedDriver, DictLedDriver
-from .api.location import LocationInputGenerator
+from .api.location import LocationInputGenerator, GeneratorLocationDriver
 from .api.location.driver import LocationDriver
 from .api.log import LogDriver, UnformattedLogDriver
 from .api.message import MessageInterface, LoggerMessageInterface
 from .api.microphone import MicrophoneDriver
-from .api.midi import MidiDriver
-from .api.options import *
+from .api.midi import MidiDriver, GeneratorMidiDriver
+from .api.options import OptionDriver, DictOptionDriver
 from .api.path import PathDriver, DefaultPathDriver
 from .api.perf import PerfDriver, DefaultPerfDriver
 from .api.power.driver import PowerDriver
@@ -374,6 +374,8 @@ class SessionBuilder:
                 self._args["location"] = lambda: location
             case func if callable(func):
                 self._args["location"] = func
+            case _DefaultType.DEFAULT:
+                self._args["location"] = GeneratorLocationDriver
             case None:
                 self._args["location"] = _nothing
             case _:
@@ -435,6 +437,8 @@ class SessionBuilder:
                 self._args["av_mask"] = lambda: av_mask
             case func if callable(func):
                 self._args["av_mask"] = func
+            case _DefaultType.DEFAULT:
+                self._args["av_mask"] = lambda: AvEnableFlags.ALL
             case None:
                 self._args["av_mask"] = _nothing
             case _:
@@ -448,6 +452,8 @@ class SessionBuilder:
                 self._args["midi"] = lambda: midi
             case func if callable(func):
                 self._args["midi"] = func
+            case _DefaultType.DEFAULT:
+                self._args["midi"] = GeneratorMidiDriver
             case None:
                 self._args["midi"] = _nothing
             case _:

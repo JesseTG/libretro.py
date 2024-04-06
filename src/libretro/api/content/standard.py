@@ -93,8 +93,8 @@ class StandardContentDriver(ContentDriver):
             # Now that we've loaded all the content, let's create the extended info array
             content_ext_type: type[Array] = retro_game_info_ext * len(loaded_content)
             self._content_ext = content_ext_type()
-            for i, c in enumerate(loaded_content):
-                self._content_ext[i] = c or retro_game_info_ext()
+            for i, lc in enumerate(loaded_content):
+                self._content_ext[i] = lc.info_ext or retro_game_info_ext()
 
             # Now we hand off the loaded content to retro_load_game...
             yield subsystem, loaded_content
@@ -293,7 +293,7 @@ class StandardContentDriver(ContentDriver):
             case None, _, _:
                 # If loading any content from in-memory...
                 return False
-            case bytes(), _, ContentInfoOverrides(overrides) if ext in overrides:
+            case bytes(), _, ContentInfoOverrides() as overrides if ext in overrides:
                 # If loading a content file with a specially-treated extension...
                 overrides: ContentInfoOverrides
                 return overrides[ext].need_fullpath
@@ -318,7 +318,7 @@ class StandardContentDriver(ContentDriver):
             case None, _:
                 # If loading any content from in-memory...
                 return True
-            case bytes(ext), ContentInfoOverrides(overrides) if ext in overrides:
+            case bytes(ext), ContentInfoOverrides() as overrides if ext in overrides:
                 # If loading a content file with a specially-treated extension...
                 overrides: ContentInfoOverrides
                 return overrides[ext].persistent_data
@@ -358,7 +358,7 @@ class StandardContentDriver(ContentDriver):
         match ext, subsysrom:
             case (None, _) | (_, None):
                 # If loading any content from in-memory or if not using a subsystem...
-                return self._system_info.required
+                return not self._support_no_game
             case bytes(), retro_subsystem_rom_info():
                 # If loading a subsystem ROM...
                 overrides: ContentInfoOverrides
