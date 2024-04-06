@@ -1,9 +1,7 @@
-import ctypes
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import *
-from os import PathLike
-from typing import TypedDict, Required, override, Type, AnyStr
+from typing import TypedDict, Required, override, AnyStr
 
 import _ctypes
 

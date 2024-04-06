@@ -1,5 +1,5 @@
 from collections.abc import Mapping, Callable
-from ctypes import c_uint, POINTER, c_bool, c_char_p, c_float
+from ctypes import POINTER, c_bool, c_char_p, c_float
 from typing import override
 
 from .dict import DictEnvironmentDriver
