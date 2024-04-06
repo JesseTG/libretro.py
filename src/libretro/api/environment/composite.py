@@ -489,7 +489,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
         if not self._log_cb:
-            self._log_cb = retro_log_callback(log=self.__log)
+            self._log_cb = retro_log_callback(log=retro_log_printf_t(self.__log))
 
         log_ptr[0] = self._log_cb
         return True
