@@ -3,12 +3,12 @@ import logging
 from collections.abc import Iterable, Sequence
 from logging import Logger
 from types import TracebackType
-from typing import Type, AnyStr, Any
+from typing import Type, AnyStr
 
 from .api.av import *
 from .api.content import *
 from .api.environment import *
-from .api.led import retro_led_interface, LedDriver, DictLedDriver
+from .api.led import LedDriver, DictLedDriver
 from .api.location import *
 from .api.memory import retro_memory_map
 from .api.microphone import *
@@ -19,10 +19,10 @@ from .api.power import *
 from .api.savestate import *
 from .api.timing import *
 from .api.log import *
-from .api.message import retro_message, MessageInterface, LoggerMessageInterface, retro_message_ext
-from .api.proc import retro_get_proc_address_interface, retro_proc_address_t
+from .api.message import MessageInterface, LoggerMessageInterface
+from .api.proc import retro_get_proc_address_interface
 from .api.user import Language
-from .api.vfs import retro_vfs_interface_info, FileSystemInterface, StandardFileSystemInterface, retro_vfs_interface
+from .api.vfs import FileSystemInterface, StandardFileSystemInterface
 from .core import Core, CoreInterface
 from .api.audio import *
 from .api.input import *
@@ -298,150 +298,7 @@ class Session:
         return self._throttle_state
 
 
-def default_session(
-        core: str | Core | CDLL | PathLike,
-        content: Content | SubsystemContent | ContentDriver | None = None,
-        content_driver: ContentDriver | None = None,
-        audio: AudioDriver | None = None,
-        input_state: InputDriver | InputStateIterator | InputStateGenerator | None = None,
-        video: VideoDriver | None = None,
-        options: OptionDriver | Mapping[AnyStr, AnyStr] | None = None,
-        overscan: bool = False,
-        message: MessageInterface | None = None,
-        system_dir: Directory | None = None,
-        rumble: RumbleInterface | None = None,
-        sensor: SensorInterface | None = None,
-        log_callback: LogDriver | str | Logger | None = None,
-        perf: PerfDriver | None = None,
-        location: LocationDriver | None = None,
-        core_assets_dir: Directory | None = None,
-        save_dir: Directory | None = None,
-        username: str | bytes | None = "libretro.py",
-        language: Language = Language.ENGLISH,
-        vfs: FileSystemInterface | int | None = None,
-        led: LedDriver | None = None,
-        av_enable: AvEnableFlags = AvEnableFlags.AUDIO | AvEnableFlags.VIDEO,
-        midi: MidiDriver | None = None,
-        target_refresh_rate: float = 60.0,
-        preferred_hw: HardwareContext | None = HardwareContext.NONE,
-        driver_switch_enable: bool = False,
-        max_users: int = 8,
-        throttle_state: retro_throttle_state | None = None,
-        savestate_context: SavestateContext = SavestateContext.NORMAL,
-        jit_capable: bool = True,
-        mic_interface: MicrophoneDriver | MicrophoneInputIterator | MicrophoneInputGenerator | None = None,
-        device_power: PowerDriver | retro_device_power = full_power,
-        playlist_dir: Directory | None = None,
-        ) -> Session:
-    """
-    Returns a Session with default state objects.
-    """
-
-    core_impl: Core
-    match core:
-        case str(path) | PathLike(path) | CDLL(path):
-            # Load a private copy of the core
-            core_impl = Core(path)
-        case Core() as c:
-            # Use the provided core
-            core_impl = c
-        case _:
-            raise TypeError(f"Expected core to be a string, path, Core, or CDLL; got {type(core).__name__}")
-
-    logger = logging.getLogger('libretro')
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
-    input_impl: InputDriver | None = None
-    if isinstance(input_state, InputDriver):
-        input_impl = input_state
-    elif isinstance(input_state, Iterable):
-        input_impl = GeneratorInputDriver(input_state)
-    elif isinstance(input_state, Callable):
-        input_impl = GeneratorInputDriver(input_state)
-
-    options_impl: OptionDriver
-    match options:
-        case OptionDriver():
-            options_impl = options
-        case map if isinstance(map, Mapping):
-            options_impl = DictOptionDriver(2, True, map)
-        case None:
-            options_impl = DictOptionDriver()
-        case _:
-            raise TypeError(f"Expected options to be an OptionState or a Mapping, not {type(options).__name__}")
-
-    vfs_impl: FileSystemInterface
-    match vfs:
-        case FileSystemInterface() as v:
-            vfs_impl = v
-        case None:
-            vfs_impl = StandardFileSystemInterface(logger=logger)
-        case 1 | 2 | 3 as version:
-            vfs_impl = StandardFileSystemInterface(version, logger=logger)
-        case int() as i:
-            raise ValueError(f"Expected a VFS version of 1, 2, or 3; got {i}")
-        case _:
-            raise TypeError(f"Expected vfs to be a FileSystemInterface or None, not {type(vfs).__name__}")
-
-    mic_impl: MicrophoneDriver
-    match mic_interface:
-        case MicrophoneDriver() as m:
-            mic_impl = m
-        case m if callable(m):
-            mic_impl = GeneratorMicrophoneDriver(m)
-        case None:
-            mic_impl = GeneratorMicrophoneDriver()
-        case _:
-            raise TypeError(f"Expected mic_interface to be a MicrophoneDriver or None, not {type(mic_interface).__name__}")
-
-    power_impl: DevicePower
-    match device_power:
-        case retro_device_power() as p:
-            power_impl = lambda: p
-        case p if callable(p):
-            power_impl = p
-        case _:
-            raise TypeError(f"Expected device_power to be a retro_device_power or a callable that returns one, not {type(device_power).__name__}")
-
-    return Session(
-        core=core_impl,
-        audio=audio or ArrayAudioDriver(),
-        input_state=input_impl or GeneratorInputDriver(),
-        video=video or PillowVideoDriver(),
-        content=content,
-        content_driver=content_driver or StandardContentDriver(),
-        overscan=overscan,
-        message=message or LoggerMessageInterface(1, logger),
-        options=options_impl,
-        system_dir=system_dir,
-        rumble=rumble or DefaultRumbleInterface(),
-        sensor=sensor or GeneratorSensorInterface(),
-        log_callback=log_callback or UnformattedLogDriver(),
-        perf=perf or DefaultPerfDriver(),
-        location=location or GeneratorLocationDriver(),
-        core_assets_dir=core_assets_dir,
-        save_dir=save_dir,
-        username=username,
-        language=language,
-        vfs=vfs_impl,
-        led=led or DictLedDriver(),
-        av_enable=av_enable,
-        midi=midi or GeneratorMidiDriver(),
-        target_refresh_rate=target_refresh_rate,
-        preferred_hw=preferred_hw,
-        driver_switch_enable=driver_switch_enable,
-        max_users=max_users,
-        throttle_state=throttle_state or retro_throttle_state(ThrottleMode.NONE, 1.0),
-        savestate_context=savestate_context,
-        jit_capable=jit_capable,
-        mic_interface=mic_impl,
-        device_power=power_impl,
-        playlist_dir=playlist_dir
-    )
-
-
 __all__ = [
     'Session',
-    'default_session',
     'CoreShutDownException',
 ]

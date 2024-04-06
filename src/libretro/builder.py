@@ -54,7 +54,7 @@ CoreArg = Core | str | PathLike | CDLL | _RequiredFactory[Core]
 AudioDriverArg = _RequiredArg[AudioDriver] | Default
 InputDriverArg = _RequiredArg[InputDriver] | InputStateGenerator | InputStateIterable | InputStateIterator | Default
 VideoDriverArg = _RequiredArg[VideoDriver] | Default
-ContentArg = _OptionalArg[Content | SubsystemContent]
+ContentArg = Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
 ContentDriverArg = _OptionalArg[ContentDriver]
 BoolArg = _OptionalArg[bool]
 MessageDriverArg = _OptionalArg[MessageInterface] | Logger
@@ -91,7 +91,7 @@ class _SessionBuilderArgs(TypedDict):
     video: _RequiredFactory[VideoDriver]
     content: _OptionalFactory[Content | SubsystemContent]
     content_driver: _OptionalFactory[ContentDriver]
-    overscan: _OptionalFactory[bool] # TODO: Replace with some driver (not sure what yet)
+    overscan: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
     path: _OptionalFactory[PathDriver]
@@ -103,12 +103,12 @@ class _SessionBuilderArgs(TypedDict):
     led: _OptionalFactory[LedDriver]
     av_mask: _OptionalFactory[AvEnableFlags]
     midi: _OptionalFactory[MidiDriver]
-    target_refresh_rate: _OptionalFactory[float] # TODO: Replace with TimingDriver
-    preferred_hw: _OptionalFactory[HardwareContext] # TODO: Replace with a method in VideoDriver
-    driver_switch_enable: _OptionalFactory[bool] # TODO: Replace with a method in VideoDriver
-    throttle: _OptionalFactory[retro_throttle_state] # TODO: Replace with TimingDriver
-    savestate_context: _OptionalFactory[SavestateContext] # TODO: Replace with some driver (not sure what yet)
-    jit_capable: _OptionalFactory[bool] # TODO: Replace with some driver (not sure what yet)
+    target_refresh_rate: _OptionalFactory[float]  # TODO: Replace with TimingDriver
+    preferred_hw: _OptionalFactory[HardwareContext]  # TODO: Replace with a method in VideoDriver
+    driver_switch_enable: _OptionalFactory[bool]  # TODO: Replace with a method in VideoDriver
+    throttle: _OptionalFactory[retro_throttle_state]  # TODO: Replace with TimingDriver
+    savestate_context: _OptionalFactory[SavestateContext]  # TODO: Replace with some driver (not sure what yet)
+    jit_capable: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     mic: _OptionalFactory[MicrophoneDriver]
     power: _OptionalFactory[PowerDriver]
 
@@ -120,6 +120,7 @@ class SessionBuilder:
     A Session requires a Core, an AudioDriver, an InputDriver, and a VideoDriver;
     each ``with_`` method sets an argument (mostly drivers) for the Session.
     """
+
     def __init__(self):
         self._args = _SessionBuilderArgs(
             core=lambda: _raise_required_error("A Core is required"),
@@ -147,7 +148,7 @@ class SessionBuilder:
             savestate_context=_nothing,
             jit_capable=_nothing,
             mic=_nothing,
-            power=_nothing
+            power=_nothing,
         )
 
     def with_core(self, core: CoreArg) -> Self:
@@ -179,7 +180,9 @@ class SessionBuilder:
             case _DefaultType.DEFAULT:
                 raise ValueError("Core does not have a default value")
             case _:
-                raise TypeError(f"Expected Core, str, PathLike, a CDLL, or a callable that returns one of them; got {type(core).__name__}")
+                raise TypeError(
+                    f"Expected Core, str, PathLike, a CDLL, or a callable that returns one of them; got {type(core).__name__}"
+                )
 
         return self
 
@@ -192,14 +195,26 @@ class SessionBuilder:
         TODO
         """
         match content:
-            case PathLike() | ZipPath() | str() | bytes() | bytearray() | memoryview() | SubsystemContent() | retro_game_info() | None:
+            case (
+                PathLike()
+                | ZipPath()
+                | str()
+                | bytes()
+                | bytearray()
+                | memoryview()
+                | SubsystemContent()
+                | retro_game_info()
+                | None
+            ):
                 self._args["content"] = lambda: content
             case func if callable(func):
                 self._args["content"] = func
             case _DefaultType.DEFAULT:
                 raise ValueError("Content does not have a default value (if you wanted None, provide it explicitly)")
             case _:
-                raise TypeError(f"Expected a path, content buffer, None, SubsystemContent, or a callable that returns one of them; got {type(content).__name__}")
+                raise TypeError(
+                    f"Expected a path, content buffer, None, SubsystemContent, or a callable that returns one of them; got {type(content).__name__}"
+                )
 
         return self
 
@@ -214,7 +229,9 @@ class SessionBuilder:
             case None:
                 raise ValueError("An audio driver is required")
             case _:
-                raise TypeError(f"Expected AudioDriver, a callable that returns one, or DEFAULT; got {type(audio).__name__}")
+                raise TypeError(
+                    f"Expected AudioDriver, a callable that returns one, or DEFAULT; got {type(audio).__name__}"
+                )
 
         return self
 
@@ -229,11 +246,13 @@ class SessionBuilder:
                 # Arguments to a generator
                 self._args["input"] = lambda: GeneratorInputDriver(it)
             case _DefaultType.DEFAULT:
-                self._args["input"] = GeneratorInputDriver # TODO: Set the rumble and sensor interfaces
+                self._args["input"] = GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
             case None:
                 raise ValueError("An input driver is required")
             case _:
-                raise TypeError(f"Expected InputDriver or a callable that returns one, a callable or iterator that yields InputState, or DEFAULT; got {type(input).__name__}")
+                raise TypeError(
+                    f"Expected InputDriver or a callable that returns one, a callable or iterator that yields InputState, or DEFAULT; got {type(input).__name__}"
+                )
 
         return self
 
@@ -248,7 +267,9 @@ class SessionBuilder:
             case None:
                 raise ValueError("A video driver is required")
             case _:
-                raise TypeError(f"Expected a VideoDriver, a callable that returns one, or DEFAULT; got {type(video).__name__}")
+                raise TypeError(
+                    f"Expected a VideoDriver, a callable that returns one, or DEFAULT; got {type(video).__name__}"
+                )
 
         return self
 
@@ -263,7 +284,9 @@ class SessionBuilder:
             case None:
                 self._args["content_driver"] = _nothing
             case _:
-                raise TypeError(f"Expected ContentDriver, a callable that returns one, DEFAULT, or None; got {type(content).__name__}")
+                raise TypeError(
+                    f"Expected ContentDriver, a callable that returns one, DEFAULT, or None; got {type(content).__name__}"
+                )
 
         return self
 
@@ -278,7 +301,9 @@ class SessionBuilder:
             case None:
                 self._args["overscan"] = _nothing
             case _:
-                raise TypeError(f"Expected bool, a callable that returns one, DEFAULT, or None; got {type(overscan).__name__}")
+                raise TypeError(
+                    f"Expected bool, a callable that returns one, DEFAULT, or None; got {type(overscan).__name__}"
+                )
 
         return self
 
@@ -295,7 +320,9 @@ class SessionBuilder:
             case None:
                 self._args["message"] = _nothing
             case _:
-                raise TypeError(f"Expected MessageInterface, a callable that returns one, DEFAULT, or None; got {type(message).__name__}")
+                raise TypeError(
+                    f"Expected MessageInterface, a callable that returns one, DEFAULT, or None; got {type(message).__name__}"
+                )
 
         return self
 
@@ -317,7 +344,9 @@ class SessionBuilder:
             case None:
                 self._args["options"] = _nothing
             case _:
-                raise TypeError(f"Expected OptionDriver, a dict, a callable that returns one, DEFAULT, or None; got {type(options).__name__}")
+                raise TypeError(
+                    f"Expected OptionDriver, a dict, a callable that returns one, DEFAULT, or None; got {type(options).__name__}"
+                )
 
         return self
 
@@ -328,11 +357,13 @@ class SessionBuilder:
             case func if callable(func):
                 self._args["path"] = func
             case _DefaultType.DEFAULT:
-                self._args["path"] = DefaultPathDriver # TODO: How to pass core path?
+                self._args["path"] = DefaultPathDriver  # TODO: How to pass core path?
             case None:
                 self._args["path"] = _nothing
             case _:
-                raise TypeError(f"Expected PathDriver, a callable that returns one, DEFAULT, or None; got {type(path).__name__}")
+                raise TypeError(
+                    f"Expected PathDriver, a callable that returns one, DEFAULT, or None; got {type(path).__name__}"
+                )
 
         return self
 
@@ -349,7 +380,9 @@ class SessionBuilder:
             case None:
                 self._args["log"] = _nothing
             case _:
-                raise TypeError(f"Expected LogDriver, a callable that returns one, DEFAULT, or None; got {type(log).__name__}")
+                raise TypeError(
+                    f"Expected LogDriver, a callable that returns one, DEFAULT, or None; got {type(log).__name__}"
+                )
 
         return self
 
@@ -364,7 +397,9 @@ class SessionBuilder:
             case None:
                 self._args["perf"] = _nothing
             case _:
-                raise TypeError(f"Expected PerfDriver, a callable that returns one, DEFAULT, or None; got {type(perf).__name__}")
+                raise TypeError(
+                    f"Expected PerfDriver, a callable that returns one, DEFAULT, or None; got {type(perf).__name__}"
+                )
 
         return self
 
@@ -379,7 +414,9 @@ class SessionBuilder:
             case None:
                 self._args["location"] = _nothing
             case _:
-                raise TypeError(f"Expected LocationDriver, a callable that returns one, DEFAULT, or None; got {type(location).__name__}")
+                raise TypeError(
+                    f"Expected LocationDriver, a callable that returns one, DEFAULT, or None; got {type(location).__name__}"
+                )
 
         return self
 
@@ -394,7 +431,9 @@ class SessionBuilder:
             case None:
                 self._args["user"] = _nothing
             case _:
-                raise TypeError(f"Expected UserDriver, a callable that returns one, DEFAULT, or None; got {type(user).__name__}")
+                raise TypeError(
+                    f"Expected UserDriver, a callable that returns one, DEFAULT, or None; got {type(user).__name__}"
+                )
 
         return self
 
@@ -412,7 +451,9 @@ class SessionBuilder:
             case None:
                 self._args["vfs"] = _nothing
             case _:
-                raise TypeError(f"Expected FileSystemInterface, a callable that returns one, DEFAULT, or None; got {type(vfs).__name__}")
+                raise TypeError(
+                    f"Expected FileSystemInterface, a callable that returns one, DEFAULT, or None; got {type(vfs).__name__}"
+                )
 
         return self
 
@@ -442,7 +483,9 @@ class SessionBuilder:
             case None:
                 self._args["av_mask"] = _nothing
             case _:
-                raise TypeError(f"Expected AvEnableFlags, a callable that returns one, or None; got {type(av_mask).__name__}")
+                raise TypeError(
+                    f"Expected AvEnableFlags, a callable that returns one, or None; got {type(av_mask).__name__}"
+                )
 
         return self
 
@@ -499,12 +542,26 @@ class SessionBuilder:
 
 
 def defaults(core: CoreArg) -> SessionBuilder:
-    return SessionBuilder() \
-        .with_core(core) \
-        .with_audio(DEFAULT) \
-        .with_input(DEFAULT) \
-        .with_video(DEFAULT) \
-
+    return (
+        SessionBuilder()
+        .with_core(core)
+        .with_audio(DEFAULT)
+        .with_input(DEFAULT)
+        .with_video(DEFAULT)
+        .with_content_driver(DEFAULT)
+        .with_overscan(DEFAULT)
+        .with_message(DEFAULT)
+        .with_options(DEFAULT)
+        .with_paths(DEFAULT)
+        .with_log(DEFAULT)
+        .with_perf(DEFAULT)
+        .with_location(DEFAULT)
+        .with_user(DEFAULT)
+        .with_vfs(DEFAULT)
+        .with_led(DEFAULT)
+        .with_av_mask(DEFAULT)
+        .with_midi(DEFAULT)
+    )
 
 
 __all__ = [

@@ -216,7 +216,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _shutdown(self) -> bool:
-        self._shutdown = True
+        self._shutdown = True  # TODO: Add a shutdown driver?
         return True
 
     @property
@@ -296,7 +296,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False  # TODO: Implement
 
     @property
-    def options(self) -> OptionDriver:
+    def options(self) -> OptionDriver | None:
         return self._options
 
     @options.setter
