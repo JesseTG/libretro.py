@@ -140,6 +140,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @override
     def __init__(self, kwargs: Args):
         super().__init__()
+        # TODO: Validate args here
         self._audio = kwargs['audio']
         self._input = kwargs['input']
         self._video = kwargs['video']
