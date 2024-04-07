@@ -1,14 +1,20 @@
-from abc import abstractmethod
-from copy import deepcopy
-from ctypes import Structure, c_char_p, c_uint, c_int8, string_at
+from ctypes import Structure, c_char_p, c_int8, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Protocol, Sequence, runtime_checkable
-from logging import Logger
 
-from ..h import *
-from .._utils import FieldsFromTypeHints
-from .log import LogLevel
+from libretro.api.log import retro_log_level
+from libretro.api._utils import FieldsFromTypeHints
+
+RETRO_MESSAGE_TARGET_ALL = 0
+RETRO_MESSAGE_TARGET_OSD = (RETRO_MESSAGE_TARGET_ALL + 1)
+RETRO_MESSAGE_TARGET_LOG = (RETRO_MESSAGE_TARGET_OSD + 1)
+RETRO_MESSAGE_TYPE_NOTIFICATION = 0
+RETRO_MESSAGE_TYPE_NOTIFICATION_ALT = (RETRO_MESSAGE_TYPE_NOTIFICATION + 1)
+RETRO_MESSAGE_TYPE_STATUS = (RETRO_MESSAGE_TYPE_NOTIFICATION_ALT + 1)
+RETRO_MESSAGE_TYPE_PROGRESS = (RETRO_MESSAGE_TYPE_STATUS + 1)
+
+retro_message_target = c_int
+retro_message_type = c_int
 
 
 class MessageTarget(IntEnum):
@@ -37,7 +43,7 @@ class retro_message(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memodict):
         return retro_message(
-            msg=bytes(self.msg) if self.msg else None,
+            msg=bytes(self.msg) if self.msg is not None else None,
             frames=self.frames
         )
 
@@ -54,7 +60,7 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_message_ext(
-            msg=bytes(self.msg) if self.msg else None,
+            msg=bytes(self.msg) if self.msg is not None else None,
             duration=self.duration,
             priority=self.priority,
             level=self.level,
@@ -64,56 +70,9 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@runtime_checkable
-class MessageInterface(Protocol):
-    @property
-    @abstractmethod
-    def version(self) -> int: ...
-
-    @abstractmethod
-    def set_message(self, message: retro_message | retro_message_ext | None) -> bool: ...
-
-
-class LoggerMessageInterface(MessageInterface):
-    def __init__(self, version: int = 1, logger: Logger | None = None):
-        self._version = version
-        self._logger = logger
-        self._messages: list[retro_message] = []
-        self._message_exts: list[retro_message_ext] = []
-
-    @property
-    def version(self) -> int:
-        return self._version
-
-    @property
-    def messages(self) -> Sequence[retro_message]:
-        return self._messages
-
-    @property
-    def message_exts(self) -> Sequence[retro_message_ext]:
-        return self._message_exts
-
-    def set_message(self, message: retro_message | retro_message_ext | None) -> bool:
-        match message:
-            case retro_message():
-                self._messages.append(deepcopy(message))
-                if self._logger is not None:
-                    self._logger.info(message.msg)
-                return True
-            case retro_message_ext() if self._version >= 1:
-                self._message_exts.append(deepcopy(message))
-                if self._logger is not None and message.target in (MessageTarget.LOG, MessageTarget.ALL):
-                    self._logger.log(LogLevel(message.level).logging_level, message.msg)
-                return True
-            case _:
-                return False
-
-
 __all__ = [
     'MessageTarget',
     'MessageType',
     'retro_message',
-    'retro_message_ext',
-    'MessageInterface',
-    'LoggerMessageInterface'
+    'retro_message_ext'
 ]

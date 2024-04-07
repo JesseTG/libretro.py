@@ -1,9 +1,38 @@
-from copy import deepcopy
-from ctypes import *
+from ctypes import c_char_p, c_size_t, c_uint, c_uint64, c_void_p, POINTER, Structure
+from dataclasses import dataclass
+from enum import IntFlag
 
-from .._utils import FieldsFromTypeHints
+from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
 
 
+RETRO_MEMDESC_CONST = (1 << 0)
+RETRO_MEMDESC_BIGENDIAN = (1 << 1)
+RETRO_MEMDESC_SYSTEM_RAM = (1 << 2)
+RETRO_MEMDESC_SAVE_RAM = (1 << 3)
+RETRO_MEMDESC_VIDEO_RAM = (1 << 4)
+RETRO_MEMDESC_ALIGN_2 = (1 << 16)
+RETRO_MEMDESC_ALIGN_4 = (2 << 16)
+RETRO_MEMDESC_ALIGN_8 = (3 << 16)
+RETRO_MEMDESC_MINSIZE_2 = (1 << 24)
+RETRO_MEMDESC_MINSIZE_4 = (2 << 24)
+RETRO_MEMDESC_MINSIZE_8 = (3 << 24)
+
+
+class MemoryDescriptorFlag(IntFlag):
+    CONST = RETRO_MEMDESC_CONST
+    BIGENDIAN = RETRO_MEMDESC_BIGENDIAN
+    SYSTEM_RAM = RETRO_MEMDESC_SYSTEM_RAM
+    SAVE_RAM = RETRO_MEMDESC_SAVE_RAM
+    VIDEO_RAM = RETRO_MEMDESC_VIDEO_RAM
+    ALIGN_2 = RETRO_MEMDESC_ALIGN_2
+    ALIGN_4 = RETRO_MEMDESC_ALIGN_4
+    ALIGN_8 = RETRO_MEMDESC_ALIGN_8
+    MINSIZE_2 = RETRO_MEMDESC_MINSIZE_2
+    MINSIZE_4 = RETRO_MEMDESC_MINSIZE_4
+    MINSIZE_8 = RETRO_MEMDESC_MINSIZE_8
+
+
+@dataclass(init=False)
 class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     flags: c_uint64
     ptr: c_void_p
@@ -14,19 +43,23 @@ class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     len: c_size_t
     addrspace: c_char_p
 
-    def __deepcopy__(self, memodict):
+    def __deepcopy__(self, _):
         return retro_memory_descriptor(
-            flags=self.flags.value,
-            ptr=self.ptr.value,
-            offset=self.offset.value,
-            start=self.start.value,
-            select=self.select.value,
-            disconnect=self.disconnect.value,
-            len=self.len.value,
-            addrspace=self.addrspace.value
+            flags=self.flags,
+            ptr=self.ptr,
+            offset=self.offset,
+            start=self.start,
+            select=self.select,
+            disconnect=self.disconnect,
+            len=self.len,
+            addrspace=bytes(self.addrspace) if self.addrspace is not None else None
         )
 
+    # TODO: Implement __getitem__, __setitem__
+    # TODO: Implement a buffer property (not __buffer__ because Structure provides that)
 
+
+@dataclass(init=False)
 class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
     descriptors: POINTER(retro_memory_descriptor)
     num_descriptors: c_uint
@@ -41,14 +74,8 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
         return self.descriptors[item]
 
     def __deepcopy__(self, memodict):
-        arraytype = retro_memory_descriptor * self.num_descriptors.value
-        descriptors: Array = arraytype()
-
-        for i in range(self.num_descriptors.value):
-            descriptors[i] = deepcopy(self.descriptors[i])
-
         return retro_memory_map(
-            descriptors=descriptors,
+            descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
             num_descriptors=self.num_descriptors.value
         )
 

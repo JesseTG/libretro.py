@@ -1,18 +1,41 @@
 from abc import abstractmethod
 from collections.abc import Sequence
-from ctypes import *
+from ctypes import (
+    CDLL,
+    POINTER,
+    c_uint,
+    c_size_t,
+    c_void_p,
+    c_bool,
+    c_char_p,
+    c_ubyte,
+    Array,
+    cast,
+    byref,
+    cdll,
+    c_char,
+)
 from typing import Protocol
 
-from ._utils import memoryview_at, String
-from .api.av.defs import Region, retro_system_av_info
-from .api.content.defs import retro_game_info, retro_system_info, retro_subsystem_info
-from .api.video.defs import retro_video_refresh_t
-from .api.audio.defs import retro_audio_sample_t, retro_audio_sample_batch_t
-from .api.environment.defs import retro_environment_t
-from .api.input.defs import retro_input_poll_t, retro_input_state_t
+from libretro.api._utils import memoryview_at
+from libretro.api import (
+    retro_environment_t,
+    retro_video_refresh_t,
+    retro_audio_sample_t,
+    retro_audio_sample_batch_t,
+    retro_input_poll_t,
+    retro_input_state_t,
+    retro_system_info,
+    retro_system_av_info,
+    retro_game_info,
+    retro_subsystem_info,
+    Region,
+)
+
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
+
 
 class CoreInterface(Protocol):
     @abstractmethod
@@ -173,7 +196,7 @@ class Core(CoreInterface):
             self._core.retro_cheat_reset.argtypes = []
             self._core.retro_cheat_reset.restype = None
 
-            self._core.retro_cheat_set.argtypes = [c_uint, c_bool, String]
+            self._core.retro_cheat_set.argtypes = [c_uint, c_bool, c_char_p]
             self._core.retro_cheat_set.restype = None
 
             self._core.retro_load_game.argtypes = [POINTER(retro_game_info)]

@@ -1,44 +1,48 @@
-import logging
-
-from collections.abc import Iterable, Sequence
-from logging import Logger
+from collections.abc import Sequence, Callable
+from copy import deepcopy
+from ctypes import CDLL
+from _ctypes import CFuncPtr
+from os import PathLike
 from types import TracebackType
 from typing import Type, AnyStr
 
-from .error import CoreShutDownException
-from .api.av import *
-from .api.content import *
-from .api.environment import *
-from .api.led import LedDriver, DictLedDriver
-from .api.location import *
-from .api.memory import retro_memory_map
-from .api.microphone import *
-from .api.midi import *
-from .api.options import *
-from .api.perf import *
-from .api.power import *
-from .api.savestate import *
-from .api.timing import *
-from .api.log import *
-from .api.message import MessageInterface, LoggerMessageInterface
-from .api.proc import retro_get_proc_address_interface
-from .api.user import Language
-from .api.vfs import FileSystemInterface, StandardFileSystemInterface
-from .core import Core, CoreInterface
-from .api.audio import *
-from .api.input import *
-from .api.video import *
 
-from ._utils import *
-from .h import *
-
-Directory = str | bytes
-
-
-
-
-def full_power() -> retro_device_power:
-    return retro_device_power(PowerState.PLUGGED_IN, RETRO_POWERSTATE_NO_ESTIMATE, 100)
+from libretro.api._utils import as_bytes
+from libretro.error import CoreShutDownException
+from libretro.core import Core, CoreInterface
+from libretro.api import (
+    retro_system_av_info,
+    retro_subsystem_info,
+    retro_input_descriptor,
+    retro_get_proc_address_interface,
+    retro_proc_address_t,
+    retro_memory_map,
+    retro_controller_info,
+    retro_throttle_state,
+    retro_fastforwarding_override,
+    retro_system_content_info_override,
+    Content,
+    SubsystemContent,
+    Subsystems,
+    AvEnableFlags,
+    API_VERSION,
+    SerializationQuirks,
+)
+from libretro.driver import (
+    AudioDriver,
+    ContentDriver,
+    CompositeEnvironmentDriver,
+    InputDriver,
+    LogDriver,
+    MessageInterface,
+    MidiDriver,
+    OptionDriver,
+    RumbleInterface,
+    VideoDriver,
+    FileSystemInterface,
+    LedDriver,
+    LoadedContentFile,
+)
 
 
 class Session:
@@ -60,8 +64,8 @@ class Session:
 
         self._content = content
 
-        if not isinstance(environment, EnvironmentDriver):
-            raise TypeError(f"Expected environment to be EnvironmentDriver; got {type(environment).__name__}")
+        if not isinstance(environment, CompositeEnvironmentDriver):
+            raise TypeError(f"Expected environment to be CompositeEnvironmentDriver; got {type(environment).__name__}")
 
         self._environment = environment
 
@@ -73,8 +77,8 @@ class Session:
 
     def __enter__(self):
         api_version = self._core.api_version()
-        if api_version != RETRO_API_VERSION:
-            raise RuntimeError(f"libretro.py is only compatible with API version {RETRO_API_VERSION}, but the core uses {api_version}")
+        if api_version != API_VERSION:
+            raise RuntimeError(f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}")
 
         self._core.set_video_refresh(self._environment.video.refresh)
         self._core.set_audio_sample(self._environment.audio.sample)
@@ -219,7 +223,7 @@ class Session:
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._environment.proc_address_callback
 
-    def get_proc_address(self, sym: AnyStr, funtype: Type[ctypes._CFuncPtr] | None = None) -> retro_proc_address_t | Callable | None:
+    def get_proc_address(self, sym: AnyStr, funtype: Type[CFuncPtr] | None = None) -> retro_proc_address_t | Callable | None:
         if not self.proc_address_callback or not sym:
             return None
 
