@@ -5,6 +5,7 @@ from logging import Logger
 from types import TracebackType
 from typing import Type, AnyStr
 
+from .error import CoreShutDownException
 from .api.av import *
 from .api.content import *
 from .api.environment import *
