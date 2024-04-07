@@ -34,9 +34,6 @@ from .h import *
 Directory = str | bytes
 
 
-class CoreShutDownException(Exception):
-    def __init__(self, *args):
-        super().__init__("Core has been shut down", *args)
 
 
 def full_power() -> retro_device_power:
