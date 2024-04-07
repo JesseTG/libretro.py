@@ -5,7 +5,7 @@ from typing import override
 
 from .driver import *
 from .defs import *
-
+from ...error import UnsupportedEnvCall
 
 EnvironmentCallbackFunction = Callable[[c_void_p], bool]
 
@@ -33,7 +33,10 @@ class DictEnvironmentDriver(EnvironmentDriver, Mapping[EnvironmentCall, Environm
 
         envcall = EnvironmentCall(cmd)
         if envcall in self._envcalls:
-            return self._envcalls[envcall](data)
+            try:
+                return self._envcalls[envcall](data)
+            except UnsupportedEnvCall:
+                pass
 
         return False
 
