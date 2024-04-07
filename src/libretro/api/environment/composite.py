@@ -146,8 +146,8 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not rotation_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_ROTATION doesn't accept NULL")
 
-        rot: Rotation = Rotation(rotation_ptr[0])
-        return self._video.set_rotation(rot)
+        self._video.rotation = Rotation(rotation_ptr[0])
+        return True
 
     @property
     def overscan(self) -> bool | None:
@@ -259,8 +259,8 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not format_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
-        _format = PixelFormat(format_ptr[0])
-        return self._video.set_pixel_format(_format)
+        self._video.pixel_format = PixelFormat(format_ptr[0])
+        return True
 
     @property
     def input_descriptors(self) -> Sequence[retro_input_descriptor] | None:
@@ -585,7 +585,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         # TODO: Provide a way to disable this envcall
         av_info: retro_system_av_info = info_ptr[0]
-        self._video.set_system_av_info(av_info)
+        self._video.system_av_info = av_info
         self._audio.set_system_av_info(av_info)
         self._system_av_info = deepcopy(av_info)
         return True
@@ -684,8 +684,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not geometry_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_GEOMETRY doesn't accept NULL")
 
-        geom: retro_game_geometry = geometry_ptr[0]
-        self._video.set_geometry(geom)
+        self._video.geometry = geometry_ptr[0]
         return True
 
     def _get_username(self, username_ptr: POINTER(c_char_p)) -> bool:

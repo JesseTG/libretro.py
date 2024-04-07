@@ -1,6 +1,7 @@
 from ctypes import *
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
+from typing import Literal
 
 from ..._utils import FieldsFromTypeHints
 from ...h import *
@@ -39,7 +40,7 @@ class PixelFormat(IntEnum):
                 raise ValueError(f"Unknown pixel format: {self}")
 
     @property
-    def pixel_typecode(self) -> str:
+    def pixel_typecode(self) -> Literal['H', 'L']:
         match self:
             case self.RGB1555:
                 return 'H'

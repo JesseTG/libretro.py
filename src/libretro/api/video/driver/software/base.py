@@ -1,7 +1,8 @@
 from abc import ABC
-from typing import final
+from typing import final, override
 
 from libretro.api.proc import retro_proc_address_t
+from libretro.error import UnsupportedEnvCall
 from ..driver import VideoDriver
 from ...render.defs import retro_hw_render_interface
 from ...context.defs import retro_hw_render_callback
@@ -31,14 +32,17 @@ class AbstractSoftwareVideoDriver(VideoDriver, ABC):
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         return None
 
+    @property
+    @override
     @final
-    def get_shared_context(self) -> bool:
+    def shared_context(self) -> bool:
         return False
 
+    @shared_context.setter
     @final
-    def set_shared_context(self, value: bool) -> None:
+    def shared_context(self, value: bool) -> None:
         # Software-rendered drivers don't need any hardware context
-        pass
+        raise UnsupportedEnvCall("Shared context is not supported")
 
     @final
     def context_reset(self) -> None:

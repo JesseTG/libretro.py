@@ -43,10 +43,12 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
         #self._rotation = rotation
         return False
 
-    def get_pixel_format(self) -> PixelFormat:
+    @property
+    def pixel_format(self) -> PixelFormat:
         return self._pixel_format
 
-    def set_pixel_format(self, format: PixelFormat) -> bool:
+    @pixel_format.setter
+    def pixel_format(self, format: PixelFormat) -> None:
         if format not in PixelFormat:
             raise ValueError(f"Invalid pixel format: {format}")
 
@@ -57,8 +59,6 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
             # If we haven't initialized the frame buffer yet, or if the pixel format has changed...
             self._pixel_format = format
             self._should_reinit_framebuffer = True
-
-        return True
 
     def get_system_av_info(self) -> retro_system_av_info | None:
         return deepcopy(self._system_av_info) if self._system_av_info else None
