@@ -366,6 +366,27 @@ class StandardContentDriver(ContentDriver):
             case _, _:
                 raise ValueError(f"Can't determine if subsystem content extension '{ext!r}' is required")
 
+    def __get_subsystem(self, content: Content | SubsystemContent | None) -> retro_subsystem_info | None:
+        if not isinstance(content, SubsystemContent):
+            return None
+
+        if not self.subsystem_info:
+            raise RuntimeError("Subsystem content was provided, but core did not register subsystems")
+
+        match content.game_type:
+            case int(id):
+                for s in self.subsystem_info:
+                    if s.id == id:
+                        return s
+
+                raise ValueError(f"Core did not register a subsystem with a numeric ID of {id}")
+
+            case str(ident) | bytes(ident):
+                return self.subsystem_info[ident]
+
+            case e:
+                raise TypeError(f"Expected a subsystem identifier of types int, str, or bytes; got {type(e).__name__}")
+
 
 __all__ = [
     "StandardContentDriver",
