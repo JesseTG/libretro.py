@@ -142,35 +142,106 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         super().__init__()
         # TODO: Validate args here
         self._audio = kwargs['audio']
+        if not isinstance(self._audio, AudioDriver):
+            raise TypeError(f"Expected AudioDriver, got {type(self._audio).__qualname__}")
+
         self._input = kwargs['input']
+        if not isinstance(self._input, InputDriver):
+            raise TypeError(f"Expected InputDriver, got {type(self._input).__qualname__}")
+
         self._video = kwargs['video']
+        if not isinstance(self._video, VideoDriver):
+            raise TypeError(f"Expected VideoDriver, got {type(self._video).__qualname__}")
+
         self._content = kwargs.get('content')
+        if self._content is not None and not isinstance(self._content, ContentDriver):
+            raise TypeError(f"Expected ContentDriver or None, got {type(self._content).__qualname__}")
+
         self._overscan = kwargs.get('overscan')
+        if self._overscan is not None and not isinstance(self._overscan, bool):
+            raise TypeError(f"Expected bool or None, got {type(self._overscan).__qualname__}")
+
         self._message = kwargs.get('message')
+        if self._message is not None and not isinstance(self._message, MessageInterface):
+            raise TypeError(f"Expected MessageInterface or None, got {type(self._message).__qualname__}")
+
         self._shutdown = False
         self._performance_level: int | None = None
         self._path = kwargs.get('path')
+        if self._path is not None and not isinstance(self._path, PathDriver):
+            raise TypeError(f"Expected PathDriver or None, got {type(self._path).__qualname__}")
+
         self._options = kwargs.get('options')
+        if self._options is not None and not isinstance(self._options, OptionDriver):
+            raise TypeError(f"Expected OptionDriver or None, got {type(self._options).__qualname__}")
+
         self._log = kwargs.get('log')
+        if self._log is not None and not isinstance(self._log, LogDriver):
+            raise TypeError(f"Expected LogDriver or None, got {type(self._log).__qualname__}")
+
         self._perf = kwargs.get('perf')
+        if self._perf is not None and not isinstance(self._perf, PerfDriver):
+            raise TypeError(f"Expected PerfDriver or None, got {type(self._perf).__qualname__}")
+
         self._location = kwargs.get('location')
+        if self._location is not None and not isinstance(self._location, LocationDriver):
+            raise TypeError(f"Expected LocationDriver or None, got {type(self._location).__qualname__}")
+
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._memory_maps: retro_memory_map | None = None
         self._user = kwargs.get('user')
+        if self._user is not None and not isinstance(self._user, UserDriver):
+            raise TypeError(f"Expected UserDriver or None, got {type(self._user).__qualname__}")
+
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
         self._vfs = kwargs.get('vfs')
+        if self._vfs is not None and not isinstance(self._vfs, FileSystemInterface):
+            raise TypeError(f"Expected FileSystemInterface or None, got {type(self._vfs).__qualname__}")
+
         self._led = kwargs.get('led')
+        if self._led is not None and not isinstance(self._led, LedDriver):
+            raise TypeError(f"Expected LedDriver or None, got {type(self._led).__qualname__}")
+
         self._av_enable = kwargs.get('av_enable')
+        if self._av_enable is not None and not isinstance(self._av_enable, AvEnableFlags):
+            raise TypeError(f"Expected AvEnableFlags or None, got {type(self._av_enable).__qualname__}")
+
         self._midi = kwargs.get('midi')
+        if self._midi is not None and not isinstance(self._midi, MidiDriver):
+            raise TypeError(f"Expected MidiDriver or None, got {type(self._midi).__qualname__}")
+
         self._target_refresh_rate = kwargs.get('target_refresh_rate')
+        if self._target_refresh_rate is not None and not isinstance(self._target_refresh_rate, float):
+            raise TypeError(f"Expected float or None, got {type(self._target_refresh_rate).__qualname__}")
+
         self._preferred_hw = kwargs.get('preferred_hw')
+        if self._preferred_hw is not None and not isinstance(self._preferred_hw, HardwareContext):
+            raise TypeError(f"Expected HardwareContext or None, got {type(self._preferred_hw).__qualname__}")
+
         self._driver_switch_enable = kwargs.get('driver_switch_enable')
+        if self._driver_switch_enable is not None and not isinstance(self._driver_switch_enable, bool):
+            raise TypeError(f"Expected bool or None, got {type(self._driver_switch_enable).__qualname__}")
+
         self._throttle_state = kwargs.get('throttle_state')
+        if self._throttle_state is not None and not isinstance(self._throttle_state, retro_throttle_state):
+            raise TypeError(f"Expected retro_throttle_state or None, got {type(self._throttle_state).__qualname__}")
+
         self._savestate_context = kwargs.get('savestate_context')
+        if self._savestate_context is not None and not isinstance(self._savestate_context, SavestateContext):
+            raise TypeError(f"Expected SavestateContext or None, got {type(self._savestate_context).__qualname__}")
+
         self._jit_capable = kwargs.get('jit_capable')
+        if self._jit_capable is not None and not isinstance(self._jit_capable, bool):
+            raise TypeError(f"Expected bool or None, got {type(self._jit_capable).__qualname__}")
+
         self._mic_interface = kwargs.get('mic_interface')
+        if self._mic_interface is not None and not isinstance(self._mic_interface, MicrophoneDriver):
+            raise TypeError(f"Expected MicrophoneDriver or None, got {type(self._mic_interface).__qualname__}")
+
         self._device_power = kwargs.get('device_power')
+        if self._device_power is not None and not isinstance(self._device_power, PowerDriver):
+            raise TypeError(f"Expected PowerDriver or None, got {type(self._device_power).__qualname__}")
 
         self._rumble: retro_rumble_interface | None = None
         self._sensor: retro_sensor_interface | None = None
