@@ -6,10 +6,59 @@ from os import PathLike
 from typing import Self, Literal, TypedDict, AnyStr
 from zipfile import Path as ZipPath
 
-from .api import *
-from .driver import *
-from .core import Core
-from .session import Session
+from libretro.core import Core
+from libretro.session import Session
+from libretro.api import (
+    AvEnableFlags,
+    Content,
+    HardwareContext,
+    PowerState,
+    SavestateContext,
+    SubsystemContent,
+    ThrottleMode,
+    retro_device_power,
+    retro_game_info,
+    retro_throttle_state,
+)
+from libretro.driver import (
+    ArrayAudioDriver,
+    ArrayVideoDriver,
+    AudioDriver,
+    CompositeEnvironmentDriver,
+    ConstantPowerDriver,
+    ContentDriver,
+    DefaultPathDriver,
+    DefaultPerfDriver,
+    DefaultUserDriver,
+    DictLedDriver,
+    DictOptionDriver,
+    FileSystemInterface,
+    GeneratorInputDriver,
+    GeneratorLocationDriver,
+    GeneratorMicrophoneDriver,
+    GeneratorMidiDriver,
+    InputDriver,
+    InputStateGenerator,
+    InputStateIterable,
+    InputStateIterator,
+    LedDriver,
+    LocationDriver,
+    LocationInputGenerator,
+    LogDriver,
+    LoggerMessageInterface,
+    MessageInterface,
+    MicrophoneDriver,
+    MidiDriver,
+    OptionDriver,
+    PathDriver,
+    PerfDriver,
+    PowerDriver,
+    StandardContentDriver,
+    StandardFileSystemInterface,
+    UnformattedLogDriver,
+    UserDriver,
+    VideoDriver,
+)
 
 
 type _RequiredFactory[T] = Callable[[], T]

@@ -89,24 +89,22 @@ from libretro.api import (
     retro_vfs_interface_info,
 )
 
-from libretro.driver import (
-    AudioDriver,
-    InputDriver,
-    VideoDriver,
-    ContentDriver,
-    PathDriver,
-    LogDriver,
-    PerfDriver,
-    MessageInterface,
-    OptionDriver,
-    LocationDriver,
-    UserDriver,
-    FileSystemInterface,
-    LedDriver,
-    MidiDriver,
-    MicrophoneDriver,
-    PowerDriver,
-)
+from libretro.driver.audio import AudioDriver
+from libretro.driver.content import ContentDriver
+from libretro.driver.input import InputDriver
+from libretro.driver.led import LedDriver
+from libretro.driver.location import LocationDriver
+from libretro.driver.log import LogDriver
+from libretro.driver.message import MessageInterface
+from libretro.driver.microphone import MicrophoneDriver
+from libretro.driver.midi import MidiDriver
+from libretro.driver.options import OptionDriver
+from libretro.driver.path import PathDriver
+from libretro.driver.perf import PerfDriver
+from libretro.driver.power import PowerDriver
+from libretro.driver.user import UserDriver
+from libretro.driver.vfs import FileSystemInterface
+from libretro.driver.video import VideoDriver
 
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)

@@ -82,7 +82,7 @@ class ModernGlVideoDriver(VideoDriver):
         pass
         # TODO: Crop the OpenGL texture if necessary
 
-    def get_software_framebuffer(self, width: int, size: int, flags: FramebufferMemoryAccess) -> retro_framebuffer | None:
+    def get_software_framebuffer(self, width: int, size: int, flags: MemoryAccess) -> retro_framebuffer | None:
         # TODO: Map the OpenGL texture to a software framebuffer
         pass
 

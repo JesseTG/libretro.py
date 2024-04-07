@@ -3,10 +3,31 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from libretro.api.input.rumble import *
-from libretro.api.input.sensor import *
-from .driver import *
-from libretro.api.input.defs import *
+from libretro.api.input import (
+    JoypadState,
+    MouseState,
+    KeyboardState,
+    LightGunState,
+    AnalogState,
+    PointerState,
+    Pointer,
+    DeviceIdPointer,
+    DeviceIdJoypad,
+    DeviceIdLightgun,
+    DeviceIdAnalog,
+    DeviceIdMouse,
+    Key,
+    InputDevice,
+    DeviceIndexAnalog,
+    InputDeviceFlag,
+    retro_input_descriptor,
+    retro_controller_info,
+    retro_keyboard_callback,
+    InputDeviceState,
+)
+from .driver import InputDriver
+from libretro.driver.sensor import SensorInterface
+from libretro.driver.rumble import RumbleInterface
 from libretro._utils import Pollable
 
 
@@ -17,17 +38,13 @@ class Point:
 
 
 DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
-InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
-InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
-InputStateIterable = Iterable[InputPollResult | Sequence[InputPollResult]]
-InputStateGenerator = Callable[[], InputStateIterator]
 
 
 class Direction(IntEnum):
-    RIGHT = 0,
-    UP = 1,
-    LEFT = 2,
-    DOWN = 3,
+    RIGHT = (0,)
+    UP = (1,)
+    LEFT = (2,)
+    DOWN = (3,)
 
     def matches_direction(self, other: DeviceIdJoypad | Key | DeviceIdLightgun) -> bool:
         match (self, other):
@@ -54,15 +71,30 @@ class PortState:
 
     def __getitem__(self, item) -> DeviceState | None:
         match item:
-            case InputDevice.NONE: return None
-            case InputDevice.JOYPAD: return self.joypad
-            case InputDevice.MOUSE: return self.mouse
-            case InputDevice.KEYBOARD: return self.keyboard
-            case InputDevice.LIGHTGUN: return self.light_gun
-            case InputDevice.ANALOG: return self.analog
-            case InputDevice.POINTER: return self.pointer
-            case int(): raise IndexError(f"Index {item} is not a valid InputDevice")
-            case _: raise TypeError(f"Expected an int or InputDevice, got {item!r}")
+            case InputDevice.NONE:
+                return None
+            case InputDevice.JOYPAD:
+                return self.joypad
+            case InputDevice.MOUSE:
+                return self.mouse
+            case InputDevice.KEYBOARD:
+                return self.keyboard
+            case InputDevice.LIGHTGUN:
+                return self.light_gun
+            case InputDevice.ANALOG:
+                return self.analog
+            case InputDevice.POINTER:
+                return self.pointer
+            case int():
+                raise IndexError(f"Index {item} is not a valid InputDevice")
+            case _:
+                raise TypeError(f"Expected an int or InputDevice, got {item!r}")
+
+
+InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
+InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
+InputStateIterable = Iterable[InputPollResult | Sequence[InputPollResult]]
+InputStateGenerator = Callable[[], InputStateIterator]
 
 
 class GeneratorInputDriver(InputDriver):
@@ -149,13 +181,15 @@ class GeneratorInputDriver(InputDriver):
 
     def state(self, port: int, device: int, index: int, id: int) -> int:
         match (self._input_generator, self._input_poll_result, port, InputDevice(device)):
-            case(None, _, _, _) | (_, [], _, _):
+            case (None, _, _, _) | (_, [], _, _):
                 # An unassigned generator or an empty result list will default to 0
                 return 0
-            case (_, _, port, _) if self._max_users is not None and not (0 <= port < self._max_users ):
+            case (_, _, port, _) if self._max_users is not None and not (0 <= port < self._max_users):
                 # If we limit the number of ports, any out-of-bounds port will default to 0
                 return 0
-            case _, _, _, device if self._device_capabilities is not None and device.flag not in self._device_capabilities:
+            case _, _, _, device if (
+                self._device_capabilities is not None and device.flag not in self._device_capabilities
+            ):
                 # If we filter by devices, any device not in the flag will default to 0
                 return 0
             case _, [*results], port, device if 0 <= port < len(results) and not isinstance(results, InputDeviceState):
@@ -242,7 +276,10 @@ class GeneratorInputDriver(InputDriver):
             # Yielding a DeviceIdMouse value will expose it as a button press on the mouse device,
             # with all other devices defaulting to 0.
             # Yielding DeviceIdMouse.X or DeviceIdMouse.Y will return 0.
-            case DeviceIdMouse(device_id), InputDevice.MOUSE, _, id if device_id == id and id not in (DeviceIdMouse.X, DeviceIdMouse.Y):
+            case DeviceIdMouse(device_id), InputDevice.MOUSE, _, id if device_id == id and id not in (
+                DeviceIdMouse.X,
+                DeviceIdMouse.Y,
+            ):
                 return 1
             case DeviceIdMouse(_), _, _, _:
                 return 0
@@ -283,14 +320,17 @@ class GeneratorInputDriver(InputDriver):
                 # Index is ignored.
                 pointer_state: PointerState
                 return len(pointer_state.pointers)
-            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.X \
-                if 0 <= index < len(pointer_state.pointers):
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.X if (
+                0 <= index < len(pointer_state.pointers)
+            ):
                 return pointer_state.pointers[index].x
-            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.Y \
-                if 0 <= index < len(pointer_state.pointers):
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.Y if (
+                0 <= index < len(pointer_state.pointers)
+            ):
                 return pointer_state.pointers[index].y
-            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.PRESSED \
-                if 0 <= index < len(pointer_state.pointers):
+            case PointerState() as pointer_state, InputDevice.POINTER, index, DeviceIdPointer.PRESSED if (
+                0 <= index < len(pointer_state.pointers)
+            ):
                 return pointer_state.pointers[index].pressed
             case PointerState(), _, _, _:
                 return 0

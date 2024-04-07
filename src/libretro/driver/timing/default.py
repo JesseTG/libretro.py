@@ -15,7 +15,8 @@ class DefaultTimingDriver(TimingDriver):
     def frame_time_callback(self) -> retro_frame_time_callback | None:
         return None
 
-    @frame_time_callback.setter
+    @TimingDriver.frame_time_callback.setter
+    @override
     def frame_time_callback(self, value: retro_frame_time_callback | None) -> None:
         pass
 
