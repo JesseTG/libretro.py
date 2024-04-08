@@ -19,6 +19,7 @@ class UnformattedLogDriver(LogDriver):
         if self._logger is None:
             self._logger = logging.getLogger('libretro')
             self._logger.setLevel(logging.DEBUG)
+            self._logger.addHandler(logging.StreamHandler())
             self._logger.addFilter(_log_record)
 
     @property
