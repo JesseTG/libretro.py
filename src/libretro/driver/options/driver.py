@@ -13,6 +13,7 @@ from libretro.api.options import (
     retro_variable,
 )
 
+
 @runtime_checkable
 class OptionDriver(Protocol):
     @abstractmethod
@@ -21,11 +22,13 @@ class OptionDriver(Protocol):
     @abstractmethod
     def set_variables(self, variables: Sequence[retro_variable] | None): ...
 
+    @property
     @abstractmethod
-    def get_variable_update(self) -> bool: ...
+    def variable_updated(self) -> bool: ...
 
+    @property
     @abstractmethod
-    def get_version(self) -> int: ...
+    def version(self) -> int: ...
 
     @abstractmethod
     def set_options(self, options: Sequence[retro_core_option_definition] | None): ...
@@ -42,23 +45,16 @@ class OptionDriver(Protocol):
     @abstractmethod
     def set_options_v2_intl(self, options: retro_core_options_v2_intl | None): ...
 
+    @property
     @abstractmethod
-    def set_update_display_callback(self, callback: retro_core_options_update_display_callback | None): ...
+    def update_display_callback(self) -> retro_core_options_update_display_callback: ...
+
+    @update_display_callback.setter
+    @abstractmethod
+    def update_display_callback(self, callback: retro_core_options_update_display_callback | None): ...
 
     @abstractmethod
     def set_variable(self, var: bytes, value: bytes) -> bool: ...
-
-    @property
-    def variable_updated(self) -> bool:
-        return self.get_variable_update()
-
-    @property
-    def version(self):
-        return self.get_version()
-
-    @property
-    @abstractmethod
-    def update_display_callback(self) -> retro_core_options_update_display_callback | None: ...
 
     @property
     @abstractmethod

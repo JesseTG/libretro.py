@@ -1104,7 +1104,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         if options_ptr:
-            if self._options.get_version() < 1:
+            if self._options.version < 1:
                 return False
 
             self._options.set_options(tuple(deepcopy(o) for o in from_zero_terminated(options_ptr)))
@@ -1120,7 +1120,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         if options_ptr:
-            if self._options.get_version() < 1:
+            if self._options.version < 1:
                 return False
 
             self._options.set_options_intl(options_ptr[0])
@@ -1271,7 +1271,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not self._options:
             return False
 
-        if self._options.get_version() < 2:
+        if self._options.version < 2:
             return False
 
         if options_ptr:
@@ -1285,7 +1285,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not self._options:
             return False
 
-        if self._options.get_version() < 2:
+        if self._options.version < 2:
             return False
 
         if options_ptr:
@@ -1302,7 +1302,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         if callback_ptr:
-            self._options.set_update_display_callback(callback_ptr[0])
+            self._options.update_display_callback = callback_ptr[0]
 
         return True
 

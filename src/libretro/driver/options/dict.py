@@ -2,7 +2,7 @@ import re
 from collections.abc import Mapping, Sequence, MutableMapping
 from copy import deepcopy
 from ctypes import string_at, Array
-from typing import AnyStr
+from typing import AnyStr, override
 
 from .driver import OptionDriver
 from libretro.api._utils import as_bytes, from_zero_terminated
@@ -24,10 +24,10 @@ _SET_VARS = re.compile(br"(?P<desc>[^;]+); (?P<values>.+)")
 
 class DictOptionDriver(OptionDriver):
     def __init__(
-            self,
-            version: int = 2,
-            categories_supported: bool | None = None,
-            variables: Mapping[AnyStr, AnyStr] | None = None,
+        self,
+        version: int = 2,
+        categories_supported: bool | None = None,
+        variables: Mapping[AnyStr, AnyStr] | None = None,
     ):
         if version not in {0, 1, 2}:
             raise ValueError(f"Expected a core option version of 0, 1, or 2; got {version}")
@@ -36,13 +36,11 @@ class DictOptionDriver(OptionDriver):
         self._variables_dirty = True
         self._categories_supported = version >= 2 if categories_supported is None else categories_supported
 
-        self._variables: dict[bytes, bytes] = {
-            as_bytes(k): as_bytes(v) for k, v in variables.items()
-        } if variables else {}
+        self._variables: dict[bytes, bytes] = (
+            {as_bytes(k): as_bytes(v) for k, v in variables.items()} if variables else {}
+        )
 
-        self._visibility: dict[bytes, bool] = {
-            as_bytes(k): True for k in variables
-        } if variables else {}
+        self._visibility: dict[bytes, bool] = {as_bytes(k): True for k in variables} if variables else {}
 
         self._update_display_callback: retro_core_options_update_display_callback | None = None
         self._categories_us: dict[bytes, retro_core_option_v2_category] = {}
@@ -96,10 +94,14 @@ class DictOptionDriver(OptionDriver):
 
         self._variables_dirty = True
 
-    def get_variable_update(self) -> bool:
+    @property
+    @override
+    def variable_updated(self) -> bool:
         return bool(self._variables_dirty and self._options_us)
 
-    def get_version(self) -> int:
+    @property
+    @override
+    def version(self) -> int:
         return self._version
 
     def set_options(self, options: Sequence[retro_core_option_definition] | None):
@@ -112,7 +114,9 @@ class DictOptionDriver(OptionDriver):
             for o in options:
                 key = bytes(o.key)
                 # Make a copy of the key so it stays valid even when the core is unloaded!
-                opt = retro_core_option_v2_definition(o.key, o.desc, None, o.info, None, None, o.values, o.default_value)
+                opt = retro_core_option_v2_definition(
+                    o.key, o.desc, None, o.info, None, None, o.values, o.default_value
+                )
                 self._options_us[key] = opt
 
         self._variables_dirty = True
@@ -172,7 +176,14 @@ class DictOptionDriver(OptionDriver):
 
         self._variables_dirty = True
 
-    def set_update_display_callback(self, callback: retro_core_options_update_display_callback | None):
+    @property
+    @override
+    def update_display_callback(self) -> retro_core_options_update_display_callback | None:
+        return self._update_display_callback
+
+    @update_display_callback.setter
+    @override
+    def update_display_callback(self, callback: retro_core_options_update_display_callback | None):
         match callback:
             case None:
                 self._update_display_callback = None
@@ -199,10 +210,6 @@ class DictOptionDriver(OptionDriver):
 
         self._variables[key] = val
         self._variables_dirty = True
-
-    @property
-    def update_display_callback(self) -> retro_core_options_update_display_callback | None:
-        return self._update_display_callback
 
     @property
     def supports_categories(self) -> bool:
