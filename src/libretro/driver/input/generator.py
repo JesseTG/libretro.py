@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterator, Sequence, Iterable
+from collections.abc import Callable, Iterator, Sequence, Iterable, Generator
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
@@ -95,12 +95,13 @@ InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
 InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
 InputStateIterable = Iterable[InputPollResult | Sequence[InputPollResult]]
 InputStateGenerator = Callable[[], InputStateIterator]
+InputStateSource = InputStateGenerator | InputStateIterable | InputStateIterator
 
 
 class GeneratorInputDriver(InputDriver):
     def __init__(
         self,
-        input_generator: InputStateGenerator | None = None,
+        input_generator: InputStateSource | None = None,
         device_capabilities: InputDeviceFlag | None = InputDeviceFlag.ALL,
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
@@ -166,7 +167,11 @@ class GeneratorInputDriver(InputDriver):
     def poll(self) -> None:
         if self._input_generator:
             if self._input_generator_state is None:
-                self._input_generator_state = self._input_generator()
+                match self._input_generator:
+                    case Callable() as func:
+                        self._input_generator_state = func()
+                    case Iterable() | Iterator() | Generator() as it:
+                        self._input_generator_state = it
 
             self._last_input_poll_result = self._input_poll_result
             self._input_poll_result = next(self._input_generator_state, None)
@@ -441,6 +446,7 @@ class GeneratorInputDriver(InputDriver):
 __all__ = [
     'GeneratorInputDriver',
     'InputPollResult',
+    'InputStateSource',
     'InputStateIterator',
     'InputStateGenerator',
     'InputStateIterable',

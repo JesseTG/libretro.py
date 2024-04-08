@@ -267,14 +267,24 @@ class SessionBuilder:
 
     def with_input(self, input: InputDriverArg) -> Self:
         match input:
-            case func if callable(func):
-                # Either a generator or a driver type
-                self._args["input"] = func
+            case Generator() as generator:
+                self._args["input"] = lambda: GeneratorInputDriver(generator)
             case InputDriver():
                 self._args["input"] = lambda: input
-            case it if isinstance(it, (Iterator, Iterable)):
-                # Arguments to a generator
-                self._args["input"] = lambda: GeneratorInputDriver(it)
+            case Callable() as func:
+                # Either a generator or a driver type;
+                def _generate():
+                    match func():
+                        case Generator() | Iterable() | Iterator() as gen:
+                            return GeneratorInputDriver(gen)
+                        case InputDriver() as driver:
+                            return driver
+                        case err:
+                            raise TypeError(
+                                f"Expected a generator, an iterable, an iterator, or an InputDriver from the callable, got {type(err).__name__}"
+                            )
+
+                self._args["input"] = _generate
             case _DefaultType.DEFAULT:
                 self._args["input"] = GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
             case None:
