@@ -165,7 +165,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._message is not None and not isinstance(self._message, MessageInterface):
             raise TypeError(f"Expected MessageInterface or None, got {type(self._message).__qualname__}")
 
-        self._shutdown = False
+        self.__shutdown = False
         self._performance_level: int | None = None
         self._path = kwargs.get('path')
         if self._path is not None and not isinstance(self._path, PathDriver):
@@ -358,11 +358,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def is_shutdown(self) -> bool:
-        return self._shutdown
+        return self.__shutdown
 
     @override
     def _shutdown(self) -> bool:
-        self._shutdown = True  # TODO: Add a shutdown driver?
+        self.__shutdown = True  # TODO: Add a shutdown driver?
         return True
 
     @property
