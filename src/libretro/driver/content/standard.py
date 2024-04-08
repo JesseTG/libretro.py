@@ -44,7 +44,6 @@ class _PersistentBuffer:
 
 
 class StandardContentDriver(ContentDriver):
-
     def __init__(self, enable_extended_info: bool = True):
         self._subsystems: Subsystems | None = None
         self._overrides: ContentInfoOverrides | None = None
@@ -67,7 +66,9 @@ class StandardContentDriver(ContentDriver):
     def enable_extended_info(self, value: bool) -> None:
         self._enable_extended_info = bool(value)
 
-    def get_game_info_ext(self) -> Array[retro_game_info_ext] | None:
+    @property
+    @override
+    def game_info_ext(self) -> Array[retro_game_info_ext] | None:
         if not self._enable_extended_info:
             return None
 
@@ -78,7 +79,7 @@ class StandardContentDriver(ContentDriver):
 
     @contextmanager
     def load(self, content: Content | SubsystemContent | None) -> AbstractContextManager[LoadedContent]:
-        if not self.system_info:
+        if not self._system_info:
             raise RuntimeError("System info not set")
 
         with ExitStack() as stack:
@@ -279,31 +280,45 @@ class StandardContentDriver(ContentDriver):
             if loaded_info_ext:
                 loaded_info_ext.data = None
 
+    @property
     @override
-    def set_system_info(self, info: retro_system_info | None) -> None:
-        self._system_info = info
-
-    @override
-    def get_system_info(self) -> retro_system_info | None:
+    def system_info(self) -> retro_system_info | None:
         return self._system_info
 
-    def set_subsystem_info(self, subsystems: Sequence[retro_subsystem_info] | None) -> None:
-        self._subsystems = Subsystems(subsystems) if subsystems else None
+    @system_info.setter
+    @override
+    def system_info(self, info: retro_system_info | None) -> None:
+        self._system_info = info
 
-    def get_subsystem_info(self) -> Subsystems | None:
+    @property
+    @override
+    def subsystem_info(self) -> Subsystems | None:
         return self._subsystems
 
-    def set_support_no_game(self, support: bool) -> None:
-        self._support_no_game = support
+    @subsystem_info.setter
+    @override
+    def subsystem_info(self, subsystems: Sequence[retro_subsystem_info] | None) -> None:
+        self._subsystems = Subsystems(subsystems) if subsystems else None
 
-    def get_support_no_game(self) -> bool | None:
+    @property
+    @override
+    def support_no_game(self) -> bool | None:
         return self._support_no_game
 
-    def set_overrides(self, overrides: Sequence[retro_system_content_info_override] | None) -> None:
-        self._overrides = ContentInfoOverrides(overrides) if overrides else None
+    @support_no_game.setter
+    @override
+    def support_no_game(self, support: bool) -> None:
+        self._support_no_game = support
 
-    def get_overrides(self) -> ContentInfoOverrides | None:
+    @property
+    @override
+    def overrides(self) -> ContentInfoOverrides | None:
         return self._overrides
+
+    @overrides.setter
+    @override
+    def overrides(self, overrides: Sequence[retro_system_content_info_override] | None) -> None:
+        self._overrides = ContentInfoOverrides(overrides) if overrides else None
 
     def __needs_fullpath(self, ext: bytes | None, subsysrom: retro_subsystem_rom_info | None = None) -> bool:
         assert self._system_info is not None

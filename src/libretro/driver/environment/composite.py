@@ -513,7 +513,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not support_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
-        self._content.set_support_no_game(support_ptr[0])
+        self._content.support_no_game = support_ptr[0]
         return True
 
     @override
