@@ -361,7 +361,7 @@ class SessionBuilder:
         match options:
             case func if callable(func):
                 self._args["options"] = func
-            case OptionDriver(driver):
+            case OptionDriver() as driver:
                 driver: OptionDriver
                 self._args["options"] = lambda: driver
             case dict(vars) if all(isinstance(k, _types) and isinstance(v, _types) for k, v in vars.items()):
@@ -471,7 +471,7 @@ class SessionBuilder:
         match vfs:
             case func if callable(func):
                 self._args["vfs"] = func
-            case FileSystemInterface():
+            case FileSystemInterface() as interface:
                 interface: FileSystemInterface
                 self._args["vfs"] = lambda: interface
             case 1 | 2 | 3 as version:
