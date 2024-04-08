@@ -140,7 +140,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @override
     def __init__(self, kwargs: Args):
         super().__init__()
-        # TODO: Validate args here
         self._audio = kwargs['audio']
         if not isinstance(self._audio, AudioDriver):
             raise TypeError(f"Expected AudioDriver, got {type(self._audio).__qualname__}")
