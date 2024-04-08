@@ -30,6 +30,24 @@ class AbstractSoftwareVideoDriver(VideoDriver, ABC):
         return None
 
     @property
+    @override
+    @final
+    def preferred_context(self) -> HardwareContext | None:
+        return None
+
+    @preferred_context.setter
+    @override
+    @final
+    def preferred_context(self, context: HardwareContext) -> None:
+        pass
+
+    @preferred_context.deleter
+    @override
+    @final
+    def preferred_context(self) -> None:
+        pass
+
+    @property
     @final
     def can_dupe(self) -> bool:
         return True
