@@ -17,7 +17,7 @@ from libretro.api.proc import retro_proc_address_t
 DriverMap = Mapping[HardwareContext, Callable[[retro_hw_render_callback], VideoDriver]]
 
 
-class DynamicVideoDriver(VideoDriver):
+class MultiVideoDriver(VideoDriver):
     def __init__(self, drivers: DriverMap):
         self._current: VideoDriver | None = None
         self._drivers = drivers
