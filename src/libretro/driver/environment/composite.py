@@ -90,6 +90,7 @@ from libretro.api import (
 )
 
 from libretro.driver.audio import AudioDriver
+from libretro.driver.camera import CameraDriver
 from libretro.driver.content import ContentDriver
 from libretro.driver.input import InputDriver
 from libretro.driver.led import LedDriver
@@ -120,6 +121,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         message: MessageInterface | None
         options: OptionDriver | None
         path: PathDriver | None
+        camera: CameraDriver | None
         log: LogDriver | None
         perf: PerfDriver | None
         location: LocationDriver | None
@@ -173,6 +175,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._options = kwargs.get('options')
         if self._options is not None and not isinstance(self._options, OptionDriver):
             raise TypeError(f"Expected OptionDriver or None, got {type(self._options).__qualname__}")
+
+        self._camera = kwargs.get('camera')
+        if self._camera is not None and not isinstance(self._camera, CameraDriver):
+            raise TypeError(f"Expected CameraDriver or None, got {type(self._camera).__qualname__}")
 
         self._log = kwargs.get('log')
         if self._log is not None and not isinstance(self._log, LogDriver):
@@ -602,6 +608,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_camera_interface(self, interface: POINTER(retro_camera_callback)) -> bool:
+        if not self._camera:
+            return False
+
+        if not interface:
+            raise ValueError("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE doesn't accept NULL")
+
         return False  # TODO: Implement
 
     @property
