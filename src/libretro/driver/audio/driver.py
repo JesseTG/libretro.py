@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from ctypes import c_int16, POINTER
 from typing import runtime_checkable, Protocol
 
 from libretro.api import retro_audio_callback, retro_audio_buffer_status_callback, retro_system_av_info
@@ -11,7 +10,7 @@ class AudioDriver(Protocol):
     def sample(self, left: int, right: int) -> None: ...
 
     @abstractmethod
-    def sample_batch(self, data: POINTER(c_int16), frames: int) -> int: ...
+    def sample_batch(self, frames: memoryview) -> int: ...
 
     @property
     @abstractmethod

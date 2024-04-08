@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from ctypes import POINTER, c_bool, c_char_p, c_float, c_uint, c_uint64, c_void_p
+from ctypes import POINTER, c_bool, c_char_p, c_float, c_uint, c_uint64, c_void_p, c_int16
 from typing import Protocol, runtime_checkable
 
 from libretro.api import (
@@ -58,6 +58,21 @@ from libretro.api import (
 class EnvironmentDriver(Protocol):
     @abstractmethod
     def environment(self, cmd: int, data: c_void_p) -> bool: ...
+
+    @abstractmethod
+    def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None: ...
+
+    @abstractmethod
+    def audio_sample(self, left: int, right: int) -> None: ...
+
+    @abstractmethod
+    def audio_sample_batch(self, data: POINTER(c_int16), frames: int) -> int: ...
+
+    @abstractmethod
+    def input_poll(self) -> None: ...
+
+    @abstractmethod
+    def input_state(self, port: int, device: int, index: int, id: int) -> int: ...
 
     def _set_rotation(self, rotation: POINTER(c_uint)) -> bool:
         return False

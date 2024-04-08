@@ -16,7 +16,8 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
         self._system_av_info: retro_system_av_info | None = None
         self._recreate_frame = True
 
-    def _refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
+    @override
+    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
         if self._recreate_frame:
             # If we don't have a frame or the frame is not the right size, create a new one
             if not self._system_av_info:

@@ -19,7 +19,8 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
         self._system_av_info: retro_system_av_info | None = None
         self._should_reinit_framebuffer = True
 
-    def _refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
+    @override
+    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
         if self._should_reinit_framebuffer:
             self.__reinit_framebuffer()
 

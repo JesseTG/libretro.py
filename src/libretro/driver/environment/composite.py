@@ -14,12 +14,14 @@ from ctypes import (
     pointer,
     sizeof,
     string_at,
+    c_void_p,
+    c_int16,
 )
 from _ctypes import CFuncPtr
 from typing import TypedDict, Required, override, AnyStr
 
 from .default import DefaultEnvironmentDriver
-from libretro.api._utils import as_bytes, from_zero_terminated
+from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at
 
 from libretro.api import (
     AvEnableFlags,
@@ -87,6 +89,8 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface,
     retro_vfs_interface_info,
+    InputDevice,
+    Port,
 )
 
 from libretro.driver.audio import AudioDriver
@@ -287,6 +291,33 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def path(self) -> PathDriver | None:
         return self._path
+
+    @override
+    def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
+        if data:
+            view = memoryview_at(data, pitch * height, readonly=True)
+            assert len(view) == pitch * height, f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
+            self._video.refresh(view, width, height, pitch)
+        else:
+            self._video.refresh(None, width, height, pitch)
+
+    @override
+    def audio_sample(self, left: int, right: int) -> None:
+        self._audio.sample(left, right)
+
+    @override
+    def audio_sample_batch(self, data: POINTER(c_int16), frames: int) -> int:
+        sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16)).cast('h')
+        assert len(sample_view) == frames * 2, f"Expected view to have {frames * 2} samples, got {len(sample_view)} samples"
+        return self._audio.sample_batch(sample_view)
+
+    @override
+    def input_poll(self) -> None:
+        self._input.poll()
+
+    @override
+    def input_state(self, port: int, device: int, index: int, id: int) -> int:
+        return self._input.state(Port(port), InputDevice(device), index, id)
 
     @property
     def rotation(self) -> Rotation:

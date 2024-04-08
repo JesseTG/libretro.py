@@ -80,11 +80,11 @@ class Session:
         if api_version != API_VERSION:
             raise RuntimeError(f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}")
 
-        self._core.set_video_refresh(self._environment.video.refresh)
-        self._core.set_audio_sample(self._environment.audio.sample)
-        self._core.set_audio_sample_batch(self._environment.audio.sample_batch)
-        self._core.set_input_poll(self._environment.input.poll)
-        self._core.set_input_state(self._environment.input.state)
+        self._core.set_video_refresh(self._environment.video_refresh)
+        self._core.set_audio_sample(self._environment.audio_sample)
+        self._core.set_audio_sample_batch(self._environment.audio_sample_batch)
+        self._core.set_input_poll(self._environment.input_poll)
+        self._core.set_input_state(self._environment.input_state)
         self._core.set_environment(self._environment.environment)
         system_info = self._core.get_system_info()
 

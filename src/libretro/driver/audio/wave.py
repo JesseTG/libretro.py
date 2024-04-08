@@ -1,5 +1,4 @@
 from copy import deepcopy
-from ctypes import c_int16, POINTER, sizeof
 import wave
 from io import RawIOBase
 from os import PathLike, fsdecode
@@ -8,7 +7,6 @@ from typing import override
 from .driver import AudioDriver
 from libretro.api.audio import retro_audio_callback, retro_audio_buffer_status_callback
 from libretro.api.av import retro_system_av_info
-from libretro.api._utils import memoryview_at
 from libretro.error import UnsupportedEnvCall
 
 
@@ -37,11 +35,10 @@ class WaveWriterAudioDriver(AudioDriver):
         self._file.writeframesraw(left.to_bytes(2, 'little', signed=True))
         self._file.writeframesraw(right.to_bytes(2, 'little', signed=True))
 
-    def sample_batch(self, data: POINTER(c_int16), frames: int) -> int:
-        sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16))
-        self._file.writeframesraw(sample_view)
+    def sample_batch(self, data: memoryview) -> int:
+        self._file.writeframesraw(data)
 
-        return frames
+        return len(memoryview)
 
     @property
     @override

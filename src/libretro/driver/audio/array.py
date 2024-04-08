@@ -1,12 +1,10 @@
 from array import array
 from copy import deepcopy
-from ctypes import sizeof, c_int16, POINTER
 from typing import override
 
 from .driver import AudioDriver
 from libretro.api.audio import retro_audio_callback, retro_audio_buffer_status_callback
 from libretro.api.av import retro_system_av_info
-from libretro.api._utils import memoryview_at
 from libretro.error import UnsupportedEnvCall
 
 
@@ -19,11 +17,10 @@ class ArrayAudioDriver(AudioDriver):
         self._buffer.append(left)
         self._buffer.append(right)
 
-    def sample_batch(self, data: POINTER(c_int16), frames: int) -> int:
-        sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16))
-        self._buffer.frombytes(sample_view)
+    def sample_batch(self, data: memoryview) -> int:
+        self._buffer.frombytes(data.cast('B'))
 
-        return frames
+        return len(data)
 
     @property
     @override
