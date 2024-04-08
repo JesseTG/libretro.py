@@ -87,7 +87,7 @@ class StandardContentDriver(ContentDriver):
             subsystem: retro_subsystem_info | None = None
             match content:
                 case SubsystemContent(game_type=game_type, info=info):
-                    subsystem = self.__get_subsystem(game_type)
+                    subsystem = self.__get_subsystem(content)
                     if len(info) != len(subsystem):
                         raise ValueError(
                             f"Subsystem {subsystem.ident!r} needs exactly {len(subsystem)} ROMs, got {len(info)}"
