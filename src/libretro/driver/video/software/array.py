@@ -25,6 +25,7 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
             geometry = self._system_av_info.geometry
             bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
             self._frame = array('B', [0] * bufsize)
+            self._recreate_frame = False
 
         if data:
             frameview = memoryview(self._frame)
