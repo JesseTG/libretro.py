@@ -491,8 +491,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not updated_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
-        update_ptr = cast(updated_ptr, POINTER(c_bool))
-        update_ptr[0] = self._options.variable_updated
+        updated_ptr[0] = self._options.variable_updated
         return True
 
     @property
@@ -1071,8 +1070,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not rate_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
-        refresh_rate_ptr = cast(rate_ptr, POINTER(c_float))
-        refresh_rate_ptr[0] = self._target_refresh_rate
+        rate_ptr[0] = self._target_refresh_rate
         return True  # TODO: Move to TimingDriver
 
     @property
