@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from collections.abc import Set
 from typing import Protocol, runtime_checkable
 
 from libretro.api.video import (
@@ -8,6 +9,7 @@ from libretro.api.video import (
     Rotation,
     PixelFormat,
     MemoryAccess,
+    HardwareContext
 )
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -17,6 +19,12 @@ from libretro.api.proc import retro_proc_address_t
 class VideoDriver(Protocol):
     @abstractmethod
     def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None: ...
+
+    @abstractmethod
+    def supported_contexts(self) -> Set[HardwareContext]: ...
+
+    @abstractmethod
+    def active_context(self) -> HardwareContext | None: ...
 
     @abstractmethod
     def init_callback(self, callback: retro_hw_render_callback) -> bool: ...

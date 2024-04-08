@@ -1,11 +1,14 @@
 from abc import ABC
+from collections.abc import Set
 from typing import final, override
 
 from ..driver import VideoDriver
 from libretro.api.proc import retro_proc_address_t
 from libretro.error import UnsupportedEnvCall
 from libretro.api.video.render import retro_hw_render_interface
-from libretro.api.video.context import retro_hw_render_callback
+from libretro.api.video.context import retro_hw_render_callback, HardwareContext
+
+_EMPTY = frozenset()
 
 
 class AbstractSoftwareVideoDriver(VideoDriver, ABC):
@@ -13,6 +16,18 @@ class AbstractSoftwareVideoDriver(VideoDriver, ABC):
     def init_callback(self, callback: retro_hw_render_callback) -> bool:
         # Software-rendered drivers don't need retro_hw_render_callback
         return False
+
+    @property
+    @override
+    @final
+    def supported_contexts(self) -> Set[HardwareContext]:
+        return _EMPTY
+
+    @property
+    @override
+    @final
+    def active_context(self) -> HardwareContext | None:
+        return None
 
     @property
     @final
