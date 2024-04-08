@@ -71,21 +71,21 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
         if not self._frame:
             return None
 
-        frame = array(self._pixel_format.pixel_typecode)
+        frame = array('B')
         width = int(self._system_av_info.geometry.base_width)
         height = int(self._system_av_info.geometry.base_height)
         max_width = self._system_av_info.geometry.max_width
         for i in range(height):
-            frame_offset = max_width * i * self._frame.itemsize
-            row = self._frame[frame_offset:frame_offset+width*self._frame.itemsize]
+            frame_offset = max_width * i * self._pixel_format.bytes_per_pixel
+            row = self._frame[frame_offset:frame_offset+width*self._pixel_format.bytes_per_pixel]
             frame.frombytes(row)
 
-        return array(self._pixel_format.pixel_typecode, self._frame) if self._frame else None
+        return frame
 
     @property
     @override
     def frame_max(self):
-        pass
+        return array(self._pixel_format.pixel_typecode, self._frame) if self._frame else None
 
 
     def get_software_framebuffer(self, width: int, height: int, flags: MemoryAccess) -> retro_framebuffer | None:
