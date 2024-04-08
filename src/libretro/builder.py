@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterator, Iterable, Mapping
+from collections.abc import Callable, Iterator, Iterable, Mapping, Generator
 from ctypes import CDLL
 from enum import Enum, auto
 from logging import Logger
