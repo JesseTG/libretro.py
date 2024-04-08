@@ -3,7 +3,7 @@ from enum import IntEnum
 from ctypes import Structure, c_bool, c_uint, CFUNCTYPE, c_char_p, cast, c_void_p, c_int
 
 from libretro.api.proc import retro_proc_address_t
-from libretro.api._utils import FieldsFromTypeHints, c_uintptr
+from libretro.api._utils import FieldsFromTypeHints, c_uintptr, UNCHECKED
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 
@@ -43,7 +43,7 @@ class HardwareContext(IntEnum):
 
 retro_hw_context_reset_t = CFUNCTYPE(None)
 retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
-retro_hw_get_proc_address_t = CFUNCTYPE(retro_proc_address_t, c_char_p)
+retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
 
 
 @dataclass(init=False)
