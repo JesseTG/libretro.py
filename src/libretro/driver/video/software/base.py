@@ -13,9 +13,9 @@ _EMPTY = frozenset()
 
 class AbstractSoftwareVideoDriver(VideoDriver, ABC):
     @final
-    def init_callback(self, callback: retro_hw_render_callback) -> bool:
+    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
         # Software-rendered drivers don't need retro_hw_render_callback
-        return False
+        return None
 
     @property
     @override

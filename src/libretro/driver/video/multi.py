@@ -39,7 +39,7 @@ class MultiVideoDriver(VideoDriver):
             del self._current
 
         self._current = self._drivers[context_type](callback)
-        self._current.context_reset()
+        self._current.set_context()
 
         pass
 
@@ -100,7 +100,7 @@ class MultiVideoDriver(VideoDriver):
     def set_shared_context(self) -> None:
         pass
 
-    def context_reset(self) -> None:
+    def set_context(self) -> None:
         pass
 
     def context_destroy(self) -> None:

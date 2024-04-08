@@ -39,7 +39,13 @@ class VideoDriver(Protocol):
     def preferred_context(self) -> None: ...
 
     @abstractmethod
-    def init_callback(self, callback: retro_hw_render_callback) -> bool: ...
+    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None: ...
+
+    @abstractmethod
+    def context_reset(self) -> None: ...
+
+    @abstractmethod
+    def context_destroy(self) -> None: ...
 
     @property
     @abstractmethod
@@ -106,11 +112,6 @@ class VideoDriver(Protocol):
     @abstractmethod
     def shared_context(self, value: bool) -> None: ...
 
-    @abstractmethod
-    def context_reset(self) -> None: ...
-
-    @abstractmethod
-    def context_destroy(self) -> None: ...
 
 
 __all__ = [
