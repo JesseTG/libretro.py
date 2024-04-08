@@ -648,8 +648,20 @@ class SessionBuilder:
 
     def with_mic(self, mic: MicDriverArg) -> Self:
         match mic:
-            case func if callable(func):
-                self._args["mic"] = func
+            case Callable() as func:
+                # Either a generator or a driver type;
+                def _generate():
+                    match func():
+                        case Generator() | Iterable() | Iterator() as gen:
+                            return GeneratorMicrophoneDriver(gen)
+                        case MicrophoneDriver() as driver:
+                            return driver
+                        case err:
+                            raise TypeError(
+                                f"Expected a generator, an iterable, an iterator, or a MicrophoneDriver from the callable, got {type(err).__name__}"
+                            )
+
+                self._args["mic"] = _generate
             case MicrophoneDriver():
                 self._args["mic"] = lambda: mic
             case _DefaultType.DEFAULT:
