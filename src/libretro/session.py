@@ -130,7 +130,7 @@ class Session:
 
         self._system_av_info = self._core.get_system_av_info()
         self._environment.video.system_av_info = self._system_av_info
-        self._environment.audio.set_system_av_info(self._system_av_info)
+        self._environment.audio.system_av_info = self._system_av_info
 
         return self
 

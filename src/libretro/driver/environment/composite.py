@@ -534,10 +534,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @override
     def _set_audio_callback(self, callback_ptr: POINTER(retro_audio_callback)) -> bool:
         if callback_ptr:
-            return self._audio.set_callbacks(deepcopy(callback_ptr[0]))
-        else:
-            # envcall allows passing NULL to query for support
-            return self._audio.set_callbacks(None)
+            self._audio.callbacks = deepcopy(callback_ptr[0])
+
+        return True
 
     @override
     def _get_rumble_interface(self, rumble_ptr: POINTER(retro_rumble_interface)) -> bool:
@@ -735,7 +734,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Provide a way to disable this envcall
         av_info: retro_system_av_info = info_ptr[0]
         self._video.system_av_info = av_info
-        self._audio.set_system_av_info(av_info)
+        self._audio.system_av_info = av_info
         self._system_av_info = deepcopy(av_info)
         return True
 
@@ -1230,9 +1229,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @override
     def _set_minimum_audio_latency(self, latency_ptr: POINTER(c_uint)) -> bool:
         if latency_ptr:
-            return self._audio.set_minimum_latency(latency_ptr[0])
-        else:
-            return self._audio.set_minimum_latency(None)
+            self._audio.minimum_latency = latency_ptr[0]
+
+        return True
 
     @override
     def _set_fastforwarding_override(self, override_ptr: POINTER(retro_fastforwarding_override)) -> bool:

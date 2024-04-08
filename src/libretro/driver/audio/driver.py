@@ -13,68 +13,52 @@ class AudioDriver(Protocol):
     @abstractmethod
     def sample_batch(self, data: POINTER(c_int16), frames: int) -> int: ...
 
-    # TODO: Use the callbacks in the session
-    @abstractmethod
-    def set_callbacks(self, callback: retro_audio_callback | None) -> bool: ...
-
-    @abstractmethod
-    def get_callbacks(self) -> retro_audio_callback | None: ...
-
     @property
-    def callbacks(self) -> retro_audio_callback | None:
-        return self.get_callbacks()
+    @abstractmethod
+    def callbacks(self) -> retro_audio_callback | None: ...
 
     @callbacks.setter
-    def callbacks(self, callback: retro_audio_callback | None) -> None:
-        self.set_callbacks(callback)
-
-    @callbacks.deleter
-    def callbacks(self) -> None:
-        self.set_callbacks(None)
-
     @abstractmethod
-    def get_status_callback(self) -> retro_audio_buffer_status_callback | None: ...
+    def callbacks(self, callback: retro_audio_callback | None) -> None: ...
 
-    @abstractmethod
-    def set_status_callback(self, callback: retro_audio_buffer_status_callback | None) -> bool: ...
+    def set_state(self, enabled: bool) -> None:
+        callbacks = self.callbacks
+        if callbacks and callbacks.callback:
+            callbacks.callback(enabled)
+
+    def callback(self) -> None:
+        callbacks = self.callbacks
+        if callbacks and callbacks.callback:
+            callbacks.callback()
 
     @property
-    def buffer_status(self) -> retro_audio_buffer_status_callback | None:
-        return self.get_status_callback()
+    @abstractmethod
+    def buffer_status(self) -> retro_audio_buffer_status_callback | None: ...
 
     @buffer_status.setter
-    def buffer_status(self, callback: retro_audio_buffer_status_callback) -> None:
-        self.set_status_callback(callback)
-
-    @buffer_status.deleter
-    def buffer_status(self) -> None:
-        self.set_status_callback(None)
+    @abstractmethod
+    def buffer_status(self, callback: retro_audio_buffer_status_callback) -> None: ...
 
     def status(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         callback = self.buffer_status
         if callback:
             callback(active, occupancy, underrun_likely)
 
-    @abstractmethod
-    def get_minimum_latency(self) -> int | None: ...
-
-    @abstractmethod
-    def set_minimum_latency(self, latency: int | None) -> bool: ...
-
     @property
-    def minimum_latency(self) -> int:
-        return self.get_minimum_latency()
+    @abstractmethod
+    def minimum_latency(self) -> int | None: ...
 
     @minimum_latency.setter
-    def minimum_latency(self, latency: int | None) -> None:
-        self.set_minimum_latency(latency)
-
-    @minimum_latency.deleter
-    def minimum_latency(self) -> None:
-        self.get_minimum_latency()
-
     @abstractmethod
-    def set_system_av_info(self, info: retro_system_av_info) -> None: ...
+    def minimum_latency(self, latency: int | None) -> None: ...
+
+    @property
+    @abstractmethod
+    def system_av_info(self) -> retro_system_av_info | None: ...
+
+    @system_av_info.setter
+    @abstractmethod
+    def system_av_info(self, info: retro_system_av_info) -> None: ...
 
 
 __all__ = [

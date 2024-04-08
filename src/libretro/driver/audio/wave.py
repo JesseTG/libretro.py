@@ -1,15 +1,18 @@
+from copy import deepcopy
 from ctypes import c_int16, POINTER, sizeof
 import wave
 from io import RawIOBase
 from os import PathLike, fsdecode
+from typing import override
 
 from .driver import AudioDriver
 from libretro.api.audio import retro_audio_callback, retro_audio_buffer_status_callback
+from libretro.api.av import retro_system_av_info
 from libretro.api._utils import memoryview_at
+from libretro.error import UnsupportedEnvCall
 
 
 class WaveWriterAudioDriver(AudioDriver):
-
     def __init__(self, file: str | bytes | PathLike | RawIOBase):
         match file:
             case str() as name:
@@ -28,6 +31,7 @@ class WaveWriterAudioDriver(AudioDriver):
         self._file.setnchannels(2)
         self._file.setsampwidth(2)
         self._file.setframerate(44100)
+        self._system_av_info: retro_system_av_info | None = None
 
     def sample(self, left: int, right: int):
         self._file.writeframesraw(left.to_bytes(2, 'little', signed=True))
@@ -39,20 +43,48 @@ class WaveWriterAudioDriver(AudioDriver):
 
         return frames
 
-    def set_callbacks(self, callback: retro_audio_callback | None) -> bool:
-        return False
-
-    def get_callbacks(self) -> retro_audio_callback | None:
+    @property
+    @override
+    def callbacks(self) -> retro_audio_callback | None:
         return None
 
-    def get_status_callback(self) -> retro_audio_buffer_status_callback | None:
+    @callbacks.setter
+    @override
+    def callbacks(self, callback: retro_audio_callback | None):
+        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting callbacks")
+
+    @property
+    @override
+    def buffer_status(self) -> retro_audio_buffer_status_callback | None:
         return None
 
-    def set_status_callback(self, callback: retro_audio_buffer_status_callback | None) -> bool:
-        return False
+    @buffer_status.setter
+    @override
+    def buffer_status(self, callback: retro_audio_buffer_status_callback):
+        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting buffer status callback")
 
-    def get_minimum_latency(self) -> int | None:
-        pass
+    @property
+    @override
+    def minimum_latency(self) -> int | None:
+        return None
+
+    @minimum_latency.setter
+    @override
+    def minimum_latency(self, latency: int | None):
+        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting minimum latency")
+
+    @property
+    @override
+    def system_av_info(self) -> retro_system_av_info | None:
+        return deepcopy(self._system_av_info)
+
+    @system_av_info.setter
+    @override
+    def system_av_info(self, info: retro_system_av_info):
+        if not isinstance(info, retro_system_av_info):
+            raise TypeError(f"Expected retro_system_av_info; got {type(info).__name__}")
+
+        self._system_av_info = deepcopy(info)
 
     def close(self):
         self._file.close()
