@@ -1,5 +1,6 @@
 from array import array
 from collections.abc import Sequence, Iterator, Callable
+from typing import override
 
 from libretro.api.microphone import retro_microphone_params, INTERFACE_VERSION
 from .driver import Microphone, MicrophoneDriver
@@ -21,24 +22,29 @@ class GeneratorMicrophone(Microphone):
     def close(self) -> None:
         self._closed = True
 
-    def get_params(self) -> retro_microphone_params | None:
+    @property
+    @override
+    def params(self) -> retro_microphone_params | None:
         if self._closed:
             return None
 
         return self._params
 
-    def set_state(self, state: bool) -> bool:
-        if self._closed:
-            return False
-
-        self._enabled = bool(state)
-        return True
-
-    def get_state(self) -> bool:
+    @property
+    @override
+    def state(self) -> bool:
         if self._closed:
             return False
 
         return self._enabled
+
+    @state.setter
+    @override
+    def state(self, state: bool) -> None:
+        if self._closed:
+            raise RuntimeError("Cannot set state on a closed microphone")
+
+        self._enabled = bool(state)
 
     def read(self, frames: int) -> Sequence[int]:
         if self._closed or not self._enabled or not frames:

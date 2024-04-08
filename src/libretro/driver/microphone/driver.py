@@ -30,30 +30,20 @@ class Microphone(Protocol):
     @abstractmethod
     def close(self) -> None: ...
 
+    @property
     @abstractmethod
-    def get_params(self) -> retro_microphone_params | None: ...
-
-    @abstractmethod
-    def set_state(self, state: bool) -> bool: ...
-
-    @abstractmethod
-    def get_state(self) -> bool: ...
+    def params(self) -> retro_microphone_params | None: ...
 
     @abstractmethod
     def read(self, frames: int) -> Sequence[int]: ...
 
     @property
-    def state(self) -> bool:
-        return self.get_state()
+    @abstractmethod
+    def state(self) -> bool: ...
 
     @state.setter
-    def state(self, value: bool) -> None:
-        if not self.set_state(value):
-            raise ValueError(f"Failed to set microphone state to {value}")
-
-    @property
-    def params(self) -> retro_microphone_params | None:
-        return self.get_params()
+    @abstractmethod
+    def state(self, value: bool) -> None: ...
 
 
 @runtime_checkable
@@ -130,7 +120,7 @@ class MicrophoneDriver(Protocol):
 
             assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
-            returned_params = handle.handle.get_params()
+            returned_params = handle.handle.params
 
             if not returned_params:
                 return False
@@ -156,7 +146,8 @@ class MicrophoneDriver(Protocol):
 
             assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
-            return handle.handle.set_state(state)
+            handle.handle.state = state
+            return True
         except Exception as e:
             # TODO: Log error
             return False
@@ -173,7 +164,7 @@ class MicrophoneDriver(Protocol):
 
             assert isinstance(handle, MicrophoneDriver.__MicHandle)
             assert isinstance(handle.handle, Microphone)
-            return handle.handle.get_state()
+            return handle.handle.state
         except Exception as e:
             # TODO: Log error
             return False
@@ -192,7 +183,7 @@ class MicrophoneDriver(Protocol):
             assert isinstance(handle.handle, Microphone)
             assert num_samples >= 0
 
-            if not handle.handle.get_state():
+            if not handle.handle.state:
                 return -1
 
             if not num_samples:
