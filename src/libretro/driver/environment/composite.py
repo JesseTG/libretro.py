@@ -417,10 +417,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not descriptors_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS doesn't accept NULL")
 
-        descriptors: tuple[retro_input_descriptor, ...] = tuple(
-            deepcopy(d) for d in from_zero_terminated(descriptors_ptr)
-        )
-        self._input.set_descriptors(descriptors)
+        self._input.descriptors = tuple(deepcopy(d) for d in from_zero_terminated(descriptors_ptr))
         return True
 
     @property

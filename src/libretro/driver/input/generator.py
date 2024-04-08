@@ -124,32 +124,47 @@ class GeneratorInputDriver(InputDriver):
         self._sensor = sensor
 
     @property
+    @override
     def device_capabilities(self) -> InputDeviceFlag | None:
         return self._device_capabilities
 
     @device_capabilities.setter
+    @override
     def device_capabilities(self, value: InputDeviceFlag) -> None:
+        if not isinstance(value, InputDeviceFlag):
+            raise TypeError(f"Expected an InputDeviceFlag, got {type(value).__name__}")
+
         # Unrecognized devices will be filtered out by the CONFORM boundary on InputDeviceFlag
         self._device_capabilities = InputDeviceFlag(value)
 
     @device_capabilities.deleter
+    @override
     def device_capabilities(self) -> None:
         self._device_capabilities = None
 
     @property
+    @override
     def bitmasks_supported(self) -> bool | None:
         return self._bitmasks_supported
 
     @bitmasks_supported.setter
+    @override
     def bitmasks_supported(self, value: bool) -> None:
         self._bitmasks_supported = bool(value)
 
     @bitmasks_supported.deleter
+    @override
     def bitmasks_supported(self) -> None:
         self._bitmasks_supported = None
 
+    @property
     @override
-    def set_max_users(self, max_users: int | None) -> None:
+    def max_users(self) -> int | None:
+        return self._max_users
+
+    @max_users.setter
+    @override
+    def max_users(self, max_users: int | None) -> None:
         match max_users:
             case int(i) if i >= 0:
                 self._max_users = int(i)
@@ -160,9 +175,10 @@ class GeneratorInputDriver(InputDriver):
             case _:
                 raise TypeError(f"Expected None or a non-negative int, got {max_users!r}")
 
+    @max_users.deleter
     @override
-    def get_max_users(self) -> int | None:
-        return self._max_users
+    def max_users(self) -> None:
+        self._max_users = None
 
     def poll(self) -> None:
         if self._input_generator:
@@ -377,7 +393,14 @@ class GeneratorInputDriver(InputDriver):
             case _, _, _, _:
                 raise ValueError(f"Invalid input state: {result}")
 
-    def set_descriptors(self, descriptors: Sequence[retro_input_descriptor] | None):
+    @property
+    @override
+    def descriptors(self) -> Sequence[retro_input_descriptor] | None:
+        return self._input_descriptors
+
+    @descriptors.setter
+    @override
+    def descriptors(self, descriptors: Sequence[retro_input_descriptor] | None) -> None:
         if descriptors is None:
             self._input_descriptors = None
         elif all(isinstance(descriptor, retro_input_descriptor) for descriptor in descriptors):
@@ -385,12 +408,14 @@ class GeneratorInputDriver(InputDriver):
         else:
             raise TypeError(f"Expected None or a sequence of retro_input_descriptor, got {descriptors!r}")
 
-        return True
+    @property
+    @override
+    def controller_info(self) -> Sequence[retro_controller_info] | None:
+        return self._controller_info
 
-    def get_descriptors(self) -> Sequence[retro_input_descriptor] | None:
-        return self._input_descriptors
-
-    def set_controller_info(self, info: Sequence[retro_controller_info] | None) -> bool:
+    @controller_info.setter
+    @override
+    def controller_info(self, info: Sequence[retro_controller_info] | None) -> None:
         if info is None:
             self._controller_info = None
         elif all(isinstance(controller_info, retro_controller_info) for controller_info in info):
@@ -398,19 +423,18 @@ class GeneratorInputDriver(InputDriver):
         else:
             raise TypeError(f"Expected None or a sequence of retro_controller_info, got {info!r}")
 
-        return True
+    @property
+    @override
+    def keyboard_callback(self) -> retro_keyboard_callback | None:
+        return self._keyboard_callback
 
-    def get_controller_info(self) -> Sequence[retro_controller_info] | None:
-        return self._controller_info
-
-    def set_keyboard_callback(self, callback: retro_keyboard_callback | None) -> None:
+    @keyboard_callback.setter
+    @override
+    def keyboard_callback(self, callback: retro_keyboard_callback | None) -> None:
         if callback is not None and not isinstance(callback, retro_keyboard_callback):
             raise TypeError(f"Expected None or a retro_keyboard_callback, got {callback!r}")
 
         self._keyboard_callback = callback
-
-    def get_keyboard_callback(self) -> retro_keyboard_callback | None:
-        return self._keyboard_callback
 
     @property
     def rumble(self) -> RumbleInterface | None:

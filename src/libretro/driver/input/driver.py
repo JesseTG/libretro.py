@@ -9,6 +9,8 @@ from libretro.api import (
     Port,
     InputDevice,
     InputDeviceFlag,
+    Key,
+    KeyModifier
 )
 
 from libretro.driver.rumble import RumbleInterface
@@ -23,37 +25,26 @@ class InputDriver(Protocol):
     @abstractmethod
     def state(self, port: Port, device: InputDevice, index: int, _id: int) -> int: ...
 
-    @abstractmethod
-    def set_descriptors(self, descriptors: Sequence[retro_input_descriptor] | None) -> None: ...
-
-    @abstractmethod
-    def get_descriptors(self) -> Sequence[retro_input_descriptor] | None: ...
-
     @property
-    def descriptors(self) -> Sequence[retro_input_descriptor] | None:
-        return self.get_descriptors()
+    @abstractmethod
+    def descriptors(self) -> Sequence[retro_input_descriptor] | None: ...
 
     @descriptors.setter
-    def descriptors(self, descriptors: Sequence[retro_input_descriptor]) -> None:
-        self.set_descriptors(descriptors)
-
     @abstractmethod
-    def set_keyboard_callback(self, callback: retro_keyboard_callback | None) -> None: ...
-
-    @abstractmethod
-    def get_keyboard_callback(self) -> retro_keyboard_callback | None: ...
+    def descriptors(self, descriptors: Sequence[retro_input_descriptor]) -> None: ...
 
     @property
-    def keyboard_callback(self) -> retro_keyboard_callback | None:
-        return self.get_keyboard_callback()
+    @abstractmethod
+    def keyboard_callback(self) -> retro_keyboard_callback | None: ...
 
     @keyboard_callback.setter
-    def keyboard_callback(self, callback: retro_keyboard_callback) -> None:
-        self.set_keyboard_callback(callback)
+    @abstractmethod
+    def keyboard_callback(self, callback: retro_keyboard_callback) -> None: ...
 
-    @keyboard_callback.deleter
-    def keyboard_callback(self) -> None:
-        self.set_keyboard_callback(None)
+    def keyboard_event(self, down: bool, keycode: Key, character: int, modifiers: KeyModifier) -> None:
+        callback = self.keyboard_callback
+        if callback:
+            callback.callback(down, keycode, character, modifiers)
 
     @property
     @abstractmethod
@@ -61,49 +52,51 @@ class InputDriver(Protocol):
 
     @property
     @abstractmethod
-    def device_capabilities(self) -> InputDeviceFlag | None: ...
-
-    @property
-    @abstractmethod
     def sensor(self) -> SensorInterface | None: ...
 
+    @property
     @abstractmethod
-    def get_controller_info(self) -> Sequence[retro_controller_info] | None: ...
+    def device_capabilities(self) -> InputDeviceFlag | None: ...
 
+    @device_capabilities.setter
     @abstractmethod
-    def set_controller_info(self, info: Sequence[retro_controller_info] | None) -> bool: ...
+    def device_capabilities(self, capabilities: InputDeviceFlag) -> None: ...
+
+    @device_capabilities.deleter
+    @abstractmethod
+    def device_capabilities(self) -> None: ...
 
     @property
-    def controller_info(self) -> Sequence[retro_controller_info] | None:
-        return self.get_controller_info()
+    @abstractmethod
+    def controller_info(self) -> Sequence[retro_controller_info] | None: ...
 
     @controller_info.setter
-    def controller_info(self, info: Sequence[retro_controller_info]) -> None:
-        self.set_controller_info(info)
+    @abstractmethod
+    def controller_info(self, info: Sequence[retro_controller_info]) -> None: ...
 
     @property
     @abstractmethod
     def bitmasks_supported(self) -> bool | None: ...
 
+    @bitmasks_supported.setter
     @abstractmethod
-    def get_max_users(self) -> int | None: ...
+    def bitmasks_supported(self, bitmask_supported: bool) -> None: ...
 
+    @bitmasks_supported.deleter
     @abstractmethod
-    def set_max_users(self, max_users: int | None) -> None: ...
+    def bitmasks_supported(self) -> None: ...
 
     @property
-    def max_users(self) -> int | None:
-        return self.get_max_users()
+    @abstractmethod
+    def max_users(self) -> int | None: ...
 
     @max_users.setter
-    def max_users(self, max_users: int) -> None:
-        self.set_max_users(max_users)
+    @abstractmethod
+    def max_users(self, max_users: int) -> None: ...
 
     @max_users.deleter
-    def max_users(self) -> None:
-        self.set_max_users(None)
+    @abstractmethod
+    def max_users(self) -> None: ...
 
 
-__all__ = [
-    'InputDriver'
-]
+__all__ = ['InputDriver']
