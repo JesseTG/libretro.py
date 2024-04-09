@@ -201,7 +201,7 @@ class SessionBuilder:
         :raises TypeError: If ``core`` is not one of the permitted types.
         """
         match core:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["core"] = func
             case Core():
                 self._args["core"] = lambda: core
@@ -250,7 +250,7 @@ class SessionBuilder:
 
     def with_audio(self, audio: AudioDriverArg) -> Self:
         match audio:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["audio"] = func
             case AudioDriver():
                 self._args["audio"] = lambda: audio
@@ -298,7 +298,7 @@ class SessionBuilder:
 
     def with_video(self, video: VideoDriverArg) -> Self:
         match video:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["video"] = func
             case VideoDriver():
                 self._args["video"] = lambda: video
@@ -315,7 +315,7 @@ class SessionBuilder:
 
     def with_content_driver(self, content: ContentDriverArg) -> Self:
         match content:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["content_driver"] = func
             case ContentDriver():
                 self._args["content_driver"] = lambda: content
@@ -334,7 +334,7 @@ class SessionBuilder:
         match overscan:
             case bool():
                 self._args["overscan"] = lambda: overscan
-            case func if callable(func):
+            case Callable() as func:
                 self._args["overscan"] = func
             case _DefaultType.DEFAULT:
                 self._args["overscan"] = lambda: False
@@ -349,7 +349,7 @@ class SessionBuilder:
 
     def with_message(self, message: MessageDriverArg) -> Self:
         match message:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["message"] = func
             case MessageInterface():
                 self._args["message"] = lambda: message
@@ -369,7 +369,7 @@ class SessionBuilder:
     def with_options(self, options: OptionDriverArg) -> Self:
         _types = (str, bytes)
         match options:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["options"] = func
             case OptionDriver() as driver:
                 driver: OptionDriver
@@ -392,7 +392,7 @@ class SessionBuilder:
 
     def with_paths(self, path: PathDriverArg) -> Self:
         match path:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["path"] = func
             case PathDriver():
                 self._args["path"] = lambda: path
@@ -409,7 +409,7 @@ class SessionBuilder:
 
     def with_log(self, log: LogDriverArg) -> Self:
         match log:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["log"] = func
             case LogDriver():
                 self._args["log"] = lambda: log
@@ -428,7 +428,7 @@ class SessionBuilder:
 
     def with_perf(self, perf: PerfDriverArg) -> Self:
         match perf:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["perf"] = func
             case PerfDriver():
                 self._args["perf"] = lambda: perf
@@ -445,7 +445,7 @@ class SessionBuilder:
 
     def with_location(self, location: LocationDriverArg) -> Self:
         match location:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["location"] = func
             case LocationDriver():
                 self._args["location"] = lambda: location
@@ -462,7 +462,7 @@ class SessionBuilder:
 
     def with_user(self, user: UserDriverArg) -> Self:
         match user:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["user"] = func
             case UserDriver():
                 self._args["user"] = lambda: user
@@ -479,7 +479,7 @@ class SessionBuilder:
 
     def with_vfs(self, vfs: FileSystemArg) -> Self:
         match vfs:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["vfs"] = func
             case FileSystemInterface() as interface:
                 interface: FileSystemInterface
@@ -499,7 +499,7 @@ class SessionBuilder:
 
     def with_led(self, led: LedDriverArg) -> Self:
         match led:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["led"] = func
             case LedDriver():
                 self._args["led"] = lambda: led
@@ -514,7 +514,7 @@ class SessionBuilder:
 
     def with_av_mask(self, av_mask: AvEnableFlagsArg) -> Self:
         match av_mask:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["av_mask"] = func
             case AvEnableFlags():
                 self._args["av_mask"] = lambda: av_mask
@@ -546,7 +546,7 @@ class SessionBuilder:
 
     def with_target_refresh_rate(self, rate: FloatArg) -> Self:
         match rate:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["target_refresh_rate"] = func
             case float() | int():
                 self._args["target_refresh_rate"] = lambda: rate
@@ -563,7 +563,7 @@ class SessionBuilder:
 
     def with_preferred_hw(self, hw: HardwareContextArg) -> Self:
         match hw:
-            case func if callable(func):
+            case Callable() as func:
                 self._args["preferred_hw"] = func
             case HardwareContext():
                 self._args["preferred_hw"] = lambda: hw
@@ -582,7 +582,7 @@ class SessionBuilder:
         match enable:
             case bool():
                 self._args["driver_switch_enable"] = lambda: enable
-            case func if callable(func):
+            case Callable() as func:
                 self._args["driver_switch_enable"] = func
             case _DefaultType.DEFAULT:
                 self._args["driver_switch_enable"] = lambda: False
