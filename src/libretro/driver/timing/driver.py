@@ -6,18 +6,13 @@ from libretro.api.timing import retro_frame_time_callback, retro_fastforwarding_
 
 @runtime_checkable
 class TimingDriver(Protocol):
-
     @property
     @abstractmethod
     def frame_time_callback(self) -> retro_frame_time_callback | None: ...
 
     @frame_time_callback.setter
     @abstractmethod
-    def frame_time_callback(self, value: retro_frame_time_callback | None) -> None: ...
-
-    @frame_time_callback.deleter
-    @abstractmethod
-    def frame_time_callback(self) -> None: ...
+    def frame_time_callback(self, value: retro_frame_time_callback) -> None: ...
 
     @property
     @abstractmethod
@@ -25,7 +20,7 @@ class TimingDriver(Protocol):
 
     @fastforwarding_override.setter
     @abstractmethod
-    def fastforwarding_override(self, value: retro_fastforwarding_override | None) -> None: ...
+    def fastforwarding_override(self, value: retro_fastforwarding_override) -> None: ...
 
     @property
     @abstractmethod
@@ -33,7 +28,7 @@ class TimingDriver(Protocol):
 
     @throttle_state.setter
     @abstractmethod
-    def throttle_state(self, value: retro_throttle_state | None) -> None: ...
+    def throttle_state(self, value: retro_throttle_state) -> None: ...
 
     @throttle_state.deleter
     @abstractmethod
@@ -45,7 +40,7 @@ class TimingDriver(Protocol):
 
     @target_refresh_rate.setter
     @abstractmethod
-    def target_refresh_rate(self, value: float | None) -> None: ...
+    def target_refresh_rate(self, value: float) -> None: ...
 
     @target_refresh_rate.deleter
     @abstractmethod

@@ -29,6 +29,7 @@ from libretro.driver import (
     ContentDriver,
     DefaultPathDriver,
     DefaultPerfDriver,
+    DefaultTimingDriver,
     DefaultUserDriver,
     DictLedDriver,
     DictOptionDriver,
@@ -55,6 +56,7 @@ from libretro.driver import (
     PowerDriver,
     StandardContentDriver,
     StandardFileSystemInterface,
+    TimingDriver,
     UnformattedLogDriver,
     UserDriver,
     VideoDriver,
@@ -98,6 +100,7 @@ FileSystemArg = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
 LedDriverArg = _OptionalArg[LedDriver]
 AvEnableFlagsArg = _OptionalArg[AvEnableFlags]
 MidiDriverArg = _OptionalArg[MidiDriver]
+TimingDriverArg = _OptionalArg[TimingDriver]
 FloatArg = _OptionalArg[float | int]
 HardwareContextArg = _OptionalArg[HardwareContext]
 ThrottleStateArg = _OptionalArg[retro_throttle_state]
@@ -133,10 +136,9 @@ class _SessionBuilderArgs(TypedDict):
     led: _OptionalFactory[LedDriver]
     av_mask: _OptionalFactory[AvEnableFlags]
     midi: _OptionalFactory[MidiDriver]
-    target_refresh_rate: _OptionalFactory[float]  # TODO: Replace with TimingDriver
+    timing: _OptionalFactory[TimingDriver]
     preferred_hw: _OptionalFactory[HardwareContext]  # TODO: Replace with a method in VideoDriver
     driver_switch_enable: _OptionalFactory[bool]  # TODO: Replace with a method in VideoDriver
-    throttle: _OptionalFactory[retro_throttle_state]  # TODO: Replace with TimingDriver
     savestate_context: _OptionalFactory[SavestateContext]  # TODO: Replace with some driver (not sure what yet)
     jit_capable: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     mic: _OptionalFactory[MicrophoneDriver]
@@ -171,10 +173,9 @@ class SessionBuilder:
             led=_nothing,
             av_mask=_nothing,
             midi=_nothing,
-            target_refresh_rate=_nothing,
+            timing=_nothing,
             preferred_hw=_nothing,
             driver_switch_enable=_nothing,
-            throttle=_nothing,
             savestate_context=_nothing,
             jit_capable=_nothing,
             mic=_nothing,
@@ -544,19 +545,19 @@ class SessionBuilder:
 
         return self
 
-    def with_target_refresh_rate(self, rate: FloatArg) -> Self:
-        match rate:
+    def with_timing(self, timing: TimingDriverArg) -> Self:
+        match timing:
+            case TimingDriver():
+                self._args["timing"] = lambda: timing
             case Callable() as func:
-                self._args["target_refresh_rate"] = func
-            case float() | int():
-                self._args["target_refresh_rate"] = lambda: rate
+                self._args["timing"] = func
             case _DefaultType.DEFAULT:
-                self._args["target_refresh_rate"] = lambda: 60.0
+                self._args["timing"] = lambda: DefaultTimingDriver(retro_throttle_state(ThrottleMode.UNBLOCKED, 0.0), 60.0)
             case None:
-                self._args["target_refresh_rate"] = _nothing
+                self._args["timing"] = _nothing
             case _:
                 raise TypeError(
-                    f"Expected float, a callable that returns one, DEFAULT, or None; got {type(rate).__name__}"
+                    f"Expected TimingDriver, a callable that returns one, DEFAULT, or None; got {type(timing).__name__}"
                 )
 
         return self
@@ -591,23 +592,6 @@ class SessionBuilder:
             case _:
                 raise TypeError(
                     f"Expected bool, a callable that returns one, DEFAULT, or None; got {type(enable).__name__}"
-                )
-
-        return self
-
-    def with_throttle(self, state: ThrottleStateArg) -> Self:
-        match state:
-            case retro_throttle_state():
-                self._args["throttle"] = lambda: state
-            case func if callable(func):
-                self._args["throttle"] = func
-            case _DefaultType.DEFAULT:
-                self._args["throttle"] = lambda: retro_throttle_state(ThrottleMode.UNBLOCKED, 0.0)
-            case None:
-                self._args["throttle"] = _nothing
-            case _:
-                raise TypeError(
-                    f"Expected retro_throttle_state, a callable that returns one, DEFAULT, or None; got {type(state).__name__}"
                 )
 
         return self
@@ -717,10 +701,9 @@ class SessionBuilder:
             led=self._args["led"](),
             av_enable=self._args["av_mask"](),
             midi=self._args["midi"](),
-            target_refresh_rate=self._args["target_refresh_rate"](),
+            timing=self._args["timing"](),
             preferred_hw=self._args["preferred_hw"](),
             driver_switch_enable=self._args["driver_switch_enable"](),
-            throttle_state=self._args["throttle"](),
             savestate_context=self._args["savestate_context"](),
             jit_capable=self._args["jit_capable"](),
             mic_interface=self._args["mic"](),
@@ -751,10 +734,9 @@ def defaults(core: CoreArg) -> SessionBuilder:
         .with_led(DEFAULT)
         .with_av_mask(DEFAULT)
         .with_midi(DEFAULT)
-        .with_target_refresh_rate(DEFAULT)
+        .with_timing(DEFAULT)
         .with_preferred_hw(DEFAULT)
         .with_driver_switch_enable(DEFAULT)
-        .with_throttle(DEFAULT)
         .with_savestate_context(DEFAULT)
         .with_jit_capable(DEFAULT)
         .with_mic(DEFAULT)
