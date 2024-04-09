@@ -647,8 +647,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not perf_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_PERF_INTERFACE doesn't accept NULL")
 
-        # TODO: Provide private entry-point wrapper functions for this callback
-        # so that drivers can be swapped out without the risk of crashes
         perf_ptr[0] = retro_perf_callback.from_param(self._perf)
         return True
 
@@ -673,8 +671,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             location_ptr, byref(retro_location_callback.from_param(self._location)), sizeof(retro_location_callback)
         )
         return True
-        # TODO: Provide a private entry-point wrapper functions for this callback
-        # so that drivers can be swapped out without the risk of crashes
 
     @override
     def _get_core_assets_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
