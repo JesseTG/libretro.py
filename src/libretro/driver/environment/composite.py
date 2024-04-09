@@ -800,6 +800,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._video.geometry = geometry_ptr[0]
         return True
 
+    @override
     def _get_username(self, username_ptr: POINTER(c_char_p)) -> bool:
         if self._user is None or self._user.username is None:
             return False
