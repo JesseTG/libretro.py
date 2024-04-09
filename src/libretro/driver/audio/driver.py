@@ -38,7 +38,7 @@ class AudioDriver(Protocol):
     @abstractmethod
     def buffer_status(self, callback: retro_audio_buffer_status_callback) -> None: ...
 
-    def status(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
+    def report_buffer_status(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         callback = self.buffer_status
         if callback:
             callback(active, occupancy, underrun_likely)
