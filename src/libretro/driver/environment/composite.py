@@ -269,6 +269,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._content
 
     @property
+    def camera(self) -> CameraDriver | None:
+        return self._camera
+
+    @property
     def user(self) -> UserDriver | None:
         return self._user
 
@@ -611,11 +615,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._input.sensor.get_sensor_input(port, Sensor(id))
 
     @override
-    def _get_camera_interface(self, interface: POINTER(retro_camera_callback)) -> bool:
+    def _get_camera_interface(self, callback_ptr: POINTER(retro_camera_callback)) -> bool:
         if not self._camera:
             return False
 
-        if not interface:
+        if not callback_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE doesn't accept NULL")
 
         return False  # TODO: Implement

@@ -1,6 +1,7 @@
 from .audio import *
 from .camera import *
 from .content import *
+from .disk import *
 from .environment import *
 from .input import *
 from .led import *
