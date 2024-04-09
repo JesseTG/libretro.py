@@ -103,7 +103,7 @@ HardwareContextArg = _OptionalArg[HardwareContext]
 ThrottleStateArg = _OptionalArg[retro_throttle_state]
 SavestateContextArg = _OptionalArg[SavestateContext]
 MicDriverArg = _OptionalArg[MicrophoneDriver]
-PowerDriverArg = _OptionalArg[PowerDriver]
+PowerDriverArg = _OptionalArg[PowerDriver] | retro_device_power
 
 
 class RequiredError(RuntimeError):
@@ -677,7 +677,9 @@ class SessionBuilder:
 
     def with_power(self, power: PowerDriverArg) -> Self:
         match power:
-            case func if callable(func):
+            case retro_device_power() as pow:
+                self._args["power"] = lambda: ConstantPowerDriver(pow)
+            case Callable() as func:
                 self._args["power"] = func
             case PowerDriver():
                 self._args["power"] = lambda: power
@@ -687,7 +689,7 @@ class SessionBuilder:
                 self._args["power"] = _nothing
             case _:
                 raise TypeError(
-                    f"Expected PowerDriver, a callable that returns one, DEFAULT, or None; got {type(power).__name__}"
+                    f"Expected a PowerDriver, retro_device_power, a callable that returns one, DEFAULT, or None; got {type(power).__name__}"
                 )
 
         return self
