@@ -263,10 +263,6 @@ class Session:
     def av_enable(self) -> AvEnableFlags:
         return self._environment.av_enable
 
-    @av_enable.setter
-    def av_enable(self, value: AvEnableFlags):
-        self._environment.av_enable = value
-
     @property
     def midi(self) -> MidiDriver:
         return self._environment.midi
@@ -287,21 +283,10 @@ class Session:
     def max_users(self) -> int | None:
         return self._environment.input.max_users
 
-    @max_users.setter
-    def max_users(self, value: int):
-        self._environment.input.max_users = value
-
-    @property
-    def fastforwarding_override(self) -> retro_fastforwarding_override | None:
-        return self._environment.fastforwarding_override
-
     @property
     def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
         return self._environment.content.overrides
 
-    @property
-    def throttle_state(self) -> retro_throttle_state:
-        return self._throttle_state
 
 
 __all__ = [
