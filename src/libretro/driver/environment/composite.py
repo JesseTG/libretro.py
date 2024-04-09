@@ -277,17 +277,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def user(self) -> UserDriver | None:
         return self._user
 
-    @user.setter
-    def user(self, value: UserDriver | None) -> None:
-        if value is not None and not isinstance(value, UserDriver):
-            raise TypeError(f"Expected UserDriver or None, got {type(value)}")
-
-        self._user = value
-
-    @user.deleter
-    def user(self) -> None:
-        self._user = None
-
     @property
     def path(self) -> PathDriver | None:
         return self._path
@@ -369,17 +358,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def message(self) -> MessageInterface | None:
         return self._message
-
-    @message.setter
-    def message(self, value: MessageInterface) -> None:
-        if not isinstance(value, MessageInterface):
-            raise TypeError(f"Expected MessageInterface, got {type(value)}")
-
-        self._message = value
-
-    @message.deleter
-    def message(self) -> None:
-        self._message = None
 
     @override
     def _set_message(self, message_ptr: POINTER(retro_message)) -> bool:
@@ -479,17 +457,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def options(self) -> OptionDriver | None:
         return self._options
-
-    @options.setter
-    def options(self, value: OptionDriver) -> None:
-        if not isinstance(value, OptionDriver):
-            raise TypeError(f"Expected OptionDriver, got {type(value).__name__}")
-
-        self._options = value
-
-    @options.deleter
-    def options(self) -> None:
-        self._options = None
 
     @override
     def _get_variable(self, var_ptr: POINTER(retro_variable)) -> bool:
@@ -651,17 +618,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def log(self) -> LogDriver | None:
         return self._log
 
-    @log.setter
-    def log(self, value: LogDriver) -> None:
-        if not isinstance(value, LogDriver):
-            raise TypeError(f"Expected LogCallback, got {type(value).__name__}")
-
-        self._log = value
-
-    @log.deleter
-    def log(self) -> None:
-        self._log = None
-
     @override
     def _get_log_interface(self, log_ptr: POINTER(retro_log_callback)) -> bool:
         if not self._log:
@@ -684,17 +640,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def perf(self) -> PerfDriver | None:
         return self._perf
 
-    @perf.setter
-    def perf(self, value: PerfDriver) -> None:
-        if not isinstance(value, PerfDriver):
-            raise TypeError(f"Expected PerfInterface, got {type(value).__name__}")
-
-        self._perf = value
-
-    @perf.deleter
-    def perf(self) -> None:
-        self._perf = None
-
     def _get_perf_interface(self, perf_ptr: POINTER(retro_perf_callback)) -> bool:
         if not self._perf:
             return False
@@ -710,17 +655,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def location(self) -> LocationDriver | None:
         return self._location
-
-    @location.setter
-    def location(self, value: LocationDriver) -> None:
-        if not isinstance(value, LocationDriver):
-            raise TypeError(f"Expected LocationDriver, got {type(value).__name__}")
-
-        self._location = value
-
-    @location.deleter
-    def location(self) -> None:
-        self._location = None
 
     @override
     def _get_location_interface(self, location_ptr: POINTER(retro_location_callback)) -> bool:
@@ -779,17 +713,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._proc_address_callback
-
-    @proc_address_callback.setter
-    def proc_address_callback(self, value: retro_get_proc_address_interface) -> None:
-        if not isinstance(value, retro_get_proc_address_interface):
-            raise TypeError(f"Expected retro_get_proc_address_interface, got {type(value).__name__}")
-
-        self._proc_address_callback = value
-
-    @proc_address_callback.deleter
-    def proc_address_callback(self) -> None:
-        self._proc_address_callback = None
 
     def get_proc_address(
         self, sym: AnyStr, funtype: type[CFuncPtr] | None
@@ -970,17 +893,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def vfs(self) -> FileSystemInterface | None:
         return self._vfs
 
-    @vfs.setter
-    def vfs(self, value: FileSystemInterface) -> None:
-        if not isinstance(value, FileSystemInterface):
-            raise TypeError(f"Expected FileSystemInterface, got {type(value).__name__}")
-
-        self._vfs = value
-
-    @vfs.deleter
-    def vfs(self) -> None:
-        self._vfs = None
-
     @override
     def _get_vfs_interface(self, vfs_ptr: POINTER(retro_vfs_interface_info)) -> bool:
         if not self._vfs:
@@ -1002,17 +914,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def led(self) -> LedDriver | None:
         return self._led
-
-    @led.setter
-    def led(self, value: LedDriver) -> None:
-        if not isinstance(value, LedDriver):
-            raise TypeError(f"Expected LedDriver, got {type(value).__name__}")
-
-        self._led = value
-
-    @led.deleter
-    def led(self) -> None:
-        self._led = None
 
     def _get_led_interface(self, led_ptr: POINTER(retro_led_interface)) -> bool:
         if not self._led:
@@ -1059,17 +960,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def midi(self) -> MidiDriver | None:
         return self._midi
 
-    @midi.setter
-    def midi(self, value: MidiDriver) -> None:
-        if not isinstance(value, MidiDriver):
-            raise TypeError(f"Expected MidiInterface, got {type(value).__name__}")
-
-        self._midi = value
-
-    @midi.deleter
-    def midi(self) -> None:
-        self._midi = None
-
     @override
     def _get_midi_interface(self, midi_ptr: POINTER(retro_midi_interface)) -> bool:
         if not self._midi:
@@ -1091,18 +981,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         fastforwarding_ptr[0] = self._throttle_state.mode.value == ThrottleMode.FAST_FORWARD
         return True  # TODO: Move to TimingDriver
-
-    @property
-    def target_refresh_rate(self) -> float | None:
-        return self._target_refresh_rate
-
-    @target_refresh_rate.setter
-    def target_refresh_rate(self, value: float) -> None:
-        self._target_refresh_rate = float(value)
-
-    @target_refresh_rate.deleter
-    def target_refresh_rate(self) -> None:
-        self._target_refresh_rate = None
 
     @override
     def _get_target_refresh_rate(self, rate_ptr: POINTER(c_float)) -> bool:
@@ -1362,17 +1240,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def throttle_state(self) -> retro_throttle_state | None:
         return self._throttle_state
 
-    @throttle_state.setter
-    def throttle_state(self, value: retro_throttle_state) -> None:
-        if not isinstance(value, retro_throttle_state):
-            raise TypeError(f"Expected retro_throttle_state, got {type(value).__name__}")
-
-        self._throttle_state = value
-
-    @throttle_state.deleter
-    def throttle_state(self) -> None:
-        self._throttle_state = None
-
     @override
     def _get_throttle_state(self, throttle_ptr: POINTER(retro_throttle_state)) -> bool:
         if not self._throttle_state:
@@ -1442,17 +1309,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def microphones(self) -> MicrophoneDriver | None:
         return self._mic_interface
 
-    @microphones.setter
-    def microphones(self, value: MicrophoneDriver) -> None:
-        if not isinstance(value, MicrophoneDriver):
-            raise TypeError(f"Expected MicrophoneDriver, got {type(value).__name__}")
-
-        self._mic_interface = value
-
-    @microphones.deleter
-    def microphones(self) -> None:
-        self._mic_interface = None
-
     @override
     def _get_microphone_interface(self, mic_ptr: POINTER(retro_microphone_interface)) -> bool:
         if not self._mic_interface:
@@ -1472,17 +1328,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def power(self) -> PowerDriver | None:
         return self._device_power
-
-    @power.setter
-    def power(self, value: PowerDriver) -> None:
-        if not isinstance(value, PowerDriver):
-            raise TypeError(f"Expected PowerDriver, got {type(value).__name__}")
-
-        self._device_power = value
-
-    @power.deleter
-    def power(self) -> None:
-        self._device_power = None
 
     @override
     def _get_device_power(self, power_ptr: POINTER(retro_device_power)) -> bool:

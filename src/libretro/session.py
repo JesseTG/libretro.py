@@ -6,7 +6,7 @@ from os import PathLike
 from types import TracebackType
 from typing import Type, AnyStr
 
-
+from libretro._utils import Pollable
 from libretro.api._utils import as_bytes
 from libretro.error import CoreShutDownException
 from libretro.core import Core, CoreInterface
@@ -287,6 +287,30 @@ class Session:
     def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
         return self._environment.content.overrides
 
+    def run(self) -> None:
+        if self._is_exited or self._environment.is_shutdown:
+            raise CoreShutDownException()
+
+        # TODO: In RetroArch, retro_audio_callback.set_state is called on the main thread,
+        # just before starting the audio thread and just after stopping it.
+        # TODO: In RetroArch, retro_audio_callback.callback is called on the audio thread.
+        # TODO: In RetroArch, an audio thread is started if the core registers an audio callback
+
+        if isinstance(self._environment.microphones, Pollable):
+            self._environment.microphones.poll()
+
+
+        # TODO: self._environment.timing.callback()
+        # TODO: self._environment.audio.report_buffer_status()
+        # TODO: self._environment.camera.poll() (see runloop_iterate in runloop.c, lion)
+        # TODO: Ensure that input is not polled more than once per frame
+        self._core.run()
+
+    def reset(self) -> None:
+        if self._is_exited or self._environment.is_shutdown:
+            raise CoreShutDownException()
+
+        self._core.reset()
 
 
 __all__ = [
