@@ -107,10 +107,10 @@ from libretro.driver.options import OptionDriver
 from libretro.driver.path import PathDriver
 from libretro.driver.perf import PerfDriver
 from libretro.driver.power import PowerDriver
+from libretro.driver.timing import TimingDriver
 from libretro.driver.user import UserDriver
 from libretro.driver.vfs import FileSystemInterface
 from libretro.driver.video import VideoDriver
-
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 
@@ -134,10 +134,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         led: LedDriver | None
         av_enable: AvEnableFlags | None
         midi: MidiDriver | None
-        target_refresh_rate: float | None
+        timing: TimingDriver | None
         preferred_hw: HardwareContext | None
         driver_switch_enable: bool | None
-        throttle_state: retro_throttle_state | None
         savestate_context: SavestateContext | None
         jit_capable: bool | None
         mic_interface: MicrophoneDriver | None
@@ -220,9 +219,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._midi is not None and not isinstance(self._midi, MidiDriver):
             raise TypeError(f"Expected MidiDriver or None, got {type(self._midi).__qualname__}")
 
-        self._target_refresh_rate = kwargs.get('target_refresh_rate')
-        if self._target_refresh_rate is not None and not isinstance(self._target_refresh_rate, float):
-            raise TypeError(f"Expected float or None, got {type(self._target_refresh_rate).__qualname__}")
+        self._timing = kwargs.get('timing')
+        if self._timing is not None and not isinstance(self._timing, TimingDriver):
+            raise TypeError(f"Expected TimingDriver or None, got {type(self._timing).__qualname__}")
 
         self._preferred_hw = kwargs.get('preferred_hw')
         if self._preferred_hw is not None and not isinstance(self._preferred_hw, HardwareContext):
@@ -231,10 +230,6 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._driver_switch_enable = kwargs.get('driver_switch_enable')
         if self._driver_switch_enable is not None and not isinstance(self._driver_switch_enable, bool):
             raise TypeError(f"Expected bool or None, got {type(self._driver_switch_enable).__qualname__}")
-
-        self._throttle_state = kwargs.get('throttle_state')
-        if self._throttle_state is not None and not isinstance(self._throttle_state, retro_throttle_state):
-            raise TypeError(f"Expected retro_throttle_state or None, got {type(self._throttle_state).__qualname__}")
 
         self._savestate_context = kwargs.get('savestate_context')
         if self._savestate_context is not None and not isinstance(self._savestate_context, SavestateContext):
@@ -280,6 +275,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def path(self) -> PathDriver | None:
         return self._path
+
+    @property
+    def timing(self) -> TimingDriver | None:
+        return self._timing
 
     @override
     def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
@@ -527,8 +526,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _set_frame_time_callback(self, callback: POINTER(retro_frame_time_callback)) -> bool:
-        return False  # TODO: Implement in TimingDriver
+    def _set_frame_time_callback(self, callback_ptr: POINTER(retro_frame_time_callback)) -> bool:
+        if not self._timing:
+            return False
+
+        if not callback_ptr:
+            raise ValueError("RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK doesn't accept NULL")
+
+        self._timing.frame_time_callback = deepcopy(callback_ptr[0])
+        return True
 
     @override
     def _set_audio_callback(self, callback_ptr: POINTER(retro_audio_callback)) -> bool:
@@ -969,25 +975,25 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_fastforwarding(self, fastforwarding_ptr: POINTER(c_bool)) -> bool:
-        if self._throttle_state is None:
+        if self._timing is None or self._timing.throttle_state is None:
             return False
 
         if not fastforwarding_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
 
-        fastforwarding_ptr[0] = self._throttle_state.mode.value == ThrottleMode.FAST_FORWARD
-        return True  # TODO: Move to TimingDriver
+        fastforwarding_ptr[0] = ThrottleMode(self.timing.throttle_state.mode) == ThrottleMode.FAST_FORWARD
+        return True
 
     @override
     def _get_target_refresh_rate(self, rate_ptr: POINTER(c_float)) -> bool:
-        if self._target_refresh_rate is None:
+        if self._timing is None or self._timing.target_refresh_rate is None:
             return False
 
         if not rate_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
-        rate_ptr[0] = self._target_refresh_rate
-        return True  # TODO: Move to TimingDriver
+        rate_ptr[0] = self._timing.target_refresh_rate
+        return True
 
     @property
     def input_bitmasks(self) -> bool | None:
@@ -1232,22 +1238,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # This envcall supports passing NULL to query for support
         return True
 
-    @property
-    def throttle_state(self) -> retro_throttle_state | None:
-        return self._throttle_state
-
     @override
     def _get_throttle_state(self, throttle_ptr: POINTER(retro_throttle_state)) -> bool:
-        if not self._throttle_state:
+        if not self._timing or not self._timing.throttle_state:
             return False
 
         if not throttle_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_THROTTLE_STATE doesn't accept NULL")
 
-        throttle_state: retro_throttle_state = throttle_ptr[0]
-
-        throttle_state.mode = self._throttle_state.mode
-        throttle_state.rate = self._throttle_state.rate
+        throttle_ptr[0] = deepcopy(self._timing.throttle_state)
 
         return True
 
