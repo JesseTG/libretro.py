@@ -156,6 +156,10 @@ class Session:
         return self._core
 
     @property
+    def environment(self) -> CompositeEnvironmentDriver:
+        return self._environment
+
+    @property
     def audio(self) -> AudioDriver:
         return self._environment.audio
 
