@@ -225,6 +225,8 @@ class SessionBuilder:
         TODO
         """
         match content:
+            case Callable() as func:
+                self._args["content"] = func
             case (
                 PathLike()
                 | ZipPath()
@@ -237,8 +239,6 @@ class SessionBuilder:
                 | None
             ):
                 self._args["content"] = lambda: content
-            case func if callable(func):
-                self._args["content"] = func
             case _DefaultType.DEFAULT:
                 raise ValueError("Content does not have a default value (if you wanted None, provide it explicitly)")
             case _:
