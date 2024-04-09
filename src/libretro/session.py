@@ -299,8 +299,11 @@ class Session:
         if isinstance(self._environment.microphones, Pollable):
             self._environment.microphones.poll()
 
+        if self._environment.timing:
+            self._environment.timing.frame_time(None)
+            # TODO: Get the time elapsed since the last frame and pass it to frame_time
+            # or if throttle_state is set, use that to determine the time elapsed
 
-        # TODO: self._environment.timing.callback()
         # TODO: self._environment.audio.report_buffer_status()
         # TODO: self._environment.camera.poll() (see runloop_iterate in runloop.c, lion)
         # TODO: Ensure that input is not polled more than once per frame

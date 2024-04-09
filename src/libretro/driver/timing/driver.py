@@ -14,6 +14,11 @@ class TimingDriver(Protocol):
     @abstractmethod
     def frame_time_callback(self, value: retro_frame_time_callback) -> None: ...
 
+    def frame_time(self, time: int | None) -> None:
+        callback = self.frame_time_callback
+        if callback:
+            callback(time if time is not None else callback.reference)
+
     @property
     @abstractmethod
     def fastforwarding_override(self) -> retro_fastforwarding_override | None: ...
