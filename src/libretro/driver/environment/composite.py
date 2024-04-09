@@ -1152,9 +1152,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_fastforwarding_override(self, override_ptr: POINTER(retro_fastforwarding_override)) -> bool:
+        if not self._timing:
+            return False
+
         if override_ptr:
-            fastforwarding: retro_fastforwarding_override = override_ptr[0]
-            self._fastforwarding_override = deepcopy(retro_fastforwarding_override(fastforwarding))
+            self._timing.fastforwarding_override = deepcopy(override_ptr[0])
 
         # This envcall supports passing NULL to query for support
         return True
