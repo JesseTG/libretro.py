@@ -742,7 +742,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def subsystem_info(self) -> Sequence[retro_subsystem_info] | None:
+    def subsystems(self) -> Sequence[retro_subsystem_info] | None:
         if not self._content:
             return None
 
