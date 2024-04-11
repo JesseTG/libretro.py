@@ -84,6 +84,7 @@ class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     access_flags: c_uint
     memory_flags: c_uint
 
+    # TODO: Should I copy framebuffer?
     def __deepcopy__(self, _):
         return retro_framebuffer(
             self.data,
