@@ -454,8 +454,19 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False  # TODO: Implement
 
     @override
-    def _set_hw_render(self, data: POINTER(retro_hw_render_callback)) -> bool:
-        return False  # TODO: Implement
+    def _set_hw_render(self, hw_render_ptr: POINTER(retro_hw_render_callback)) -> bool:
+        if not hw_render_ptr:
+            raise ValueError("RETRO_ENVIRONMENT_SET_HW_RENDER doesn't accept NULL")
+
+        context = self._video.set_context(hw_render_ptr[0])
+        if context is None:
+            return False
+
+        hw_render_ptr[0] = context
+
+        # TODO: Call the provided context_reset at the start of the next frame, not immediately
+        # TODO: Save the context
+        return True
 
     @property
     def options(self) -> OptionDriver | None:
@@ -622,7 +633,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not callback_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE doesn't accept NULL")
 
-        return False  # TODO: Implement
+        callback: retro_camera_callback = callback_ptr[0]
+        self._camera.width = callback.width
+        self._camera.height = callback.height
+        
+
+        callback_ptr[0] = retro_camera_callback.from_param(self._camera)
+
+        return True  # TODO: Implement
 
     @property
     def log(self) -> LogDriver | None:
