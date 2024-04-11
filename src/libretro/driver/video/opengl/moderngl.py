@@ -185,3 +185,6 @@ class ModernGlVideoDriver(VideoDriver):
 
         if self._hw_render_callback.context_destroy:
             self._hw_render_callback.context_destroy()
+
+
+__all__ = ['ModernGlVideoDriver']

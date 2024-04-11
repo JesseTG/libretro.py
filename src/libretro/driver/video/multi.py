@@ -105,3 +105,6 @@ class MultiVideoDriver(VideoDriver):
 
     def context_destroy(self) -> None:
         pass
+
+
+__all__ = ["MultiVideoDriver"]
