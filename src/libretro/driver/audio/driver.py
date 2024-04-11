@@ -1,3 +1,6 @@
+"""
+ddddd
+"""
 from abc import abstractmethod
 from typing import runtime_checkable, Protocol
 
