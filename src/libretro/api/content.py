@@ -21,9 +21,9 @@ class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_system_info(
-            library_name=bytes(self.library_name) if self.library_name is not None else None,
-            library_version=bytes(self.library_version) if self.library_version is not None else None,
-            valid_extensions=bytes(self.valid_extensions) if self.valid_extensions is not None else None,
+            library_name=self.library_name,
+            library_version=self.library_version,
+            valid_extensions=self.valid_extensions,
             need_fullpath=self.need_fullpath,
             block_extract=self.block_extract
         )
@@ -43,10 +43,10 @@ class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_game_info(
-            path=bytes(self.path) if self.path else None,
+            path=self.path,
             data=deepcopy_buffer(self.data, self.size),
             size=self.size,
-            meta=bytes(self.meta) if self.meta else None
+            meta=self.meta,
         )
 
 
@@ -66,10 +66,7 @@ class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
     type: c_uint
 
     def __deepcopy__(self, _):
-        return retro_subsystem_memory_info(
-            extension=bytes(self.extension) if self.extension is not None else None,
-            type=self.type
-        )
+        return retro_subsystem_memory_info(self.extension, self.type)
 
 
 @dataclass
@@ -110,8 +107,8 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_subsystem_rom_info(
-            desc=bytes(self.desc) if self.desc else None,
-            valid_extensions=bytes(self.valid_extensions) if self.valid_extensions else None,
+            desc=self.desc,
+            valid_extensions=self.valid_extensions,
             need_fullpath=self.need_fullpath,
             block_extract=self.block_extract,
             required=self.required,
@@ -161,8 +158,8 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_subsystem_info(
-            desc=bytes(self.desc) if self.desc is not None else None,
-            ident=bytes(self.ident) if self.ident is not None else None,
+            desc=self.desc,
+            ident=self.ident,
             roms=deepcopy_array(self.roms, self.num_roms, memo) if self.roms else None,
             num_roms=self.num_roms,
             id=self.id
@@ -239,7 +236,7 @@ class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHint
 
     def __deepcopy__(self, _):
         return retro_system_content_info_override(
-            extensions=bytes(self.extensions) if self.extensions else None,
+            extensions=self.extensions,
             need_fullpath=self.need_fullpath,
             persistent_data=self.persistent_data
         )
@@ -330,13 +327,13 @@ class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_game_info_ext(
-            full_path=bytes(self.full_path) if self.full_path else None,
-            archive_path=bytes(self.archive_path) if self.archive_path else None,
-            archive_file=bytes(self.archive_file) if self.archive_file else None,
-            dir=bytes(self.dir) if self.dir else None,
-            name=bytes(self.name) if self.name else None,
-            ext=bytes(self.ext) if self.ext else None,
-            meta=bytes(self.meta) if self.meta else None,
+            full_path=self.full_path,
+            archive_path=self.archive_path,
+            archive_file=self.archive_file,
+            dir=self.dir,
+            name=self.name,
+            ext=self.ext,
+            meta=self.meta,
             data=deepcopy_buffer(self.data, self.size),
             size=self.size,
             file_in_archive=self.file_in_archive,

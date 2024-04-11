@@ -68,7 +68,7 @@ class retro_perf_counter(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_perf_counter(
-            bytes(self.ident) if self.ident is not None else None,
+            self.ident,
             self.start,
             self.total,
             self.call_cnt,

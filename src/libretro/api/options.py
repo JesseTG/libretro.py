@@ -16,10 +16,7 @@ class retro_variable(Structure, metaclass=FieldsFromTypeHints):
     value: c_char_p
 
     def __deepcopy__(self, _):
-        return retro_variable(
-            bytes(self.key) if self.key is not None else None,
-            bytes(self.value) if self.value is not None else None,
-        )
+        return retro_variable(self.key, self.value)
 
 
 @dataclass
@@ -28,10 +25,7 @@ class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
     visible: c_bool
 
     def __deepcopy__(self, _):
-        return retro_core_option_display(
-            bytes(self.key) if self.key is not None else None,
-            self.visible,
-        )
+        return retro_core_option_display(self.key, self.visible)
 
 
 @dataclass
@@ -40,10 +34,7 @@ class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
     label: c_char_p
 
     def __deepcopy__(self, _):
-        return retro_core_option_value(
-            bytes(self.value) if self.value is not None else None,
-            bytes(self.label) if self.label is not None else None,
-        )
+        return retro_core_option_value(self.value, self.label)
 
 
 NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
@@ -60,11 +51,11 @@ class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_core_option_definition(
-            bytes(self.key) if self.key is not None else None,
-            bytes(self.desc) if self.desc is not None else None,
-            bytes(self.info) if self.info is not None else None,
+            self.key,
+            self.desc,
+            self.info,
             deepcopy_array(self.values, NUM_CORE_OPTION_VALUES_MAX, memo),
-            bytes(self.default_value) if self.default_value is not None else None,
+            self.default_value,
         )
 
 
@@ -87,11 +78,7 @@ class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
     info: c_char_p
 
     def __deepcopy__(self, _):
-        return retro_core_option_v2_category(
-            bytes(self.key) if self.key is not None else None,
-            bytes(self.desc) if self.desc is not None else None,
-            bytes(self.info) if self.info is not None else None,
-        )
+        return retro_core_option_v2_category(self.key, self.desc, self.info)
 
 
 @dataclass
@@ -107,14 +94,14 @@ class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_core_option_v2_definition(
-            bytes(self.key) if self.key is not None else None,
-            bytes(self.desc) if self.desc is not None else None,
-            bytes(self.desc_categorized) if self.desc_categorized is not None else None,
-            bytes(self.info) if self.info is not None else None,
-            bytes(self.info_categorized) if self.info_categorized is not None else None,
-            bytes(self.category_key) if self.category_key is not None else None,
+            self.key,
+            self.desc,
+            self.desc_categorized,
+            self.info,
+            self.info_categorized,
+            self.category_key,
             deepcopy_array(self.values, NUM_CORE_OPTION_VALUES_MAX, memo),
-            bytes(self.default_value) if self.default_value is not None else None,
+            self.default_value,
         )
 
 

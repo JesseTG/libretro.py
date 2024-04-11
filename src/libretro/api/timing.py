@@ -33,7 +33,7 @@ class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
                 self.callback(time)
 
     def __deepcopy__(self, _):
-        return retro_frame_time_callback(self.callback, int(self.reference))
+        return retro_frame_time_callback(self.callback, self.reference)
 
 
 class ThrottleMode(IntEnum):

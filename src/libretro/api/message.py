@@ -43,7 +43,7 @@ class retro_message(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memodict):
         return retro_message(
-            msg=bytes(self.msg) if self.msg is not None else None,
+            msg=self.msg,
             frames=self.frames
         )
 
@@ -60,7 +60,7 @@ class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_message_ext(
-            msg=bytes(self.msg) if self.msg is not None else None,
+            msg=self.msg,
             duration=self.duration,
             priority=self.priority,
             level=self.level,

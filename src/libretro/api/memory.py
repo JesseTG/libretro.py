@@ -52,7 +52,7 @@ class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
             select=self.select,
             disconnect=self.disconnect,
             len=self.len,
-            addrspace=bytes(self.addrspace) if self.addrspace is not None else None
+            addrspace=self.addrspace
         )
 
     # TODO: Implement __getitem__, __setitem__
@@ -76,7 +76,7 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
     def __deepcopy__(self, memodict):
         return retro_memory_map(
             descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
-            num_descriptors=self.num_descriptors.value
+            num_descriptors=self.num_descriptors
         )
 
 

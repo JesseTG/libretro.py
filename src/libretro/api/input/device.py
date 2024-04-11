@@ -70,7 +70,7 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
             device=self.device,
             index=self.index,
             id=self.id,
-            description=bytes(self.description) if self.description else None
+            description=self.description
         )
 
 
@@ -80,10 +80,7 @@ class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
     id: c_uint
 
     def __deepcopy__(self, _):
-        return retro_controller_description(
-            desc=bytes(self.desc) if self.desc else None,
-            id=self.id
-        )
+        return retro_controller_description(self.desc, self.id)
 
 
 @dataclass
