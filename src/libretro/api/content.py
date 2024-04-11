@@ -80,7 +80,7 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
     num_memory: c_uint
 
     def __len__(self):
-        return int(self.num_types)
+        return int(self.num_memory)
 
     @overload
     def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...

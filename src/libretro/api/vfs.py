@@ -1,5 +1,5 @@
 from copy import deepcopy
-from ctypes import CFUNCTYPE, c_bool, c_char_p, c_int, c_int32, c_int64, c_uint, c_uint32, c_void_p, c_uint64, POINTER, Structure
+from ctypes import CFUNCTYPE, c_bool, c_char_p, c_int, c_int32, c_int64, c_uint, c_uint32, c_void_p, c_uint64, POINTER, Structure, pointer
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum
 from os import PathLike
@@ -132,8 +132,8 @@ class retro_vfs_interface_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_vfs_interface_info(
-            int(self.required_interface_version),
-            deepcopy(self.iface[0], memo) if self.iface else None
+            self.required_interface_version,
+            pointer(deepcopy(self.iface[0], memo)) if self.iface else None
         )
 
 
