@@ -1,5 +1,3 @@
-import os
-import sys
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -12,15 +10,12 @@ project = 'libretro.py'
 copyright = '2024, Jesse Talavera'
 author = 'Jesse Talavera'
 
-sys.path.insert(0, os.path.abspath(".."))
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.duration',
 ]
 
 templates_path = ['_templates']
@@ -33,12 +28,12 @@ autodoc_default_options = {
     'undoc-members': True,
     'members': True,
 }
-autosummary_generate = ["index.rst"]
+autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = 'alabaster'
 html_static_path = ['_static']
 
 def source_read_handler(app, what, name, obj, options, signature, return_annotation):
