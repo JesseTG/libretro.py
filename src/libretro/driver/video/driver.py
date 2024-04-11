@@ -113,7 +113,6 @@ class VideoDriver(Protocol):
     def shared_context(self, value: bool) -> None: ...
 
 
-
 __all__ = [
     'VideoDriver',
 ]
