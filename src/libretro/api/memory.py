@@ -83,4 +83,5 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
 __all__ = [
     "retro_memory_descriptor",
     "retro_memory_map",
+    "MemoryDescriptorFlag",
 ]
