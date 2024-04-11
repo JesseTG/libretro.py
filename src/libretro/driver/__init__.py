@@ -10,6 +10,7 @@ from .log import *
 from .message import *
 from .microphone import *
 from .midi import *
+from .netpacket import *
 from .options import *
 from .path import *
 from .perf import *
