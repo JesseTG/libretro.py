@@ -16,7 +16,7 @@ retro_get_image_path_t = CFUNCTYPE(c_bool, c_uint, c_char_p, c_size_t)
 retro_get_image_label_t = CFUNCTYPE(c_bool, c_uint, c_char_p, c_size_t)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_disk_control_callback(Structure, metaclass=FieldsFromTypeHints):
     set_eject_state: retro_set_eject_state_t
     get_eject_state: retro_get_eject_state_t
@@ -38,7 +38,7 @@ class retro_disk_control_callback(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=FieldsFromTypeHints):
     set_initial_image: retro_set_initial_image_t
     get_image_path: retro_get_image_path_t

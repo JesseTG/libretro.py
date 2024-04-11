@@ -11,7 +11,7 @@ from zipfile import Path as ZipPath
 from libretro.api._utils import FieldsFromTypeHints, as_bytes, deepcopy_array, deepcopy_buffer, mmap_file
 
 
-@dataclass(init=False)
+@dataclass
 class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
     library_name: c_char_p
     library_version: c_char_p
@@ -34,7 +34,7 @@ class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
             yield from self.valid_extensions.split(b'|')
 
 
-@dataclass(init=False)
+@dataclass
 class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
     path: c_char_p
     data: c_void_p
@@ -60,7 +60,7 @@ class SubsystemContent(NamedTuple):
     info: Sequence[Content]
 
 
-@dataclass(init=False)
+@dataclass
 class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
     extension: c_char_p
     type: c_uint
@@ -72,7 +72,7 @@ class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     valid_extensions: c_char_p
@@ -125,7 +125,7 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
             yield from self.valid_extensions.split(b'|')
 
 
-@dataclass(init=False)
+@dataclass
 class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     ident: c_char_p
@@ -231,7 +231,7 @@ class Subsystems(Sequence[retro_subsystem_info]):
         return len(self._subsystems)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHints):
     extensions: c_char_p
     need_fullpath: c_bool
@@ -314,7 +314,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
         return self._overrides_by_ext
 
 
-@dataclass(init=False)
+@dataclass
 class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
     full_path: c_char_p
     archive_path: c_char_p

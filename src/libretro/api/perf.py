@@ -58,7 +58,7 @@ class CpuFeatures(IntFlag):
     ASIMD = RETRO_SIMD_ASIMD
 
 
-@dataclass(init=False)
+@dataclass
 class retro_perf_counter(Structure, metaclass=FieldsFromTypeHints):
     ident: c_char_p
     start: retro_perf_tick_t
@@ -85,7 +85,7 @@ retro_perf_start_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
 retro_perf_stop_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
 
 
-@dataclass(init=False)
+@dataclass
 class retro_perf_callback(Structure, metaclass=FieldsFromTypeHints):
     get_time_usec: retro_perf_get_time_usec_t
     get_cpu_features: retro_get_cpu_features_t

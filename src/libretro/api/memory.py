@@ -32,7 +32,7 @@ class MemoryDescriptorFlag(IntFlag):
     MINSIZE_8 = RETRO_MEMDESC_MINSIZE_8
 
 
-@dataclass(init=False)
+@dataclass
 class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     flags: c_uint64
     ptr: c_void_p
@@ -59,7 +59,7 @@ class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     # TODO: Implement a buffer property (not __buffer__ because Structure provides that)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
     descriptors: POINTER(retro_memory_descriptor)
     num_descriptors: c_uint

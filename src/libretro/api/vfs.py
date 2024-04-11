@@ -79,7 +79,7 @@ retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
 retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
 
 
-@dataclass(init=False)
+@dataclass
 class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
     get_path: retro_vfs_get_path_t
     open: retro_vfs_open_t
@@ -125,7 +125,7 @@ class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_vfs_interface_info(Structure, metaclass=FieldsFromTypeHints):
     required_interface_version: c_uint32
     iface: POINTER(retro_vfs_interface)

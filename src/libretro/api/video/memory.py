@@ -74,7 +74,7 @@ class MemoryType(IntFlag):
     CACHED = RETRO_MEMORY_TYPE_CACHED
 
 
-@dataclass(init=False)
+@dataclass
 class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
     data: c_void_p
     width: c_uint

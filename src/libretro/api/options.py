@@ -10,7 +10,7 @@ RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_variable(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     value: c_char_p
@@ -22,7 +22,7 @@ class retro_variable(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     visible: c_bool
@@ -34,7 +34,7 @@ class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
     value: c_char_p
     label: c_char_p
@@ -50,7 +50,7 @@ NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
 CoreOptionArray: type[Array] = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -68,7 +68,7 @@ class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
     us: POINTER(retro_core_option_definition)
     local: POINTER(retro_core_option_definition)
@@ -80,7 +80,7 @@ class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -94,7 +94,7 @@ class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
     key: c_char_p
     desc: c_char_p
@@ -118,7 +118,7 @@ class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
     categories: POINTER(retro_core_option_v2_category)
     definitions: POINTER(retro_core_option_v2_definition)
@@ -130,7 +130,7 @@ class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
     us: POINTER(retro_core_options_v2)
     local: POINTER(retro_core_options_v2)
@@ -142,7 +142,7 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_core_options_update_display_callback_t
 

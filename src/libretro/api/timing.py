@@ -17,7 +17,7 @@ retro_usec_t = c_int64
 retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_frame_time_callback_t
     reference: retro_usec_t
@@ -49,7 +49,7 @@ class ThrottleMode(IntEnum):
         self._type_ = 'I'
 
 
-@dataclass(init=False)
+@dataclass
 class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
     ratio: c_float
     fastforward: c_bool
@@ -65,7 +65,7 @@ class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass(init=False)
+@dataclass
 class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
     mode: c_uint
     rate: c_float

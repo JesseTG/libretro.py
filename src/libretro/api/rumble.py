@@ -18,7 +18,7 @@ class RumbleEffect(IntEnum):
     WEAK = RETRO_RUMBLE_WEAK
 
 
-@dataclass(init=False)
+@dataclass
 class retro_rumble_interface(Structure, metaclass=FieldsFromTypeHints):
     set_rumble_state: retro_set_rumble_state_t
 

@@ -10,7 +10,7 @@ retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
 retro_midi_flush_t = CFUNCTYPE(c_bool)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_midi_interface(Structure, metaclass=FieldsFromTypeHints):
     input_enabled: retro_midi_input_enabled_t
     output_enabled: retro_midi_output_enabled_t

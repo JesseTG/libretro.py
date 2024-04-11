@@ -40,7 +40,7 @@ class LogLevel(IntEnum):
                 return logging.ERROR
 
 
-@dataclass(init=False)
+@dataclass
 class retro_log_callback(Structure, metaclass=FieldsFromTypeHints):
     log: retro_log_printf_t
 

@@ -10,7 +10,7 @@ retro_location_get_position_t = CFUNCTYPE(c_bool, c_double_p, c_double_p, c_doub
 retro_location_lifetime_status_t = CFUNCTYPE(None)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_location_callback(Structure, metaclass=FieldsFromTypeHints):
     start: retro_location_start_t
     stop: retro_location_stop_t

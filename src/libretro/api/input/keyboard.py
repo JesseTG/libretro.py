@@ -492,7 +492,7 @@ class KeyboardState(InputDeviceState):
 retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
 
-@dataclass(init=False)
+@dataclass
 class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_keyboard_event_t
 
