@@ -38,6 +38,10 @@ from libretro.api import (
 
 
 class CoreInterface(Protocol):
+    """
+    An interface for a libretro core.
+    """
+
     @abstractmethod
     def set_environment(self, env: retro_environment_t) -> None: ...
 
