@@ -16,6 +16,7 @@ retro_netpacket_start_t = CFUNCTYPE(None, c_uint16, retro_netpacket_send_t)
 retro_netpacket_receive_t = CFUNCTYPE(None, c_void_p, c_size_t, c_uint16)
 retro_netpacket_stop_t = CFUNCTYPE(None)
 retro_netpacket_poll_t = CFUNCTYPE(None)
+retro_netpacket_poll_receive_t = CFUNCTYPE(None)
 retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
 retro_netpacket_disconnected_t = CFUNCTYPE(None, c_uint16)
 
