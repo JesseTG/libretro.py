@@ -1,6 +1,6 @@
 [project]
 name = "libretro.py"
-version = "0.0.0"
+dynamic = ["version"]
 description = "A libretro frontend for Python intended for testing cores."
 readme = "README.md"
 requires-python = ">=3.11"
