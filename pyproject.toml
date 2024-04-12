@@ -3,7 +3,7 @@ name = "libretro.py"
 dynamic = ["version"]
 description = "A libretro frontend for Python intended for testing cores."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = {text = "MIT License"}
 authors = [
     {name = "Jesse Talavera", email = "jesse@jesse.tg"},
@@ -23,6 +23,7 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Games/Entertainment",
@@ -30,6 +31,24 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 keywords = ["libretro", "retroarch", "emulation", "testing", "retrogaming"]
+dependencies = [
+    "typing_extensions == 4.*; python_version == '3.10'",
+]
+
+[optional-dependencies]
+dev = [
+    'bandit == 1.7.*',
+    'black == 23.*',
+    'flake8 == 6.*',
+    'isort == 5.*',
+    'mypy == 1.5.*',
+]
+opengl = [
+    'moderngl == 5.10.*',
+]
+pillow = [
+    'pillow == 10.2.*',
+]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
@@ -39,18 +58,14 @@ Changelog = "https://github.com/JesseTG/libretro.py/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = [
-    'bandit == 1.7.*',
-    'black == 23.*',
     'build == 0.10.*',
-    'flake8 == 6.*',
-    'isort == 5.*',
-    'mypy == 1.5.*',
-    'pytest == 7.*',
-    'pytest-cov == 4.*',
     'setuptools>=69.1.1',
     'twine == 4.*',
 ]
 build-backend = "setuptools.build_meta"
+
+
+
 
 [tool.black]
 preview = true
