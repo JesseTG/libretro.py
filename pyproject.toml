@@ -12,7 +12,7 @@ maintainers = [
     {name = "Jesse Talavera", email = "jesse@jesse.tg"},
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Environment :: Console :: Framebuffer",
     "Intended Audience :: Developers",
