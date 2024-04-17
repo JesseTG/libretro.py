@@ -1,48 +1,92 @@
+# libretro.py
+
+A Python binding for [libretro][libretro] intended for testing cores,
+but suitable for any purpose.
+Ease of use, flexibility, and complete API support are top priorities.
+
 <div align="center">
 
-# Python Template
-
-A Python project template to save you time and energy.
-
-[![Build Status](https://github.com/Justintime50/python-template/workflows/build/badge.svg)](https://github.com/Justintime50/python-template/actions)
-[![Coverage Status](https://coveralls.io/repos/github/Justintime50/python-template/badge.svg?branch=main)](https://coveralls.io/github/Justintime50/python-template?branch=main)
-[![Licence](https://img.shields.io/github/license/justintime50/python-template)](LICENSE)
-
-<img src="https://raw.githubusercontent.com/justintime50/assets/main/src/python-template/showcase.png" alt="Showcase">
+[![Build Status](https://github.com/JesseTG/libretro.py/workflows/build/badge.svg)](https://github.com/JesseTG/libretro.py/actions)
+[![PyPi](https://img.shields.io/pypi/v/PROJECT_NAME_URL)](https://pypi.org/project/PROJECT_NAME_URL)
+[![License](https://img.shields.io/github/license/JesseTG/libretro.py)](LICENSE)
 
 </div>
 
-Python projects take a long time to setup with all the various files, the virtual environment, and keeping things uniform across projects. With this Python template, you can quickly setup boilerplate code and miscellaneous items for your Python project saving you time and energy so you can get back to coding.
+# Supported Environments
 
-## Install
+libretro.py has the following requirements:
 
-Click the [Use this template](https://github.com/Justintime50/python-template/generate) button at the top of this project's GitHub page to get started.
+- Python 3.10 or newer.
+  May not work on alternative Python implementations like PyPy.
+- Supported on Windows, macOS, and Linux.
+  May work on other platforms, but no promises.
 
-## Usage
+Nothing else is required for most functionality,
+but some [extra features](#extras) have additional dependencies or constraints.
 
-### Easy text replacements
+If contributing then [`just`][just] is optional but recommended,
+as it will simplify most development tasks.
+For details, run `just` (no arguments) in the project root.
 
-1. Replace all instances of `project_name` with the name of your project
-    * These are the Python snake_case references (eg: `project_name`)
-1. Replace all instances of `PROJECT_NAME_URL` with the name of your project
-    * These are the references to your project that will appear in URLs and are typically hyphenated (eg: `project-name`)
-1. Replace all instances of `USERNAME` with the name of the author or owner of the project
-    * These are references typically found in the URL of your project as it appears on GitHub
+# Installing
 
-### File configuration
+libretro.py supports **Python 3.10 or newer**.
+Nothing else is required for most functionality,
+but some extra features have additional dependencies.
 
-1. Configure the `setup.py` file
-1. Configure the `justfile` targets
-1. Update the name in the `LICENSE` or swap it out entirely
-1. Configure the `.github/workflows/build.yml` file
-1. Update the `CHANGELOG.md` with your own info
-1. Rename other files/folders as needed and configure their content
-1. Delete this `README` and rename `README_project.md` to `README.md`
+You can install libretro.py with `pip` like so:
 
-### GitHub configuration
+```bash
+# Install the base libretro.py
+pip install libretro.py
+```
 
-1. Add a `PYPI_API_TOKEN` GitHub secret to your project so that automated releasing can occur from GitHub Actions to PyPI and uncomment the final step on the `release` job in `.github/workflows/release.yml`
+Using a virtual environment is recommended:
 
-## Attribution
+```bash
+# Create a virtual environment
+python -m venv ./venv
 
-* Watch [the video](https://youtu.be/ZMfcl3CnRhA) where I built this template.
+# Activate the virtual environment (in Bash)
+source ./venv/bin/activate
+
+# Activate the virtual environment (in PowerShell)
+./venv/Scripts/activate.ps1 
+```
+
+Or if you have [`just`][just] installed, let it figure out the details for you:
+
+```bash
+just venv
+```
+
+## Extras
+
+To install additional features,
+add one or more of the following extras to the `install` command:
+
+- **`dev`:** Assorted tools used to help develop libretro.py.
+  Required if contributing to libretro.py.
+- **`opengl`:** Support for the built-in OpenGL video driver.
+  Required if testing a core's OpenGL support.
+- **`pillow`:** Support for the built-in software-only video driver
+  powered by the [Pillow][pillow] image processing library.
+  Not required for any particular feature,
+  but it simplifies tests that inspect the core's video output.
+
+For example, if you want to submit an improvement to the Pillow video driver,
+you would install libretro.py like so:
+
+```bash
+pip install libretro.py[pillow,dev]
+```
+
+And if you just want to test your libretro core's OpenGL support:
+
+```bash
+pip install libretro.py[opengl]
+```
+
+[just]: https://just.systems
+[libretro]: https://www.libretro.com
+[pillow]: https://python-pillow.org
