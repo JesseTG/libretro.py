@@ -48,6 +48,7 @@ opengl = [
 ]
 pillow = [
     'pillow == 10.2.*',
+    'types-Pillow',
 ]
 
 [project.urls]
