@@ -50,7 +50,7 @@ class Session:
         self,
         core: Core | CDLL | str | PathLike,
         content: Content | SubsystemContent | None,
-        environment: CompositeEnvironmentDriver
+        environment: CompositeEnvironmentDriver,
     ):
         match core:
             case Core():
@@ -60,12 +60,16 @@ class Session:
             case str(path) | PathLike(path):
                 self._core = Core(path)
             case _:
-                raise TypeError(f"Expected core to be a Core, CDLL, or str; got {type(core).__name__}")
+                raise TypeError(
+                    f"Expected core to be a Core, CDLL, or str; got {type(core).__name__}"
+                )
 
         self._content = content
 
         if not isinstance(environment, CompositeEnvironmentDriver):
-            raise TypeError(f"Expected environment to be CompositeEnvironmentDriver; got {type(environment).__name__}")
+            raise TypeError(
+                f"Expected environment to be CompositeEnvironmentDriver; got {type(environment).__name__}"
+            )
 
         self._environment = environment
 
@@ -78,7 +82,9 @@ class Session:
     def __enter__(self):
         api_version = self._core.api_version()
         if api_version != API_VERSION:
-            raise RuntimeError(f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}")
+            raise RuntimeError(
+                f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}"
+            )
 
         self._core.set_video_refresh(self._environment.video_refresh)
         self._core.set_audio_sample(self._environment.audio_sample)
@@ -117,7 +123,9 @@ class Session:
                     info: LoadedContentFile
                     loaded = self._core.load_game(info.info)
                 case None, [*_]:
-                    raise RuntimeError("Content driver returned multiple files, but not a subsystem that uses them all")
+                    raise RuntimeError(
+                        "Content driver returned multiple files, but not a subsystem that uses them all"
+                    )
                 case retro_subsystem_info(), [*infos]:
                     infos: Sequence[LoadedContentFile]
                     game_infos = tuple(i.info for i in infos)
@@ -134,7 +142,9 @@ class Session:
 
         return self
 
-    def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType):
+    def __exit__(
+        self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType
+    ):
         if self._content is not None:
             self._core.unload_game()
 
@@ -227,7 +237,9 @@ class Session:
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._environment.proc_address_callback
 
-    def get_proc_address(self, sym: AnyStr, funtype: Type[CFuncPtr] | None = None) -> retro_proc_address_t | Callable | None:
+    def get_proc_address(
+        self, sym: AnyStr, funtype: Type[CFuncPtr] | None = None
+    ) -> retro_proc_address_t | Callable | None:
         if not self.proc_address_callback or not sym:
             return None
 
@@ -284,7 +296,9 @@ class Session:
         return self._environment.input.max_users
 
     @property
-    def content_info_overrides(self) -> Sequence[retro_system_content_info_override] | None:
+    def content_info_overrides(
+        self,
+    ) -> Sequence[retro_system_content_info_override] | None:
         return self._environment.content.overrides
 
     def run(self) -> None:
@@ -317,6 +331,6 @@ class Session:
 
 
 __all__ = [
-    'Session',
-    'CoreShutDownException',
+    "Session",
+    "CoreShutDownException",
 ]

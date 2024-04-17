@@ -149,8 +149,8 @@ RETROK_POWER = 320
 RETROK_EURO = 321
 RETROK_UNDO = 322
 RETROK_OEM_102 = 323
-RETROK_LAST = (RETROK_OEM_102 + 1)
-RETROK_DUMMY = 0x7fffffff
+RETROK_LAST = RETROK_OEM_102 + 1
+RETROK_DUMMY = 0x7FFFFFFF
 
 retro_mod = c_int
 RETROKMOD_NONE = 0x0000
@@ -161,7 +161,7 @@ RETROKMOD_META = 0x08
 RETROKMOD_NUMLOCK = 0x10
 RETROKMOD_CAPSLOCK = 0x20
 RETROKMOD_SCROLLOCK = 0x40
-RETROKMOD_DUMMY = 0x7fffffff
+RETROKMOD_DUMMY = 0x7FFFFFFF
 
 
 class Key(IntEnum, boundary=EJECT):
@@ -313,11 +313,23 @@ class Key(IntEnum, boundary=EJECT):
     OEM_102 = RETROK_OEM_102
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
     @property
     def is_modifier(self):
-        return self in (Key.LCTRL, Key.RCTRL, Key.LSHIFT, Key.RSHIFT, Key.LALT, Key.RALT, Key.LMETA, Key.RMETA, Key.NUMLOCK, Key.CAPSLOCK, Key.SCROLLOCK)
+        return self in (
+            Key.LCTRL,
+            Key.RCTRL,
+            Key.LSHIFT,
+            Key.RSHIFT,
+            Key.LALT,
+            Key.RALT,
+            Key.LMETA,
+            Key.RMETA,
+            Key.NUMLOCK,
+            Key.CAPSLOCK,
+            Key.SCROLLOCK,
+        )
 
 
 class KeyModifier(IntFlag):
@@ -331,7 +343,7 @@ class KeyModifier(IntFlag):
     SCROLLOCK = RETROKMOD_SCROLLOCK
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 @dataclass(frozen=True, slots=True)
@@ -499,17 +511,19 @@ class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
     def __deepcopy__(self, _):
         return retro_keyboard_callback(callback=self.callback)
 
-    def __call__(self, pressed: bool, keycode: int, character: int, key_modifiers: KeyModifier) -> None:
+    def __call__(
+        self, pressed: bool, keycode: int, character: int, key_modifiers: KeyModifier
+    ) -> None:
         if self.callback:
             self.callback(pressed, keycode, character, key_modifiers)
 
 
 __all__ = [
-    'Key',
-    'KeyModifier',
-    'KeyboardState',
-    'retro_keyboard_event_t',
-    'retro_keyboard_callback',
-    'retro_key',
-    'retro_mod',
+    "Key",
+    "KeyModifier",
+    "KeyboardState",
+    "retro_keyboard_event_t",
+    "retro_keyboard_callback",
+    "retro_key",
+    "retro_mod",
 ]

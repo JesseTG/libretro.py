@@ -18,7 +18,9 @@ class RumbleState:
             case int(i):
                 raise IndexError(f"Expected a valid RumbleEffect, got {i}")
             case e:
-                raise TypeError(f"Expected a valid RumbleEffect, got: {type(e).__name__}")
+                raise TypeError(
+                    f"Expected a valid RumbleEffect, got: {type(e).__name__}"
+                )
 
     def __setitem__(self, key: RumbleEffect, value: int):
         match key, value:
@@ -54,7 +56,4 @@ class DefaultRumbleInterface(RumbleInterface):
                 return RumbleState(0, 0)
 
 
-__all__ = [
-    'DefaultRumbleInterface',
-    'RumbleState'
-]
+__all__ = ["DefaultRumbleInterface", "RumbleState"]

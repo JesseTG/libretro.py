@@ -15,10 +15,16 @@ class SensorInterface(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_sensor_interface()
-        self._as_parameter_.set_sensor_state = retro_set_sensor_state_t(self.__set_sensor_state)
-        self._as_parameter_.get_sensor_input = retro_sensor_get_input_t(self.__get_sensor_input)
+        self._as_parameter_.set_sensor_state = retro_set_sensor_state_t(
+            self.__set_sensor_state
+        )
+        self._as_parameter_.get_sensor_input = retro_sensor_get_input_t(
+            self.__get_sensor_input
+        )
 
-    def set_sensor_state(self, port: int, action: SensorAction | int, rate: int) -> bool:
+    def set_sensor_state(
+        self, port: int, action: SensorAction | int, rate: int
+    ) -> bool:
         if not isinstance(port, int):
             raise TypeError(f"port must be an int, not {type(port).__name__}")
 
@@ -56,7 +62,9 @@ class SensorInterface(Protocol):
             case float(f) | bool(f) | int(f):
                 return float(f)
             case e:
-                raise TypeError(f"Expected _get_sensor_input to return a float, got {type(e).__name__}")
+                raise TypeError(
+                    f"Expected _get_sensor_input to return a float, got {type(e).__name__}"
+                )
 
     @abstractmethod
     def _get_sensor_input(self, port: int, sensor: Sensor) -> float: ...

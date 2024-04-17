@@ -19,7 +19,7 @@ class DeviceIndexAnalog(IntEnum):
     BUTTON = RETRO_DEVICE_INDEX_ANALOG_BUTTON
 
     def __init__(self, value: int):
-        self._type_ = 'H'
+        self._type_ = "H"
 
 
 class DeviceIdAnalog(IntEnum):
@@ -27,7 +27,7 @@ class DeviceIdAnalog(IntEnum):
     Y = RETRO_DEVICE_ID_ANALOG_Y
 
     def __init__(self, value: int):
-        self._type_ = 'H'
+        self._type_ = "H"
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,24 +66,42 @@ class AnalogState(InputDeviceState):
 
     def __getitem__(self, item) -> int:
         match item:
-            case DeviceIdJoypad.B: return self.b
-            case DeviceIdJoypad.Y: return self.y
-            case DeviceIdJoypad.SELECT: return self.select
-            case DeviceIdJoypad.START: return self.start
-            case DeviceIdJoypad.UP: return self.up
-            case DeviceIdJoypad.DOWN: return self.down
-            case DeviceIdJoypad.LEFT: return self.left
-            case DeviceIdJoypad.RIGHT: return self.right
-            case DeviceIdJoypad.A: return self.a
-            case DeviceIdJoypad.X: return self.x
-            case DeviceIdJoypad.L: return self.l
-            case DeviceIdJoypad.R: return self.r
-            case DeviceIdJoypad.L2: return self.l2
-            case DeviceIdJoypad.R2: return self.r2
-            case DeviceIdJoypad.L3: return self.l3
-            case DeviceIdJoypad.R3: return self.r3
-            case int(): raise IndexError(f"Index {item} is not a valid DeviceIdJoypad")
-            case _: raise TypeError(f"Expected an int or DeviceIdJoypad, got {item!r}")
+            case DeviceIdJoypad.B:
+                return self.b
+            case DeviceIdJoypad.Y:
+                return self.y
+            case DeviceIdJoypad.SELECT:
+                return self.select
+            case DeviceIdJoypad.START:
+                return self.start
+            case DeviceIdJoypad.UP:
+                return self.up
+            case DeviceIdJoypad.DOWN:
+                return self.down
+            case DeviceIdJoypad.LEFT:
+                return self.left
+            case DeviceIdJoypad.RIGHT:
+                return self.right
+            case DeviceIdJoypad.A:
+                return self.a
+            case DeviceIdJoypad.X:
+                return self.x
+            case DeviceIdJoypad.L:
+                return self.l
+            case DeviceIdJoypad.R:
+                return self.r
+            case DeviceIdJoypad.L2:
+                return self.l2
+            case DeviceIdJoypad.R2:
+                return self.r2
+            case DeviceIdJoypad.L3:
+                return self.l3
+            case DeviceIdJoypad.R3:
+                return self.r3
+            case int():
+                raise IndexError(f"Index {item} is not a valid DeviceIdJoypad")
+            case _:
+                raise TypeError(f"Expected an int or DeviceIdJoypad, got {item!r}")
 
 
-__all__ = ['DeviceIndexAnalog', 'DeviceIdAnalog', 'AnalogState']
+__all__ = ["DeviceIndexAnalog", "DeviceIdAnalog", "AnalogState"]

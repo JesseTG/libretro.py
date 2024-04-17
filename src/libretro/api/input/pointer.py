@@ -18,7 +18,7 @@ class DeviceIdPointer(IntEnum):
     COUNT = RETRO_DEVICE_ID_POINTER_COUNT
 
     def __init__(self, value: int):
-        self._type_ = 'H'
+        self._type_ = "H"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,4 +33,4 @@ class PointerState(InputDeviceState):
     pointers: Sequence[Pointer] = ()
 
 
-__all__ = ['DeviceIdPointer', 'Pointer', 'PointerState']
+__all__ = ["DeviceIdPointer", "Pointer", "PointerState"]

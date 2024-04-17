@@ -14,4 +14,4 @@ class retro_led_interface(Structure, metaclass=FieldsFromTypeHints):
         return retro_led_interface(self.set_led_state)
 
 
-__all__ = ['retro_led_interface', 'retro_set_led_state_t']
+__all__ = ["retro_led_interface", "retro_set_led_state_t"]

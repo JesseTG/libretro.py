@@ -23,12 +23,16 @@ class MultiVideoDriver(VideoDriver):
         self._drivers = drivers
         self._pixel_format = PixelFormat.RGB1555
 
-    def _refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
+    def _refresh(
+        self, data: memoryview | None, width: int, height: int, pitch: int
+    ) -> None:
         pass
 
     def init_callback(self, callback: retro_hw_render_callback) -> bool:
         if not isinstance(callback, retro_hw_render_callback):
-            raise TypeError(f"Expected a retro_hw_render_callback, got {type(callback).__name__}")
+            raise TypeError(
+                f"Expected a retro_hw_render_callback, got {type(callback).__name__}"
+            )
 
         context_type = HardwareContext(callback.context_type)
         if context_type not in self._drivers:
@@ -87,7 +91,9 @@ class MultiVideoDriver(VideoDriver):
 
         self._current.set_geometry(geometry)
 
-    def get_software_framebuffer(self, width: int, size: int, flags: MemoryAccess) -> retro_framebuffer | None:
+    def get_software_framebuffer(
+        self, width: int, size: int, flags: MemoryAccess
+    ) -> retro_framebuffer | None:
         pass
 
     @property

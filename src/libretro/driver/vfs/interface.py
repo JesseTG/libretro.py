@@ -120,7 +120,9 @@ class FileSystemInterface(Protocol):
         self.__file_handles: dict[int, FileHandle] = dict()
         self.__dir_handles: dict[int, DirectoryHandle] = dict()
         if not isinstance(logger, (Logger, type(None))):
-            raise TypeError(f"Expected logger to be a Logger or None, got: {type(logger).__name__}")
+            raise TypeError(
+                f"Expected logger to be a Logger or None, got: {type(logger).__name__}"
+            )
 
         self._logger = logger
         self.__interface: retro_vfs_interface | None = None
@@ -130,7 +132,9 @@ class FileSystemInterface(Protocol):
     def version(self) -> int: ...
 
     @abstractmethod
-    def open(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint) -> FileHandle | None: ...
+    def open(
+        self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
+    ) -> FileHandle | None: ...
 
     @abstractmethod
     def remove(self, path: bytes) -> bool: ...
@@ -172,8 +176,12 @@ class FileSystemInterface(Protocol):
                 self.__interface.mkdir = retro_vfs_mkdir_t(self.__mkdir)
                 self.__interface.opendir = retro_vfs_opendir_t(self.__opendir)
                 self.__interface.readdir = retro_vfs_readdir_t(self.__readdir)
-                self.__interface.dirent_get_name = retro_vfs_dirent_get_name_t(self.__dirent_get_name)
-                self.__interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.__dirent_is_dir)
+                self.__interface.dirent_get_name = retro_vfs_dirent_get_name_t(
+                    self.__dirent_get_name
+                )
+                self.__interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(
+                    self.__dirent_is_dir
+                )
                 self.__interface.closedir = retro_vfs_closedir_t(self.__closedir)
 
         return self.__interface
@@ -195,7 +203,9 @@ class FileSystemInterface(Protocol):
             case bytes(path):
                 return path
             case _ as result:
-                raise TypeError(f"Expected path to return a bytes, got: {type(result).__name__}")
+                raise TypeError(
+                    f"Expected path to return a bytes, got: {type(result).__name__}"
+                )
 
     def __open(self, path: bytes, mode: int, hints: int) -> c_void_p | None:
         if not path:
@@ -210,7 +220,9 @@ class FileSystemInterface(Protocol):
             return None
 
         if not isinstance(file, FileHandle):
-            raise TypeError(f"Expected open to return a FileHandle, got: {type(file).__name__}")
+            raise TypeError(
+                f"Expected open to return a FileHandle, got: {type(file).__name__}"
+            )
 
         address = id(file)
         self.__file_handles[address] = file
@@ -251,7 +263,9 @@ class FileSystemInterface(Protocol):
 
             size = handle.size
             if not isinstance(size, int):
-                raise TypeError(f"Expected size to return an int, got: {type(size).__name__}")
+                raise TypeError(
+                    f"Expected size to return an int, got: {type(size).__name__}"
+                )
 
             return size
         except:
@@ -272,14 +286,18 @@ class FileSystemInterface(Protocol):
 
             pos = handle.tell()
             if not isinstance(pos, int):
-                raise TypeError(f"Expected tell to return an int, got: {type(pos).__name__}")
+                raise TypeError(
+                    f"Expected tell to return an int, got: {type(pos).__name__}"
+                )
 
             return pos
         except:
             # TODO: Log the exception
             return -1
 
-    def __seek(self, stream: POINTER(retro_vfs_file_handle), offset: int, whence: int) -> int:
+    def __seek(
+        self, stream: POINTER(retro_vfs_file_handle), offset: int, whence: int
+    ) -> int:
         if not stream:
             return -1
 
@@ -299,14 +317,18 @@ class FileSystemInterface(Protocol):
 
             pos = handle.seek(offset, VfsSeekPosition(whence))
             if not isinstance(pos, int):
-                raise TypeError(f"Expected seek to return an int, got: {type(pos).__name__}")
+                raise TypeError(
+                    f"Expected seek to return an int, got: {type(pos).__name__}"
+                )
 
             return pos
         except:
             # TODO: Log the exception
             return -1
 
-    def __read(self, stream: POINTER(retro_vfs_file_handle), buffer: c_void_p, length: int) -> int:
+    def __read(
+        self, stream: POINTER(retro_vfs_file_handle), buffer: c_void_p, length: int
+    ) -> int:
         if not stream:
             return -1
 
@@ -326,19 +348,25 @@ class FileSystemInterface(Protocol):
             if not handle:
                 return -1
 
-            assert isinstance(handle, FileHandle), f"Expected a FileHandle, got: {type(handle).__name__}"
+            assert isinstance(
+                handle, FileHandle
+            ), f"Expected a FileHandle, got: {type(handle).__name__}"
 
             memview = memoryview_at(buffer, length)
             bytes_read = handle.read(memview)
             if not isinstance(bytes_read, int):
-                raise TypeError(f"Expected read to return an int, got: {type(bytes_read).__name__}")
+                raise TypeError(
+                    f"Expected read to return an int, got: {type(bytes_read).__name__}"
+                )
 
             return bytes_read
         except:
             # TODO: Log the exception
             return -1
 
-    def __write(self, stream: POINTER(retro_vfs_file_handle), buffer: int, length: int) -> int:
+    def __write(
+        self, stream: POINTER(retro_vfs_file_handle), buffer: int, length: int
+    ) -> int:
         if not stream:
             return -1
 
@@ -363,7 +391,9 @@ class FileSystemInterface(Protocol):
             memview = memoryview_at(buffer, length, readonly=True)
             bytes_written = handle.write(memview)
             if not isinstance(bytes_written, int):
-                raise TypeError(f"Expected write to return an int, got: {type(bytes_written).__name__}")
+                raise TypeError(
+                    f"Expected write to return an int, got: {type(bytes_written).__name__}"
+                )
 
             return bytes_written
         except:
@@ -462,7 +492,9 @@ class FileSystemInterface(Protocol):
             ok = self.mkdir(path)
 
             if ok not in VfsMkdirResult:
-                raise TypeError(f"Expected mkdir to return a VfsMkdirResult, got: {type(ok).__name__}")
+                raise TypeError(
+                    f"Expected mkdir to return a VfsMkdirResult, got: {type(ok).__name__}"
+                )
 
             return ok
         except FileExistsError:
@@ -484,7 +516,9 @@ class FileSystemInterface(Protocol):
                 return None
 
             if not isinstance(dir, DirectoryHandle):
-                raise TypeError(f"Expected opendir to return a DirectoryHandle, got: {type(dir).__name__}")
+                raise TypeError(
+                    f"Expected opendir to return a DirectoryHandle, got: {type(dir).__name__}"
+                )
         except:
             # TODO: Log the exception
             return None
@@ -512,7 +546,9 @@ class FileSystemInterface(Protocol):
                 case DirEntry():
                     return True  # It's okay, this can be accessed via handle.dirent
                 case e:
-                    raise TypeError(f"Expected readdir to return a DirEntry or None, got: {type(e).__name__}")
+                    raise TypeError(
+                        f"Expected readdir to return a DirEntry or None, got: {type(e).__name__}"
+                    )
         except StopIteration:
             # Not an error, just the end of the directory
             return False
@@ -536,7 +572,9 @@ class FileSystemInterface(Protocol):
                 case (bytes() | None) as name:
                     return name
                 case _ as name:
-                    raise TypeError(f"Expected dirent_name to return a bytes or None, got: {type(name).__name__}")
+                    raise TypeError(
+                        f"Expected dirent_name to return a bytes or None, got: {type(name).__name__}"
+                    )
         except:
             # TODO: Log the exception
             return None
@@ -577,4 +615,4 @@ class FileSystemInterface(Protocol):
             return -1
 
 
-__all__ = ['FileHandle', 'DirectoryHandle', 'FileSystemInterface', 'DirEntry']
+__all__ = ["FileHandle", "DirectoryHandle", "FileSystemInterface", "DirEntry"]

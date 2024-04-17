@@ -34,7 +34,10 @@ class LoggerMessageInterface(MessageInterface):
                 return True
             case retro_message_ext() if self._version >= 1:
                 self._message_exts.append(deepcopy(message))
-                if self._logger is not None and message.target in (MessageTarget.LOG, MessageTarget.ALL):
+                if self._logger is not None and message.target in (
+                    MessageTarget.LOG,
+                    MessageTarget.ALL,
+                ):
                     self._logger.log(LogLevel(message.level).logging_level, message.msg)
                 return True
             case _:
@@ -42,5 +45,5 @@ class LoggerMessageInterface(MessageInterface):
 
 
 __all__ = [
-    'LoggerMessageInterface',
+    "LoggerMessageInterface",
 ]

@@ -11,9 +11,11 @@ class MessageInterface(Protocol):
     def version(self) -> int: ...
 
     @abstractmethod
-    def set_message(self, message: retro_message | retro_message_ext | None) -> bool: ...
+    def set_message(
+        self, message: retro_message | retro_message_ext | None
+    ) -> bool: ...
 
 
 __all__ = [
-    'MessageInterface',
+    "MessageInterface",
 ]

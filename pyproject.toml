@@ -68,9 +68,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.black]
-preview = true
-line-length = 120
-skip-string-normalization = true
+line-length = 88
 
 [tool.isort]
 profile = "black"

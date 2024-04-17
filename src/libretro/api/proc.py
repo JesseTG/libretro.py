@@ -24,6 +24,6 @@ class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints)
 
 __all__ = [
     "retro_get_proc_address_interface",
-    'retro_proc_address_t',
-    'retro_get_proc_address_t',
+    "retro_proc_address_t",
+    "retro_get_proc_address_t",
 ]

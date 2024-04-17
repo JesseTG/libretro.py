@@ -40,9 +40,11 @@ class ModernGlVideoDriver(VideoDriver):
 
             del self._context
 
-    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
+    def refresh(
+        self, data: memoryview | None, width: int, height: int, pitch: int
+    ) -> None:
         # TODO: Recreate the frame buffer based on the pixel format and system AV info
-        pass # TODO: Implement
+        pass  # TODO: Implement
 
     def supported_contexts(self) -> Set[HardwareContext]:
         pass
@@ -58,13 +60,21 @@ class ModernGlVideoDriver(VideoDriver):
         return HardwareContext.NONE
 
     @override
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(
+        self, callback: retro_hw_render_callback
+    ) -> retro_hw_render_callback | None:
         if not isinstance(callback, retro_hw_render_callback):
-            raise TypeError(f"Expected a retro_hw_render_callback, got {type(callback).__name__}")
+            raise TypeError(
+                f"Expected a retro_hw_render_callback, got {type(callback).__name__}"
+            )
 
         self._hw_render_callback = deepcopy(callback)
-        self._hw_render_callback.get_current_framebuffer = retro_hw_get_current_framebuffer_t(self.get_hw_framebuffer)
-        self._hw_render_callback.get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
+        self._hw_render_callback.get_current_framebuffer = (
+            retro_hw_get_current_framebuffer_t(self.get_hw_framebuffer)
+        )
+        self._hw_render_callback.get_proc_address = retro_hw_get_proc_address_t(
+            self.__get_proc_address
+        )
 
         return self._hw_render_callback
 
@@ -80,7 +90,9 @@ class ModernGlVideoDriver(VideoDriver):
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
-            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
+            raise TypeError(
+                f"Expected a retro_game_geometry, got {type(geometry).__name__}"
+            )
 
         self._system_av_info.geometry = geometry
         # TODO: Crop the OpenGL texture if necessary
@@ -111,7 +123,7 @@ class ModernGlVideoDriver(VideoDriver):
     @rotation.setter
     @override
     def rotation(self, rotation: Rotation) -> None:
-        pass # TODO: Implement
+        pass  # TODO: Implement
 
     @property
     @override
@@ -122,7 +134,9 @@ class ModernGlVideoDriver(VideoDriver):
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
         if not isinstance(av_info, retro_system_av_info):
-            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
+            raise TypeError(
+                f"Expected a retro_system_av_info, got {type(av_info).__name__}"
+            )
 
         self._system_av_info = av_info
         self._needs_recreate = True
@@ -146,14 +160,14 @@ class ModernGlVideoDriver(VideoDriver):
         self._use_shared_context = bool(shared)
 
     def set_rotation(self, rotation: Rotation) -> bool:
-        raise NotImplementedError() # TODO: Implement
+        raise NotImplementedError()  # TODO: Implement
 
     @property
     def can_dupe(self) -> bool:
         return True
 
     def get_hw_framebuffer(self) -> int:
-        raise NotImplementedError() # TODO: Implement
+        raise NotImplementedError()  # TODO: Implement
 
     def __get_proc_address(self, sym: c_char_p) -> retro_proc_address_t:
         return self.get_proc_address(bytes(sym))
@@ -167,7 +181,9 @@ class ModernGlVideoDriver(VideoDriver):
 
         return retro_proc_address_t(self._context.load_opengl_function(sym))
 
-    def get_software_framebuffer(self, width: int, size: int, flags: MemoryAccess) -> retro_framebuffer | None:
+    def get_software_framebuffer(
+        self, width: int, size: int, flags: MemoryAccess
+    ) -> retro_framebuffer | None:
         # TODO: Map the OpenGL texture to a software framebuffer
         pass
 
@@ -177,7 +193,7 @@ class ModernGlVideoDriver(VideoDriver):
         return None
 
     def context_reset(self) -> None:
-        pass # TODO: Implement
+        pass  # TODO: Implement
 
     def context_destroy(self) -> None:
         if not self._context:
@@ -187,4 +203,4 @@ class ModernGlVideoDriver(VideoDriver):
             self._hw_render_callback.context_destroy()
 
 
-__all__ = ['ModernGlVideoDriver']
+__all__ = ["ModernGlVideoDriver"]

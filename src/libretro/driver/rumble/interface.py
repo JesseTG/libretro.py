@@ -1,7 +1,11 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
-from libretro.api.rumble import retro_rumble_interface, retro_set_rumble_state_t, RumbleEffect
+from libretro.api.rumble import (
+    retro_rumble_interface,
+    retro_set_rumble_state_t,
+    RumbleEffect,
+)
 
 
 @runtime_checkable
@@ -9,12 +13,18 @@ class RumbleInterface(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_rumble_interface()
-        self._as_parameter_.set_rumble_state = retro_set_rumble_state_t(self.__set_rumble_state)
+        self._as_parameter_.set_rumble_state = retro_set_rumble_state_t(
+            self.__set_rumble_state
+        )
 
     @abstractmethod
-    def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool: ...
+    def _set_rumble_state(
+        self, port: int, effect: RumbleEffect, strength: int
+    ) -> bool: ...
 
-    def set_rumble_state(self, port: int, effect: RumbleEffect | int, strength: int) -> bool:
+    def set_rumble_state(
+        self, port: int, effect: RumbleEffect | int, strength: int
+    ) -> bool:
         """
         Set the rumble state of a controller port.
 
@@ -42,5 +52,5 @@ class RumbleInterface(Protocol):
 
 
 __all__ = [
-    'RumbleInterface',
+    "RumbleInterface",
 ]

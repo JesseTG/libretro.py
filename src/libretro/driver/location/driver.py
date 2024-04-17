@@ -26,8 +26,12 @@ class LocationDriver(Protocol):
         self._as_parameter_ = retro_location_callback()
         self._as_parameter_.start = retro_location_start_t(self.start)
         self._as_parameter_.stop = retro_location_stop_t(self.stop)
-        self._as_parameter_.get_position = retro_location_get_position_t(self.__get_position)
-        self._as_parameter_.set_interval = retro_location_set_interval_t(self.set_interval)
+        self._as_parameter_.get_position = retro_location_get_position_t(
+            self.__get_position
+        )
+        self._as_parameter_.set_interval = retro_location_set_interval_t(
+            self.set_interval
+        )
 
     @abstractmethod
     def start(self) -> bool: ...
@@ -47,8 +51,12 @@ class LocationDriver(Protocol):
 
     @initialized.setter
     def initialized(self, value: retro_location_lifetime_status_t) -> None:
-        if value is not None and not isinstance(value, retro_location_lifetime_status_t):
-            raise TypeError(f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}")
+        if value is not None and not isinstance(
+            value, retro_location_lifetime_status_t
+        ):
+            raise TypeError(
+                f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}"
+            )
 
         self._as_parameter_.initialized = value
 
@@ -62,8 +70,12 @@ class LocationDriver(Protocol):
 
     @deinitialized.setter
     def deinitialized(self, value: retro_location_lifetime_status_t) -> None:
-        if value is not None and not isinstance(value, retro_location_lifetime_status_t):
-            raise TypeError(f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}")
+        if value is not None and not isinstance(
+            value, retro_location_lifetime_status_t
+        ):
+            raise TypeError(
+                f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}"
+            )
 
         self._as_parameter_.deinitialized = value
 
@@ -72,7 +84,11 @@ class LocationDriver(Protocol):
         self._as_parameter_.deinitialized = None
 
     def __get_position(
-        self, lat: c_double_p, lon: c_double_p, horiz_accuracy: c_double_p, vert_accuracy: c_double_p
+        self,
+        lat: c_double_p,
+        lon: c_double_p,
+        horiz_accuracy: c_double_p,
+        vert_accuracy: c_double_p,
     ) -> bool:
         if not lat:
             raise ValueError("latitude pointer cannot be None")
@@ -100,6 +116,6 @@ class LocationDriver(Protocol):
 
 
 __all__ = [
-    'LocationDriver',
-    'Position',
+    "LocationDriver",
+    "Position",
 ]

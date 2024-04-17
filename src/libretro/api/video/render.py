@@ -11,7 +11,7 @@ RETRO_HW_RENDER_INTERFACE_D3D10 = 2
 RETRO_HW_RENDER_INTERFACE_D3D11 = 3
 RETRO_HW_RENDER_INTERFACE_D3D12 = 4
 RETRO_HW_RENDER_INTERFACE_GSKIT_PS2 = 5
-RETRO_HW_RENDER_INTERFACE_DUMMY = 0x7fffffff
+RETRO_HW_RENDER_INTERFACE_DUMMY = 0x7FFFFFFF
 
 
 class Rotation(IntEnum):
@@ -21,7 +21,7 @@ class Rotation(IntEnum):
     TWO_SEVENTY = 3
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class HardwareRenderInterfaceType(IntEnum):
@@ -33,7 +33,7 @@ class HardwareRenderInterfaceType(IntEnum):
     GSKIT_PS2 = RETRO_HW_RENDER_INTERFACE_GSKIT_PS2
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class retro_hw_render_interface(Structure, metaclass=FieldsFromTypeHints):
@@ -42,8 +42,8 @@ class retro_hw_render_interface(Structure, metaclass=FieldsFromTypeHints):
 
 
 __all__ = [
-    'HardwareRenderInterfaceType',
-    'retro_hw_render_interface',
-    'retro_hw_render_interface_type',
-    'Rotation',
+    "HardwareRenderInterfaceType",
+    "retro_hw_render_interface",
+    "retro_hw_render_interface_type",
+    "Rotation",
 ]

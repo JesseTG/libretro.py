@@ -8,11 +8,11 @@ RETRO_REGION_NTSC = 0
 RETRO_REGION_PAL = 1
 
 retro_av_enable_flags = c_uint
-RETRO_AV_ENABLE_VIDEO = (1 << 0)
-RETRO_AV_ENABLE_AUDIO = (1 << 1)
-RETRO_AV_ENABLE_FAST_SAVESTATES = (1 << 2)
-RETRO_AV_ENABLE_HARD_DISABLE_AUDIO = (1 << 3)
-RETRO_AV_ENABLE_DUMMY = 0x7fffffff
+RETRO_AV_ENABLE_VIDEO = 1 << 0
+RETRO_AV_ENABLE_AUDIO = 1 << 1
+RETRO_AV_ENABLE_FAST_SAVESTATES = 1 << 2
+RETRO_AV_ENABLE_HARD_DISABLE_AUDIO = 1 << 3
+RETRO_AV_ENABLE_DUMMY = 0x7FFFFFFF
 
 
 class Region(IntEnum):
@@ -20,7 +20,7 @@ class Region(IntEnum):
     PAL = RETRO_REGION_PAL
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class AvEnableFlags(IntFlag, boundary=CONFORM):

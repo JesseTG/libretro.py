@@ -38,7 +38,9 @@ class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
 
 
 NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
-CoreOptionArray: type[Array] = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
+CoreOptionArray: type[Array] = (
+    retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
+)
 
 
 @dataclass
@@ -130,7 +132,9 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass
-class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
+class retro_core_options_update_display_callback(
+    Structure, metaclass=FieldsFromTypeHints
+):
     callback: retro_core_options_update_display_callback_t
 
     def __call__(self) -> bool:
@@ -144,17 +148,17 @@ class retro_core_options_update_display_callback(Structure, metaclass=FieldsFrom
 
 
 __all__ = [
-    'retro_variable',
-    'retro_core_option_display',
-    'retro_core_option_value',
-    'CoreOptionArray',
-    'retro_core_option_definition',
-    'retro_core_options_intl',
-    'retro_core_option_v2_category',
-    'retro_core_option_v2_definition',
-    'retro_core_options_v2',
-    'retro_core_options_v2_intl',
-    'retro_core_options_update_display_callback',
-    'retro_core_options_update_display_callback_t',
-    'NUM_CORE_OPTION_VALUES_MAX',
+    "retro_variable",
+    "retro_core_option_display",
+    "retro_core_option_value",
+    "CoreOptionArray",
+    "retro_core_option_definition",
+    "retro_core_options_intl",
+    "retro_core_option_v2_category",
+    "retro_core_option_v2_definition",
+    "retro_core_options_v2",
+    "retro_core_options_v2_intl",
+    "retro_core_options_update_display_callback",
+    "retro_core_options_update_display_callback_t",
+    "NUM_CORE_OPTION_VALUES_MAX",
 ]

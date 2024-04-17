@@ -32,11 +32,11 @@ class retro_audio_buffer_status_callback(Structure, metaclass=FieldsFromTypeHint
 
 
 __all__ = [
-    'retro_audio_sample_t',
-    'retro_audio_sample_batch_t',
-    'retro_audio_callback_t',
-    'retro_audio_set_state_callback_t',
-    'retro_audio_buffer_status_callback_t',
-    'retro_audio_callback',
-    'retro_audio_buffer_status_callback',
+    "retro_audio_sample_t",
+    "retro_audio_sample_batch_t",
+    "retro_audio_callback_t",
+    "retro_audio_set_state_callback_t",
+    "retro_audio_buffer_status_callback_t",
+    "retro_audio_callback",
+    "retro_audio_buffer_status_callback",
 ]

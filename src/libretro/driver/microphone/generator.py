@@ -12,7 +12,9 @@ MicrophoneSource = MicrophoneInput | MicrophoneInputIterator | MicrophoneInputGe
 
 
 class GeneratorMicrophone(Microphone):
-    def __init__(self, generator: MicrophoneSource | None, params: retro_microphone_params | None):
+    def __init__(
+        self, generator: MicrophoneSource | None, params: retro_microphone_params | None
+    ):
         super().__init__(params)
         self._params = params or retro_microphone_params(44100)
         self._enabled = False
@@ -59,7 +61,7 @@ class GeneratorMicrophone(Microphone):
                 case Iterable() | Iterator() | Generator() as it:
                     self._generator_state = it
 
-        buffer = array('h')
+        buffer = array("h")
         try:
             while len(buffer) < frames:
                 match next(self._generator_state, None):
@@ -67,7 +69,7 @@ class GeneratorMicrophone(Microphone):
                         break
                     case int(frame):
                         buffer.append(frame)
-                    case array() as samples if samples.typecode == 'h':
+                    case array() as samples if samples.typecode == "h":
                         buffer.extend(samples)
                     case f if isinstance(f, Sequence):
                         buffer.extend(f)
@@ -100,10 +102,10 @@ class GeneratorMicrophoneDriver(MicrophoneDriver):
 
 
 __all__ = [
-    'GeneratorMicrophone',
-    'GeneratorMicrophoneDriver',
-    'MicrophoneInput',
-    'MicrophoneInputIterator',
-    'MicrophoneInputGenerator',
-    'MicrophoneSource',
+    "GeneratorMicrophone",
+    "GeneratorMicrophoneDriver",
+    "MicrophoneInput",
+    "MicrophoneInputIterator",
+    "MicrophoneInputGenerator",
+    "MicrophoneSource",
 ]

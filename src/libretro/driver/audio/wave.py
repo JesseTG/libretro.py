@@ -14,17 +14,19 @@ class WaveWriterAudioDriver(AudioDriver):
     def __init__(self, file: str | bytes | PathLike | RawIOBase):
         match file:
             case str() as name:
-                self._file = wave.open(name, 'wb')
+                self._file = wave.open(name, "wb")
             case bytes() as name:
-                self._file = wave.open(fsdecode(name), 'wb')
+                self._file = wave.open(fsdecode(name), "wb")
             case PathLike() as path:
-                self._file = wave.open(fsdecode(path), 'wb')
+                self._file = wave.open(fsdecode(path), "wb")
             case RawIOBase() as io if not io.writable():
-                raise ValueError('RawIOBase must be writable')
+                raise ValueError("RawIOBase must be writable")
             case RawIOBase() as io:
                 self._file = wave.open(io)
             case _:
-                raise TypeError(f'Expected a str, bytes, path, or RawIOBase, got {file!r}')
+                raise TypeError(
+                    f"Expected a str, bytes, path, or RawIOBase, got {file!r}"
+                )
 
         self._file.setnchannels(2)
         self._file.setsampwidth(2)
@@ -32,8 +34,8 @@ class WaveWriterAudioDriver(AudioDriver):
         self._system_av_info: retro_system_av_info | None = None
 
     def sample(self, left: int, right: int):
-        self._file.writeframesraw(left.to_bytes(2, 'little', signed=True))
-        self._file.writeframesraw(right.to_bytes(2, 'little', signed=True))
+        self._file.writeframesraw(left.to_bytes(2, "little", signed=True))
+        self._file.writeframesraw(right.to_bytes(2, "little", signed=True))
 
     def sample_batch(self, data: memoryview) -> int:
         self._file.writeframesraw(data)
@@ -58,7 +60,9 @@ class WaveWriterAudioDriver(AudioDriver):
     @buffer_status.setter
     @override
     def buffer_status(self, callback: retro_audio_buffer_status_callback):
-        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting buffer status callback")
+        raise UnsupportedEnvCall(
+            "ArrayAudioDriver does not support setting buffer status callback"
+        )
 
     @property
     @override
@@ -68,7 +72,9 @@ class WaveWriterAudioDriver(AudioDriver):
     @minimum_latency.setter
     @override
     def minimum_latency(self, latency: int | None):
-        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting minimum latency")
+        raise UnsupportedEnvCall(
+            "ArrayAudioDriver does not support setting minimum latency"
+        )
 
     @property
     @override
@@ -88,5 +94,5 @@ class WaveWriterAudioDriver(AudioDriver):
 
 
 __all__ = [
-    'WaveWriterAudioDriver',
+    "WaveWriterAudioDriver",
 ]

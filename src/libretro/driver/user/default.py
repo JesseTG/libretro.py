@@ -5,7 +5,11 @@ from libretro.api.user import Language
 
 
 class DefaultUserDriver(UserDriver):
-    def __init__(self, username: str | bytes | None = "libretro.py", language: Language | None = Language.ENGLISH):
+    def __init__(
+        self,
+        username: str | bytes | None = "libretro.py",
+        language: Language | None = Language.ENGLISH,
+    ):
         self.username = username
         self.language = Language(language)
 
@@ -24,7 +28,9 @@ class DefaultUserDriver(UserDriver):
             case bytes():
                 self._username: bytes | None = username
             case _:
-                raise TypeError(f"Expected str, bytes, or None, got {type(username).__name__}")
+                raise TypeError(
+                    f"Expected str, bytes, or None, got {type(username).__name__}"
+                )
 
     @username.deleter
     def username(self) -> None:
@@ -38,7 +44,9 @@ class DefaultUserDriver(UserDriver):
     @language.setter
     def language(self, language: Language | None) -> None:
         if not isinstance(language, (Language, int, type(None))):
-            raise TypeError(f"Expected Language or int or None, got {type(language).__name__}")
+            raise TypeError(
+                f"Expected Language or int or None, got {type(language).__name__}"
+            )
 
         self._language = Language(language)
 
@@ -47,6 +55,4 @@ class DefaultUserDriver(UserDriver):
         self._language = None
 
 
-__all__ = [
-    "DefaultUserDriver"
-]
+__all__ = ["DefaultUserDriver"]

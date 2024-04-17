@@ -10,9 +10,13 @@ from libretro.api import EnvironmentCall
 EnvironmentCallbackFunction = Callable[[c_void_p], bool]
 
 
-class DictEnvironmentDriver(EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
+class DictEnvironmentDriver(
+    EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]
+):
     def __init__(self, envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
-        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = MappingProxyType(envcalls)
+        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = (
+            MappingProxyType(envcalls)
+        )
 
     @override
     def __getitem__(self, __key: EnvironmentCall) -> EnvironmentCallbackFunction:
@@ -42,6 +46,6 @@ class DictEnvironmentDriver(EnvironmentDriver, Mapping[EnvironmentCall, Environm
 
 
 __all__ = [
-    'EnvironmentCallbackFunction',
-    'DictEnvironmentDriver',
+    "EnvironmentCallbackFunction",
+    "DictEnvironmentDriver",
 ]

@@ -36,8 +36,8 @@ RETRO_LANGUAGE_CATALAN = 29
 RETRO_LANGUAGE_BRITISH_ENGLISH = 30
 RETRO_LANGUAGE_HUNGARIAN = 31
 RETRO_LANGUAGE_BELARUSIAN = 32
-RETRO_LANGUAGE_LAST = (RETRO_LANGUAGE_BELARUSIAN + 1)
-RETRO_LANGUAGE_DUMMY = 0x7fffffff
+RETRO_LANGUAGE_LAST = RETRO_LANGUAGE_BELARUSIAN + 1
+RETRO_LANGUAGE_DUMMY = 0x7FFFFFFF
 
 
 class Language(IntEnum):
@@ -76,10 +76,10 @@ class Language(IntEnum):
     BELARUSIAN = RETRO_LANGUAGE_BELARUSIAN
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 __all__ = [
-    'Language',
-    'retro_language',
+    "Language",
+    "retro_language",
 ]

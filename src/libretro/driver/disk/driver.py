@@ -15,11 +15,15 @@ class DiskDriver(Protocol):
 
     @property
     @abstractmethod
-    def callback(self) -> retro_disk_control_callback | retro_disk_control_ext_callback | None: ...
+    def callback(
+        self,
+    ) -> retro_disk_control_callback | retro_disk_control_ext_callback | None: ...
 
     @callback.setter
     @abstractmethod
-    def callback(self, value: retro_disk_control_callback | retro_disk_control_ext_callback) -> None: ...
+    def callback(
+        self, value: retro_disk_control_callback | retro_disk_control_ext_callback
+    ) -> None: ...
 
     @callback.deleter
     @abstractmethod

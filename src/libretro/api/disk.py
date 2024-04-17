@@ -39,7 +39,9 @@ class retro_disk_control_callback(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass
-class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=FieldsFromTypeHints):
+class retro_disk_control_ext_callback(
+    retro_disk_control_callback, metaclass=FieldsFromTypeHints
+):
     set_initial_image: retro_set_initial_image_t
     get_image_path: retro_get_image_path_t
     get_image_label: retro_get_image_label_t
@@ -62,14 +64,14 @@ class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=Fie
 __all__ = [
     "retro_disk_control_callback",
     "retro_disk_control_ext_callback",
-    'retro_set_eject_state_t',
-    'retro_get_eject_state_t',
-    'retro_get_image_index_t',
-    'retro_set_image_index_t',
-    'retro_get_num_images_t',
-    'retro_replace_image_index_t',
-    'retro_add_image_index_t',
-    'retro_set_initial_image_t',
-    'retro_get_image_path_t',
-    'retro_get_image_label_t',
+    "retro_set_eject_state_t",
+    "retro_get_eject_state_t",
+    "retro_get_image_index_t",
+    "retro_set_image_index_t",
+    "retro_get_num_images_t",
+    "retro_replace_image_index_t",
+    "retro_add_image_index_t",
+    "retro_set_initial_image_t",
+    "retro_get_image_path_t",
+    "retro_get_image_label_t",
 ]

@@ -9,7 +9,7 @@ from libretro.api.video import (
     Rotation,
     PixelFormat,
     MemoryAccess,
-    HardwareContext
+    HardwareContext,
 )
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -18,7 +18,9 @@ from libretro.api.proc import retro_proc_address_t
 @runtime_checkable
 class VideoDriver(Protocol):
     @abstractmethod
-    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None: ...
+    def refresh(
+        self, data: memoryview | None, width: int, height: int, pitch: int
+    ) -> None: ...
 
     @abstractmethod
     def supported_contexts(self) -> Set[HardwareContext]: ...
@@ -39,7 +41,9 @@ class VideoDriver(Protocol):
     def preferred_context(self) -> None: ...
 
     @abstractmethod
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None: ...
+    def set_context(
+        self, callback: retro_hw_render_callback
+    ) -> retro_hw_render_callback | None: ...
 
     @abstractmethod
     def context_reset(self) -> None: ...
@@ -98,7 +102,9 @@ class VideoDriver(Protocol):
     def geometry(self, geometry: retro_game_geometry) -> None: ...
 
     @abstractmethod
-    def get_software_framebuffer(self, width: int, height: int, flags: MemoryAccess) -> retro_framebuffer | None: ...
+    def get_software_framebuffer(
+        self, width: int, height: int, flags: MemoryAccess
+    ) -> retro_framebuffer | None: ...
 
     @property
     @abstractmethod
@@ -114,5 +120,5 @@ class VideoDriver(Protocol):
 
 
 __all__ = [
-    'VideoDriver',
+    "VideoDriver",
 ]

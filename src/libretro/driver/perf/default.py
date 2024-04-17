@@ -35,16 +35,24 @@ class DefaultPerfDriver(PerfDriver):
             raise ValueError("counter.ident must not be NULL")
 
         if counter.start:
-            raise ValueError(f"Expected counter.start to be zero upon registration, got {counter.start}")
+            raise ValueError(
+                f"Expected counter.start to be zero upon registration, got {counter.start}"
+            )
 
         if counter.total:
-            raise ValueError(f"Expected counter.total to be zero upon registration, got {counter.total}")
+            raise ValueError(
+                f"Expected counter.total to be zero upon registration, got {counter.total}"
+            )
 
         if counter.call_cnt:
-            raise ValueError(f"Expected counter.call_cnt to be zero upon registration, got {counter.call_cnt}")
+            raise ValueError(
+                f"Expected counter.call_cnt to be zero upon registration, got {counter.call_cnt}"
+            )
 
         if counter.registered:
-            raise ValueError(f"Expected counter.registered to be false upon registration, got {counter.registered}")
+            raise ValueError(
+                f"Expected counter.registered to be false upon registration, got {counter.registered}"
+            )
 
         ident: bytes = counter.ident.value
         if ident in self._perf_counters:

@@ -97,13 +97,17 @@ class CoreInterface(Protocol):
     def cheat_reset(self) -> None: ...
 
     @abstractmethod
-    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview) -> None: ...
+    def cheat_set(
+        self, index: int, enabled: bool, code: bytes | bytearray | memoryview
+    ) -> None: ...
 
     @abstractmethod
     def load_game(self, game: retro_game_info | None) -> bool: ...
 
     @abstractmethod
-    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool: ...
+    def load_game_special(
+        self, game_type: int, info: Sequence[retro_game_info]
+    ) -> bool: ...
 
     @abstractmethod
     def unload_game(self) -> None: ...
@@ -155,7 +159,9 @@ class Core(CoreInterface):
             self._core.retro_set_audio_sample.argtypes = [retro_audio_sample_t]
             self._core.retro_set_audio_sample.restype = None
 
-            self._core.retro_set_audio_sample_batch.argtypes = [retro_audio_sample_batch_t]
+            self._core.retro_set_audio_sample_batch.argtypes = [
+                retro_audio_sample_batch_t
+            ]
             self._core.retro_set_audio_sample_batch.restype = None
 
             self._core.retro_set_input_poll.argtypes = [retro_input_poll_t]
@@ -173,10 +179,14 @@ class Core(CoreInterface):
             self._core.retro_api_version.argtypes = []
             self._core.retro_api_version.restype = c_uint
 
-            self._core.retro_get_system_info.argtypes = [POINTER(retro_system_info)]
+            self._core.retro_get_system_info.argtypes = [
+                POINTER(retro_system_info),
+            ]
             self._core.retro_get_system_info.restype = None
 
-            self._core.retro_get_system_av_info.argtypes = [POINTER(retro_system_av_info)]
+            self._core.retro_get_system_av_info.argtypes = [
+                POINTER(retro_system_av_info),
+            ]
             self._core.retro_get_system_av_info.restype = None
 
             self._core.retro_set_controller_port_device.argtypes = [c_uint, c_uint]
@@ -206,7 +216,11 @@ class Core(CoreInterface):
             self._core.retro_load_game.argtypes = [POINTER(retro_game_info)]
             self._core.retro_load_game.restype = c_bool
 
-            self._core.retro_load_game_special.argtypes = [c_uint, POINTER(retro_game_info), c_size_t]
+            self._core.retro_load_game_special.argtypes = [
+                c_uint,
+                POINTER(retro_game_info),
+                c_size_t,
+            ]
             self._core.retro_load_game_special.restype = c_bool
 
             self._core.retro_unload_game.argtypes = []
@@ -222,7 +236,9 @@ class Core(CoreInterface):
             self._core.retro_get_memory_size.argtypes = [c_uint]
             self._core.retro_get_memory_size.restype = c_size_t
         except AttributeError as e:
-            raise ValueError(f"Couldn't find required symbol '{e.name}' in {self._core._name}") from e
+            raise ValueError(
+                f"Couldn't find required symbol '{e.name}' in {self._core._name}"
+            ) from e
 
         # Need to keep references to these objects to prevent them from being garbage collected,
         # otherwise the C function pointers to them will become invalid.
@@ -299,7 +315,9 @@ class Core(CoreInterface):
             raise ValueError("data must not be None")
 
         if not isinstance(data, (bytearray, memoryview)):
-            raise TypeError(f"data must be bytearray or memoryview, not {type(data).__name__}")
+            raise TypeError(
+                f"data must be bytearray or memoryview, not {type(data).__name__}"
+            )
 
         if isinstance(data, memoryview) and data.readonly:
             raise ValueError("data must not be readonly")
@@ -313,22 +331,30 @@ class Core(CoreInterface):
             raise ValueError("data must not be None")
 
         if not isinstance(data, (bytes, bytearray, memoryview)):
-            raise TypeError(f"data must be bytes, bytearray or memoryview, not {type(data).__name__}")
+            raise TypeError(
+                f"data must be bytes, bytearray or memoryview, not {type(data).__name__}"
+            )
 
         arraytype: Array = c_char * len(data)
 
-        return self._core.retro_unserialize(byref(arraytype.from_buffer(data)), len(data))
+        return self._core.retro_unserialize(
+            byref(arraytype.from_buffer(data)), len(data)
+        )
 
     def cheat_reset(self):
         self._core.retro_cheat_reset()
 
-    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview):
+    def cheat_set(
+        self, index: int, enabled: bool, code: bytes | bytearray | memoryview
+    ):
         self._core.retro_cheat_set(index, enabled, code)
 
     def load_game(self, game: retro_game_info | None) -> bool:
         return self._core.retro_load_game(byref(game) if game else None)
 
-    def load_game_special(self, game_type: int | retro_subsystem_info, info: Sequence[retro_game_info]) -> bool:
+    def load_game_special(
+        self, game_type: int | retro_subsystem_info, info: Sequence[retro_game_info]
+    ) -> bool:
         _type: int
         match game_type:
             case int():
@@ -336,7 +362,9 @@ class Core(CoreInterface):
             case retro_subsystem_info():
                 _type = game_type.id
             case _:
-                raise TypeError(f"Expected int or retro_subsystem_info, got {type(game_type).__name__}")
+                raise TypeError(
+                    f"Expected int or retro_subsystem_info, got {type(game_type).__name__}"
+                )
 
         _array: Array[retro_game_info]
 
@@ -346,7 +374,9 @@ class Core(CoreInterface):
             GameInfoArray: type[Array] = retro_game_info * len(info)
             _array = GameInfoArray(*info)
         else:
-            raise TypeError(f"Expected a Sequence or ctypes Array of retro_game_info, got {type(info).__name__}")
+            raise TypeError(
+                f"Expected a Sequence or ctypes Array of retro_game_info, got {type(info).__name__}"
+            )
 
         if not all(isinstance(i, retro_game_info) for i in info):
             raise TypeError("All elements of info must be retro_game_info instances")

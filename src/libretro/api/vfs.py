@@ -1,5 +1,19 @@
 from copy import deepcopy
-from ctypes import CFUNCTYPE, c_bool, c_char_p, c_int, c_int32, c_int64, c_uint, c_uint32, c_void_p, c_uint64, POINTER, Structure, pointer
+from ctypes import (
+    CFUNCTYPE,
+    c_bool,
+    c_char_p,
+    c_int,
+    c_int32,
+    c_int64,
+    c_uint,
+    c_uint32,
+    c_void_p,
+    c_uint64,
+    POINTER,
+    Structure,
+    pointer,
+)
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum
 from os import PathLike
@@ -7,21 +21,23 @@ from os import PathLike
 from libretro.api._utils import FieldsFromTypeHints, UNCHECKED
 
 
-RETRO_VFS_FILE_ACCESS_READ = (1 << 0)
-RETRO_VFS_FILE_ACCESS_WRITE = (1 << 1)
-RETRO_VFS_FILE_ACCESS_READ_WRITE = (RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE)
-RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING = (1 << 2)
+RETRO_VFS_FILE_ACCESS_READ = 1 << 0
+RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
+RETRO_VFS_FILE_ACCESS_READ_WRITE = (
+    RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE
+)
+RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING = 1 << 2
 
 RETRO_VFS_FILE_ACCESS_HINT_NONE = 0
-RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS = (1 << 0)
+RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS = 1 << 0
 
 RETRO_VFS_SEEK_POSITION_START = 0
 RETRO_VFS_SEEK_POSITION_CURRENT = 1
 RETRO_VFS_SEEK_POSITION_END = 2
 
-RETRO_VFS_STAT_IS_VALID = (1 << 0)
-RETRO_VFS_STAT_IS_DIRECTORY = (1 << 1)
-RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = (1 << 2)
+RETRO_VFS_STAT_IS_VALID = 1 << 0
+RETRO_VFS_STAT_IS_DIRECTORY = 1 << 1
+RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 
 class retro_vfs_file_handle(Structure):
@@ -41,17 +57,17 @@ class VfsFileAccess(IntFlag):
     READ_WRITE_EXISTING = READ_WRITE | UPDATE_EXISTING
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
     @property
     def open_flag(self) -> str:
         match self:
             case VfsFileAccess.READ:
-                return 'rb'
+                return "rb"
             case VfsFileAccess.WRITE:
-                return 'wb'
+                return "wb"
             case VfsFileAccess.READ_WRITE:
-                return 'w+b'
+                return "w+b"
             case VfsFileAccess.READ_WRITE_EXISTING:
                 return "r+b"
             case _:
@@ -59,14 +75,20 @@ class VfsFileAccess(IntFlag):
 
 
 retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
-retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_file_handle)), c_char_p, c_uint, c_uint)
+retro_vfs_open_t = CFUNCTYPE(
+    UNCHECKED(POINTER(retro_vfs_file_handle)), c_char_p, c_uint, c_uint
+)
 retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
 retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
-retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
-retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
+retro_vfs_read_t = CFUNCTYPE(
+    c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64
+)
+retro_vfs_write_t = CFUNCTYPE(
+    c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64
+)
 retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 retro_vfs_remove_t = CFUNCTYPE(c_int, c_char_p)
 retro_vfs_rename_t = CFUNCTYPE(c_int, c_char_p, c_char_p)
@@ -121,7 +143,7 @@ class retro_vfs_interface(Structure, metaclass=FieldsFromTypeHints):
             self.readdir,
             self.dirent_get_name,
             self.dirent_is_dir,
-            self.closedir
+            self.closedir,
         )
 
 
@@ -133,7 +155,7 @@ class retro_vfs_interface_info(Structure, metaclass=FieldsFromTypeHints):
     def __deepcopy__(self, memo):
         return retro_vfs_interface_info(
             self.required_interface_version,
-            pointer(deepcopy(self.iface[0], memo)) if self.iface else None
+            pointer(deepcopy(self.iface[0], memo)) if self.iface else None,
         )
 
 
@@ -142,7 +164,7 @@ class VfsFileAccessHint(IntFlag):
     FREQUENT_ACCESS = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class VfsSeekPosition(IntEnum):
@@ -151,7 +173,7 @@ class VfsSeekPosition(IntEnum):
     END = RETRO_VFS_SEEK_POSITION_END
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class VfsStat(IntFlag):
@@ -160,7 +182,7 @@ class VfsStat(IntFlag):
     IS_CHARACTER_SPECIAL = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 class VfsMkdirResult(IntEnum):
@@ -169,39 +191,39 @@ class VfsMkdirResult(IntEnum):
     ALREADY_EXISTS = -2
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 VfsPath = bytes | str | PathLike
 
 __all__ = [
-    'retro_vfs_file_handle',
-    'retro_vfs_dir_handle',
-    'VfsFileAccess',
-    'retro_vfs_get_path_t',
-    'retro_vfs_open_t',
-    'retro_vfs_close_t',
-    'retro_vfs_size_t',
-    'retro_vfs_truncate_t',
-    'retro_vfs_tell_t',
-    'retro_vfs_seek_t',
-    'retro_vfs_read_t',
-    'retro_vfs_write_t',
-    'retro_vfs_flush_t',
-    'retro_vfs_remove_t',
-    'retro_vfs_rename_t',
-    'retro_vfs_stat_t',
-    'retro_vfs_mkdir_t',
-    'retro_vfs_opendir_t',
-    'retro_vfs_readdir_t',
-    'retro_vfs_dirent_get_name_t',
-    'retro_vfs_dirent_is_dir_t',
-    'retro_vfs_closedir_t',
-    'retro_vfs_interface',
-    'retro_vfs_interface_info',
-    'VfsFileAccessHint',
-    'VfsSeekPosition',
-    'VfsStat',
-    'VfsMkdirResult',
-    'VfsPath',
+    "retro_vfs_file_handle",
+    "retro_vfs_dir_handle",
+    "VfsFileAccess",
+    "retro_vfs_get_path_t",
+    "retro_vfs_open_t",
+    "retro_vfs_close_t",
+    "retro_vfs_size_t",
+    "retro_vfs_truncate_t",
+    "retro_vfs_tell_t",
+    "retro_vfs_seek_t",
+    "retro_vfs_read_t",
+    "retro_vfs_write_t",
+    "retro_vfs_flush_t",
+    "retro_vfs_remove_t",
+    "retro_vfs_rename_t",
+    "retro_vfs_stat_t",
+    "retro_vfs_mkdir_t",
+    "retro_vfs_opendir_t",
+    "retro_vfs_readdir_t",
+    "retro_vfs_dirent_get_name_t",
+    "retro_vfs_dirent_is_dir_t",
+    "retro_vfs_closedir_t",
+    "retro_vfs_interface",
+    "retro_vfs_interface_info",
+    "VfsFileAccessHint",
+    "VfsSeekPosition",
+    "VfsStat",
+    "VfsMkdirResult",
+    "VfsPath",
 ]

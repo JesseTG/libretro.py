@@ -14,4 +14,4 @@ class LogDriver(Protocol):
     def log(self, message: LogLevel, fmt: bytes, *args) -> None: ...
 
 
-__all__ = ['LogDriver']
+__all__ = ["LogDriver"]

@@ -46,7 +46,7 @@ class ThrottleMode(IntEnum):
     UNBLOCKED = RETRO_THROTTLE_UNBLOCKED
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 @dataclass
@@ -58,10 +58,7 @@ class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_fastforwarding_override(
-            self.ratio,
-            self.fastforward,
-            self.notification,
-            self.inhibit_toggle
+            self.ratio, self.fastforward, self.notification, self.inhibit_toggle
         )
 
 
@@ -75,10 +72,10 @@ class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
 
 
 __all__ = [
-    'ThrottleMode',
-    'retro_fastforwarding_override',
-    'retro_throttle_state',
-    'retro_frame_time_callback',
-    'retro_usec_t',
-    'retro_frame_time_callback_t',
+    "ThrottleMode",
+    "retro_fastforwarding_override",
+    "retro_throttle_state",
+    "retro_frame_time_callback",
+    "retro_usec_t",
+    "retro_frame_time_callback_t",
 ]

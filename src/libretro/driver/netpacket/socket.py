@@ -7,7 +7,9 @@ from libretro.api.netpacket import NetpacketFlags, retro_netpacket_callback
 
 
 class SocketNetpacketDriver(NetpacketDriver):
-    def __init__(self, client_id: ClientID, family: AddressFamily, kind: SocketKind, proto=0) -> None:
+    def __init__(
+        self, client_id: ClientID, family: AddressFamily, kind: SocketKind, proto=0
+    ) -> None:
         self._socket = socket(family, kind)
 
     def __del__(self):
@@ -56,9 +58,10 @@ class SocketNetpacketDriver(NetpacketDriver):
     def disconnected(self, client_id: ClientID) -> None:
         pass
 
-    def _send(self, flags: NetpacketFlags, buf: memoryview, client_id: ClientID) -> None:
+    def _send(
+        self, flags: NetpacketFlags, buf: memoryview, client_id: ClientID
+    ) -> None:
         pass
 
     def _poll_receive(self) -> None:
         pass
-

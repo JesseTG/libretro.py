@@ -52,17 +52,17 @@ del _int_types
 class FieldsFromTypeHints(type(Structure)):
     def __new__(cls, name, bases, namespace):
         class AnnotationDummy:
-            __annotations__ = namespace.get('__annotations__', {})
+            __annotations__ = namespace.get("__annotations__", {})
 
         annotations = get_type_hints(AnnotationDummy)
-        namespace['_fields_'] = list(annotations.items())
-        namespace['__slots__'] = list(annotations.keys())
+        namespace["_fields_"] = list(annotations.items())
+        namespace["__slots__"] = list(annotations.keys())
         return type(Structure).__new__(cls, name, bases, namespace)
 
 
 def as_bytes(value: str | bytes | None) -> bytes | None:
     if isinstance(value, str):
-        return value.encode('utf-8')
+        return value.encode("utf-8")
     return value
 
 
@@ -127,9 +127,13 @@ def addressof_buffer(buffer: Buffer) -> int:
     return ctypes.addressof(buffer_array)
 
 
-def memoryview_at(address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False) -> memoryview:
+def memoryview_at(
+    address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False
+) -> memoryview:
     flags = c_int(0x100 if readonly else 0x200)
-    return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
+    return pythonapi.PyMemoryView_FromMemory(
+        cast(address, c_char_p), c_ssize_t(size), flags
+    )
 
 
 class c_uintptr(ctypes._SimpleCData):
@@ -137,6 +141,7 @@ class c_uintptr(ctypes._SimpleCData):
 
 
 c_double_p = POINTER(c_double)
+
 
 # As of ctypes 1.0, ctypes does not support custom error-checking
 # functions on callbacks, nor does it support custom datatypes on
@@ -153,19 +158,18 @@ def UNCHECKED(type):
 
 
 __all__ = [
-    'FieldsFromTypeHints',
-    'as_bytes',
-    'is_zeroed',
-    'from_zero_terminated',
-    'Pointer',
-    'deepcopy_array',
-    'deepcopy_buffer',
-    'mmap_file',
-    'addressof_buffer',
-    'memoryview_at',
-    'c_ptrdiff_t',
-    'c_uintptr',
-    'c_double_p',
-    'UNCHECKED',
+    "FieldsFromTypeHints",
+    "as_bytes",
+    "is_zeroed",
+    "from_zero_terminated",
+    "Pointer",
+    "deepcopy_array",
+    "deepcopy_buffer",
+    "mmap_file",
+    "addressof_buffer",
+    "memoryview_at",
+    "c_ptrdiff_t",
+    "c_uintptr",
+    "c_double_p",
+    "UNCHECKED",
 ]
-

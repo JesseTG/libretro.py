@@ -7,12 +7,12 @@ from libretro.api._utils import FieldsFromTypeHints
 
 retro_sensor_action = c_int
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0
-RETRO_SENSOR_ACCELEROMETER_DISABLE = (RETRO_SENSOR_ACCELEROMETER_ENABLE + 1)
-RETRO_SENSOR_GYROSCOPE_ENABLE = (RETRO_SENSOR_ACCELEROMETER_DISABLE + 1)
-RETRO_SENSOR_GYROSCOPE_DISABLE = (RETRO_SENSOR_GYROSCOPE_ENABLE + 1)
-RETRO_SENSOR_ILLUMINANCE_ENABLE = (RETRO_SENSOR_GYROSCOPE_DISABLE + 1)
-RETRO_SENSOR_ILLUMINANCE_DISABLE = (RETRO_SENSOR_ILLUMINANCE_ENABLE + 1)
-RETRO_SENSOR_DUMMY = 0x7fffffff
+RETRO_SENSOR_ACCELEROMETER_DISABLE = RETRO_SENSOR_ACCELEROMETER_ENABLE + 1
+RETRO_SENSOR_GYROSCOPE_ENABLE = RETRO_SENSOR_ACCELEROMETER_DISABLE + 1
+RETRO_SENSOR_GYROSCOPE_DISABLE = RETRO_SENSOR_GYROSCOPE_ENABLE + 1
+RETRO_SENSOR_ILLUMINANCE_ENABLE = RETRO_SENSOR_GYROSCOPE_DISABLE + 1
+RETRO_SENSOR_ILLUMINANCE_DISABLE = RETRO_SENSOR_ILLUMINANCE_ENABLE + 1
+RETRO_SENSOR_DUMMY = 0x7FFFFFFF
 
 RETRO_SENSOR_ACCELEROMETER_X = 0
 RETRO_SENSOR_ACCELEROMETER_Y = 1
@@ -67,9 +67,17 @@ class SensorAction(IntEnum):
     @property
     def enabled(self) -> bool:
         match self:
-            case SensorAction.ACCELEROMETER_ENABLE | SensorAction.GYROSCOPE_ENABLE | SensorAction.ILLUMINANCE_ENABLE:
+            case (
+                SensorAction.ACCELEROMETER_ENABLE
+                | SensorAction.GYROSCOPE_ENABLE
+                | SensorAction.ILLUMINANCE_ENABLE
+            ):
                 return True
-            case SensorAction.ACCELEROMETER_DISABLE | SensorAction.GYROSCOPE_DISABLE | SensorAction.ILLUMINANCE_DISABLE:
+            case (
+                SensorAction.ACCELEROMETER_DISABLE
+                | SensorAction.GYROSCOPE_DISABLE
+                | SensorAction.ILLUMINANCE_DISABLE
+            ):
                 return False
             case _:
                 raise ValueError(f"Invalid action: {self}")
@@ -90,7 +98,9 @@ class Sensor(IntEnum):
     @property
     def type(self) -> SensorType:
         match self:
-            case Sensor.ACCELEROMETER_X | Sensor.ACCELEROMETER_Y | Sensor.ACCELEROMETER_Z:
+            case (
+                Sensor.ACCELEROMETER_X | Sensor.ACCELEROMETER_Y | Sensor.ACCELEROMETER_Z
+            ):
                 return SensorType.ACCELEROMETER
             case Sensor.GYROSCOPE_X | Sensor.GYROSCOPE_Y | Sensor.GYROSCOPE_Z:
                 return SensorType.GYROSCOPE
@@ -107,5 +117,5 @@ __all__ = [
     "SensorAction",
     "SensorType",
     "Sensor",
-    'retro_sensor_action',
+    "retro_sensor_action",
 ]

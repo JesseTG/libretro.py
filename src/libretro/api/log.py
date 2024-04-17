@@ -24,7 +24,7 @@ class LogLevel(IntEnum):
     ERROR = RETRO_LOG_ERROR
 
     def __init__(self, value: int):
-        self._type_ = 'I'
+        self._type_ = "I"
         self._as_parameter_ = value
 
     @property
@@ -53,8 +53,8 @@ class retro_log_callback(Structure, metaclass=FieldsFromTypeHints):
 
 
 __all__ = [
-    'LogLevel',
-    'retro_log_callback',
-    'retro_log_printf_t',
-    'retro_log_level',
+    "LogLevel",
+    "retro_log_callback",
+    "retro_log_printf_t",
+    "retro_log_level",
 ]

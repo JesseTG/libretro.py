@@ -9,10 +9,10 @@ retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
 RETRO_PIXEL_FORMAT_XRGB8888 = 1
 RETRO_PIXEL_FORMAT_RGB565 = 2
-RETRO_PIXEL_FORMAT_UNKNOWN = 0x7fffffff
-RETRO_MEMORY_ACCESS_WRITE = (1 << 0)
-RETRO_MEMORY_ACCESS_READ = (1 << 1)
-RETRO_MEMORY_TYPE_CACHED = (1 << 0)
+RETRO_PIXEL_FORMAT_UNKNOWN = 0x7FFFFFFF
+RETRO_MEMORY_ACCESS_WRITE = 1 << 0
+RETRO_MEMORY_ACCESS_READ = 1 << 1
+RETRO_MEMORY_TYPE_CACHED = 1 << 0
 
 
 retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
@@ -24,7 +24,7 @@ class PixelFormat(IntEnum):
     RGB565 = RETRO_PIXEL_FORMAT_RGB565
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
     @property
     def bytes_per_pixel(self) -> int:
@@ -39,14 +39,14 @@ class PixelFormat(IntEnum):
                 raise ValueError(f"Unknown pixel format: {self}")
 
     @property
-    def pixel_typecode(self) -> Literal['H', 'L']:
+    def pixel_typecode(self) -> Literal["H", "L"]:
         match self:
             case self.RGB1555:
-                return 'H'
+                return "H"
             case self.XRGB8888:
-                return 'L'
+                return "L"
             case self.RGB565:
-                return 'H'
+                return "H"
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
@@ -54,11 +54,11 @@ class PixelFormat(IntEnum):
     def pillow_mode(self) -> str:
         match self:
             case self.RGB1555:
-                return 'BGR;15'
+                return "BGR;15"
             case self.XRGB8888:
-                return 'RGBX'
+                return "RGBX"
             case self.RGB565:
-                return 'BGR;16'
+                return "BGR;16"
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
@@ -98,10 +98,10 @@ class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
 
 
 __all__ = [
-    'retro_video_refresh_t',
-    'PixelFormat',
-    'MemoryAccess',
-    'MemoryType',
-    'retro_framebuffer',
-    'retro_pixel_format',
+    "retro_video_refresh_t",
+    "PixelFormat",
+    "MemoryAccess",
+    "MemoryType",
+    "retro_framebuffer",
+    "retro_pixel_format",
 ]

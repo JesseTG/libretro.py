@@ -5,7 +5,14 @@ from io import FileIO
 from logging import Logger
 from typing import Literal
 
-from libretro.api.vfs import VfsMkdirResult, VfsStat, VfsFileAccess, VfsFileAccessHint, VfsSeekPosition, VfsPath
+from libretro.api.vfs import (
+    VfsMkdirResult,
+    VfsStat,
+    VfsFileAccess,
+    VfsFileAccessHint,
+    VfsSeekPosition,
+    VfsPath,
+)
 from .interface import DirEntry, FileHandle, DirectoryHandle, FileSystemInterface
 from libretro.api._utils import as_bytes
 
@@ -116,7 +123,9 @@ class StandardFileSystemInterface(FileSystemInterface):
         super().__init__(logger)
         self._version = version
 
-    def open(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint) -> FileHandle | None:
+    def open(
+        self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
+    ) -> FileHandle | None:
         try:
             handle = StandardFileHandle(path, mode, hints)
             return handle
@@ -167,7 +176,7 @@ class StandardFileSystemInterface(FileSystemInterface):
 
 
 __all__ = [
-    'StandardFileHandle',
-    'StandardDirectoryHandle',
-    'StandardFileSystemInterface',
+    "StandardFileHandle",
+    "StandardDirectoryHandle",
+    "StandardFileSystemInterface",
 ]

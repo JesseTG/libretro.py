@@ -2,16 +2,34 @@ from copy import deepcopy
 from typing import override
 
 from .driver import TimingDriver
-from libretro.api.timing import retro_frame_time_callback, retro_fastforwarding_override, retro_throttle_state
+from libretro.api.timing import (
+    retro_frame_time_callback,
+    retro_fastforwarding_override,
+    retro_throttle_state,
+)
 
 
 class DefaultTimingDriver(TimingDriver):
-    def __init__(self, throttle_state: retro_throttle_state | None = None, target_refresh_rate: float | None = 60.0):
-        if not isinstance(throttle_state, retro_throttle_state) and throttle_state is not None:
-            raise TypeError(f"throttle_state must be a retro_throttle_state or None, not {type(throttle_state).__name__}")
+    def __init__(
+        self,
+        throttle_state: retro_throttle_state | None = None,
+        target_refresh_rate: float | None = 60.0,
+    ):
+        if (
+            not isinstance(throttle_state, retro_throttle_state)
+            and throttle_state is not None
+        ):
+            raise TypeError(
+                f"throttle_state must be a retro_throttle_state or None, not {type(throttle_state).__name__}"
+            )
 
-        if not isinstance(target_refresh_rate, float) and target_refresh_rate is not None:
-            raise TypeError(f"target_refresh_rate must be a float or None, not {type(target_refresh_rate).__name__}")
+        if (
+            not isinstance(target_refresh_rate, float)
+            and target_refresh_rate is not None
+        ):
+            raise TypeError(
+                f"target_refresh_rate must be a float or None, not {type(target_refresh_rate).__name__}"
+            )
 
         self._frame_time_callback: retro_frame_time_callback | None = None
         self._fastforwarding_override: retro_fastforwarding_override | None = None
@@ -27,7 +45,9 @@ class DefaultTimingDriver(TimingDriver):
     @override
     def frame_time_callback(self, value: retro_frame_time_callback) -> None:
         if not isinstance(value, retro_frame_time_callback):
-            raise TypeError(f"value must be a retro_frame_time_callback, not {type(value).__name__}")
+            raise TypeError(
+                f"value must be a retro_frame_time_callback, not {type(value).__name__}"
+            )
 
         self._frame_time_callback = value
 
@@ -40,7 +60,9 @@ class DefaultTimingDriver(TimingDriver):
     @override
     def fastforwarding_override(self, value: retro_fastforwarding_override) -> None:
         if not isinstance(value, retro_fastforwarding_override):
-            raise TypeError(f"value must be a retro_fastforwarding_override, not {type(value).__name__}")
+            raise TypeError(
+                f"value must be a retro_fastforwarding_override, not {type(value).__name__}"
+            )
 
         self._fastforwarding_override = value
 
@@ -53,7 +75,9 @@ class DefaultTimingDriver(TimingDriver):
     @override
     def throttle_state(self, value: retro_throttle_state) -> None:
         if not isinstance(value, retro_throttle_state):
-            raise TypeError(f"value must be a retro_throttle_state, not {type(value).__name__}")
+            raise TypeError(
+                f"value must be a retro_throttle_state, not {type(value).__name__}"
+            )
 
         self._throttle_state = value
 
@@ -81,4 +105,4 @@ class DefaultTimingDriver(TimingDriver):
         self._target_refresh_rate = None
 
 
-__all__ = ['DefaultTimingDriver']
+__all__ = ["DefaultTimingDriver"]

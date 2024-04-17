@@ -17,4 +17,4 @@ class DictLedDriver(LedDriver):
         return self._leds.get(led, 0)
 
 
-__all__ = ['DictLedDriver']
+__all__ = ["DictLedDriver"]

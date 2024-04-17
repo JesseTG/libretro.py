@@ -5,17 +5,17 @@ from enum import IntFlag
 from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
 
 
-RETRO_MEMDESC_CONST = (1 << 0)
-RETRO_MEMDESC_BIGENDIAN = (1 << 1)
-RETRO_MEMDESC_SYSTEM_RAM = (1 << 2)
-RETRO_MEMDESC_SAVE_RAM = (1 << 3)
-RETRO_MEMDESC_VIDEO_RAM = (1 << 4)
-RETRO_MEMDESC_ALIGN_2 = (1 << 16)
-RETRO_MEMDESC_ALIGN_4 = (2 << 16)
-RETRO_MEMDESC_ALIGN_8 = (3 << 16)
-RETRO_MEMDESC_MINSIZE_2 = (1 << 24)
-RETRO_MEMDESC_MINSIZE_4 = (2 << 24)
-RETRO_MEMDESC_MINSIZE_8 = (3 << 24)
+RETRO_MEMDESC_CONST = 1 << 0
+RETRO_MEMDESC_BIGENDIAN = 1 << 1
+RETRO_MEMDESC_SYSTEM_RAM = 1 << 2
+RETRO_MEMDESC_SAVE_RAM = 1 << 3
+RETRO_MEMDESC_VIDEO_RAM = 1 << 4
+RETRO_MEMDESC_ALIGN_2 = 1 << 16
+RETRO_MEMDESC_ALIGN_4 = 2 << 16
+RETRO_MEMDESC_ALIGN_8 = 3 << 16
+RETRO_MEMDESC_MINSIZE_2 = 1 << 24
+RETRO_MEMDESC_MINSIZE_4 = 2 << 24
+RETRO_MEMDESC_MINSIZE_8 = 3 << 24
 
 
 class MemoryDescriptorFlag(IntFlag):
@@ -52,7 +52,7 @@ class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
             select=self.select,
             disconnect=self.disconnect,
             len=self.len,
-            addrspace=self.addrspace
+            addrspace=self.addrspace,
         )
 
     # TODO: Implement __getitem__, __setitem__
@@ -69,14 +69,18 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
 
     def __getitem__(self, item):
         if item < 0 or item >= self.num_descriptors:
-            raise IndexError(f"Expected 0 <= index < {self.num_descriptors}, got {item}")
+            raise IndexError(
+                f"Expected 0 <= index < {self.num_descriptors}, got {item}"
+            )
 
         return self.descriptors[item]
 
     def __deepcopy__(self, memodict):
         return retro_memory_map(
-            descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
-            num_descriptors=self.num_descriptors
+            descriptors=deepcopy_array(
+                self.descriptors, self.num_descriptors, memodict
+            ),
+            num_descriptors=self.num_descriptors,
         )
 
 

@@ -5,7 +5,7 @@ from typing import Sequence, overload, NewType
 
 from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
 
-Port = NewType('Port', int)
+Port = NewType("Port", int)
 
 RETRO_DEVICE_NONE = 0
 RETRO_DEVICE_JOYPAD = 1
@@ -20,11 +20,11 @@ retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
 
 
 RETRO_DEVICE_TYPE_SHIFT = 8
-RETRO_DEVICE_MASK = ((1 << RETRO_DEVICE_TYPE_SHIFT) - 1)
+RETRO_DEVICE_MASK = (1 << RETRO_DEVICE_TYPE_SHIFT) - 1
 
 
 def RETRO_DEVICE_SUBCLASS(base: int, id: int) -> int:
-    return (((id + 1) << RETRO_DEVICE_TYPE_SHIFT) | base)
+    return ((id + 1) << RETRO_DEVICE_TYPE_SHIFT) | base
 
 
 class InputDeviceFlag(IntFlag, boundary=CONFORM):
@@ -49,7 +49,7 @@ class InputDevice(IntEnum):
     POINTER = RETRO_DEVICE_POINTER
 
     def __init__(self, value: int):
-        self._type_ = 'H'
+        self._type_ = "H"
 
     @property
     def flag(self) -> InputDeviceFlag:
@@ -70,7 +70,7 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
             device=self.device,
             index=self.index,
             id=self.id,
-            description=self.description
+            description=self.description,
         )
 
 
@@ -90,8 +90,10 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_controller_info(
-            types=deepcopy_array(self.types, self.num_types, memo) if self.types else None,
-            num_types=self.num_types
+            types=(
+                deepcopy_array(self.types, self.num_types, memo) if self.types else None
+            ),
+            num_types=self.num_types,
         )
 
     @overload
@@ -115,7 +117,9 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
                 return self.types[s]
 
             case _:
-                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
+                raise TypeError(
+                    f"Expected an int or slice index, got {type(index).__name__}"
+                )
 
     def __len__(self):
         return int(self.num_types)
@@ -125,17 +129,18 @@ class InputDeviceState:
     """
     Empty marker class for identifying input device states.
     """
+
     pass
 
 
 __all__ = [
-    'InputDeviceFlag',
-    'InputDevice',
-    'retro_input_poll_t',
-    'retro_input_state_t',
-    'retro_input_descriptor',
-    'retro_controller_description',
-    'retro_controller_info',
-    'InputDeviceState',
-    'Port',
+    "InputDeviceFlag",
+    "InputDevice",
+    "retro_input_poll_t",
+    "retro_input_state_t",
+    "retro_input_descriptor",
+    "retro_controller_description",
+    "retro_controller_info",
+    "InputDeviceState",
+    "Port",
 ]

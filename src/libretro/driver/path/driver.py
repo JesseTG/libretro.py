@@ -26,5 +26,5 @@ class PathDriver(Protocol):
 
 
 __all__ = [
-    'PathDriver',
+    "PathDriver",
 ]

@@ -21,9 +21,15 @@ class PerfDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_perf_callback()
-        self._as_parameter_.get_time_usec = retro_perf_get_time_usec_t(self.get_time_usec)
-        self._as_parameter_.get_cpu_features = retro_get_cpu_features_t(self.get_cpu_features)
-        self._as_parameter_.get_perf_counter = retro_perf_get_counter_t(self.get_perf_counter)
+        self._as_parameter_.get_time_usec = retro_perf_get_time_usec_t(
+            self.get_time_usec
+        )
+        self._as_parameter_.get_cpu_features = retro_get_cpu_features_t(
+            self.get_cpu_features
+        )
+        self._as_parameter_.get_perf_counter = retro_perf_get_counter_t(
+            self.get_perf_counter
+        )
         self._as_parameter_.perf_register = retro_perf_register_t(self.__perf_register)
         self._as_parameter_.perf_start = retro_perf_start_t(self.__perf_start)
         self._as_parameter_.perf_stop = retro_perf_stop_t(self.__perf_stop)

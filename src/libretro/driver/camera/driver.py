@@ -7,7 +7,8 @@ from libretro.api.camera import (
     retro_camera_stop_t,
     retro_camera_lifetime_status_t,
     retro_camera_frame_raw_framebuffer_t,
-    retro_camera_frame_opengl_texture_t, CameraCapabilityFlags,
+    retro_camera_frame_opengl_texture_t,
+    CameraCapabilityFlags,
 )
 
 
@@ -58,7 +59,9 @@ class CameraDriver(Protocol):
 
     @frame_raw_framebuffer.setter
     @abstractmethod
-    def frame_raw_framebuffer(self, value: retro_camera_frame_raw_framebuffer_t) -> None: ...
+    def frame_raw_framebuffer(
+        self, value: retro_camera_frame_raw_framebuffer_t
+    ) -> None: ...
 
     @property
     @abstractmethod
@@ -66,7 +69,9 @@ class CameraDriver(Protocol):
 
     @frame_opengl_texture.setter
     @abstractmethod
-    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t) -> None: ...
+    def frame_opengl_texture(
+        self, value: retro_camera_frame_opengl_texture_t
+    ) -> None: ...
 
     @property
     @abstractmethod

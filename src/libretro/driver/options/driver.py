@@ -51,7 +51,9 @@ class OptionDriver(Protocol):
 
     @update_display_callback.setter
     @abstractmethod
-    def update_display_callback(self, callback: retro_core_options_update_display_callback | None): ...
+    def update_display_callback(
+        self, callback: retro_core_options_update_display_callback | None
+    ): ...
 
     @abstractmethod
     def set_variable(self, var: bytes, value: bytes) -> bool: ...
@@ -78,5 +80,5 @@ class OptionDriver(Protocol):
 
 
 __all__ = [
-    'OptionDriver',
+    "OptionDriver",
 ]

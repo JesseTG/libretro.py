@@ -17,7 +17,7 @@ class UnformattedLogDriver(LogDriver):
             return True
 
         if self._logger is None:
-            self._logger = logging.getLogger('libretro')
+            self._logger = logging.getLogger("libretro")
             self._logger.setLevel(logging.DEBUG)
             self._logger.addHandler(logging.StreamHandler())
             self._logger.addFilter(_log_record)
@@ -30,4 +30,4 @@ class UnformattedLogDriver(LogDriver):
         self._logger.log(level.logging_level, fmt.decode().rstrip())
 
 
-__all__ = ['UnformattedLogDriver']
+__all__ = ["UnformattedLogDriver"]

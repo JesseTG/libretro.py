@@ -25,7 +25,11 @@ class GeneratorMidiDriver(MidiDriver):
 
     @property
     def input_enabled(self) -> bool:
-        return self._generator and self._input_enabled and not isinstance(self._last_poll_result, StopIteration)
+        return (
+            self._generator
+            and self._input_enabled
+            and not isinstance(self._last_poll_result, StopIteration)
+        )
 
     @input_enabled.setter
     def input_enabled(self, value: bool):
@@ -69,4 +73,4 @@ class GeneratorMidiDriver(MidiDriver):
         return True
 
 
-__all__ = ['GeneratorMidiDriver']
+__all__ = ["GeneratorMidiDriver"]

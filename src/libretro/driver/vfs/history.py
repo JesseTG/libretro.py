@@ -2,30 +2,36 @@ from collections.abc import Sequence, MutableSequence
 from enum import Enum, auto
 from typing import NamedTuple, Any
 
-from libretro.api.vfs import VfsMkdirResult, VfsStat, VfsFileAccess, VfsFileAccessHint, VfsSeekPosition
+from libretro.api.vfs import (
+    VfsMkdirResult,
+    VfsStat,
+    VfsFileAccess,
+    VfsFileAccessHint,
+    VfsSeekPosition,
+)
 from .interface import FileSystemInterface, DirectoryHandle, FileHandle, DirEntry
 
 
 class VfsOperationType(Enum):
-    GET_PATH = auto(),
-    OPEN = auto(),
-    CLOSE = auto(),
-    SIZE = auto(),
-    TELL = auto(),
-    SEEK = auto(),
-    READ = auto(),
-    WRITE = auto(),
-    FLUSH = auto(),
-    REMOVE = auto(),
-    RENAME = auto(),
-    TRUNCATE = auto(),
-    STAT = auto(),
-    MKDIR = auto(),
-    OPENDIR = auto(),
-    READDIR = auto(),
-    DIRENT_GET_NAME = auto(),
-    DIRENT_IS_DIR = auto(),
-    CLOSEDIR = auto(),
+    GET_PATH = (auto(),)
+    OPEN = (auto(),)
+    CLOSE = (auto(),)
+    SIZE = (auto(),)
+    TELL = (auto(),)
+    SEEK = (auto(),)
+    READ = (auto(),)
+    WRITE = (auto(),)
+    FLUSH = (auto(),)
+    REMOVE = (auto(),)
+    RENAME = (auto(),)
+    TRUNCATE = (auto(),)
+    STAT = (auto(),)
+    MKDIR = (auto(),)
+    OPENDIR = (auto(),)
+    READDIR = (auto(),)
+    DIRENT_GET_NAME = (auto(),)
+    DIRENT_IS_DIR = (auto(),)
+    CLOSEDIR = (auto(),)
 
 
 class VfsOperation(NamedTuple):
@@ -86,28 +92,40 @@ class HistoryFileHandle(FileHandle):
     def seek(self, offset: int, whence: VfsSeekPosition) -> int:
         try:
             result = self._handle.seek(offset, whence)
-            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), result))
+            self._history.append(
+                VfsOperation(VfsOperationType.SEEK, (offset, whence), result)
+            )
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), -1))
+            self._history.append(
+                VfsOperation(VfsOperationType.SEEK, (offset, whence), -1)
+            )
             raise
 
     def read(self, buffer: bytearray | memoryview) -> int:
         try:
             result = self._handle.read(buffer)
-            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), result))
+            self._history.append(
+                VfsOperation(VfsOperationType.READ, (bytes(buffer),), result)
+            )
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), -1))
+            self._history.append(
+                VfsOperation(VfsOperationType.READ, (bytes(buffer),), -1)
+            )
             raise
 
     def write(self, buffer: bytes | bytearray | memoryview) -> int:
         try:
             result = self._handle.write(buffer)
-            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), result))
+            self._history.append(
+                VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), result)
+            )
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), -1))
+            self._history.append(
+                VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), -1)
+            )
             raise
 
     def flush(self) -> bool:
@@ -122,7 +140,9 @@ class HistoryFileHandle(FileHandle):
     def truncate(self, length: int) -> int:
         try:
             result = self._handle.truncate(length)
-            self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), result))
+            self._history.append(
+                VfsOperation(VfsOperationType.TRUNCATE, (length,), result)
+            )
             return result
         except:
             self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), -1))
@@ -163,7 +183,9 @@ class HistoryFileSystemInterface(FileSystemInterface):
     def __init__(self, interface: FileSystemInterface):
         super().__init__(None)
         if not isinstance(interface, FileSystemInterface):
-            raise TypeError(f"Expected a FileSystemInterface, got {type(interface).__name__}")
+            raise TypeError(
+                f"Expected a FileSystemInterface, got {type(interface).__name__}"
+            )
 
         self._interface = interface
         self._history: list[VfsOperation] = []
@@ -172,18 +194,26 @@ class HistoryFileSystemInterface(FileSystemInterface):
     def version(self) -> int:
         return self._interface.version
 
-    def open(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint) -> FileHandle | None:
+    def open(
+        self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
+    ) -> FileHandle | None:
         try:
             wrapped_handle = self._interface.open(path, mode, hints)
             if not wrapped_handle:
-                self._history.append(VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None))
+                self._history.append(
+                    VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None)
+                )
                 return None
 
             handle = HistoryFileHandle(wrapped_handle, self._history)
-            self._history.append(VfsOperation(VfsOperationType.OPEN, (path, mode, hints), wrapped_handle))
+            self._history.append(
+                VfsOperation(VfsOperationType.OPEN, (path, mode, hints), wrapped_handle)
+            )
             return handle
         except:
-            self._history.append(VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None))
+            self._history.append(
+                VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None)
+            )
             raise
 
     def remove(self, path: bytes) -> bool:
@@ -198,10 +228,14 @@ class HistoryFileSystemInterface(FileSystemInterface):
     def rename(self, old_path: bytes, new_path: bytes) -> bool:
         try:
             result = self._interface.rename(old_path, new_path)
-            self._history.append(VfsOperation(VfsOperationType.RENAME, (old_path, new_path), result))
+            self._history.append(
+                VfsOperation(VfsOperationType.RENAME, (old_path, new_path), result)
+            )
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.RENAME, (old_path, new_path), False))
+            self._history.append(
+                VfsOperation(VfsOperationType.RENAME, (old_path, new_path), False)
+            )
             raise
 
     def stat(self, path: bytes) -> tuple[VfsStat, int] | None:
@@ -219,16 +253,22 @@ class HistoryFileSystemInterface(FileSystemInterface):
             self._history.append(VfsOperation(VfsOperationType.MKDIR, (path,), result))
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.MKDIR, (path,), VfsMkdirResult.ERROR))
+            self._history.append(
+                VfsOperation(VfsOperationType.MKDIR, (path,), VfsMkdirResult.ERROR)
+            )
             raise
 
     def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None:
         try:
             handle = self._interface.opendir(path, include_hidden)
-            self._history.append(VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), handle))
+            self._history.append(
+                VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), handle)
+            )
             return handle
         except:
-            self._history.append(VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), None))
+            self._history.append(
+                VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), None)
+            )
             raise
 
     @property
@@ -237,9 +277,9 @@ class HistoryFileSystemInterface(FileSystemInterface):
 
 
 __all__ = [
-    'HistoryFileHandle',
-    'HistoryDirectoryHandle',
-    'HistoryFileSystemInterface',
-    'VfsOperationType',
-    'VfsOperation',
+    "HistoryFileHandle",
+    "HistoryDirectoryHandle",
+    "HistoryFileSystemInterface",
+    "VfsOperationType",
+    "VfsOperation",
 ]

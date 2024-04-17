@@ -1,4 +1,13 @@
-from ctypes import CFUNCTYPE, POINTER, c_bool, c_int, c_int16, c_size_t, c_uint, Structure
+from ctypes import (
+    CFUNCTYPE,
+    POINTER,
+    c_bool,
+    c_int,
+    c_int16,
+    c_size_t,
+    c_uint,
+    Structure,
+)
 from dataclasses import dataclass
 
 from libretro.api._utils import FieldsFromTypeHints, UNCHECKED
@@ -21,12 +30,18 @@ class retro_microphone_params(Structure, metaclass=FieldsFromTypeHints):
         return retro_microphone_params(self.rate)
 
 
-retro_open_mic_t = CFUNCTYPE(UNCHECKED(POINTER(retro_microphone)), POINTER(retro_microphone_params))
+retro_open_mic_t = CFUNCTYPE(
+    UNCHECKED(POINTER(retro_microphone)), POINTER(retro_microphone_params)
+)
 retro_close_mic_t = CFUNCTYPE(None, POINTER(retro_microphone))
-retro_get_mic_params_t = CFUNCTYPE(c_bool, POINTER(retro_microphone), POINTER(retro_microphone_params))
+retro_get_mic_params_t = CFUNCTYPE(
+    c_bool, POINTER(retro_microphone), POINTER(retro_microphone_params)
+)
 retro_set_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone), c_bool)
 retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone))
-retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t)
+retro_read_mic_t = CFUNCTYPE(
+    c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t
+)
 
 
 @dataclass
@@ -47,19 +62,19 @@ class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
             self.get_params,
             self.set_mic_state,
             self.get_mic_state,
-            self.read_mic
+            self.read_mic,
         )
 
 
 __all__ = [
-    'INTERFACE_VERSION',
-    'retro_microphone',
-    'retro_microphone_params',
-    'retro_open_mic_t',
-    'retro_close_mic_t',
-    'retro_get_mic_params_t',
-    'retro_set_mic_state_t',
-    'retro_get_mic_state_t',
-    'retro_read_mic_t',
-    'retro_microphone_interface'
+    "INTERFACE_VERSION",
+    "retro_microphone",
+    "retro_microphone_params",
+    "retro_open_mic_t",
+    "retro_close_mic_t",
+    "retro_get_mic_params_t",
+    "retro_set_mic_state_t",
+    "retro_get_mic_state_t",
+    "retro_read_mic_t",
+    "retro_microphone_interface",
 ]

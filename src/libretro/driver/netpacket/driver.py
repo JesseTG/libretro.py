@@ -7,7 +7,7 @@ from libretro.api.netpacket import (
     NetpacketFlags,
 )
 
-ClientID = NewType('ClientID', int)
+ClientID = NewType("ClientID", int)
 
 LOCAL = ClientID(0)
 BROADCAST = ClientID(libretro.api.netpacket.BROADCAST)
@@ -58,12 +58,12 @@ class NetpacketDriver(Protocol):
     def disconnected(self, client_id: ClientID) -> None: ...
 
     @abstractmethod
-    def _send(self, flags: NetpacketFlags, buf: memoryview, client_id: ClientID) -> None: ...
+    def _send(
+        self, flags: NetpacketFlags, buf: memoryview, client_id: ClientID
+    ) -> None: ...
 
     @abstractmethod
     def _poll_receive(self) -> None: ...
 
 
-__all__ = [
-    'NetpacketDriver'
-]
+__all__ = ["NetpacketDriver"]

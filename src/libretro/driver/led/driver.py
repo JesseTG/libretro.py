@@ -27,4 +27,4 @@ class LedDriver(Protocol):
         return self.get_led_state(int(key))
 
 
-__all__ = ['LedDriver']
+__all__ = ["LedDriver"]

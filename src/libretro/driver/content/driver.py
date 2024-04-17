@@ -25,12 +25,16 @@ class ContentAttributes(NamedTuple):
 
 
 class LoadedContentFile:
-    def __init__(self, info: retro_game_info, info_ext: retro_game_info_ext | None = None):
+    def __init__(
+        self, info: retro_game_info, info_ext: retro_game_info_ext | None = None
+    ):
         if not isinstance(info, retro_game_info):
             raise TypeError(f"Expected retro_game_info, got {type(info).__name__}")
 
         if info_ext is not None and not isinstance(info_ext, retro_game_info_ext):
-            raise TypeError(f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}")
+            raise TypeError(
+                f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}"
+            )
 
         self._info = info
         self._info_ext = info_ext
@@ -54,7 +58,9 @@ class ContentError(RuntimeError):
 @runtime_checkable
 class ContentDriver(Protocol):
     @abstractmethod
-    def load(self, content: Content | SubsystemContent | None) -> AbstractContextManager[LoadedContent]:
+    def load(
+        self, content: Content | SubsystemContent | None
+    ) -> AbstractContextManager[LoadedContent]:
         """
         Loads all content files.
 
@@ -109,7 +115,9 @@ class ContentDriver(Protocol):
 
     @overrides.setter
     @abstractmethod
-    def overrides(self, overrides: Sequence[retro_system_content_info_override]) -> None: ...
+    def overrides(
+        self, overrides: Sequence[retro_system_content_info_override]
+    ) -> None: ...
 
     @property
     @abstractmethod

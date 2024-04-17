@@ -16,8 +16,12 @@ from libretro.api.midi import (
 class MidiDriver(Protocol):
     def __init__(self):
         self._as_parameter_ = retro_midi_interface()
-        self._as_parameter_.input_enabled = retro_midi_input_enabled_t(self.__input_enabled)
-        self._as_parameter_.output_enabled = retro_midi_output_enabled_t(self.__output_enabled)
+        self._as_parameter_.input_enabled = retro_midi_input_enabled_t(
+            self.__input_enabled
+        )
+        self._as_parameter_.output_enabled = retro_midi_output_enabled_t(
+            self.__output_enabled
+        )
         self._as_parameter_.read = retro_midi_read_t(self.__read)
         self._as_parameter_.write = retro_midi_write_t(self.__write)
         self._as_parameter_.flush = retro_midi_flush_t(self.__flush)
@@ -71,4 +75,4 @@ class MidiDriver(Protocol):
         return self.flush()
 
 
-__all__ = ['MidiDriver']
+__all__ = ["MidiDriver"]

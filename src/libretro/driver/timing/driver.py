@@ -1,7 +1,11 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
-from libretro.api.timing import retro_frame_time_callback, retro_fastforwarding_override, retro_throttle_state
+from libretro.api.timing import (
+    retro_frame_time_callback,
+    retro_fastforwarding_override,
+    retro_throttle_state,
+)
 
 
 @runtime_checkable
@@ -52,4 +56,4 @@ class TimingDriver(Protocol):
     def target_refresh_rate(self) -> None: ...
 
 
-__all__ = ['TimingDriver']
+__all__ = ["TimingDriver"]

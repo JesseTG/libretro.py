@@ -20,19 +20,15 @@ class retro_midi_interface(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, _):
         return retro_midi_interface(
-            self.input_enabled,
-            self.output_enabled,
-            self.read,
-            self.write,
-            self.flush
+            self.input_enabled, self.output_enabled, self.read, self.write, self.flush
         )
 
 
 __all__ = [
-    'retro_midi_input_enabled_t',
-    'retro_midi_output_enabled_t',
-    'retro_midi_read_t',
-    'retro_midi_write_t',
-    'retro_midi_flush_t',
-    'retro_midi_interface',
+    "retro_midi_input_enabled_t",
+    "retro_midi_output_enabled_t",
+    "retro_midi_read_t",
+    "retro_midi_write_t",
+    "retro_midi_flush_t",
+    "retro_midi_interface",
 ]

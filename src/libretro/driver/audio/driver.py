@@ -1,7 +1,11 @@
 from abc import abstractmethod
 from typing import runtime_checkable, Protocol
 
-from libretro.api import retro_audio_callback, retro_audio_buffer_status_callback, retro_system_av_info
+from libretro.api import (
+    retro_audio_callback,
+    retro_audio_buffer_status_callback,
+    retro_system_av_info,
+)
 
 
 @runtime_checkable
@@ -38,7 +42,9 @@ class AudioDriver(Protocol):
     @abstractmethod
     def buffer_status(self, callback: retro_audio_buffer_status_callback) -> None: ...
 
-    def report_buffer_status(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
+    def report_buffer_status(
+        self, active: bool, occupancy: int, underrun_likely: bool
+    ) -> None:
         callback = self.buffer_status
         if callback:
             callback(active, occupancy, underrun_likely)
@@ -61,5 +67,5 @@ class AudioDriver(Protocol):
 
 
 __all__ = [
-    'AudioDriver',
+    "AudioDriver",
 ]

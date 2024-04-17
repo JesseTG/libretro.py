@@ -15,6 +15,4 @@ class UserDriver(Protocol):
     def language(self) -> Language | None: ...
 
 
-__all__ = [
-    'UserDriver'
-]
+__all__ = ["UserDriver"]

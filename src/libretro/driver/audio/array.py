@@ -10,7 +10,7 @@ from libretro.error import UnsupportedEnvCall
 
 class ArrayAudioDriver(AudioDriver):
     def __init__(self):
-        self._buffer = array('h')
+        self._buffer = array("h")
         self._system_av_info: retro_system_av_info | None = None
 
     def sample(self, left: int, right: int):
@@ -18,7 +18,7 @@ class ArrayAudioDriver(AudioDriver):
         self._buffer.append(right)
 
     def sample_batch(self, data: memoryview) -> int:
-        self._buffer.frombytes(data.cast('B'))
+        self._buffer.frombytes(data.cast("B"))
 
         return len(data)
 
@@ -40,7 +40,9 @@ class ArrayAudioDriver(AudioDriver):
     @buffer_status.setter
     @override
     def buffer_status(self, callback: retro_audio_buffer_status_callback):
-        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting buffer status callback")
+        raise UnsupportedEnvCall(
+            "ArrayAudioDriver does not support setting buffer status callback"
+        )
 
     @property
     @override
@@ -50,7 +52,9 @@ class ArrayAudioDriver(AudioDriver):
     @minimum_latency.setter
     @override
     def minimum_latency(self, latency: int | None):
-        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting minimum latency")
+        raise UnsupportedEnvCall(
+            "ArrayAudioDriver does not support setting minimum latency"
+        )
 
     @property
     @override
@@ -71,5 +75,5 @@ class ArrayAudioDriver(AudioDriver):
 
 
 __all__ = [
-    'ArrayAudioDriver',
+    "ArrayAudioDriver",
 ]

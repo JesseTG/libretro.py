@@ -7,10 +7,8 @@ from typing import Protocol, runtime_checkable
 from libretro.api._utils import c_uintptr
 
 
-
 if not hasattr(ctypes, "c_uintptr"):
     ctypes._check_size(c_uintptr)
-
 
 
 class UserString:
@@ -374,9 +372,6 @@ def ReturnString(obj, func=None, arguments=None):
     return String.from_param(obj)
 
 
-
-
-
 def ord_if_char(value):
     """
     Simple helper used for casts to simple builtin types:  if the argument is a
@@ -386,8 +381,6 @@ def ord_if_char(value):
     than one characters.
     """
     return ord(value) if (isinstance(value, bytes) or isinstance(value, str)) else value
-
-
 
 
 @runtime_checkable

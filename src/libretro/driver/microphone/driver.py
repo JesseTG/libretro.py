@@ -74,7 +74,9 @@ class MicrophoneDriver(Protocol):
     @abstractmethod
     def open_mic(self, params: retro_microphone_params | None) -> Microphone: ...
 
-    def __open_mic(self, params: POINTER(retro_microphone_params)) -> POINTER(retro_microphone):
+    def __open_mic(
+        self, params: POINTER(retro_microphone_params)
+    ) -> POINTER(retro_microphone):
         mic_params: retro_microphone_params | None = params[0] if params else None
 
         mic = self.open_mic(mic_params)
@@ -108,7 +110,9 @@ class MicrophoneDriver(Protocol):
             # TODO: Log error
             return
 
-    def __get_params(self, mic: POINTER(retro_microphone), params: POINTER(retro_microphone_params)) -> bool:
+    def __get_params(
+        self, mic: POINTER(retro_microphone), params: POINTER(retro_microphone_params)
+    ) -> bool:
         if not mic or not params:
             return False
 
@@ -126,7 +130,9 @@ class MicrophoneDriver(Protocol):
                 return False
 
             if not isinstance(returned_params, retro_microphone_params):
-                raise TypeError(f"Expected a retro_microphone_params, got {type(returned_params).__name__}")
+                raise TypeError(
+                    f"Expected a retro_microphone_params, got {type(returned_params).__name__}"
+                )
 
             memmove(params, byref(returned_params), sizeof(retro_microphone_params))
             return True
@@ -169,7 +175,9 @@ class MicrophoneDriver(Protocol):
             # TODO: Log error
             return False
 
-    def __read_mic(self, mic: POINTER(retro_microphone), frames: POINTER(c_int16), num_samples: int) -> int:
+    def __read_mic(
+        self, mic: POINTER(retro_microphone), frames: POINTER(c_int16), num_samples: int
+    ) -> int:
         if not mic or not frames:
             return -1
 
@@ -196,7 +204,7 @@ class MicrophoneDriver(Protocol):
 
             byteview = memoryview_at(frames, num_samples * sizeof(c_int16))
             # First get a view of the bytes so we can cast it to a view of 16-bit ints
-            frameview = byteview.cast('h')  # signed 16-bit int
+            frameview = byteview.cast("h")  # signed 16-bit int
             assert len(frameview) == num_samples
 
             samples_to_give = min(num_samples, len(handle.buffer))
@@ -209,4 +217,4 @@ class MicrophoneDriver(Protocol):
             return -1
 
 
-__all__ = ['Microphone', 'MicrophoneDriver']
+__all__ = ["Microphone", "MicrophoneDriver"]

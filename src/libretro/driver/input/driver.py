@@ -10,7 +10,7 @@ from libretro.api import (
     InputDevice,
     InputDeviceFlag,
     Key,
-    KeyModifier
+    KeyModifier,
 )
 
 from libretro.driver.rumble import RumbleInterface
@@ -41,7 +41,9 @@ class InputDriver(Protocol):
     @abstractmethod
     def keyboard_callback(self, callback: retro_keyboard_callback) -> None: ...
 
-    def keyboard_event(self, down: bool, keycode: Key, character: int, modifiers: KeyModifier) -> None:
+    def keyboard_event(
+        self, down: bool, keycode: Key, character: int, modifiers: KeyModifier
+    ) -> None:
         callback = self.keyboard_callback
         if callback:
             callback.callback(down, keycode, character, modifiers)
@@ -99,4 +101,4 @@ class InputDriver(Protocol):
     def max_users(self) -> None: ...
 
 
-__all__ = ['InputDriver']
+__all__ = ["InputDriver"]

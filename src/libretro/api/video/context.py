@@ -19,7 +19,7 @@ RETRO_HW_CONTEXT_D3D11 = 7
 RETRO_HW_CONTEXT_D3D10 = 8
 RETRO_HW_CONTEXT_D3D12 = 9
 RETRO_HW_CONTEXT_D3D9 = 10
-RETRO_HW_CONTEXT_DUMMY = 0x7fffffff
+RETRO_HW_CONTEXT_DUMMY = 0x7FFFFFFF
 
 HW_FRAME_BUFFER_VALID = RETRO_HW_FRAME_BUFFER_VALID
 
@@ -38,7 +38,7 @@ class HardwareContext(IntEnum):
     D3D12 = RETRO_HW_CONTEXT_D3D12
 
     def __init__(self, value):
-        self._type_ = 'I'
+        self._type_ = "I"
 
 
 retro_hw_context_reset_t = CFUNCTYPE(None)
@@ -79,11 +79,11 @@ class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
 
 
 __all__ = [
-    'HardwareContext',
-    'retro_hw_context_reset_t',
-    'retro_hw_get_current_framebuffer_t',
-    'retro_hw_get_proc_address_t',
-    'retro_hw_render_callback',
-    'HW_FRAME_BUFFER_VALID',
-    'retro_hw_context_type',
+    "HardwareContext",
+    "retro_hw_context_reset_t",
+    "retro_hw_get_current_framebuffer_t",
+    "retro_hw_get_proc_address_t",
+    "retro_hw_render_callback",
+    "HW_FRAME_BUFFER_VALID",
+    "retro_hw_context_type",
 ]

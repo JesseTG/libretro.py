@@ -48,11 +48,17 @@ class DeviceIdLightgun(IntEnum):
     PAUSE = RETRO_DEVICE_ID_LIGHTGUN_PAUSE
 
     def __init__(self, value: int):
-        self._type_ = 'H'
+        self._type_ = "H"
 
     @property
     def is_button(self) -> bool:
-        return self not in (self.SCREEN_X, self.SCREEN_Y, self.IS_OFFSCREEN, self.X, self.Y)
+        return self not in (
+            self.SCREEN_X,
+            self.SCREEN_Y,
+            self.IS_OFFSCREEN,
+            self.X,
+            self.Y,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,24 +94,42 @@ class LightGunState(InputDeviceState):
 
     def __getitem__(self, item) -> int | bool:
         match item:
-            case DeviceIdLightgun.SCREEN_X: return self.screen_x
-            case DeviceIdLightgun.SCREEN_Y: return self.screen_y
-            case DeviceIdLightgun.IS_OFFSCREEN: return self.is_offscreen
-            case DeviceIdLightgun.TRIGGER: return self.trigger
-            case DeviceIdLightgun.RELOAD: return self.reload
-            case DeviceIdLightgun.AUX_A: return self.aux_a
-            case DeviceIdLightgun.AUX_B: return self.aux_b
-            case DeviceIdLightgun.START: return self.start
-            case DeviceIdLightgun.SELECT: return self.select
-            case DeviceIdLightgun.AUX_C: return self.aux_c
-            case DeviceIdLightgun.DPAD_UP: return self.dpad_up
-            case DeviceIdLightgun.DPAD_DOWN: return self.dpad_down
-            case DeviceIdLightgun.DPAD_LEFT: return self.dpad_left
-            case DeviceIdLightgun.DPAD_RIGHT: return self.dpad_right
-            case DeviceIdLightgun.X: return self.x
-            case DeviceIdLightgun.Y: return self.y
-            case int(): raise IndexError(f'Index {item!r} is not a valid DeviceIdLightgun')
-            case _: raise KeyError(f'Expected an int or DeviceIdLightgun, got {item!r}')
+            case DeviceIdLightgun.SCREEN_X:
+                return self.screen_x
+            case DeviceIdLightgun.SCREEN_Y:
+                return self.screen_y
+            case DeviceIdLightgun.IS_OFFSCREEN:
+                return self.is_offscreen
+            case DeviceIdLightgun.TRIGGER:
+                return self.trigger
+            case DeviceIdLightgun.RELOAD:
+                return self.reload
+            case DeviceIdLightgun.AUX_A:
+                return self.aux_a
+            case DeviceIdLightgun.AUX_B:
+                return self.aux_b
+            case DeviceIdLightgun.START:
+                return self.start
+            case DeviceIdLightgun.SELECT:
+                return self.select
+            case DeviceIdLightgun.AUX_C:
+                return self.aux_c
+            case DeviceIdLightgun.DPAD_UP:
+                return self.dpad_up
+            case DeviceIdLightgun.DPAD_DOWN:
+                return self.dpad_down
+            case DeviceIdLightgun.DPAD_LEFT:
+                return self.dpad_left
+            case DeviceIdLightgun.DPAD_RIGHT:
+                return self.dpad_right
+            case DeviceIdLightgun.X:
+                return self.x
+            case DeviceIdLightgun.Y:
+                return self.y
+            case int():
+                raise IndexError(f"Index {item!r} is not a valid DeviceIdLightgun")
+            case _:
+                raise KeyError(f"Expected an int or DeviceIdLightgun, got {item!r}")
 
 
-__all__ = ['DeviceIdLightgun', 'LightGunState']
+__all__ = ["DeviceIdLightgun", "LightGunState"]

@@ -20,13 +20,17 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
         self._should_reinit_framebuffer = True
 
     @override
-    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
+    def refresh(
+        self, data: memoryview | None, width: int, height: int, pitch: int
+    ) -> None:
         if self._should_reinit_framebuffer:
             self.__reinit_framebuffer()
 
         if data:
             pillow_mode = self._pixel_format.pillow_mode
-            image = PIL.Image.frombuffer(pillow_mode, (width, height), data, "raw", pillow_mode, 0, 1)
+            image = PIL.Image.frombuffer(
+                pillow_mode, (width, height), data, "raw", pillow_mode, 0, 1
+            )
             # TODO: Rotate image if needed
 
             self._framebuffer.paste(image)
@@ -73,9 +77,15 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
         if not isinstance(av_info, retro_system_av_info):
-            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
+            raise TypeError(
+                f"Expected a retro_system_av_info, got {type(av_info).__name__}"
+            )
 
-        if not self._framebuffer or not self._system_av_info or self._system_av_info.geometry != av_info.geometry:
+        if (
+            not self._framebuffer
+            or not self._system_av_info
+            or self._system_av_info.geometry != av_info.geometry
+        ):
             # If we haven't initialized the system AV info yet, or if the geometry has changed...
             self._should_reinit_framebuffer = True
 
@@ -85,7 +95,9 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def geometry(self) -> retro_game_geometry:
         if not self._system_av_info:
-            raise RuntimeError("Cannot get geometry until system AV info is initialized")
+            raise RuntimeError(
+                "Cannot get geometry until system AV info is initialized"
+            )
 
         return deepcopy(self._system_av_info.geometry)
 
@@ -93,10 +105,14 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
-            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
+            raise TypeError(
+                f"Expected a retro_game_geometry, got {type(geometry).__name__}"
+            )
 
         if not self._system_av_info:
-            raise RuntimeError("Cannot set geometry until system AV info is initialized")
+            raise RuntimeError(
+                "Cannot set geometry until system AV info is initialized"
+            )
 
         if geometry.base_width > self._system_av_info.geometry.max_width:
             raise ValueError(
@@ -116,7 +132,9 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
         self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio
         # TODO: Recompute aspect ratio
 
-    def get_software_framebuffer(self, width: int, height: int, flags: MemoryAccess) -> retro_framebuffer | None:
+    def get_software_framebuffer(
+        self, width: int, height: int, flags: MemoryAccess
+    ) -> retro_framebuffer | None:
         return None  # TODO: Implement
 
     @property
@@ -126,7 +144,9 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
             raise RuntimeError("Cannot get frame until system AV info is initialized")
 
         geometry = self._system_av_info.geometry
-        cropped = self._framebuffer.crop((0, 0, int(geometry.base_width), int(geometry.base_height)))
+        cropped = self._framebuffer.crop(
+            (0, 0, int(geometry.base_width), int(geometry.base_height))
+        )
         r, g, b, _ = cropped.split()
 
         return PIL.Image.merge("RGB", (b, g, r))
@@ -136,7 +156,9 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def frame_max(self) -> Image:
         if not self._system_av_info or not self._framebuffer:
-            raise RuntimeError("Cannot get framebuffer until system AV info is initialized")
+            raise RuntimeError(
+                "Cannot get framebuffer until system AV info is initialized"
+            )
 
         r, g, b, _ = self._framebuffer.split()
 
@@ -147,7 +169,10 @@ class PillowVideoDriver(AbstractSoftwareVideoDriver):
         if not self._should_reinit_framebuffer:
             return
 
-        size = (int(self._system_av_info.geometry.max_width), int(self._system_av_info.geometry.max_height))
+        size = (
+            int(self._system_av_info.geometry.max_width),
+            int(self._system_av_info.geometry.max_height),
+        )
         self._framebuffer = PIL.Image.new(self._pixel_format.pillow_mode, size)
         self._should_reinit_framebuffer = False
 

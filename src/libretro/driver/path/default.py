@@ -22,7 +22,9 @@ class DefaultPathDriver(PathDriver):
             case PathLike():
                 self._libretro = fsencode(corepath.encode())
             case _:
-                raise TypeError(f"Expected str, bytes, PathLike, Core, or None, got {corepath!r}")
+                raise TypeError(
+                    f"Expected str, bytes, PathLike, Core, or None, got {corepath!r}"
+                )
 
         self._system: bytes | None
         match system:
@@ -33,7 +35,9 @@ class DefaultPathDriver(PathDriver):
             case PathLike():
                 self._system = fsencode(system.encode())
             case _:
-                raise TypeError(f"Expected str, bytes, PathLike, or None, got {system!r}")
+                raise TypeError(
+                    f"Expected str, bytes, PathLike, or None, got {system!r}"
+                )
 
         self._assets: bytes | None
         match assets:
@@ -44,7 +48,9 @@ class DefaultPathDriver(PathDriver):
             case PathLike():
                 self._assets = fsencode(assets.encode())
             case _:
-                raise TypeError(f"Expected str, bytes, PathLike, or None, got {assets!r}")
+                raise TypeError(
+                    f"Expected str, bytes, PathLike, or None, got {assets!r}"
+                )
 
         self._save: bytes | None
         match save:
@@ -66,7 +72,9 @@ class DefaultPathDriver(PathDriver):
             case PathLike():
                 self._playlist = fsencode(playlist.encode())
             case _:
-                raise TypeError(f"Expected str, bytes, PathLike, or None, got {playlist!r}")
+                raise TypeError(
+                    f"Expected str, bytes, PathLike, or None, got {playlist!r}"
+                )
 
     @override
     @property

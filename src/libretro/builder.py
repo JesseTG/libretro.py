@@ -84,13 +84,23 @@ When passed to a SessionBuilder method, the method will use the default value fo
 _nothing = lambda: None
 CoreArg = Core | str | PathLike | CDLL | _RequiredFactory[Core]
 AudioDriverArg = _RequiredArg[AudioDriver] | Default
-InputDriverArg = _RequiredArg[InputDriver] | InputStateGenerator | InputStateIterable | InputStateIterator | Default
+InputDriverArg = (
+    _RequiredArg[InputDriver]
+    | InputStateGenerator
+    | InputStateIterable
+    | InputStateIterator
+    | Default
+)
 VideoDriverArg = _RequiredArg[VideoDriver] | Default
-ContentArg = Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
+ContentArg = (
+    Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
+)
 ContentDriverArg = _OptionalArg[ContentDriver]
 BoolArg = _OptionalArg[bool]
 MessageDriverArg = _OptionalArg[MessageInterface] | Logger
-OptionDriverArg = _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
+OptionDriverArg = (
+    _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
+)
 PathDriverArg = _OptionalArg[PathDriver] | str | PathLike
 LogDriverArg = _OptionalArg[LogDriver] | Logger
 PerfDriverArg = _OptionalArg[PerfDriver]
@@ -124,7 +134,9 @@ class _SessionBuilderArgs(TypedDict):
     video: _RequiredFactory[VideoDriver]
     content: _OptionalFactory[Content | SubsystemContent]
     content_driver: _OptionalFactory[ContentDriver]
-    overscan: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
+    overscan: _OptionalFactory[
+        bool
+    ]  # TODO: Replace with some driver (not sure what yet)
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
     path: _OptionalFactory[PathDriver]
@@ -137,10 +149,18 @@ class _SessionBuilderArgs(TypedDict):
     av_mask: _OptionalFactory[AvEnableFlags]
     midi: _OptionalFactory[MidiDriver]
     timing: _OptionalFactory[TimingDriver]
-    preferred_hw: _OptionalFactory[HardwareContext]  # TODO: Replace with a method in VideoDriver
-    driver_switch_enable: _OptionalFactory[bool]  # TODO: Replace with a method in VideoDriver
-    savestate_context: _OptionalFactory[SavestateContext]  # TODO: Replace with some driver (not sure what yet)
-    jit_capable: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
+    preferred_hw: _OptionalFactory[
+        HardwareContext
+    ]  # TODO: Replace with a method in VideoDriver
+    driver_switch_enable: _OptionalFactory[
+        bool
+    ]  # TODO: Replace with a method in VideoDriver
+    savestate_context: _OptionalFactory[
+        SavestateContext
+    ]  # TODO: Replace with some driver (not sure what yet)
+    jit_capable: _OptionalFactory[
+        bool
+    ]  # TODO: Replace with some driver (not sure what yet)
     mic: _OptionalFactory[MicrophoneDriver]
     power: _OptionalFactory[PowerDriver]
 
@@ -241,7 +261,9 @@ class SessionBuilder:
             ):
                 self._args["content"] = lambda: content
             case _DefaultType.DEFAULT:
-                raise ValueError("Content does not have a default value (if you wanted None, provide it explicitly)")
+                raise ValueError(
+                    "Content does not have a default value (if you wanted None, provide it explicitly)"
+                )
             case _:
                 raise TypeError(
                     f"Expected a path, content buffer, None, SubsystemContent, or a callable that returns one of them; got {type(content).__name__}"
@@ -287,7 +309,9 @@ class SessionBuilder:
 
                 self._args["input"] = _generate
             case _DefaultType.DEFAULT:
-                self._args["input"] = GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
+                self._args["input"] = (
+                    GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
+                )
             case None:
                 raise ValueError("An input driver is required")
             case _:
@@ -375,7 +399,9 @@ class SessionBuilder:
             case OptionDriver() as driver:
                 driver: OptionDriver
                 self._args["options"] = lambda: driver
-            case dict(vars) if all(isinstance(k, _types) and isinstance(v, _types) for k, v in vars.items()):
+            case dict(vars) if all(
+                isinstance(k, _types) and isinstance(v, _types) for k, v in vars.items()
+            ):
                 vars: Mapping[AnyStr, AnyStr]
                 self._args["options"] = lambda: DictOptionDriver(2, True, vars)
             case 0 | 1 | 2 as version:
@@ -509,7 +535,9 @@ class SessionBuilder:
             case None:
                 self._args["led"] = _nothing
             case _:
-                raise TypeError(f"Expected LedDriver, a callable that returns one, or None; got {type(led).__name__}")
+                raise TypeError(
+                    f"Expected LedDriver, a callable that returns one, or None; got {type(led).__name__}"
+                )
 
         return self
 
@@ -541,7 +569,9 @@ class SessionBuilder:
             case None:
                 self._args["midi"] = _nothing
             case _:
-                raise TypeError(f"Expected MidiDriver, a callable that returns one, or None; got {type(midi).__name__}")
+                raise TypeError(
+                    f"Expected MidiDriver, a callable that returns one, or None; got {type(midi).__name__}"
+                )
 
         return self
 
@@ -552,7 +582,9 @@ class SessionBuilder:
             case Callable() as func:
                 self._args["timing"] = func
             case _DefaultType.DEFAULT:
-                self._args["timing"] = lambda: DefaultTimingDriver(retro_throttle_state(ThrottleMode.UNBLOCKED, 0.0), 60.0)
+                self._args["timing"] = lambda: DefaultTimingDriver(
+                    retro_throttle_state(ThrottleMode.UNBLOCKED, 0.0), 60.0
+                )
             case None:
                 self._args["timing"] = _nothing
             case _:
@@ -668,7 +700,9 @@ class SessionBuilder:
             case PowerDriver():
                 self._args["power"] = lambda: power
             case _DefaultType.DEFAULT:
-                self._args["power"] = lambda: ConstantPowerDriver(retro_device_power(PowerState.PLUGGED_IN, 0, 100))
+                self._args["power"] = lambda: ConstantPowerDriver(
+                    retro_device_power(PowerState.PLUGGED_IN, 0, 100)
+                )
             case None:
                 self._args["power"] = _nothing
             case _:
