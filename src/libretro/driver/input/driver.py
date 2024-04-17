@@ -1,18 +1,17 @@
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import runtime_checkable, Protocol
+from typing import Protocol, runtime_checkable
 
 from libretro.api import (
-    retro_input_descriptor,
-    retro_keyboard_callback,
-    retro_controller_info,
-    Port,
     InputDevice,
     InputDeviceFlag,
     Key,
     KeyModifier,
+    Port,
+    retro_controller_info,
+    retro_input_descriptor,
+    retro_keyboard_callback,
 )
-
 from libretro.driver.rumble import RumbleInterface
 from libretro.driver.sensor import SensorInterface
 

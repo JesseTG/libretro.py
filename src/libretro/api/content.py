@@ -1,22 +1,22 @@
 import os
-from collections.abc import Sequence, Generator, Mapping, Iterator, Buffer
+from collections.abc import Buffer, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from ctypes import (
-    Structure,
-    c_char_p,
-    c_bool,
-    c_uint,
-    c_size_t,
-    c_void_p,
     POINTER,
-    addressof,
     Array,
+    Structure,
+    addressof,
+    c_bool,
+    c_char_p,
+    c_size_t,
     c_ubyte,
+    c_uint,
+    c_void_p,
 )
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
-from typing import TypeAlias, NamedTuple, overload, Any
+from typing import Any, NamedTuple, TypeAlias, overload
 from zipfile import Path as ZipPath
 
 from libretro.api._utils import (

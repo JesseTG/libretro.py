@@ -1,6 +1,5 @@
 from ctypes import c_int
-from enum import IntFlag, IntEnum
-
+from enum import IntEnum, IntFlag
 
 RETRO_SERIALIZATION_QUIRK_INCOMPLETE = 1 << 0
 RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE = 1 << 1

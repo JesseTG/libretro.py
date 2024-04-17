@@ -1,7 +1,7 @@
-from ctypes import Structure, c_char_p, POINTER, CFUNCTYPE, c_int16, c_uint
+from ctypes import CFUNCTYPE, POINTER, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
-from enum import IntFlag, IntEnum, CONFORM
-from typing import Sequence, overload, NewType
+from enum import CONFORM, IntEnum, IntFlag
+from typing import NewType, Sequence, overload
 
 from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
 

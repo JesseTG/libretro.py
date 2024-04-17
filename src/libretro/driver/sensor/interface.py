@@ -1,12 +1,12 @@
 from abc import abstractmethod
-from typing import runtime_checkable, Protocol
+from typing import Protocol, runtime_checkable
 
 from libretro.api.sensor import (
+    Sensor,
+    SensorAction,
+    retro_sensor_get_input_t,
     retro_sensor_interface,
     retro_set_sensor_state_t,
-    retro_sensor_get_input_t,
-    SensorAction,
-    Sensor,
 )
 
 

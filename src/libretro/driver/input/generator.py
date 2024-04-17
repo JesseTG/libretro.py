@@ -1,34 +1,35 @@
-from collections.abc import Callable, Iterator, Sequence, Iterable, Generator
+from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
+from libretro._utils import Pollable
 from libretro.api.input import (
-    JoypadState,
-    MouseState,
-    KeyboardState,
-    LightGunState,
     AnalogState,
-    PointerState,
-    Pointer,
-    DeviceIdPointer,
+    DeviceIdAnalog,
     DeviceIdJoypad,
     DeviceIdLightgun,
-    DeviceIdAnalog,
     DeviceIdMouse,
-    Key,
-    InputDevice,
+    DeviceIdPointer,
     DeviceIndexAnalog,
+    InputDevice,
     InputDeviceFlag,
-    retro_input_descriptor,
-    retro_controller_info,
-    retro_keyboard_callback,
     InputDeviceState,
+    JoypadState,
+    Key,
+    KeyboardState,
+    LightGunState,
+    MouseState,
+    Pointer,
+    PointerState,
+    retro_controller_info,
+    retro_input_descriptor,
+    retro_keyboard_callback,
 )
-from .driver import InputDriver
-from libretro.driver.sensor import SensorInterface
 from libretro.driver.rumble import RumbleInterface
-from libretro._utils import Pollable
+from libretro.driver.sensor import SensorInterface
+
+from .driver import InputDriver
 
 
 @dataclass(order=True, slots=True)

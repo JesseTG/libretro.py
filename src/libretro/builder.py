@@ -1,13 +1,11 @@
-from collections.abc import Callable, Iterator, Iterable, Mapping, Generator
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from ctypes import CDLL
 from enum import Enum, auto
 from logging import Logger
 from os import PathLike
-from typing import Self, Literal, TypedDict, AnyStr
+from typing import AnyStr, Literal, Self, TypedDict
 from zipfile import Path as ZipPath
 
-from libretro.core import Core
-from libretro.session import Session
 from libretro.api import (
     AvEnableFlags,
     Content,
@@ -20,6 +18,7 @@ from libretro.api import (
     retro_game_info,
     retro_throttle_state,
 )
+from libretro.core import Core
 from libretro.driver import (
     ArrayAudioDriver,
     ArrayVideoDriver,
@@ -61,7 +60,7 @@ from libretro.driver import (
     UserDriver,
     VideoDriver,
 )
-
+from libretro.session import Session
 
 type _RequiredFactory[T] = Callable[[], T]
 type _OptionalFactory[T] = Callable[[], T | None]

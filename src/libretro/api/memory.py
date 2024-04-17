@@ -1,9 +1,8 @@
-from ctypes import c_char_p, c_size_t, c_uint, c_uint64, c_void_p, POINTER, Structure
+from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64, c_void_p
 from dataclasses import dataclass
 from enum import IntFlag
 
 from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
-
 
 RETRO_MEMDESC_CONST = 1 << 0
 RETRO_MEMDESC_BIGENDIAN = 1 << 1

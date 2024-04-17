@@ -1,32 +1,31 @@
 import ctypes
 import mmap
-
-from ctypes import (
-    Structure,
-    c_void_p,
-    c_uint8,
-    cast,
-    c_ubyte,
-    c_char_p,
-    c_ssize_t,
-    c_int,
-    pythonapi,
-    Array,
-    c_size_t,
-    sizeof,
-    addressof,
-    c_int16,
-    c_int32,
-    c_int64,
-    py_object,
-    POINTER,
-    c_double,
-)
 from collections.abc import Buffer, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
+from ctypes import (
+    POINTER,
+    Array,
+    Structure,
+    addressof,
+    c_char_p,
+    c_double,
+    c_int,
+    c_int16,
+    c_int32,
+    c_int64,
+    c_size_t,
+    c_ssize_t,
+    c_ubyte,
+    c_uint8,
+    c_void_p,
+    cast,
+    py_object,
+    pythonapi,
+    sizeof,
+)
 from os import PathLike
-from typing import get_type_hints, TypeAlias
+from typing import TypeAlias, get_type_hints
 
 # When https://github.com/python/cpython/issues/112015 is merged,
 # use ctypes.memoryview_at instead of this hack

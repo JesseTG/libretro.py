@@ -3,35 +3,34 @@ from collections.abc import Sequence
 from ctypes import (
     CDLL,
     POINTER,
-    c_uint,
-    c_size_t,
-    c_void_p,
-    c_bool,
-    c_char_p,
-    c_ubyte,
     Array,
-    cast,
     byref,
-    cdll,
+    c_bool,
     c_char,
+    c_char_p,
+    c_size_t,
+    c_ubyte,
+    c_uint,
+    c_void_p,
+    cast,
+    cdll,
 )
 from typing import Protocol
 
-from libretro.api._utils import memoryview_at
 from libretro.api import (
-    retro_environment_t,
-    retro_video_refresh_t,
-    retro_audio_sample_t,
+    Region,
     retro_audio_sample_batch_t,
+    retro_audio_sample_t,
+    retro_environment_t,
+    retro_game_info,
     retro_input_poll_t,
     retro_input_state_t,
-    retro_system_info,
-    retro_system_av_info,
-    retro_game_info,
     retro_subsystem_info,
-    Region,
+    retro_system_av_info,
+    retro_system_info,
+    retro_video_refresh_t,
 )
-
+from libretro.api._utils import memoryview_at
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)

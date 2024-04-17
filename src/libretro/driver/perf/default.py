@@ -1,8 +1,9 @@
 from collections.abc import Mapping
-from time import time_ns, process_time_ns
+from time import process_time_ns, time_ns
+
+from libretro.api.perf import CpuFeatures, retro_perf_counter
 
 from .driver import PerfDriver
-from libretro.api.perf import retro_perf_counter, CpuFeatures
 
 
 class DefaultPerfDriver(PerfDriver):

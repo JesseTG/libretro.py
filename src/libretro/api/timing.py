@@ -1,4 +1,4 @@
-from ctypes import c_bool, c_float, c_int64, c_uint, CFUNCTYPE, Structure
+from ctypes import CFUNCTYPE, Structure, c_bool, c_float, c_int64, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 

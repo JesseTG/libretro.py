@@ -1,11 +1,10 @@
 import ctypes
 import sys
 from abc import abstractmethod
-from ctypes import c_char, c_char_p, cast, POINTER, Union
+from ctypes import POINTER, Union, c_char, c_char_p, cast
 from typing import Protocol, runtime_checkable
 
 from libretro.api._utils import c_uintptr
-
 
 if not hasattr(ctypes, "c_uintptr"):
     ctypes._check_size(c_uintptr)

@@ -7,21 +7,21 @@ from typing import override
 import moderngl
 from glcontext.empty import GLContext
 
-from ..driver import VideoDriver
-from libretro.api.video import (
-    retro_hw_render_callback,
-    retro_hw_render_interface,
-    retro_framebuffer,
-    Rotation,
-    PixelFormat,
-    MemoryAccess,
-    HardwareContext,
-    retro_hw_get_current_framebuffer_t,
-    retro_hw_get_proc_address_t,
-)
-
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
+from libretro.api.video import (
+    HardwareContext,
+    MemoryAccess,
+    PixelFormat,
+    Rotation,
+    retro_framebuffer,
+    retro_hw_get_current_framebuffer_t,
+    retro_hw_get_proc_address_t,
+    retro_hw_render_callback,
+    retro_hw_render_interface,
+)
+
+from ..driver import VideoDriver
 
 
 class ModernGlVideoDriver(VideoDriver):

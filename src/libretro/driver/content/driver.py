@@ -2,18 +2,18 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from ctypes import Array
-from typing import Protocol, runtime_checkable, NamedTuple
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api import (
+    Content,
+    ContentInfoOverrides,
+    SubsystemContent,
+    Subsystems,
     retro_game_info,
     retro_game_info_ext,
     retro_subsystem_info,
     retro_system_content_info_override,
-    Content,
-    SubsystemContent,
     retro_system_info,
-    Subsystems,
-    ContentInfoOverrides,
 )
 
 

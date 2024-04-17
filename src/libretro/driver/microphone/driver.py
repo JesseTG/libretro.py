@@ -1,20 +1,20 @@
 from abc import abstractmethod
-from collections.abc import Sequence
 from collections import deque
-from ctypes import POINTER, c_void_p, cast, byref, c_int16, memmove, sizeof
-from typing import Protocol, runtime_checkable, NamedTuple
+from collections.abc import Sequence
+from ctypes import POINTER, byref, c_int16, c_void_p, cast, memmove, sizeof
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api._utils import memoryview_at
 from libretro.api.microphone import (
-    retro_microphone_params,
-    retro_microphone,
-    retro_microphone_interface,
-    retro_open_mic_t,
     retro_close_mic_t,
     retro_get_mic_params_t,
-    retro_set_mic_state_t,
     retro_get_mic_state_t,
+    retro_microphone,
+    retro_microphone_interface,
+    retro_microphone_params,
+    retro_open_mic_t,
     retro_read_mic_t,
+    retro_set_mic_state_t,
 )
 
 

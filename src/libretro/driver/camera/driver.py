@@ -2,13 +2,13 @@ from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
 from libretro.api.camera import (
+    CameraCapabilityFlags,
     retro_camera_callback,
+    retro_camera_frame_opengl_texture_t,
+    retro_camera_frame_raw_framebuffer_t,
+    retro_camera_lifetime_status_t,
     retro_camera_start_t,
     retro_camera_stop_t,
-    retro_camera_lifetime_status_t,
-    retro_camera_frame_raw_framebuffer_t,
-    retro_camera_frame_opengl_texture_t,
-    CameraCapabilityFlags,
 )
 
 

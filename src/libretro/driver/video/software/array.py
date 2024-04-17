@@ -2,10 +2,11 @@ from array import array
 from copy import deepcopy
 from typing import final, override
 
-from .base import AbstractSoftwareVideoDriver
+from libretro.api.av import retro_game_geometry, retro_system_av_info
+from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 from libretro.error import UnsupportedEnvCall
-from libretro.api.video import MemoryAccess, Rotation, retro_framebuffer, PixelFormat
-from libretro.api.av import retro_system_av_info, retro_game_geometry
+
+from .base import AbstractSoftwareVideoDriver
 
 
 @final

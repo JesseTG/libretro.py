@@ -1,5 +1,5 @@
 from collections import deque
-from collections.abc import Iterator, Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from typing import NamedTuple
 
 from .driver import MidiDriver

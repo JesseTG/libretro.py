@@ -1,9 +1,9 @@
-from socket import socket, AddressFamily, SocketKind
+from socket import AddressFamily, SocketKind, socket
 from typing import override
 
-from .driver import NetpacketDriver, ClientID
-
 from libretro.api.netpacket import NetpacketFlags, retro_netpacket_callback
+
+from .driver import ClientID, NetpacketDriver
 
 
 class SocketNetpacketDriver(NetpacketDriver):

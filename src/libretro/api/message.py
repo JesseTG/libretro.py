@@ -1,9 +1,9 @@
-from ctypes import Structure, c_char_p, c_int8, c_int, c_uint
+from ctypes import Structure, c_char_p, c_int, c_int8, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 
-from libretro.api.log import retro_log_level
 from libretro.api._utils import FieldsFromTypeHints
+from libretro.api.log import retro_log_level
 
 RETRO_MESSAGE_TARGET_ALL = 0
 RETRO_MESSAGE_TARGET_OSD = RETRO_MESSAGE_TARGET_ALL + 1

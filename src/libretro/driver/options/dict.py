@@ -1,23 +1,24 @@
 import re
-from collections.abc import Mapping, Sequence, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from copy import deepcopy
-from ctypes import string_at, Array
+from ctypes import Array, string_at
 from typing import AnyStr, override
 
-from .driver import OptionDriver
 from libretro.api._utils import as_bytes, from_zero_terminated
 from libretro.api.options import (
+    CoreOptionArray,
+    retro_core_option_definition,
     retro_core_option_v2_category,
     retro_core_option_v2_definition,
-    retro_core_options_update_display_callback,
-    retro_variable,
+    retro_core_option_value,
     retro_core_options_intl,
+    retro_core_options_update_display_callback,
     retro_core_options_v2,
     retro_core_options_v2_intl,
-    retro_core_option_value,
-    retro_core_option_definition,
-    CoreOptionArray,
+    retro_variable,
 )
+
+from .driver import OptionDriver
 
 _SET_VARS = re.compile(rb"(?P<desc>[^;]+); (?P<values>.+)")
 

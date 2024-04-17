@@ -2,8 +2,9 @@ from copy import deepcopy
 from logging import Logger
 from typing import Sequence
 
+from libretro.api import LogLevel, MessageTarget, retro_message, retro_message_ext
+
 from .driver import MessageInterface
-from libretro.api import retro_message, retro_message_ext, MessageTarget, LogLevel
 
 
 class LoggerMessageInterface(MessageInterface):

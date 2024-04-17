@@ -1,38 +1,38 @@
 from abc import abstractmethod
-from ctypes import c_void_p, c_int32, POINTER, cast
+from ctypes import POINTER, c_int32, c_void_p, cast
 from logging import Logger
-from typing import Protocol, runtime_checkable, NamedTuple
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api._utils import memoryview_at
 from libretro.api.vfs import (
-    retro_vfs_interface,
-    retro_vfs_file_handle,
-    retro_vfs_dir_handle,
-    VfsPath,
     VfsFileAccess,
     VfsFileAccessHint,
+    VfsMkdirResult,
+    VfsPath,
     VfsSeekPosition,
     VfsStat,
-    VfsMkdirResult,
-    retro_vfs_open_t,
     retro_vfs_close_t,
-    retro_vfs_size_t,
-    retro_vfs_tell_t,
-    retro_vfs_seek_t,
-    retro_vfs_read_t,
-    retro_vfs_write_t,
-    retro_vfs_flush_t,
-    retro_vfs_remove_t,
-    retro_vfs_rename_t,
-    retro_vfs_truncate_t,
-    retro_vfs_stat_t,
-    retro_vfs_mkdir_t,
-    retro_vfs_opendir_t,
-    retro_vfs_readdir_t,
+    retro_vfs_closedir_t,
+    retro_vfs_dir_handle,
     retro_vfs_dirent_get_name_t,
     retro_vfs_dirent_is_dir_t,
-    retro_vfs_closedir_t,
+    retro_vfs_file_handle,
+    retro_vfs_flush_t,
     retro_vfs_get_path_t,
+    retro_vfs_interface,
+    retro_vfs_mkdir_t,
+    retro_vfs_open_t,
+    retro_vfs_opendir_t,
+    retro_vfs_read_t,
+    retro_vfs_readdir_t,
+    retro_vfs_remove_t,
+    retro_vfs_rename_t,
+    retro_vfs_seek_t,
+    retro_vfs_size_t,
+    retro_vfs_stat_t,
+    retro_vfs_tell_t,
+    retro_vfs_truncate_t,
+    retro_vfs_write_t,
 )
 
 

@@ -1,33 +1,34 @@
 import os
 from collections.abc import Sequence
-from contextlib import ExitStack, AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from ctypes import Array, c_void_p
 from os import PathLike
 from tempfile import TemporaryDirectory
 from typing import override
 from zipfile import Path as ZipPath
 
-from .driver import (
-    ContentDriver,
-    LoadedContentFile,
-    ContentAttributes,
-    ContentError,
-    LoadedContent,
-)
 from libretro.api import (
+    Content,
+    ContentInfoOverrides,
+    SubsystemContent,
+    Subsystems,
+    get_extension,
     retro_game_info,
     retro_game_info_ext,
     retro_subsystem_info,
-    retro_system_info,
-    Content,
-    SubsystemContent,
-    ContentInfoOverrides,
-    Subsystems,
     retro_subsystem_rom_info,
     retro_system_content_info_override,
-    get_extension,
+    retro_system_info,
 )
-from libretro.api._utils import mmap_file, addressof_buffer
+from libretro.api._utils import addressof_buffer, mmap_file
+
+from .driver import (
+    ContentAttributes,
+    ContentDriver,
+    ContentError,
+    LoadedContent,
+    LoadedContentFile,
+)
 
 
 class _PersistentBuffer:

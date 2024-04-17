@@ -1,14 +1,14 @@
 from abc import abstractmethod
-from typing import Protocol, runtime_checkable, NamedTuple
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api._utils import c_double_p
 from libretro.api.location import (
     retro_location_callback,
+    retro_location_get_position_t,
+    retro_location_lifetime_status_t,
+    retro_location_set_interval_t,
     retro_location_start_t,
     retro_location_stop_t,
-    retro_location_get_position_t,
-    retro_location_set_interval_t,
-    retro_location_lifetime_status_t,
 )
 
 

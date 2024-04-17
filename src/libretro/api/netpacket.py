@@ -1,9 +1,8 @@
-from ctypes import CFUNCTYPE, c_bool, c_int, c_size_t, c_uint16, c_void_p, Structure
+from ctypes import CFUNCTYPE, Structure, c_bool, c_int, c_size_t, c_uint16, c_void_p
 from dataclasses import dataclass
 from enum import IntFlag
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = 1 << 0

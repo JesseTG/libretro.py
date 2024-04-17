@@ -1,9 +1,8 @@
-from ctypes import CFUNCTYPE, c_bool, c_float, c_uint, Structure, c_int
+from ctypes import CFUNCTYPE, Structure, c_bool, c_float, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 retro_sensor_action = c_int
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0

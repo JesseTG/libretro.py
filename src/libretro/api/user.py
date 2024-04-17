@@ -1,7 +1,6 @@
 from ctypes import c_int
 from enum import IntEnum
 
-
 retro_language = c_int
 RETRO_LANGUAGE_ENGLISH = 0
 RETRO_LANGUAGE_JAPANESE = 1

@@ -2,7 +2,7 @@ from ctypes import CFUNCTYPE, Structure, c_char_p
 from dataclasses import dataclass
 from typing import AnyStr
 
-from libretro.api._utils import FieldsFromTypeHints, UNCHECKED
+from libretro.api._utils import UNCHECKED, FieldsFromTypeHints
 
 retro_proc_address_t = CFUNCTYPE(None)
 retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)

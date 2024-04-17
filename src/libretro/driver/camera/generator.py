@@ -1,12 +1,12 @@
 from typing import override
 
-from .driver import CameraDriver
 from ... import (
-    retro_camera_lifetime_status_t,
-    retro_camera_frame_raw_framebuffer_t,
     CameraCapabilityFlags,
     retro_camera_frame_opengl_texture_t,
+    retro_camera_frame_raw_framebuffer_t,
+    retro_camera_lifetime_status_t,
 )
+from .driver import CameraDriver
 
 
 class CameraFrame:

@@ -1,20 +1,20 @@
 import os
 import stat
-
 from io import FileIO
 from logging import Logger
 from typing import Literal
 
+from libretro.api._utils import as_bytes
 from libretro.api.vfs import (
-    VfsMkdirResult,
-    VfsStat,
     VfsFileAccess,
     VfsFileAccessHint,
-    VfsSeekPosition,
+    VfsMkdirResult,
     VfsPath,
+    VfsSeekPosition,
+    VfsStat,
 )
-from .interface import DirEntry, FileHandle, DirectoryHandle, FileSystemInterface
-from libretro.api._utils import as_bytes
+
+from .interface import DirectoryHandle, DirEntry, FileHandle, FileSystemInterface
 
 
 class StandardFileHandle(FileHandle):

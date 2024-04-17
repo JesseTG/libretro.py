@@ -4,7 +4,6 @@ from enum import IntFlag
 
 from libretro.api._utils import FieldsFromTypeHints
 
-
 RETRO_SIMD_SSE = 1 << 0
 RETRO_SIMD_SSE2 = 1 << 1
 RETRO_SIMD_VMX = 1 << 2

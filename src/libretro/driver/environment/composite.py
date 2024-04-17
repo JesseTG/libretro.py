@@ -1,34 +1,34 @@
-from collections.abc import Sequence, Callable
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from ctypes import (
-    Array,
     POINTER,
+    Array,
     byref,
     c_bool,
     c_char_p,
     c_float,
+    c_int16,
     c_uint,
     c_uint64,
+    c_void_p,
     cast,
     memmove,
     pointer,
     sizeof,
     string_at,
-    c_void_p,
-    c_int16,
 )
-from _ctypes import CFuncPtr
-from typing import TypedDict, Required, override, AnyStr
+from typing import AnyStr, Required, TypedDict, override
 
-from .default import DefaultEnvironmentDriver
-from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at
+from _ctypes import CFuncPtr
 
 from libretro.api import (
     AvEnableFlags,
     HardwareContext,
+    InputDevice,
     LogLevel,
     MemoryAccess,
     PixelFormat,
+    Port,
     Rotation,
     RumbleEffect,
     SavestateContext,
@@ -36,9 +36,9 @@ from libretro.api import (
     SensorAction,
     SerializationQuirks,
     ThrottleMode,
-    retro_av_enable_flags,
     retro_audio_buffer_status_callback,
     retro_audio_callback,
+    retro_av_enable_flags,
     retro_camera_callback,
     retro_controller_info,
     retro_core_option_definition,
@@ -89,10 +89,8 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface,
     retro_vfs_interface_info,
-    InputDevice,
-    Port,
 )
-
+from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at
 from libretro.driver.audio import AudioDriver
 from libretro.driver.camera import CameraDriver
 from libretro.driver.content import ContentDriver
@@ -111,6 +109,8 @@ from libretro.driver.timing import TimingDriver
 from libretro.driver.user import UserDriver
 from libretro.driver.vfs import FileSystemInterface
 from libretro.driver.video import VideoDriver
+
+from .default import DefaultEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 

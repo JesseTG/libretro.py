@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, c_bool, c_uint, Structure
+from ctypes import CFUNCTYPE, Structure, c_bool, c_uint
 from dataclasses import dataclass
 
 from libretro.api._utils import FieldsFromTypeHints, c_double_p

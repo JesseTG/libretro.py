@@ -1,8 +1,7 @@
-from ctypes import Structure, c_uint, c_int
+from ctypes import Structure, c_int, c_uint
 from enum import IntEnum
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 retro_hw_render_interface_type = c_int
 RETRO_HW_RENDER_INTERFACE_VULKAN = 0

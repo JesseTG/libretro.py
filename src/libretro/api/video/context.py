@@ -1,9 +1,9 @@
+from ctypes import CFUNCTYPE, Structure, c_bool, c_char_p, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
-from ctypes import Structure, c_bool, c_uint, CFUNCTYPE, c_char_p, cast, c_void_p, c_int
 
+from libretro.api._utils import UNCHECKED, FieldsFromTypeHints, c_uintptr
 from libretro.api.proc import retro_proc_address_t
-from libretro.api._utils import FieldsFromTypeHints, c_uintptr, UNCHECKED
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 

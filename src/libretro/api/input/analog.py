@@ -4,7 +4,6 @@ from enum import IntEnum
 from .device import InputDeviceState
 from .joypad import DeviceIdJoypad
 
-
 RETRO_DEVICE_INDEX_ANALOG_LEFT = 0
 RETRO_DEVICE_INDEX_ANALOG_RIGHT = 1
 RETRO_DEVICE_INDEX_ANALOG_BUTTON = 2

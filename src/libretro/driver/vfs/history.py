@@ -1,15 +1,16 @@
-from collections.abc import Sequence, MutableSequence
+from collections.abc import MutableSequence, Sequence
 from enum import Enum, auto
-from typing import NamedTuple, Any
+from typing import Any, NamedTuple
 
 from libretro.api.vfs import (
-    VfsMkdirResult,
-    VfsStat,
     VfsFileAccess,
     VfsFileAccessHint,
+    VfsMkdirResult,
     VfsSeekPosition,
+    VfsStat,
 )
-from .interface import FileSystemInterface, DirectoryHandle, FileHandle, DirEntry
+
+from .interface import DirectoryHandle, DirEntry, FileHandle, FileSystemInterface
 
 
 class VfsOperationType(Enum):

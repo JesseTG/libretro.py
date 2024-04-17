@@ -1,13 +1,14 @@
-from copy import deepcopy
 import wave
+from copy import deepcopy
 from io import RawIOBase
 from os import PathLike, fsdecode
 from typing import override
 
-from .driver import AudioDriver
-from libretro.api.audio import retro_audio_callback, retro_audio_buffer_status_callback
+from libretro.api.audio import retro_audio_buffer_status_callback, retro_audio_callback
 from libretro.api.av import retro_system_av_info
 from libretro.error import UnsupportedEnvCall
+
+from .driver import AudioDriver
 
 
 class WaveWriterAudioDriver(AudioDriver):

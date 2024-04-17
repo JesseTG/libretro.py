@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import runtime_checkable, Protocol
+from typing import Protocol, runtime_checkable
 
 from libretro.api import retro_led_interface, retro_set_led_state_t
 

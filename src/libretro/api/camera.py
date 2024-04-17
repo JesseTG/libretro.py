@@ -1,20 +1,19 @@
 from ctypes import (
     CFUNCTYPE,
     POINTER,
-    c_bool,
-    c_uint,
-    c_size_t,
-    c_uint32,
-    c_float,
     Structure,
-    c_uint64,
+    c_bool,
+    c_float,
     c_int,
+    c_size_t,
+    c_uint,
+    c_uint32,
+    c_uint64,
 )
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 retro_camera_buffer = c_int
 RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0

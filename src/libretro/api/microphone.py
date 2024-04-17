@@ -1,17 +1,16 @@
 from ctypes import (
     CFUNCTYPE,
     POINTER,
+    Structure,
     c_bool,
     c_int,
     c_int16,
     c_size_t,
     c_uint,
-    Structure,
 )
 from dataclasses import dataclass
 
-from libretro.api._utils import FieldsFromTypeHints, UNCHECKED
-
+from libretro.api._utils import UNCHECKED, FieldsFromTypeHints
 
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION

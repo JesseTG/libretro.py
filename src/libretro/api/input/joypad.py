@@ -3,7 +3,6 @@ from enum import IntEnum
 
 from .device import InputDeviceState
 
-
 RETRO_DEVICE_ID_JOYPAD_B = 0
 RETRO_DEVICE_ID_JOYPAD_Y = 1
 RETRO_DEVICE_ID_JOYPAD_SELECT = 2

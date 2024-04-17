@@ -1,12 +1,13 @@
 from copy import deepcopy
 from typing import override
 
-from .driver import TimingDriver
 from libretro.api.timing import (
-    retro_frame_time_callback,
     retro_fastforwarding_override,
+    retro_frame_time_callback,
     retro_throttle_state,
 )
+
+from .driver import TimingDriver
 
 
 class DefaultTimingDriver(TimingDriver):

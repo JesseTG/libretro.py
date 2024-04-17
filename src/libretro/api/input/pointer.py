@@ -4,7 +4,6 @@ from typing import Sequence
 
 from .device import InputDeviceState
 
-
 RETRO_DEVICE_ID_POINTER_X = 0
 RETRO_DEVICE_ID_POINTER_Y = 1
 RETRO_DEVICE_ID_POINTER_PRESSED = 2

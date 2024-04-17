@@ -2,11 +2,12 @@ from abc import ABC
 from collections.abc import Set
 from typing import final, override
 
-from ..driver import VideoDriver
 from libretro.api.proc import retro_proc_address_t
-from libretro.error import UnsupportedEnvCall
+from libretro.api.video.context import HardwareContext, retro_hw_render_callback
 from libretro.api.video.render import retro_hw_render_interface
-from libretro.api.video.context import retro_hw_render_callback, HardwareContext
+from libretro.error import UnsupportedEnvCall
+
+from ..driver import VideoDriver
 
 _EMPTY = frozenset()
 

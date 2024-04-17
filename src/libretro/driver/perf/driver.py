@@ -3,6 +3,8 @@ from ctypes import POINTER
 from typing import Protocol, runtime_checkable
 
 from libretro.api.perf import (
+    CpuFeatures,
+    retro_get_cpu_features_t,
     retro_perf_callback,
     retro_perf_counter,
     retro_perf_get_counter_t,
@@ -11,8 +13,6 @@ from libretro.api.perf import (
     retro_perf_register_t,
     retro_perf_start_t,
     retro_perf_stop_t,
-    retro_get_cpu_features_t,
-    CpuFeatures,
 )
 
 

@@ -3,12 +3,12 @@ from ctypes import POINTER, c_uint8
 from typing import Protocol, runtime_checkable
 
 from libretro.api.midi import (
-    retro_midi_interface,
+    retro_midi_flush_t,
     retro_midi_input_enabled_t,
+    retro_midi_interface,
     retro_midi_output_enabled_t,
     retro_midi_read_t,
     retro_midi_write_t,
-    retro_midi_flush_t,
 )
 
 

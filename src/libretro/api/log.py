@@ -1,11 +1,9 @@
 import logging
-
 from ctypes import CFUNCTYPE, Structure, c_char_p, c_int
 from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 RETRO_LOG_DEBUG = 0
 RETRO_LOG_INFO = RETRO_LOG_DEBUG + 1

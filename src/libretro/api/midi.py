@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, POINTER, c_bool, c_uint32, c_uint8, Structure
+from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
 
 from libretro.api._utils import FieldsFromTypeHints

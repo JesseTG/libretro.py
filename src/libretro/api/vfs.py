@@ -1,6 +1,8 @@
 from copy import deepcopy
 from ctypes import (
     CFUNCTYPE,
+    POINTER,
+    Structure,
     c_bool,
     c_char_p,
     c_int,
@@ -8,18 +10,15 @@ from ctypes import (
     c_int64,
     c_uint,
     c_uint32,
-    c_void_p,
     c_uint64,
-    POINTER,
-    Structure,
+    c_void_p,
     pointer,
 )
 from dataclasses import dataclass
-from enum import IntFlag, IntEnum
+from enum import IntEnum, IntFlag
 from os import PathLike
 
-from libretro.api._utils import FieldsFromTypeHints, UNCHECKED
-
+from libretro.api._utils import UNCHECKED, FieldsFromTypeHints
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1

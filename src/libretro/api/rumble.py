@@ -1,9 +1,8 @@
-from ctypes import CFUNCTYPE, c_bool, c_uint, c_uint16, Structure, c_int
+from ctypes import CFUNCTYPE, Structure, c_bool, c_int, c_uint, c_uint16
 from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 retro_rumble_effect = c_int
 RETRO_RUMBLE_STRONG = 0

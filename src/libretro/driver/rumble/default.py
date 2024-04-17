@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
-from .interface import RumbleInterface
 from libretro.api.rumble import RumbleEffect
+
+from .interface import RumbleInterface
 
 
 @dataclass(slots=True)

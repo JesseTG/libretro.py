@@ -2,8 +2,9 @@ import logging
 from collections.abc import Sequence
 from logging import Logger, LogRecord
 
-from .driver import LogDriver
 from libretro.api.log import LogLevel
+
+from .driver import LogDriver
 
 
 class UnformattedLogDriver(LogDriver):

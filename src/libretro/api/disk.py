@@ -1,8 +1,8 @@
-from ctypes import CFUNCTYPE, POINTER, c_bool, c_uint, c_size_t, Structure, c_char_p
+from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_char_p, c_size_t, c_uint
 from dataclasses import dataclass
 
-from libretro.api.content import retro_game_info
 from libretro.api._utils import FieldsFromTypeHints
+from libretro.api.content import retro_game_info
 
 retro_set_eject_state_t = CFUNCTYPE(c_bool, c_bool)
 retro_get_eject_state_t = CFUNCTYPE(c_bool)

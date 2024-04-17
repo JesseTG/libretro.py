@@ -1,11 +1,12 @@
-from collections.abc import Mapping, Callable, KeysView
+from collections.abc import Callable, KeysView, Mapping
 from ctypes import c_void_p
 from types import MappingProxyType
 from typing import override
 
-from .driver import EnvironmentDriver
-from libretro.error import UnsupportedEnvCall
 from libretro.api import EnvironmentCall
+from libretro.error import UnsupportedEnvCall
+
+from .driver import EnvironmentDriver
 
 EnvironmentCallbackFunction = Callable[[c_void_p], bool]
 

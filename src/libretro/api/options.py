@@ -1,9 +1,8 @@
 from copy import deepcopy
-from ctypes import Array, CFUNCTYPE, POINTER, Structure, c_bool, c_char_p, pointer
+from ctypes import CFUNCTYPE, POINTER, Array, Structure, c_bool, c_char_p, pointer
 from dataclasses import dataclass
 
 from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
-
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 

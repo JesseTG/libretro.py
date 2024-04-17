@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, c_int, c_size_t, c_uint, c_void_p, Structure
+from ctypes import CFUNCTYPE, Structure, c_int, c_size_t, c_uint, c_void_p
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import Literal

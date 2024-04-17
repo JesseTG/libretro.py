@@ -1,9 +1,9 @@
 from abc import abstractmethod
-from typing import runtime_checkable, Protocol
+from typing import Protocol, runtime_checkable
 
 from libretro.api import (
-    retro_audio_callback,
     retro_audio_buffer_status_callback,
+    retro_audio_callback,
     retro_system_av_info,
 )
 

@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from typing import runtime_checkable, Protocol
+from typing import Protocol, runtime_checkable
 
-from libretro.api.log import retro_log_callback, retro_log_printf_t, LogLevel
+from libretro.api.log import LogLevel, retro_log_callback, retro_log_printf_t
 
 
 @runtime_checkable

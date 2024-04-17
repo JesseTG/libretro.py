@@ -5,9 +5,10 @@ from typing import final, override
 import PIL.Image
 from PIL.Image import Image
 
-from .base import AbstractSoftwareVideoDriver
-from libretro.api.video import MemoryAccess, retro_framebuffer, PixelFormat, Rotation
 from libretro.api.av import retro_game_geometry, retro_system_av_info
+from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
+
+from .base import AbstractSoftwareVideoDriver
 
 
 @final

@@ -2,10 +2,11 @@ from array import array
 from copy import deepcopy
 from typing import override
 
-from .driver import AudioDriver
-from libretro.api.audio import retro_audio_callback, retro_audio_buffer_status_callback
+from libretro.api.audio import retro_audio_buffer_status_callback, retro_audio_callback
 from libretro.api.av import retro_system_av_info
 from libretro.error import UnsupportedEnvCall
+
+from .driver import AudioDriver
 
 
 class ArrayAudioDriver(AudioDriver):

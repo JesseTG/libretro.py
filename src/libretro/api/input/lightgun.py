@@ -3,7 +3,6 @@ from enum import IntEnum
 
 from .device import InputDeviceState
 
-
 RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X = 13
 RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y = 14
 RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN = 15

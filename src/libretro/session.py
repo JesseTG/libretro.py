@@ -1,48 +1,49 @@
-from collections.abc import Sequence, Callable
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from ctypes import CDLL
-from _ctypes import CFuncPtr
 from os import PathLike
 from types import TracebackType
-from typing import Type, AnyStr
+from typing import AnyStr, Type
+
+from _ctypes import CFuncPtr
 
 from libretro._utils import Pollable
-from libretro.api._utils import as_bytes
-from libretro.error import CoreShutDownException
-from libretro.core import Core, CoreInterface
 from libretro.api import (
-    retro_system_av_info,
-    retro_subsystem_info,
-    retro_input_descriptor,
-    retro_get_proc_address_interface,
-    retro_proc_address_t,
-    retro_memory_map,
-    retro_controller_info,
-    retro_throttle_state,
-    retro_fastforwarding_override,
-    retro_system_content_info_override,
+    API_VERSION,
+    AvEnableFlags,
     Content,
+    SerializationQuirks,
     SubsystemContent,
     Subsystems,
-    AvEnableFlags,
-    API_VERSION,
-    SerializationQuirks,
+    retro_controller_info,
+    retro_fastforwarding_override,
+    retro_get_proc_address_interface,
+    retro_input_descriptor,
+    retro_memory_map,
+    retro_proc_address_t,
+    retro_subsystem_info,
+    retro_system_av_info,
+    retro_system_content_info_override,
+    retro_throttle_state,
 )
+from libretro.api._utils import as_bytes
+from libretro.core import Core, CoreInterface
 from libretro.driver import (
     AudioDriver,
-    ContentDriver,
     CompositeEnvironmentDriver,
+    ContentDriver,
+    FileSystemInterface,
     InputDriver,
+    LedDriver,
+    LoadedContentFile,
     LogDriver,
     MessageInterface,
     MidiDriver,
     OptionDriver,
     RumbleInterface,
     VideoDriver,
-    FileSystemInterface,
-    LedDriver,
-    LoadedContentFile,
 )
+from libretro.error import CoreShutDownException
 
 
 class Session:

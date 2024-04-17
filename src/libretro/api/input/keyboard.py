@@ -1,10 +1,10 @@
-from ctypes import c_uint16, c_uint32, c_bool, CFUNCTYPE, Structure, c_int, c_uint
+from ctypes import CFUNCTYPE, Structure, c_bool, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
-from enum import IntEnum, IntFlag, EJECT
+from enum import EJECT, IntEnum, IntFlag
 
-from .device import InputDeviceState
 from libretro.api._utils import FieldsFromTypeHints
 
+from .device import InputDeviceState
 
 retro_key = c_int
 RETROK_UNKNOWN = 0

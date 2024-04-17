@@ -2,9 +2,9 @@ from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
 from libretro.api.rumble import (
+    RumbleEffect,
     retro_rumble_interface,
     retro_set_rumble_state_t,
-    RumbleEffect,
 )
 
 

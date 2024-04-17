@@ -1,7 +1,8 @@
 from typing import override
 
-from .driver import UserDriver
 from libretro.api.user import Language
+
+from .driver import UserDriver
 
 
 class DefaultUserDriver(UserDriver):

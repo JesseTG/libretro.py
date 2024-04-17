@@ -1,11 +1,12 @@
 from collections import defaultdict
-from collections.abc import Sequence, Iterator, Callable, MutableMapping
-from dataclasses import dataclass, is_dataclass, field
+from collections.abc import Callable, Iterator, MutableMapping, Sequence
+from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import NamedTuple, overload, Literal
+from typing import Literal, NamedTuple, overload
+
+from libretro.api.sensor import Sensor, SensorAction, SensorType
 
 from .interface import SensorInterface
-from libretro.api.sensor import SensorType, SensorAction, Sensor
 
 
 class Vector3(NamedTuple):

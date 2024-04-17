@@ -2,17 +2,17 @@ from abc import abstractmethod
 from collections.abc import Set
 from typing import Protocol, runtime_checkable
 
-from libretro.api.video import (
-    retro_hw_render_callback,
-    retro_hw_render_interface,
-    retro_framebuffer,
-    Rotation,
-    PixelFormat,
-    MemoryAccess,
-    HardwareContext,
-)
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
+from libretro.api.video import (
+    HardwareContext,
+    MemoryAccess,
+    PixelFormat,
+    Rotation,
+    retro_framebuffer,
+    retro_hw_render_callback,
+    retro_hw_render_interface,
+)
 
 
 @runtime_checkable

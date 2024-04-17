@@ -1,6 +1,6 @@
-from ctypes import Structure, c_uint, c_float, c_double
+from ctypes import Structure, c_double, c_float, c_uint
 from dataclasses import dataclass
-from enum import IntFlag, CONFORM, IntEnum
+from enum import CONFORM, IntEnum, IntFlag
 
 from libretro.api._utils import FieldsFromTypeHints
 

@@ -3,7 +3,6 @@ from enum import IntEnum
 
 from .device import InputDeviceState
 
-
 RETRO_DEVICE_ID_MOUSE_X = 0
 RETRO_DEVICE_ID_MOUSE_Y = 1
 RETRO_DEVICE_ID_MOUSE_LEFT = 2

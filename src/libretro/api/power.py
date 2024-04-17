@@ -1,9 +1,8 @@
-from ctypes import c_int, c_int8, Structure
+from ctypes import Structure, c_int, c_int8
 from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import FieldsFromTypeHints
-
 
 retro_power_state = c_int
 RETRO_POWERSTATE_UNKNOWN = 0

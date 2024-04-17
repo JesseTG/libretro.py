@@ -1,4 +1,4 @@
-from ctypes import c_bool, c_uint, CFUNCTYPE, c_void_p
+from ctypes import CFUNCTYPE, c_bool, c_uint, c_void_p
 from enum import IntEnum, unique
 
 RETRO_ENVIRONMENT_EXPERIMENTAL = 0x10000

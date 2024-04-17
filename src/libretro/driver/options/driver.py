@@ -1,15 +1,15 @@
 from abc import abstractmethod
-from collections.abc import Sequence, Mapping, MutableMapping
-from typing import Protocol, runtime_checkable, AnyStr
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import AnyStr, Protocol, runtime_checkable
 
 from libretro.api.options import (
     retro_core_option_definition,
-    retro_core_options_intl,
-    retro_core_options_v2,
-    retro_core_options_v2_intl,
     retro_core_option_v2_category,
     retro_core_option_v2_definition,
+    retro_core_options_intl,
     retro_core_options_update_display_callback,
+    retro_core_options_v2,
+    retro_core_options_v2_intl,
     retro_variable,
 )
 

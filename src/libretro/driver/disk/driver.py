@@ -2,8 +2,8 @@ from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
 from libretro.api.disk import (
-    retro_disk_control_ext_callback,
     retro_disk_control_callback,
+    retro_disk_control_ext_callback,
 )
 
 

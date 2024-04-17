@@ -2,8 +2,8 @@ from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
 from libretro.api.timing import (
-    retro_frame_time_callback,
     retro_fastforwarding_override,
+    retro_frame_time_callback,
     retro_throttle_state,
 )
 

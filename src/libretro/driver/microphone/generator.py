@@ -1,8 +1,9 @@
 from array import array
-from collections.abc import Sequence, Iterator, Callable, Iterable, Generator
+from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from typing import override
 
-from libretro.api.microphone import retro_microphone_params, INTERFACE_VERSION
+from libretro.api.microphone import INTERFACE_VERSION, retro_microphone_params
+
 from .driver import Microphone, MicrophoneDriver
 
 MicrophoneInput = int | Sequence[int] | None

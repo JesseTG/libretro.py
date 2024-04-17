@@ -1,18 +1,19 @@
 from array import array
-from collections.abc import Mapping, Callable
+from collections.abc import Callable, Mapping
 
-from .driver import VideoDriver
-from libretro.api.video import (
-    retro_hw_render_callback,
-    retro_hw_render_interface,
-    retro_framebuffer,
-    Rotation,
-    PixelFormat,
-    MemoryAccess,
-    HardwareContext,
-)
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
+from libretro.api.video import (
+    HardwareContext,
+    MemoryAccess,
+    PixelFormat,
+    Rotation,
+    retro_framebuffer,
+    retro_hw_render_callback,
+    retro_hw_render_interface,
+)
+
+from .driver import VideoDriver
 
 DriverMap = Mapping[HardwareContext, Callable[[retro_hw_render_callback], VideoDriver]]
 
