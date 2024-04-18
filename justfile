@@ -6,6 +6,14 @@ VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
 PROJECT_NAME := "libretro.py"
 TEST_DIR := "test"
 
+# List all available recipes.
+list:
+    @{{just_executable()}} --list
+
+[private]
+help:
+    @{{just_executable()}} --help
+
 # Scans the project for security vulnerabilities
 bandit:
     {{VIRTUAL_BIN}}/bandit -r {{PROJECT_NAME}}/
