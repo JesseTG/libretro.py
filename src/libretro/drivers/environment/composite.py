@@ -91,24 +91,24 @@ from libretro.api import (
     retro_vfs_interface_info,
 )
 from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at
-from libretro.driver.audio import AudioDriver
-from libretro.driver.camera import CameraDriver
-from libretro.driver.content import ContentDriver
-from libretro.driver.input import InputDriver
-from libretro.driver.led import LedDriver
-from libretro.driver.location import LocationDriver
-from libretro.driver.log import LogDriver
-from libretro.driver.message import MessageInterface
-from libretro.driver.microphone import MicrophoneDriver
-from libretro.driver.midi import MidiDriver
-from libretro.driver.options import OptionDriver
-from libretro.driver.path import PathDriver
-from libretro.driver.perf import PerfDriver
-from libretro.driver.power import PowerDriver
-from libretro.driver.timing import TimingDriver
-from libretro.driver.user import UserDriver
-from libretro.driver.vfs import FileSystemInterface
-from libretro.driver.video import VideoDriver
+from libretro.drivers.audio import AudioDriver
+from libretro.drivers.camera import CameraDriver
+from libretro.drivers.content import ContentDriver
+from libretro.drivers.input import InputDriver
+from libretro.drivers.led import LedDriver
+from libretro.drivers.location import LocationDriver
+from libretro.drivers.log import LogDriver
+from libretro.drivers.message import MessageInterface
+from libretro.drivers.microphone import MicrophoneDriver
+from libretro.drivers.midi import MidiDriver
+from libretro.drivers.options import OptionDriver
+from libretro.drivers.path import PathDriver
+from libretro.drivers.perf import PerfDriver
+from libretro.drivers.power import PowerDriver
+from libretro.drivers.timing import TimingDriver
+from libretro.drivers.user import UserDriver
+from libretro.drivers.vfs import FileSystemInterface
+from libretro.drivers.video import VideoDriver
 
 from .default import DefaultEnvironmentDriver
 

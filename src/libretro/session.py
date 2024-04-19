@@ -28,7 +28,7 @@ from libretro.api import (
 )
 from libretro.api._utils import as_bytes
 from libretro.core import Core, CoreInterface
-from libretro.driver import (
+from libretro.drivers import (
     AudioDriver,
     CompositeEnvironmentDriver,
     ContentDriver,

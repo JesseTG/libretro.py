@@ -19,7 +19,7 @@ from libretro.api import (
     retro_throttle_state,
 )
 from libretro.core import Core
-from libretro.driver import (
+from libretro.drivers import (
     ArrayAudioDriver,
     ArrayVideoDriver,
     AudioDriver,

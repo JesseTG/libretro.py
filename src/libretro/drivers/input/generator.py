@@ -26,8 +26,8 @@ from libretro.api.input import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
-from libretro.driver.rumble import RumbleInterface
-from libretro.driver.sensor import SensorInterface
+from libretro.drivers.rumble import RumbleInterface
+from libretro.drivers.sensor import SensorInterface
 
 from .driver import InputDriver
 
