@@ -1,6 +1,6 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
-PYTHON_BINARY := "python3.11"
+python := "python"
 VIRTUAL_ENV := "venv"
 VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
 PROJECT_NAME := "libretro.py"
@@ -68,8 +68,8 @@ mypy: venv
 # Create a virtual environment if necessary
 [windows]
 venv:
-    if (-Not (Test-Path {{VIRTUAL_ENV}})) { {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}} }
+    if (-Not (Test-Path {{VIRTUAL_ENV}})) { {{python}} -m venv {{VIRTUAL_ENV}} }
 
 [unix]
 venv:
-    [ -d {{VIRTUAL_ENV}} ] || {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
+    [ -d {{VIRTUAL_ENV}} ] || {{python}} -m venv {{VIRTUAL_ENV}}
