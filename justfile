@@ -37,8 +37,7 @@ black-check: venv
 
 # Cleans the project
 clean:
-    rm -rf {{VIRTUAL_ENV}} dist *.egg-info .coverage htmlcov .*cache
-    find . -name '*.pyc' -delete
+    git clean -xdf
 
 # Run flake8 checks against the project
 flake8: venv

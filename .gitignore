@@ -9,6 +9,9 @@ htmlcov
 venv*
 .idea
 build/
+dist/
+*.pyc
+.*cache
 
 # Cython extensions
 *.so
