@@ -19,19 +19,19 @@ help:
     @{{just_executable()}} --help
 
 # Scans the project for security vulnerabilities
-bandit:
+bandit: venv
     {{VIRTUAL_BIN}}/bandit -r {{PROJECT_NAME}}/
 
 # Builds the project in preparation for release
-build:
+build: venv
     {{VIRTUAL_BIN}}/python -m build
 
 # Runs the Black Python formatter against the project
-black:
+black: venv
     {{VIRTUAL_BIN}}/black {{PROJECT_NAME}}/ {{TEST_DIR}}/
 
 # Checks if the project is formatted correctly against the Black rules
-black-check:
+black-check: venv
     {{VIRTUAL_BIN}}/black {{PROJECT_NAME}}/ {{TEST_DIR}}/ --check
 
 # Cleans the project
@@ -40,7 +40,7 @@ clean:
     find . -name '*.pyc' -delete
 
 # Run flake8 checks against the project
-flake8:
+flake8: venv
     {{VIRTUAL_BIN}}/flake8 {{PROJECT_NAME}}/ {{TEST_DIR}}/
 
 # Lints the project
@@ -50,20 +50,19 @@ lint: black-check isort-check flake8 mypy bandit
 lint-fix: black isort
 
 # Install the project locally
-install:
-    {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
+install: venv
     {{VIRTUAL_BIN}}/pip install -v -e .
 
 # Sorts imports throughout the project
-isort:
+isort: venv
     {{VIRTUAL_BIN}}/isort {{PROJECT_NAME}}/ {{TEST_DIR}}/
 
 # Checks that imports throughout the project are sorted correctly
-isort-check:
+isort-check: venv
     {{VIRTUAL_BIN}}/isort {{PROJECT_NAME}}/ {{TEST_DIR}}/ --check-only
 
 # Run mypy type checking on the project
-mypy:
+mypy: venv
     {{VIRTUAL_BIN}}/mypy {{PROJECT_NAME}}/ {{TEST_DIR}}/
 
 # Create a virtual environment if necessary
