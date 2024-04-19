@@ -27,7 +27,7 @@ bandit: _validate_venv
     {{_venv_bin}}/bandit -r src
 
 # Builds the project in preparation for release
-build: venv
+build: install
     {{_venv_bin}}/python -m build
 
 # Runs the Black Python formatter against the project
