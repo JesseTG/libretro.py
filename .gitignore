@@ -12,6 +12,7 @@ build/
 dist/
 *.pyc
 .*cache
+docs/libretro/
 
 # Cython extensions
 *.so
