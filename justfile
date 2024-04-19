@@ -4,7 +4,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # e.g. "just --set python /usr/bin/python3.11 variables"
 python := "python"
 venv := "venv"
-_venv_bin := venv / "Scripts"
+_venv_bin := if os_family() == "windows" { venv / "Scripts" } else { venv / "bin" }
 
 # List all available recipes.
 list:
