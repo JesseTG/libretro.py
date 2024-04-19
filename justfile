@@ -3,7 +3,6 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 python := "python"
 VIRTUAL_ENV := "venv"
 VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
-PROJECT_NAME := "libretro.py"
 TEST_DIR := "test"
 
 # List all available recipes.
@@ -20,7 +19,7 @@ help:
 
 # Scans the project for security vulnerabilities
 bandit: venv
-    {{VIRTUAL_BIN}}/bandit -r {{PROJECT_NAME}}/
+    {{VIRTUAL_BIN}}/bandit -r src
 
 # Builds the project in preparation for release
 build: venv
@@ -28,11 +27,11 @@ build: venv
 
 # Runs the Black Python formatter against the project
 black: venv
-    {{VIRTUAL_BIN}}/black {{PROJECT_NAME}}/ {{TEST_DIR}}/
+    {{VIRTUAL_BIN}}/black src
 
 # Checks if the project is formatted correctly against the Black rules
 black-check: venv
-    {{VIRTUAL_BIN}}/black {{PROJECT_NAME}}/ {{TEST_DIR}}/ --check
+    {{VIRTUAL_BIN}}/black src --check
 
 # Cleans the project
 clean:
@@ -41,7 +40,7 @@ clean:
 
 # Run flake8 checks against the project
 flake8: venv
-    {{VIRTUAL_BIN}}/flake8 {{PROJECT_NAME}}/ {{TEST_DIR}}/
+    {{VIRTUAL_BIN}}/flake8 src
 
 # Lints the project
 lint: black-check isort-check flake8 mypy bandit
@@ -55,15 +54,15 @@ install: venv
 
 # Sorts imports throughout the project
 isort: venv
-    {{VIRTUAL_BIN}}/isort {{PROJECT_NAME}}/ {{TEST_DIR}}/
+    {{VIRTUAL_BIN}}/isort src
 
 # Checks that imports throughout the project are sorted correctly
 isort-check: venv
-    {{VIRTUAL_BIN}}/isort {{PROJECT_NAME}}/ {{TEST_DIR}}/ --check-only
+    {{VIRTUAL_BIN}}/isort src --check-only
 
 # Run mypy type checking on the project
 mypy: venv
-    {{VIRTUAL_BIN}}/mypy {{PROJECT_NAME}}/ {{TEST_DIR}}/
+    {{VIRTUAL_BIN}}/mypy src
 
 # Create a virtual environment if necessary
 [windows]
