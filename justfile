@@ -23,7 +23,7 @@ help:
     @{{just_executable()}} --help
 
 # Scans the project for security vulnerabilities
-bandit: venv
+bandit: _validate_venv
     {{_venv_bin}}/bandit -r src
 
 # Builds the project in preparation for release
@@ -31,11 +31,11 @@ build: venv
     {{_venv_bin}}/python -m build
 
 # Runs the Black Python formatter against the project
-black: venv
+black: _validate_venv
     {{_venv_bin}}/black src
 
 # Checks if the project is formatted correctly against the Black rules
-black-check: venv
+black-check: _validate_venv
     {{_venv_bin}}/black src --check
 
 # Cleans the project
@@ -43,7 +43,7 @@ clean:
     git clean -xdf
 
 # Run flake8 checks against the project
-flake8: venv
+flake8: _validate_venv
     {{_venv_bin}}/flake8 src
 
 # Lints the project
@@ -57,16 +57,26 @@ install: venv
     {{_venv_bin}}/pip install -v -e .
 
 # Sorts imports throughout the project
-isort: venv
+isort: _validate_venv
     {{_venv_bin}}/isort src
 
 # Checks that imports throughout the project are sorted correctly
-isort-check: venv
+isort-check: _validate_venv
     {{_venv_bin}}/isort src --check-only
 
 # Run mypy type checking on the project
-mypy: venv
+mypy: _validate_venv
     {{_venv_bin}}/mypy src
+
+[private]
+[windows]
+_validate_venv:
+    @if (-Not (Test-Path {{venv}})) { throw "Virtual environment not found. Run `just install` to create it." }
+
+[private]
+[unix]
+_validate_venv:
+    @[ -d {{venv}} ] || { echo "Virtual environment not found. Run 'just install' to create it."; exit 1; }
 
 # Create a virtual environment if necessary
 [windows]
