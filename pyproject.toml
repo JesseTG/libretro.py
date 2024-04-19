@@ -35,7 +35,7 @@ dependencies = [
     "typing_extensions == 4.*; python_version == '3.10'",
 ]
 
-[optional-dependencies]
+[project.optional-dependencies]
 dev = [
     'bandit == 1.7.*',
     'black == 23.*',
@@ -50,6 +50,7 @@ pillow = [
     'pillow == 10.2.*',
     'types-Pillow',
 ]
+all = ["libretro.py[dev,opengl,pillow]"]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
