@@ -34,10 +34,6 @@ black:
 black-check:
     {{VIRTUAL_BIN}}/black {{PROJECT_NAME}}/ {{TEST_DIR}}/ --check
 
-# Test the project and generate an HTML coverage report
-coverage:
-    {{VIRTUAL_BIN}}/pytest --cov={{PROJECT_NAME}} --cov-branch --cov-report=html --cov-report=lcov --cov-report=term-missing --cov-fail-under=90
-
 # Cleans the project
 clean:
     rm -rf {{VIRTUAL_ENV}} dist *.egg-info .coverage htmlcov .*cache
@@ -69,10 +65,6 @@ isort-check:
 # Run mypy type checking on the project
 mypy:
     {{VIRTUAL_BIN}}/mypy {{PROJECT_NAME}}/ {{TEST_DIR}}/
-
-# Test the project
-test:
-    {{VIRTUAL_BIN}}/pytest
 
 # Create a virtual environment if necessary
 [windows]
