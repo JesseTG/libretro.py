@@ -3,8 +3,8 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # To use a specific Python interpreter, set the `python` variable to the path of the interpreter,
 # e.g. "just --set python /usr/bin/python3.11 variables"
 python := "python"
-VIRTUAL_ENV := "venv"
-VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
+venv := "venv"
+VIRTUAL_BIN := venv / "Scripts"
 TEST_DIR := "test"
 
 # List all available recipes.
@@ -68,8 +68,8 @@ mypy: venv
 # Create a virtual environment if necessary
 [windows]
 venv:
-    if (-Not (Test-Path {{VIRTUAL_ENV}})) { {{python}} -m venv {{VIRTUAL_ENV}} }
+    if (-Not (Test-Path {{venv}})) { {{python}} -m venv {{venv}} }
 
 [unix]
 venv:
-    [ -d {{VIRTUAL_ENV}} ] || {{python}} -m venv {{VIRTUAL_ENV}}
+    [ -d {{venv}} ] || {{python}} -m venv {{venv}}
