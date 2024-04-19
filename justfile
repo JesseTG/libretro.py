@@ -10,11 +10,11 @@ TEST_DIR := "test"
 list:
     @{{just_executable()}} --list
 
-# List all variables that can be used to configure the recipes.
+# List all variables that can be used to configure the recipes. (_leading_underscores are private)
 vars:
     @{{just_executable()}} --variables
 
-[private]
+# Show the help for just itself
 help:
     @{{just_executable()}} --help
 
