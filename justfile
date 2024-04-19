@@ -3,7 +3,11 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # To use a specific Python interpreter, set the `python` variable to the path of the interpreter,
 # e.g. "just --set python /usr/bin/python3.11 variables"
 python := "python"
-venv := "venv"
+
+# The OS name is appended to the venv dir
+# in case you're developing in an environment that exposes this directory
+# to multiple OSes (e.g. WSL)
+venv := "venv-" + os()
 _venv_bin := if os_family() == "windows" { venv / "Scripts" } else { venv / "bin" }
 
 # List all available recipes.
