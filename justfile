@@ -74,7 +74,11 @@ mypy:
 test:
     {{VIRTUAL_BIN}}/pytest
 
-
-# Install the project locally
+# Create a virtual environment if necessary
+[windows]
 venv:
-    {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
+    if (-Not (Test-Path {{VIRTUAL_ENV}})) { {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}} }
+
+[unix]
+venv:
+    [ -d {{VIRTUAL_ENV}} ] || {{PYTHON_BINARY}} -m venv {{VIRTUAL_ENV}}
