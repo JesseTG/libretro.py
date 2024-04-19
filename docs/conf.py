@@ -35,10 +35,3 @@ autosummary_generate = True
 
 html_theme = 'furo'
 html_static_path = ['_static']
-
-def source_read_handler(app, what, name, obj, options, signature, return_annotation):
-    if what == 'module':
-        print(f"{name}: {obj}")
-
-def setup(app):
-    app.connect('autodoc-process-signature', source_read_handler)
