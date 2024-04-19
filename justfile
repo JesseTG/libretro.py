@@ -5,7 +5,6 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 python := "python"
 venv := "venv"
 _venv_bin := venv / "Scripts"
-TEST_DIR := "test"
 
 # List all available recipes.
 list:
