@@ -1,5 +1,7 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
+# To use a specific Python interpreter, set the `python` variable to the path of the interpreter,
+# e.g. "just --set python /usr/bin/python3.11 variables"
 python := "python"
 VIRTUAL_ENV := "venv"
 VIRTUAL_BIN := VIRTUAL_ENV / "Scripts"
