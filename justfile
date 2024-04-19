@@ -12,7 +12,7 @@ list:
 
 # List all variables that can be used to configure the recipes. (_leading_underscores are private)
 vars:
-    @{{just_executable()}} --variables
+    @{{just_executable()}} --evaluate
 
 # Show the help for just itself
 help:
