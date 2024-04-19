@@ -15,3 +15,11 @@ cd libretro.py  # Enter the project directory
 python -m venv ./venv  # Create a virtual environment where dependencies will be installed
 pip install -v -e .  # Install the project in editable mode
 ```
+
+Or, if you have `just` installed...
+
+```bash
+git clone https://github.com/JesseTG/libretro.py  # Clone the repository
+cd libretro.py  # Enter the project directory
+just install # Set up a virtual environment, install dependencies, and install the project in editable mode
+```
