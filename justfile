@@ -4,7 +4,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # e.g. "just --set python /usr/bin/python3.11 variables"
 python := "python"
 venv := "venv"
-VIRTUAL_BIN := venv / "Scripts"
+_venv_bin := venv / "Scripts"
 TEST_DIR := "test"
 
 # List all available recipes.
@@ -21,19 +21,19 @@ help:
 
 # Scans the project for security vulnerabilities
 bandit: venv
-    {{VIRTUAL_BIN}}/bandit -r src
+    {{_venv_bin}}/bandit -r src
 
 # Builds the project in preparation for release
 build: venv
-    {{VIRTUAL_BIN}}/python -m build
+    {{_venv_bin}}/python -m build
 
 # Runs the Black Python formatter against the project
 black: venv
-    {{VIRTUAL_BIN}}/black src
+    {{_venv_bin}}/black src
 
 # Checks if the project is formatted correctly against the Black rules
 black-check: venv
-    {{VIRTUAL_BIN}}/black src --check
+    {{_venv_bin}}/black src --check
 
 # Cleans the project
 clean:
@@ -41,7 +41,7 @@ clean:
 
 # Run flake8 checks against the project
 flake8: venv
-    {{VIRTUAL_BIN}}/flake8 src
+    {{_venv_bin}}/flake8 src
 
 # Lints the project
 lint: black-check isort-check flake8 mypy bandit
@@ -51,19 +51,19 @@ lint-fix: black isort
 
 # Install the project locally
 install: venv
-    {{VIRTUAL_BIN}}/pip install -v -e .
+    {{_venv_bin}}/pip install -v -e .
 
 # Sorts imports throughout the project
 isort: venv
-    {{VIRTUAL_BIN}}/isort src
+    {{_venv_bin}}/isort src
 
 # Checks that imports throughout the project are sorted correctly
 isort-check: venv
-    {{VIRTUAL_BIN}}/isort src --check-only
+    {{_venv_bin}}/isort src --check-only
 
 # Run mypy type checking on the project
 mypy: venv
-    {{VIRTUAL_BIN}}/mypy src
+    {{_venv_bin}}/mypy src
 
 # Create a virtual environment if necessary
 [windows]
