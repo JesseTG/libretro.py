@@ -52,9 +52,9 @@ lint: black-check isort-check flake8 mypy bandit
 # Runs all formatting tools against the project
 lint-fix: black isort
 
-# Install the project locally
+# Install the project locally and install all dependencies
 install: venv
-    {{_venv_bin}}/pip install -v -e .
+    {{_venv_bin}}/pip install --editable ".[all]"
 
 # Sorts imports throughout the project
 isort: _validate_venv
