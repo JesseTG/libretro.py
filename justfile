@@ -68,6 +68,10 @@ isort-check: _validate_venv
 mypy: _validate_venv
     {{_venv_bin}}/mypy src
 
+# Generate the documentation and serve it locally. View it in a web browser.
+serve-docs: _validate_venv
+    {{_venv_bin}}/sphinx-autobuild -j auto --ignore "./docs/libretro/*" --keep-going docs build/doc --watch src
+
 [private]
 [windows]
 _validate_venv:
