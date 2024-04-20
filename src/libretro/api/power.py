@@ -33,9 +33,7 @@ class retro_device_power(Structure, metaclass=FieldsFromTypeHints):
     percent: c_int8
 
     def __deepcopy__(self, _):
-        return retro_device_power(
-            state=self.state, seconds=self.seconds, percent=self.percent
-        )
+        return retro_device_power(state=self.state, seconds=self.seconds, percent=self.percent)
 
 
 __all__ = [

@@ -32,11 +32,11 @@ build: install
 
 # Runs the Black Python formatter against the project
 black: _validate_venv
-    {{_venv_bin}}/black src
+    {{_venv_bin}}/black src docs setup.py
 
 # Checks if the project is formatted correctly against the Black rules
 black-check: _validate_venv
-    {{_venv_bin}}/black src --check
+    {{_venv_bin}}/black src docs setup.py --check
 
 # Cleans the project
 clean:

@@ -26,24 +26,24 @@ class LocationDriver(Protocol):
         self._as_parameter_ = retro_location_callback()
         self._as_parameter_.start = retro_location_start_t(self.start)
         self._as_parameter_.stop = retro_location_stop_t(self.stop)
-        self._as_parameter_.get_position = retro_location_get_position_t(
-            self.__get_position
-        )
-        self._as_parameter_.set_interval = retro_location_set_interval_t(
-            self.set_interval
-        )
+        self._as_parameter_.get_position = retro_location_get_position_t(self.__get_position)
+        self._as_parameter_.set_interval = retro_location_set_interval_t(self.set_interval)
 
     @abstractmethod
-    def start(self) -> bool: ...
+    def start(self) -> bool:
+        ...
 
     @abstractmethod
-    def stop(self) -> None: ...
+    def stop(self) -> None:
+        ...
 
     @abstractmethod
-    def get_position(self) -> Position | None: ...
+    def get_position(self) -> Position | None:
+        ...
 
     @abstractmethod
-    def set_interval(self, interval: int, distance: int) -> None: ...
+    def set_interval(self, interval: int, distance: int) -> None:
+        ...
 
     @property
     def initialized(self) -> retro_location_lifetime_status_t:
@@ -51,9 +51,7 @@ class LocationDriver(Protocol):
 
     @initialized.setter
     def initialized(self, value: retro_location_lifetime_status_t) -> None:
-        if value is not None and not isinstance(
-            value, retro_location_lifetime_status_t
-        ):
+        if value is not None and not isinstance(value, retro_location_lifetime_status_t):
             raise TypeError(
                 f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}"
             )
@@ -70,9 +68,7 @@ class LocationDriver(Protocol):
 
     @deinitialized.setter
     def deinitialized(self, value: retro_location_lifetime_status_t) -> None:
-        if value is not None and not isinstance(
-            value, retro_location_lifetime_status_t
-        ):
+        if value is not None and not isinstance(value, retro_location_lifetime_status_t):
             raise TypeError(
                 f"expected retro_location_lifetime_status_t or None, got {type(value).__name__}"
             )

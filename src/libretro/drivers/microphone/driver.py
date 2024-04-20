@@ -28,22 +28,27 @@ class Microphone(Protocol):
         self.close()
 
     @abstractmethod
-    def close(self) -> None: ...
+    def close(self) -> None:
+        ...
 
     @property
     @abstractmethod
-    def params(self) -> retro_microphone_params | None: ...
+    def params(self) -> retro_microphone_params | None:
+        ...
 
     @abstractmethod
-    def read(self, frames: int) -> Sequence[int]: ...
+    def read(self, frames: int) -> Sequence[int]:
+        ...
 
     @property
     @abstractmethod
-    def state(self) -> bool: ...
+    def state(self) -> bool:
+        ...
 
     @state.setter
     @abstractmethod
-    def state(self, value: bool) -> None: ...
+    def state(self, value: bool) -> None:
+        ...
 
 
 @runtime_checkable
@@ -69,14 +74,14 @@ class MicrophoneDriver(Protocol):
 
     @property
     @abstractmethod
-    def version(self) -> int: ...
+    def version(self) -> int:
+        ...
 
     @abstractmethod
-    def open_mic(self, params: retro_microphone_params | None) -> Microphone: ...
+    def open_mic(self, params: retro_microphone_params | None) -> Microphone:
+        ...
 
-    def __open_mic(
-        self, params: POINTER(retro_microphone_params)
-    ) -> POINTER(retro_microphone):
+    def __open_mic(self, params: POINTER(retro_microphone_params)) -> POINTER(retro_microphone):
         mic_params: retro_microphone_params | None = params[0] if params else None
 
         mic = self.open_mic(mic_params)

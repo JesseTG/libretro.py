@@ -93,40 +93,28 @@ class HistoryFileHandle(FileHandle):
     def seek(self, offset: int, whence: VfsSeekPosition) -> int:
         try:
             result = self._handle.seek(offset, whence)
-            self._history.append(
-                VfsOperation(VfsOperationType.SEEK, (offset, whence), result)
-            )
+            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), result))
             return result
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.SEEK, (offset, whence), -1)
-            )
+            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), -1))
             raise
 
     def read(self, buffer: bytearray | memoryview) -> int:
         try:
             result = self._handle.read(buffer)
-            self._history.append(
-                VfsOperation(VfsOperationType.READ, (bytes(buffer),), result)
-            )
+            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), result))
             return result
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.READ, (bytes(buffer),), -1)
-            )
+            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), -1))
             raise
 
     def write(self, buffer: bytes | bytearray | memoryview) -> int:
         try:
             result = self._handle.write(buffer)
-            self._history.append(
-                VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), result)
-            )
+            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), result))
             return result
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), -1)
-            )
+            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), -1))
             raise
 
     def flush(self) -> bool:
@@ -141,9 +129,7 @@ class HistoryFileHandle(FileHandle):
     def truncate(self, length: int) -> int:
         try:
             result = self._handle.truncate(length)
-            self._history.append(
-                VfsOperation(VfsOperationType.TRUNCATE, (length,), result)
-            )
+            self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), result))
             return result
         except:
             self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), -1))
@@ -184,9 +170,7 @@ class HistoryFileSystemInterface(FileSystemInterface):
     def __init__(self, interface: FileSystemInterface):
         super().__init__(None)
         if not isinstance(interface, FileSystemInterface):
-            raise TypeError(
-                f"Expected a FileSystemInterface, got {type(interface).__name__}"
-            )
+            raise TypeError(f"Expected a FileSystemInterface, got {type(interface).__name__}")
 
         self._interface = interface
         self._history: list[VfsOperation] = []
@@ -212,9 +196,7 @@ class HistoryFileSystemInterface(FileSystemInterface):
             )
             return handle
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None)
-            )
+            self._history.append(VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None))
             raise
 
     def remove(self, path: bytes) -> bool:

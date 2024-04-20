@@ -37,9 +37,7 @@ class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
 
 
 NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
-CoreOptionArray: type[Array] = (
-    retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
-)
+CoreOptionArray: type[Array] = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
 @dataclass
@@ -131,9 +129,7 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass
-class retro_core_options_update_display_callback(
-    Structure, metaclass=FieldsFromTypeHints
-):
+class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_core_options_update_display_callback_t
 
     def __call__(self) -> bool:

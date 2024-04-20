@@ -6,9 +6,7 @@ from libretro.api._utils import FieldsFromTypeHints, c_double_p
 retro_location_set_interval_t = CFUNCTYPE(None, c_uint, c_uint)
 retro_location_start_t = CFUNCTYPE(c_bool)
 retro_location_stop_t = CFUNCTYPE(None)
-retro_location_get_position_t = CFUNCTYPE(
-    c_bool, c_double_p, c_double_p, c_double_p, c_double_p
-)
+retro_location_get_position_t = CFUNCTYPE(c_bool, c_double_p, c_double_p, c_double_p, c_double_p)
 retro_location_lifetime_status_t = CFUNCTYPE(None)
 
 

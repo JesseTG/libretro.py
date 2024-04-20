@@ -25,16 +25,12 @@ class ContentAttributes(NamedTuple):
 
 
 class LoadedContentFile:
-    def __init__(
-        self, info: retro_game_info, info_ext: retro_game_info_ext | None = None
-    ):
+    def __init__(self, info: retro_game_info, info_ext: retro_game_info_ext | None = None):
         if not isinstance(info, retro_game_info):
             raise TypeError(f"Expected retro_game_info, got {type(info).__name__}")
 
         if info_ext is not None and not isinstance(info_ext, retro_game_info_ext):
-            raise TypeError(
-                f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}"
-            )
+            raise TypeError(f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}")
 
         self._info = info
         self._info_ext = info_ext
@@ -95,45 +91,53 @@ class ContentDriver(Protocol):
 
     @property
     @abstractmethod
-    def enable_extended_info(self) -> bool: ...
+    def enable_extended_info(self) -> bool:
+        ...
 
     @property
     @abstractmethod
-    def game_info_ext(self) -> Array[retro_game_info_ext] | None: ...
+    def game_info_ext(self) -> Array[retro_game_info_ext] | None:
+        ...
 
     @property
     @abstractmethod
-    def system_info(self) -> retro_system_info | None: ...
+    def system_info(self) -> retro_system_info | None:
+        ...
 
     @system_info.setter
     @abstractmethod
-    def system_info(self, info: retro_system_info) -> None: ...
+    def system_info(self, info: retro_system_info) -> None:
+        ...
 
     @property
     @abstractmethod
-    def overrides(self) -> Sequence[retro_system_content_info_override] | None: ...
+    def overrides(self) -> Sequence[retro_system_content_info_override] | None:
+        ...
 
     @overrides.setter
     @abstractmethod
-    def overrides(
-        self, overrides: Sequence[retro_system_content_info_override]
-    ) -> None: ...
+    def overrides(self, overrides: Sequence[retro_system_content_info_override]) -> None:
+        ...
 
     @property
     @abstractmethod
-    def subsystem_info(self) -> Subsystems | None: ...
+    def subsystem_info(self) -> Subsystems | None:
+        ...
 
     @subsystem_info.setter
     @abstractmethod
-    def subsystem_info(self, subsystems: Sequence[retro_subsystem_info]) -> None: ...
+    def subsystem_info(self, subsystems: Sequence[retro_subsystem_info]) -> None:
+        ...
 
     @property
     @abstractmethod
-    def support_no_game(self) -> bool | None: ...
+    def support_no_game(self) -> bool | None:
+        ...
 
     @support_no_game.setter
     @abstractmethod
-    def support_no_game(self, support: bool) -> None: ...
+    def support_no_game(self, support: bool) -> None:
+        ...
 
 
 __all__ = [

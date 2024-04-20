@@ -16,18 +16,12 @@ class DefaultTimingDriver(TimingDriver):
         throttle_state: retro_throttle_state | None = None,
         target_refresh_rate: float | None = 60.0,
     ):
-        if (
-            not isinstance(throttle_state, retro_throttle_state)
-            and throttle_state is not None
-        ):
+        if not isinstance(throttle_state, retro_throttle_state) and throttle_state is not None:
             raise TypeError(
                 f"throttle_state must be a retro_throttle_state or None, not {type(throttle_state).__name__}"
             )
 
-        if (
-            not isinstance(target_refresh_rate, float)
-            and target_refresh_rate is not None
-        ):
+        if not isinstance(target_refresh_rate, float) and target_refresh_rate is not None:
             raise TypeError(
                 f"target_refresh_rate must be a float or None, not {type(target_refresh_rate).__name__}"
             )
@@ -76,9 +70,7 @@ class DefaultTimingDriver(TimingDriver):
     @override
     def throttle_state(self, value: retro_throttle_state) -> None:
         if not isinstance(value, retro_throttle_state):
-            raise TypeError(
-                f"value must be a retro_throttle_state, not {type(value).__name__}"
-            )
+            raise TypeError(f"value must be a retro_throttle_state, not {type(value).__name__}")
 
         self._throttle_state = value
 

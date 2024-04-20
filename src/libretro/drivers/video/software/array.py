@@ -18,20 +18,14 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
         self._recreate_frame = True
 
     @override
-    def refresh(
-        self, data: memoryview | None, width: int, height: int, pitch: int
-    ) -> None:
+    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
         if self._recreate_frame:
             # If we don't have a frame or the frame is not the right size, create a new one
             if not self._system_av_info:
                 raise RuntimeError("System AV info is not set")
 
             geometry = self._system_av_info.geometry
-            bufsize = (
-                geometry.max_width
-                * geometry.max_height
-                * self._pixel_format.bytes_per_pixel
-            )
+            bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
             self._frame = array("B", [0] * bufsize)
             self._recreate_frame = False
 
@@ -97,11 +91,7 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
     @property
     @override
     def frame_max(self):
-        return (
-            array(self._pixel_format.pixel_typecode, self._frame)
-            if self._frame
-            else None
-        )
+        return array(self._pixel_format.pixel_typecode, self._frame) if self._frame else None
 
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
@@ -117,9 +107,7 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
         if not isinstance(av_info, retro_system_av_info):
-            raise TypeError(
-                f"Expected a retro_system_av_info, got {type(av_info).__name__}"
-            )
+            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
 
         geometry: retro_game_geometry = av_info.geometry
         if (
@@ -139,9 +127,7 @@ class ArrayVideoDriver(AbstractSoftwareVideoDriver):
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
-            raise TypeError(
-                f"Expected a retro_game_geometry, got {type(geometry).__name__}"
-            )
+            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
         self._system_av_info.geometry.base_width = geometry.base_width
         self._system_av_info.geometry.base_height = geometry.base_height
         self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio

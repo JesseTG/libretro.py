@@ -29,9 +29,7 @@ class DefaultUserDriver(UserDriver):
             case bytes():
                 self._username: bytes | None = username
             case _:
-                raise TypeError(
-                    f"Expected str, bytes, or None, got {type(username).__name__}"
-                )
+                raise TypeError(f"Expected str, bytes, or None, got {type(username).__name__}")
 
     @username.deleter
     def username(self) -> None:
@@ -45,9 +43,7 @@ class DefaultUserDriver(UserDriver):
     @language.setter
     def language(self, language: Language | None) -> None:
         if not isinstance(language, (Language, int, type(None))):
-            raise TypeError(
-                f"Expected Language or int or None, got {type(language).__name__}"
-            )
+            raise TypeError(f"Expected Language or int or None, got {type(language).__name__}")
 
         self._language = Language(language)
 

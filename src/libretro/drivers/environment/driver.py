@@ -66,24 +66,28 @@ from libretro.api import (
 @runtime_checkable
 class EnvironmentDriver(Protocol):
     @abstractmethod
-    def environment(self, cmd: int, data: c_void_p) -> bool: ...
+    def environment(self, cmd: int, data: c_void_p) -> bool:
+        ...
 
     @abstractmethod
-    def video_refresh(
-        self, data: c_void_p, width: int, height: int, pitch: int
-    ) -> None: ...
+    def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
+        ...
 
     @abstractmethod
-    def audio_sample(self, left: int, right: int) -> None: ...
+    def audio_sample(self, left: int, right: int) -> None:
+        ...
 
     @abstractmethod
-    def audio_sample_batch(self, data: POINTER(c_int16), frames: int) -> int: ...
+    def audio_sample_batch(self, data: POINTER(c_int16), frames: int) -> int:
+        ...
 
     @abstractmethod
-    def input_poll(self) -> None: ...
+    def input_poll(self) -> None:
+        ...
 
     @abstractmethod
-    def input_state(self, port: int, device: int, index: int, id: int) -> int: ...
+    def input_state(self, port: int, device: int, index: int, id: int) -> int:
+        ...
 
     def _set_rotation(self, rotation: POINTER(c_uint)) -> bool:
         return False
@@ -109,19 +113,13 @@ class EnvironmentDriver(Protocol):
     def _set_pixel_format(self, fmt: POINTER(retro_pixel_format)) -> bool:
         return False
 
-    def _set_input_descriptors(
-        self, descriptors: POINTER(retro_input_descriptor)
-    ) -> bool:
+    def _set_input_descriptors(self, descriptors: POINTER(retro_input_descriptor)) -> bool:
         return False
 
-    def _set_keyboard_callback(
-        self, callback: POINTER(retro_keyboard_callback)
-    ) -> bool:
+    def _set_keyboard_callback(self, callback: POINTER(retro_keyboard_callback)) -> bool:
         return False
 
-    def _set_disk_control_interface(
-        self, callback: POINTER(retro_disk_control_callback)
-    ) -> bool:
+    def _set_disk_control_interface(self, callback: POINTER(retro_disk_control_callback)) -> bool:
         return False
 
     def _set_hw_render(self, data: POINTER(retro_hw_render_callback)) -> bool:
@@ -142,9 +140,7 @@ class EnvironmentDriver(Protocol):
     def _get_libretro_path(self, path: POINTER(c_char_p)) -> bool:
         return False
 
-    def _set_frame_time_callback(
-        self, callback: POINTER(retro_frame_time_callback)
-    ) -> bool:
+    def _set_frame_time_callback(self, callback: POINTER(retro_frame_time_callback)) -> bool:
         return False
 
     def _set_audio_callback(self, callback: POINTER(retro_audio_callback)) -> bool:
@@ -168,9 +164,7 @@ class EnvironmentDriver(Protocol):
     def _get_perf_interface(self, interface: POINTER(retro_perf_callback)) -> bool:
         return False
 
-    def _get_location_interface(
-        self, interface: POINTER(retro_location_callback)
-    ) -> bool:
+    def _get_location_interface(self, interface: POINTER(retro_location_callback)) -> bool:
         return False
 
     def _get_core_assets_directory(self, dir: POINTER(c_char_p)) -> bool:
@@ -205,14 +199,10 @@ class EnvironmentDriver(Protocol):
     def _get_language(self, language: POINTER(retro_language)) -> bool:
         return False
 
-    def _get_current_software_framebuffer(
-        self, framebuffer: POINTER(retro_framebuffer)
-    ) -> bool:
+    def _get_current_software_framebuffer(self, framebuffer: POINTER(retro_framebuffer)) -> bool:
         return False
 
-    def _get_hw_render_interface(
-        self, interface: POINTER(retro_hw_render_interface)
-    ) -> bool:
+    def _get_hw_render_interface(self, interface: POINTER(retro_hw_render_interface)) -> bool:
         return False
 
     def _set_support_achievements(self, support: POINTER(c_bool)) -> bool:
@@ -259,14 +249,10 @@ class EnvironmentDriver(Protocol):
     def _set_core_options_intl(self, options: POINTER(retro_core_options_intl)) -> bool:
         return False
 
-    def _set_core_options_display(
-        self, options: POINTER(retro_core_option_display)
-    ) -> bool:
+    def _set_core_options_display(self, options: POINTER(retro_core_option_display)) -> bool:
         return False
 
-    def _get_preferred_hw_render(
-        self, preferred: POINTER(retro_hw_context_type)
-    ) -> bool:
+    def _get_preferred_hw_render(self, preferred: POINTER(retro_hw_context_type)) -> bool:
         return False
 
     def _get_disk_control_interface_version(self, version: POINTER(c_uint)) -> bool:
@@ -310,9 +296,7 @@ class EnvironmentDriver(Protocol):
     def _set_core_options_v2(self, options: POINTER(retro_core_options_v2)) -> bool:
         return False
 
-    def _set_core_options_v2_intl(
-        self, options: POINTER(retro_core_options_v2_intl)
-    ) -> bool:
+    def _set_core_options_v2_intl(self, options: POINTER(retro_core_options_v2_intl)) -> bool:
         return False
 
     def _set_core_options_update_display_callback(
@@ -337,17 +321,13 @@ class EnvironmentDriver(Protocol):
     def _get_jit_capable(self, capable: POINTER(c_bool)) -> bool:
         return False
 
-    def _get_microphone_interface(
-        self, interface: POINTER(retro_microphone_interface)
-    ) -> bool:
+    def _get_microphone_interface(self, interface: POINTER(retro_microphone_interface)) -> bool:
         return False
 
     def _get_device_power(self, power: POINTER(retro_device_power)) -> bool:
         return False
 
-    def _set_netpacket_interface(
-        self, interface: POINTER(retro_netpacket_callback)
-    ) -> bool:
+    def _set_netpacket_interface(self, interface: POINTER(retro_netpacket_callback)) -> bool:
         return False
 
     def _get_playlist_directory(self, dir: POINTER(c_char_p)) -> bool:

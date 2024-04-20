@@ -8,7 +8,8 @@ from libretro.api.power import retro_device_power
 class PowerDriver(Protocol):
     @property
     @abstractmethod
-    def device_power(self) -> retro_device_power: ...
+    def device_power(self) -> retro_device_power:
+        ...
 
 
 class ConstantPowerDriver(PowerDriver):
@@ -24,9 +25,7 @@ class ConstantPowerDriver(PowerDriver):
     @device_power.setter
     def device_power(self, device_power: retro_device_power) -> None:
         if not isinstance(device_power, retro_device_power):
-            raise TypeError(
-                f"Expected a retro_device_power, got: {type(device_power).__name__}"
-            )
+            raise TypeError(f"Expected a retro_device_power, got: {type(device_power).__name__}")
         self._device_power = device_power
 
 

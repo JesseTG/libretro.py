@@ -130,9 +130,7 @@ def memoryview_at(
     address: c_char_p | c_void_p | int, size: c_ssize_t | int, readonly=False
 ) -> memoryview:
     flags = c_int(0x100 if readonly else 0x200)
-    return pythonapi.PyMemoryView_FromMemory(
-        cast(address, c_char_p), c_ssize_t(size), flags
-    )
+    return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
 
 
 class c_uintptr(ctypes._SimpleCData):

@@ -15,8 +15,8 @@ class DictEnvironmentDriver(
     EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]
 ):
     def __init__(self, envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction]):
-        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = (
-            MappingProxyType(envcalls)
+        self._envcalls: Mapping[EnvironmentCall, EnvironmentCallbackFunction] = MappingProxyType(
+            envcalls
         )
 
     @override

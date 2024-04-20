@@ -176,9 +176,7 @@ class StandardContentDriver(ContentDriver):
         ext = get_extension(content)
         if ext is not None:
             if not subsystem and ext not in self._system_info.extensions:
-                raise ContentError(
-                    f"Content extension '{ext!r}' is not supported by the system"
-                )
+                raise ContentError(f"Content extension '{ext!r}' is not supported by the system")
 
             if subsystem and ext not in subsysrom.extensions:
                 raise ContentError(
@@ -207,8 +205,7 @@ class StandardContentDriver(ContentDriver):
             return retro_game_info_ext(
                 full_path=info.path if not file_in_archive else None,
                 archive_path=path or None,  # Will be None if file_in_archive is False
-                archive_file=archive_file
-                or None,  # Will be None if file_in_archive is False
+                archive_file=archive_file or None,  # Will be None if file_in_archive is False
                 dir=_dir,  # Will be the content dirname if not an archive
                 name=name,
                 ext=ext.lower(),
@@ -232,21 +229,15 @@ class StandardContentDriver(ContentDriver):
                     "Core needs retro_game_info to include data, but none was provided"
                 )
             case retro_game_info(path=None, data=None), _:
-                raise ValueError(
-                    "Core needs a full path or data, but neither was provided"
-                )
-            case retro_game_info(info), ContentAttributes(
-                persistent_data=persistent_data
-            ):
+                raise ValueError("Core needs a full path or data, but neither was provided")
+            case retro_game_info(info), ContentAttributes(persistent_data=persistent_data):
                 info: retro_game_info
 
                 loaded_info = info
                 loaded_info_ext = _make_game_info_ext(info)
 
                 if persistent_data:
-                    self._persistent_buffers.add(
-                        _PersistentBuffer(c_void_p(info.data), None)
-                    )
+                    self._persistent_buffers.add(_PersistentBuffer(c_void_p(info.data), None))
 
                 # Give the loaded content to the environment
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
@@ -261,9 +252,7 @@ class StandardContentDriver(ContentDriver):
                     loaded_info = retro_game_info(os.fsencode(tmpfile), None, 0, None)
                     loaded_info_ext = _make_game_info_ext(loaded_info)
                     yield LoadedContentFile(loaded_info, loaded_info_ext)
-            case ZipPath(zippath), ContentAttributes(
-                need_fullpath=True, block_extract=True
-            ):
+            case ZipPath(zippath), ContentAttributes(need_fullpath=True, block_extract=True):
                 # If the core needs a full path and we're blocking extraction...
                 raise ContentError(
                     f"Cannot extract {zippath}; core requires a full path, but block_extract is enabled"
@@ -273,9 +262,7 @@ class StandardContentDriver(ContentDriver):
             ):  # TODO: Is block_extract significant here?
                 path = f"{zippath.filename}#{zippath.name}".encode()
                 data = zippath.read_bytes()
-                loaded_info = retro_game_info(
-                    path, addressof_buffer(data), len(data), None
-                )
+                loaded_info = retro_game_info(path, addressof_buffer(data), len(data), None)
                 loaded_info_ext = _make_game_info_ext(loaded_info)
 
                 if attributes.persistent_data:
@@ -313,18 +300,12 @@ class StandardContentDriver(ContentDriver):
                 # Content is persistent, so the view (and backing file) will be cleaned up in __del__ later
 
             # For test cases that provide ROM data directly
-            case bytes() | bytearray() | memoryview(), ContentAttributes(
-                need_fullpath=True
-            ):
-                raise ValueError(
-                    "Core requires a full path, but only raw data was provided"
-                )
+            case bytes() | bytearray() | memoryview(), ContentAttributes(need_fullpath=True):
+                raise ValueError("Core requires a full path, but only raw data was provided")
             case bytes(rom) | bytearray(rom) | memoryview(rom), ContentAttributes(
                 persistent_data=persistent_data
             ):
-                loaded_info = retro_game_info(
-                    None, addressof_buffer(rom), len(rom), None
-                )
+                loaded_info = retro_game_info(None, addressof_buffer(rom), len(rom), None)
                 loaded_info_ext = _make_game_info_ext(loaded_info)
 
                 if persistent_data:
@@ -390,9 +371,7 @@ class StandardContentDriver(ContentDriver):
 
     @overrides.setter
     @override
-    def overrides(
-        self, overrides: Sequence[retro_system_content_info_override] | None
-    ) -> None:
+    def overrides(self, overrides: Sequence[retro_system_content_info_override] | None) -> None:
         self._overrides = ContentInfoOverrides(overrides) if overrides else None
 
     def __needs_fullpath(
@@ -411,9 +390,7 @@ class StandardContentDriver(ContentDriver):
                 # If loading a content file with a specially-treated extension...
                 overrides: ContentInfoOverrides
                 return overrides[ext].need_fullpath
-            case bytes(), None, _ if ext.removeprefix(
-                b"."
-            ) in self._system_info.extensions:
+            case bytes(), None, _ if ext.removeprefix(b".") in self._system_info.extensions:
                 # If loading a regular content file with no relevant overrides...
                 return self._system_info.need_fullpath
             case bytes(), None, _:
@@ -513,9 +490,7 @@ class StandardContentDriver(ContentDriver):
                     if s.id == id:
                         return s
 
-                raise ValueError(
-                    f"Core did not register a subsystem with a numeric ID of {id}"
-                )
+                raise ValueError(f"Core did not register a subsystem with a numeric ID of {id}")
 
             case str(ident) | bytes(ident):
                 return self.subsystem_info[ident]

@@ -53,9 +53,7 @@ class ArrayAudioDriver(AudioDriver):
     @minimum_latency.setter
     @override
     def minimum_latency(self, latency: int | None):
-        raise UnsupportedEnvCall(
-            "ArrayAudioDriver does not support setting minimum latency"
-        )
+        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting minimum latency")
 
     @property
     @override

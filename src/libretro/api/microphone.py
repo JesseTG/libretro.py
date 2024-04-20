@@ -38,9 +38,7 @@ retro_get_mic_params_t = CFUNCTYPE(
 )
 retro_set_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone), c_bool)
 retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone))
-retro_read_mic_t = CFUNCTYPE(
-    c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t
-)
+retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t)
 
 
 @dataclass

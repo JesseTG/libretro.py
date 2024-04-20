@@ -100,10 +100,12 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
         return int(self.num_memory)
 
     @overload
-    def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...
+    def __getitem__(self, index: int) -> retro_subsystem_memory_info:
+        ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]: ...
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]:
+        ...
 
     def __getitem__(self, index):
         if not self.memory:
@@ -120,9 +122,7 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
                 return self.memory[s]
 
             case _:
-                raise TypeError(
-                    f"Expected an int or slice index, got {type(index).__name__}"
-                )
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __deepcopy__(self, memo):
         return retro_subsystem_rom_info(
@@ -131,11 +131,7 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
             need_fullpath=self.need_fullpath,
             block_extract=self.block_extract,
             required=self.required,
-            memory=(
-                deepcopy_array(self.memory, self.num_memory, memo)
-                if self.memory
-                else None
-            ),
+            memory=(deepcopy_array(self.memory, self.num_memory, memo) if self.memory else None),
             num_memory=self.num_memory,
         )
 
@@ -157,10 +153,12 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
         return int(self.num_roms)
 
     @overload
-    def __getitem__(self, index: int) -> retro_subsystem_rom_info: ...
+    def __getitem__(self, index: int) -> retro_subsystem_rom_info:
+        ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]: ...
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]:
+        ...
 
     def __getitem__(self, index):
         if not self.roms:
@@ -177,9 +175,7 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
                 return self.roms[s]
 
             case _:
-                raise TypeError(
-                    f"Expected an int or slice index, got {type(index).__name__}"
-                )
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __deepcopy__(self, memo):
         return retro_subsystem_info(
@@ -217,17 +213,11 @@ class Subsystems(Sequence[retro_subsystem_info]):
                 f"Expected a sequence of retro_subsystem_info objects, got {type(subsystems).__name__}"
             )
 
-        if not all(
-            isinstance(subsystem, retro_subsystem_info) for subsystem in subsystems
-        ):
-            raise TypeError(
-                "All elements in the sequence must be retro_subsystem_info objects"
-            )
+        if not all(isinstance(subsystem, retro_subsystem_info) for subsystem in subsystems):
+            raise TypeError("All elements in the sequence must be retro_subsystem_info objects")
 
         self._subsystems = tuple(subsystems)
-        self._subsystems_by_ident = {
-            bytes(subsystem.ident): subsystem for subsystem in subsystems
-        }
+        self._subsystems_by_ident = {bytes(subsystem.ident): subsystem for subsystem in subsystems}
 
     def __getitem__(self, item: int | str | bytes) -> retro_subsystem_info:
         length = len(self._subsystems)
@@ -243,9 +233,7 @@ class Subsystems(Sequence[retro_subsystem_info]):
 
                 raise KeyError(f"Subsystem with identifier {item!r} not found")
             case _:
-                raise TypeError(
-                    f"Expected an int, str, or bytes; got {type(item).__name__}"
-                )
+                raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
 
     def __contains__(self, item: str | bytes | retro_subsystem_info):
         match item:
@@ -291,8 +279,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
             )
 
         if not all(
-            isinstance(override, retro_system_content_info_override)
-            for override in overrides
+            isinstance(override, retro_system_content_info_override) for override in overrides
         ):
             raise TypeError(
                 "All elements in the sequence must be retro_system_content_info_override objects"
@@ -310,16 +297,12 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
         self._overrides_by_ext = MappingProxyType(overrides_by_ext)
 
-    def __getitem__(
-        self, item: int | slice | str | bytes
-    ) -> retro_system_content_info_override:
+    def __getitem__(self, item: int | slice | str | bytes) -> retro_system_content_info_override:
         match item:
             case int() if -len(self) <= item < len(self):
                 return self._overrides[item]
             case int():
-                raise IndexError(
-                    f"Expected {-len(self)} <= index < {len(self)}, got {item}"
-                )
+                raise IndexError(f"Expected {-len(self)} <= index < {len(self)}, got {item}")
             case slice() as s:
                 return self._overrides[s]
             case str() | bytes():
@@ -329,13 +312,9 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
                 raise KeyError(f"Override for extension {item!r} not found")
             case _:
-                raise TypeError(
-                    f"Expected an int, str, or bytes; got {type(item).__name__}"
-                )
+                raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
 
-    def __contains__(
-        self, item: str | bytes | retro_system_content_info_override
-    ) -> bool:
+    def __contains__(self, item: str | bytes | retro_system_content_info_override) -> bool:
         """
         Tests if the given item is in the overrides list.
 

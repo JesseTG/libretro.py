@@ -13,9 +13,7 @@ MicrophoneSource = MicrophoneInput | MicrophoneInputIterator | MicrophoneInputGe
 
 
 class GeneratorMicrophone(Microphone):
-    def __init__(
-        self, generator: MicrophoneSource | None, params: retro_microphone_params | None
-    ):
+    def __init__(self, generator: MicrophoneSource | None, params: retro_microphone_params | None):
         super().__init__(params)
         self._params = params or retro_microphone_params(44100)
         self._enabled = False

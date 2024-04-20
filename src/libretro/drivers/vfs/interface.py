@@ -43,33 +43,42 @@ class FileHandle(Protocol):
         self._as_parameter_ = id(self)
 
     @abstractmethod
-    def close(self) -> bool: ...
+    def close(self) -> bool:
+        ...
 
     @property
     @abstractmethod
-    def path(self) -> bytes: ...
+    def path(self) -> bytes:
+        ...
 
     @property
     @abstractmethod
-    def size(self) -> int: ...
+    def size(self) -> int:
+        ...
 
     @abstractmethod
-    def tell(self) -> int: ...
+    def tell(self) -> int:
+        ...
 
     @abstractmethod
-    def seek(self, offset: int, whence: VfsSeekPosition) -> int: ...
+    def seek(self, offset: int, whence: VfsSeekPosition) -> int:
+        ...
 
     @abstractmethod
-    def read(self, buffer: bytearray | memoryview) -> int: ...
+    def read(self, buffer: bytearray | memoryview) -> int:
+        ...
 
     @abstractmethod
-    def write(self, buffer: bytes | bytearray | memoryview) -> int: ...
+    def write(self, buffer: bytes | bytearray | memoryview) -> int:
+        ...
 
     @abstractmethod
-    def flush(self) -> bool: ...
+    def flush(self) -> bool:
+        ...
 
     @abstractmethod
-    def truncate(self, length: int) -> int: ...
+    def truncate(self, length: int) -> int:
+        ...
 
 
 class DirEntry(NamedTuple):
@@ -85,7 +94,8 @@ class DirectoryHandle(Protocol):
         self._current_dirent: DirEntry | None = None
 
     @abstractmethod
-    def close(self) -> bool: ...  # Corresponds to closedir
+    def close(self) -> bool:
+        ...  # Corresponds to closedir
 
     def __iter__(self):
         return self
@@ -98,7 +108,8 @@ class DirectoryHandle(Protocol):
         return self._current_dirent
 
     @abstractmethod
-    def readdir(self) -> DirEntry | None: ...
+    def readdir(self) -> DirEntry | None:
+        ...
 
     def dirent_name(self) -> bytes | None:
         """
@@ -129,27 +140,34 @@ class FileSystemInterface(Protocol):
 
     @property
     @abstractmethod
-    def version(self) -> int: ...
+    def version(self) -> int:
+        ...
 
     @abstractmethod
     def open(
         self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
-    ) -> FileHandle | None: ...
+    ) -> FileHandle | None:
+        ...
 
     @abstractmethod
-    def remove(self, path: bytes) -> bool: ...
+    def remove(self, path: bytes) -> bool:
+        ...
 
     @abstractmethod
-    def rename(self, old_path: bytes, new_path: bytes) -> bool: ...
+    def rename(self, old_path: bytes, new_path: bytes) -> bool:
+        ...
 
     @abstractmethod
-    def stat(self, path: bytes) -> tuple[VfsStat, int] | None: ...
+    def stat(self, path: bytes) -> tuple[VfsStat, int] | None:
+        ...
 
     @abstractmethod
-    def mkdir(self, path: bytes) -> VfsMkdirResult: ...
+    def mkdir(self, path: bytes) -> VfsMkdirResult:
+        ...
 
     @abstractmethod
-    def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None: ...
+    def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None:
+        ...
 
     @property
     def _as_parameter_(self) -> retro_vfs_interface:
@@ -179,9 +197,7 @@ class FileSystemInterface(Protocol):
                 self.__interface.dirent_get_name = retro_vfs_dirent_get_name_t(
                     self.__dirent_get_name
                 )
-                self.__interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(
-                    self.__dirent_is_dir
-                )
+                self.__interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.__dirent_is_dir)
                 self.__interface.closedir = retro_vfs_closedir_t(self.__closedir)
 
         return self.__interface
@@ -203,9 +219,7 @@ class FileSystemInterface(Protocol):
             case bytes(path):
                 return path
             case _ as result:
-                raise TypeError(
-                    f"Expected path to return a bytes, got: {type(result).__name__}"
-                )
+                raise TypeError(f"Expected path to return a bytes, got: {type(result).__name__}")
 
     def __open(self, path: bytes, mode: int, hints: int) -> c_void_p | None:
         if not path:
@@ -220,9 +234,7 @@ class FileSystemInterface(Protocol):
             return None
 
         if not isinstance(file, FileHandle):
-            raise TypeError(
-                f"Expected open to return a FileHandle, got: {type(file).__name__}"
-            )
+            raise TypeError(f"Expected open to return a FileHandle, got: {type(file).__name__}")
 
         address = id(file)
         self.__file_handles[address] = file
@@ -263,9 +275,7 @@ class FileSystemInterface(Protocol):
 
             size = handle.size
             if not isinstance(size, int):
-                raise TypeError(
-                    f"Expected size to return an int, got: {type(size).__name__}"
-                )
+                raise TypeError(f"Expected size to return an int, got: {type(size).__name__}")
 
             return size
         except:
@@ -286,18 +296,14 @@ class FileSystemInterface(Protocol):
 
             pos = handle.tell()
             if not isinstance(pos, int):
-                raise TypeError(
-                    f"Expected tell to return an int, got: {type(pos).__name__}"
-                )
+                raise TypeError(f"Expected tell to return an int, got: {type(pos).__name__}")
 
             return pos
         except:
             # TODO: Log the exception
             return -1
 
-    def __seek(
-        self, stream: POINTER(retro_vfs_file_handle), offset: int, whence: int
-    ) -> int:
+    def __seek(self, stream: POINTER(retro_vfs_file_handle), offset: int, whence: int) -> int:
         if not stream:
             return -1
 
@@ -317,18 +323,14 @@ class FileSystemInterface(Protocol):
 
             pos = handle.seek(offset, VfsSeekPosition(whence))
             if not isinstance(pos, int):
-                raise TypeError(
-                    f"Expected seek to return an int, got: {type(pos).__name__}"
-                )
+                raise TypeError(f"Expected seek to return an int, got: {type(pos).__name__}")
 
             return pos
         except:
             # TODO: Log the exception
             return -1
 
-    def __read(
-        self, stream: POINTER(retro_vfs_file_handle), buffer: c_void_p, length: int
-    ) -> int:
+    def __read(self, stream: POINTER(retro_vfs_file_handle), buffer: c_void_p, length: int) -> int:
         if not stream:
             return -1
 
@@ -364,9 +366,7 @@ class FileSystemInterface(Protocol):
             # TODO: Log the exception
             return -1
 
-    def __write(
-        self, stream: POINTER(retro_vfs_file_handle), buffer: int, length: int
-    ) -> int:
+    def __write(self, stream: POINTER(retro_vfs_file_handle), buffer: int, length: int) -> int:
         if not stream:
             return -1
 

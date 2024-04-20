@@ -19,9 +19,7 @@ class RumbleState:
             case int(i):
                 raise IndexError(f"Expected a valid RumbleEffect, got {i}")
             case e:
-                raise TypeError(
-                    f"Expected a valid RumbleEffect, got: {type(e).__name__}"
-                )
+                raise TypeError(f"Expected a valid RumbleEffect, got: {type(e).__name__}")
 
     def __setitem__(self, key: RumbleEffect, value: int):
         match key, value:

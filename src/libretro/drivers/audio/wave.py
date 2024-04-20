@@ -25,9 +25,7 @@ class WaveWriterAudioDriver(AudioDriver):
             case RawIOBase() as io:
                 self._file = wave.open(io)
             case _:
-                raise TypeError(
-                    f"Expected a str, bytes, path, or RawIOBase, got {file!r}"
-                )
+                raise TypeError(f"Expected a str, bytes, path, or RawIOBase, got {file!r}")
 
         self._file.setnchannels(2)
         self._file.setsampwidth(2)
@@ -73,9 +71,7 @@ class WaveWriterAudioDriver(AudioDriver):
     @minimum_latency.setter
     @override
     def minimum_latency(self, latency: int | None):
-        raise UnsupportedEnvCall(
-            "ArrayAudioDriver does not support setting minimum latency"
-        )
+        raise UnsupportedEnvCall("ArrayAudioDriver does not support setting minimum latency")
 
     @property
     @override

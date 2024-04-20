@@ -28,10 +28,12 @@ class PortSensorState:
     illuminance: SensorState = field(default_factory=SensorState)
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorState: ...
+    def __getitem__(self, item: SensorType) -> SensorState:
+        ...
 
     @overload
-    def __getitem__(self, item: SensorAction) -> bool: ...
+    def __getitem__(self, item: SensorAction) -> bool:
+        ...
 
     def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
         match item:
@@ -59,10 +61,12 @@ class PortSensorState:
                 )
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState): ...
+    def __setitem__(self, key: SensorType, value: SensorState):
+        ...
 
     @overload
-    def __setitem__(self, key: SensorAction, value: bool): ...
+    def __setitem__(self, key: SensorAction, value: bool):
+        ...
 
     def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
         match key, value:
@@ -87,9 +91,7 @@ class PortSensorState:
             case (SensorType(k) | SensorAction(k)), _:
                 raise TypeError(f"Cannot set {k} from {type(value).__name__}")
             case _, _:
-                raise TypeError(
-                    f"Expected a SensorType or SensorAction, got {type(key).__name__}"
-                )
+                raise TypeError(f"Expected a SensorType or SensorAction, got {type(key).__name__}")
 
 
 @dataclass(slots=True)
@@ -99,10 +101,12 @@ class PortState:
     illuminance: SensorState = field(default_factory=SensorState)
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorState: ...
+    def __getitem__(self, item: SensorType) -> SensorState:
+        ...
 
     @overload
-    def __getitem__(self, item: SensorAction) -> bool: ...
+    def __getitem__(self, item: SensorAction) -> bool:
+        ...
 
     def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
         match item:
@@ -130,10 +134,12 @@ class PortState:
                 )
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState): ...
+    def __setitem__(self, key: SensorType, value: SensorState):
+        ...
 
     @overload
-    def __setitem__(self, key: SensorAction, value: bool): ...
+    def __setitem__(self, key: SensorAction, value: bool):
+        ...
 
     def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
         match key, value:
@@ -158,9 +164,7 @@ class PortState:
             case (SensorType(k) | SensorAction(k)), _:
                 raise TypeError(f"Cannot set {k} from {type(value).__name__}")
             case _, _:
-                raise TypeError(
-                    f"Expected a SensorType or SensorAction, got {type(key).__name__}"
-                )
+                raise TypeError(f"Expected a SensorType or SensorAction, got {type(key).__name__}")
 
 
 class SensorInput:
@@ -193,23 +197,24 @@ class PortInput:
     illuminance: IlluminanceInput = field(default_factory=IlluminanceInput)
 
     @overload
-    def __getitem__(self, item: Sensor) -> float: ...
+    def __getitem__(self, item: Sensor) -> float:
+        ...
 
     @overload
-    def __getitem__(
-        self, item: Literal[SensorType.ACCELEROMETER]
-    ) -> AccelerometerInput: ...
+    def __getitem__(self, item: Literal[SensorType.ACCELEROMETER]) -> AccelerometerInput:
+        ...
 
     @overload
-    def __getitem__(self, item: Literal[SensorType.GYROSCOPE]) -> GyroscopeInput: ...
+    def __getitem__(self, item: Literal[SensorType.GYROSCOPE]) -> GyroscopeInput:
+        ...
 
     @overload
-    def __getitem__(
-        self, item: Literal[SensorType.ILLUMINANCE]
-    ) -> IlluminanceInput: ...
+    def __getitem__(self, item: Literal[SensorType.ILLUMINANCE]) -> IlluminanceInput:
+        ...
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorInput: ...
+    def __getitem__(self, item: SensorType) -> SensorInput:
+        ...
 
     def __getitem__(self, item: Sensor | SensorType) -> float | SensorInput:
         match item:
@@ -234,30 +239,27 @@ class PortInput:
             case SensorType.ILLUMINANCE:
                 return self.illuminance
             case _:
-                raise TypeError(
-                    f"Expected a Sensor or SensorType, got {type(item).__name__}"
-                )
+                raise TypeError(f"Expected a Sensor or SensorType, got {type(item).__name__}")
 
     @overload
-    def __setitem__(self, key: Sensor, value: float): ...
+    def __setitem__(self, key: Sensor, value: float):
+        ...
 
     @overload
-    def __setitem__(
-        self, key: Literal[SensorType.ACCELEROMETER], value: AccelerometerInput
-    ): ...
+    def __setitem__(self, key: Literal[SensorType.ACCELEROMETER], value: AccelerometerInput):
+        ...
 
     @overload
-    def __setitem__(
-        self, key: Literal[SensorType.GYROSCOPE], value: GyroscopeInput
-    ): ...
+    def __setitem__(self, key: Literal[SensorType.GYROSCOPE], value: GyroscopeInput):
+        ...
 
     @overload
-    def __setitem__(
-        self, key: Literal[SensorType.ILLUMINANCE], value: IlluminanceInput
-    ): ...
+    def __setitem__(self, key: Literal[SensorType.ILLUMINANCE], value: IlluminanceInput):
+        ...
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState): ...
+    def __setitem__(self, key: SensorType, value: SensorState):
+        ...
 
     def __setitem__(self, key: Sensor | SensorType, value: float | SensorInput):
         match key, value:
@@ -284,9 +286,7 @@ class PortInput:
             case (Sensor(s) | SensorType(s)), _:
                 raise TypeError(f"Cannot set {s} from {type(value).__name__}")
             case _, _:
-                raise TypeError(
-                    f"Cannot set {type(key).__name__} from {type(value).__name__}"
-                )
+                raise TypeError(f"Cannot set {type(key).__name__} from {type(value).__name__}")
 
 
 SensorPollResult = Real | PortInput | SensorInput | Vector3 | None
@@ -335,9 +335,7 @@ class GeneratorSensorInterface(SensorInterface):
                 # (Non-existent ports are enforced at the environment layer, not here)
                 return 0.0
 
-            case [*results], port, sensor if port < len(results) and not is_dataclass(
-                results
-            ):
+            case [*results], port, sensor if port < len(results) and not is_dataclass(results):
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
@@ -352,9 +350,7 @@ class GeneratorSensorInterface(SensorInterface):
             case _, _, _:
                 return 0.0
 
-    def _lookup_port_state(
-        self, result: SensorPollResult, port: int, sensor: Sensor
-    ) -> float:
+    def _lookup_port_state(self, result: SensorPollResult, port: int, sensor: Sensor) -> float:
         # The port's enabled state is handled by _get_sensor_input
 
         match result, port, sensor:

@@ -39,9 +39,7 @@ class retro_disk_control_callback(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass
-class retro_disk_control_ext_callback(
-    retro_disk_control_callback, metaclass=FieldsFromTypeHints
-):
+class retro_disk_control_ext_callback(retro_disk_control_callback, metaclass=FieldsFromTypeHints):
     set_initial_image: retro_set_initial_image_t
     get_image_path: retro_get_image_path_t
     get_image_label: retro_get_image_label_t

@@ -68,17 +68,13 @@ class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
 
     def __getitem__(self, item):
         if item < 0 or item >= self.num_descriptors:
-            raise IndexError(
-                f"Expected 0 <= index < {self.num_descriptors}, got {item}"
-            )
+            raise IndexError(f"Expected 0 <= index < {self.num_descriptors}, got {item}")
 
         return self.descriptors[item]
 
     def __deepcopy__(self, memodict):
         return retro_memory_map(
-            descriptors=deepcopy_array(
-                self.descriptors, self.num_descriptors, memodict
-            ),
+            descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
             num_descriptors=self.num_descriptors,
         )
 

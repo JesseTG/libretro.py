@@ -47,9 +47,7 @@ class GeneratorLocationDriver(LocationDriver):
                 case Position() as pos:
                     return pos
                 case e:
-                    raise TypeError(
-                        f"expected Position or None, got {type(e).__name__}"
-                    )
+                    raise TypeError(f"expected Position or None, got {type(e).__name__}")
         except StopIteration:
             return None
 

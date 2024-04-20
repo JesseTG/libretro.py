@@ -90,17 +90,17 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
 
     def __deepcopy__(self, memo):
         return retro_controller_info(
-            types=(
-                deepcopy_array(self.types, self.num_types, memo) if self.types else None
-            ),
+            types=(deepcopy_array(self.types, self.num_types, memo) if self.types else None),
             num_types=self.num_types,
         )
 
     @overload
-    def __getitem__(self, index: int) -> retro_controller_description: ...
+    def __getitem__(self, index: int) -> retro_controller_description:
+        ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]: ...
+    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]:
+        ...
 
     def __getitem__(self, index):
         if not self.types:
@@ -117,9 +117,7 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
                 return self.types[s]
 
             case _:
-                raise TypeError(
-                    f"Expected an int or slice index, got {type(index).__name__}"
-                )
+                raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __len__(self):
         return int(self.num_types)

@@ -24,9 +24,7 @@ RETRO_CAMERA_BUFFER_DUMMY = 0x7FFFFFFF
 retro_camera_start_t = CFUNCTYPE(c_bool)
 retro_camera_stop_t = CFUNCTYPE(None)
 retro_camera_lifetime_status_t = CFUNCTYPE(None)
-retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(
-    None, POINTER(c_uint32), c_uint, c_uint, c_size_t
-)
+retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(None, POINTER(c_uint32), c_uint, c_uint, c_size_t)
 retro_camera_frame_opengl_texture_t = CFUNCTYPE(None, c_uint, c_uint, POINTER(c_float))
 
 

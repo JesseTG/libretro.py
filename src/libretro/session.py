@@ -143,9 +143,7 @@ class Session:
 
         return self
 
-    def __exit__(
-        self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType
-    ):
+    def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType):
         if self._content is not None:
             self._core.unload_game()
 

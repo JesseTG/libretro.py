@@ -31,9 +31,7 @@ class DictOptionDriver(OptionDriver):
         variables: Mapping[AnyStr, AnyStr] | None = None,
     ):
         if version not in {0, 1, 2}:
-            raise ValueError(
-                f"Expected a core option version of 0, 1, or 2; got {version}"
-            )
+            raise ValueError(f"Expected a core option version of 0, 1, or 2; got {version}")
 
         self._version = version
         self._variables_dirty = True
@@ -42,18 +40,14 @@ class DictOptionDriver(OptionDriver):
         )
 
         self._variables: dict[bytes, bytes] = (
-            {as_bytes(k): as_bytes(v) for k, v in variables.items()}
-            if variables
-            else {}
+            {as_bytes(k): as_bytes(v) for k, v in variables.items()} if variables else {}
         )
 
         self._visibility: dict[bytes, bool] = (
             {as_bytes(k): True for k in variables} if variables else {}
         )
 
-        self._update_display_callback: (
-            retro_core_options_update_display_callback | None
-        ) = None
+        self._update_display_callback: (retro_core_options_update_display_callback | None) = None
         self._categories_us: dict[bytes, retro_core_option_v2_category] = {}
         self._options_us: dict[bytes, retro_core_option_v2_definition] = {}
         self._categories_intl: dict[bytes, retro_core_option_v2_category] = {}
@@ -78,9 +72,7 @@ class DictOptionDriver(OptionDriver):
 
         value = self._variables[key]
 
-        if value not in (
-            string_at(v.value) for v in self._options_us[key].values if v.value
-        ):
+        if value not in (string_at(v.value) for v in self._options_us[key].values if v.value):
             # For invalid values, return None
             return string_at(self._options_us[key].default_value)
 
@@ -144,14 +136,12 @@ class DictOptionDriver(OptionDriver):
             self._options_intl.clear()
         else:
             self._options_us = {
-                bytes(o.key): deepcopy(o)
-                for o in from_zero_terminated(options.us.contents)
+                bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.us.contents)
             }
 
             if options.local:
                 self._options_intl = {
-                    bytes(o.key): deepcopy(o)
-                    for o in from_zero_terminated(options.local.contents)
+                    bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.local.contents)
                 }
 
         self._variables_dirty = True
@@ -170,12 +160,10 @@ class DictOptionDriver(OptionDriver):
 
         if options and options.definitions:
             self._categories_us = {
-                bytes(c.key): deepcopy(c)
-                for c in from_zero_terminated(options.categories)
+                bytes(c.key): deepcopy(c) for c in from_zero_terminated(options.categories)
             }
             self._options_us = {
-                bytes(o.key): deepcopy(o)
-                for o in from_zero_terminated(options.definitions)
+                bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.definitions)
             }
         else:
             self._categories_us.clear()
@@ -203,12 +191,10 @@ class DictOptionDriver(OptionDriver):
                 local: retro_core_options_v2 = options.local.contents
 
                 self._categories_intl = {
-                    bytes(c.key): deepcopy(c)
-                    for c in from_zero_terminated(local.categories)
+                    bytes(c.key): deepcopy(c) for c in from_zero_terminated(local.categories)
                 }
                 self._options_intl = {
-                    bytes(o.key): deepcopy(o)
-                    for o in from_zero_terminated(local.definitions)
+                    bytes(o.key): deepcopy(o) for o in from_zero_terminated(local.definitions)
                 }
 
         self._variables_dirty = True
@@ -222,18 +208,14 @@ class DictOptionDriver(OptionDriver):
 
     @update_display_callback.setter
     @override
-    def update_display_callback(
-        self, callback: retro_core_options_update_display_callback | None
-    ):
+    def update_display_callback(self, callback: retro_core_options_update_display_callback | None):
         match callback:
             case None:
                 self._update_display_callback = None
             case retro_core_options_update_display_callback(callback=c) if not c:
                 self._update_display_callback = None
             case retro_core_options_update_display_callback(callback=c):
-                self._update_display_callback = (
-                    retro_core_options_update_display_callback(c)
-                )
+                self._update_display_callback = retro_core_options_update_display_callback(c)
             case _:
                 raise TypeError(
                     f"Expected a retro_core_options_update_display_callback, got {callback!r}"

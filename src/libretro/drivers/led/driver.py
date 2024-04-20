@@ -15,13 +15,15 @@ class LedDriver(Protocol):
         self.set_led_state(led, state)
 
     @abstractmethod
-    def set_led_state(self, led: int, state: int) -> None: ...
+    def set_led_state(self, led: int, state: int) -> None:
+        ...
 
     def __setitem__(self, key: int, value: int):
         self.set_led_state(int(key), int(value))
 
     @abstractmethod
-    def get_led_state(self, led: int) -> int: ...
+    def get_led_state(self, led: int) -> int:
+        ...
 
     def __getitem__(self, key: int) -> int:
         return self.get_led_state(int(key))

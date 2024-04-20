@@ -38,14 +38,7 @@ class Point:
     y: int = 0
 
 
-DeviceState = (
-    JoypadState
-    | MouseState
-    | KeyboardState
-    | LightGunState
-    | AnalogState
-    | PointerState
-)
+DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
 
 
 class Direction(IntEnum):
@@ -192,9 +185,7 @@ class GeneratorInputDriver(InputDriver):
             case None:
                 self._max_users = None
             case _:
-                raise TypeError(
-                    f"Expected None or a non-negative int, got {max_users!r}"
-                )
+                raise TypeError(f"Expected None or a non-negative int, got {max_users!r}")
 
     @max_users.deleter
     @override
@@ -242,9 +233,9 @@ class GeneratorInputDriver(InputDriver):
             ):
                 # If we filter by devices, any device not in the flag will default to 0
                 return 0
-            case _, [*results], port, device if 0 <= port < len(
-                results
-            ) and not isinstance(results, InputDeviceState):
+            case _, [*results], port, device if 0 <= port < len(results) and not isinstance(
+                results, InputDeviceState
+            ):
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
@@ -519,9 +510,7 @@ class GeneratorInputDriver(InputDriver):
     def descriptors(self, descriptors: Sequence[retro_input_descriptor] | None) -> None:
         if descriptors is None:
             self._input_descriptors = None
-        elif all(
-            isinstance(descriptor, retro_input_descriptor) for descriptor in descriptors
-        ):
+        elif all(isinstance(descriptor, retro_input_descriptor) for descriptor in descriptors):
             self._input_descriptors = tuple(descriptors)
         else:
             raise TypeError(
@@ -538,15 +527,10 @@ class GeneratorInputDriver(InputDriver):
     def controller_info(self, info: Sequence[retro_controller_info] | None) -> None:
         if info is None:
             self._controller_info = None
-        elif all(
-            isinstance(controller_info, retro_controller_info)
-            for controller_info in info
-        ):
+        elif all(isinstance(controller_info, retro_controller_info) for controller_info in info):
             self._controller_info = tuple(info)
         else:
-            raise TypeError(
-                f"Expected None or a sequence of retro_controller_info, got {info!r}"
-            )
+            raise TypeError(f"Expected None or a sequence of retro_controller_info, got {info!r}")
 
     @property
     @override
@@ -557,9 +541,7 @@ class GeneratorInputDriver(InputDriver):
     @override
     def keyboard_callback(self, callback: retro_keyboard_callback | None) -> None:
         if callback is not None and not isinstance(callback, retro_keyboard_callback):
-            raise TypeError(
-                f"Expected None or a retro_keyboard_callback, got {callback!r}"
-            )
+            raise TypeError(f"Expected None or a retro_keyboard_callback, got {callback!r}")
 
         self._keyboard_callback = callback
 

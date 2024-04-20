@@ -91,15 +91,11 @@ InputDriverArg = (
     | Default
 )
 VideoDriverArg = _RequiredArg[VideoDriver] | Default
-ContentArg = (
-    Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
-)
+ContentArg = Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
 ContentDriverArg = _OptionalArg[ContentDriver]
 BoolArg = _OptionalArg[bool]
 MessageDriverArg = _OptionalArg[MessageInterface] | Logger
-OptionDriverArg = (
-    _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
-)
+OptionDriverArg = _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
 PathDriverArg = _OptionalArg[PathDriver] | str | PathLike
 LogDriverArg = _OptionalArg[LogDriver] | Logger
 PerfDriverArg = _OptionalArg[PerfDriver]
@@ -133,9 +129,7 @@ class _SessionBuilderArgs(TypedDict):
     video: _RequiredFactory[VideoDriver]
     content: _OptionalFactory[Content | SubsystemContent]
     content_driver: _OptionalFactory[ContentDriver]
-    overscan: _OptionalFactory[
-        bool
-    ]  # TODO: Replace with some driver (not sure what yet)
+    overscan: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
     path: _OptionalFactory[PathDriver]
@@ -148,18 +142,12 @@ class _SessionBuilderArgs(TypedDict):
     av_mask: _OptionalFactory[AvEnableFlags]
     midi: _OptionalFactory[MidiDriver]
     timing: _OptionalFactory[TimingDriver]
-    preferred_hw: _OptionalFactory[
-        HardwareContext
-    ]  # TODO: Replace with a method in VideoDriver
-    driver_switch_enable: _OptionalFactory[
-        bool
-    ]  # TODO: Replace with a method in VideoDriver
+    preferred_hw: _OptionalFactory[HardwareContext]  # TODO: Replace with a method in VideoDriver
+    driver_switch_enable: _OptionalFactory[bool]  # TODO: Replace with a method in VideoDriver
     savestate_context: _OptionalFactory[
         SavestateContext
     ]  # TODO: Replace with some driver (not sure what yet)
-    jit_capable: _OptionalFactory[
-        bool
-    ]  # TODO: Replace with some driver (not sure what yet)
+    jit_capable: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     mic: _OptionalFactory[MicrophoneDriver]
     power: _OptionalFactory[PowerDriver]
 
@@ -308,9 +296,9 @@ class SessionBuilder:
 
                 self._args["input"] = _generate
             case _DefaultType.DEFAULT:
-                self._args["input"] = (
-                    GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
-                )
+                self._args[
+                    "input"
+                ] = GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
             case None:
                 raise ValueError("An input driver is required")
             case _:

@@ -315,7 +315,6 @@ class MutableString(UserString):
 
 
 class String(MutableString, Union):
-
     _fields_ = [("raw", POINTER(c_char)), ("data", c_char_p)]
 
     def __init__(self, obj=b""):
@@ -385,4 +384,5 @@ def ord_if_char(value):
 @runtime_checkable
 class Pollable(Protocol):
     @abstractmethod
-    def poll(self) -> None: ...
+    def poll(self) -> None:
+        ...

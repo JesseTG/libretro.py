@@ -22,9 +22,7 @@ from libretro.api._utils import UNCHECKED, FieldsFromTypeHints
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
-RETRO_VFS_FILE_ACCESS_READ_WRITE = (
-    RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE
-)
+RETRO_VFS_FILE_ACCESS_READ_WRITE = RETRO_VFS_FILE_ACCESS_READ | RETRO_VFS_FILE_ACCESS_WRITE
 RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING = 1 << 2
 
 RETRO_VFS_FILE_ACCESS_HINT_NONE = 0
@@ -74,20 +72,14 @@ class VfsFileAccess(IntFlag):
 
 
 retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
-retro_vfs_open_t = CFUNCTYPE(
-    UNCHECKED(POINTER(retro_vfs_file_handle)), c_char_p, c_uint, c_uint
-)
+retro_vfs_open_t = CFUNCTYPE(UNCHECKED(POINTER(retro_vfs_file_handle)), c_char_p, c_uint, c_uint)
 retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
 retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
 retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
-retro_vfs_read_t = CFUNCTYPE(
-    c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64
-)
-retro_vfs_write_t = CFUNCTYPE(
-    c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64
-)
+retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
+retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
 retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
 retro_vfs_remove_t = CFUNCTYPE(c_int, c_char_p)
 retro_vfs_rename_t = CFUNCTYPE(c_int, c_char_p, c_char_p)
