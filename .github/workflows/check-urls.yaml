@@ -1,0 +1,24 @@
+name: Validate URLs
+
+on:
+  push:
+    branches:
+      - main
+    paths: ["**.md", "**.yaml", "**.yml", "**.py", "**.pyi", "**.rst", "**.txt"]
+  schedule:
+    - cron: "0 0 * * *" # Run every day at midnight UTC
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@v4
+
+      - name: Validate URLs
+        uses: urlstechie/urlchecker-action@0.0.34
+        with:
+          file_types: .md,.yaml,.yml,.py,.pyi,.rst,.txt
+          print_all: false
+          timeout: 10
+          retry_count: 3
