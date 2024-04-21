@@ -16,8 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release
-      url:
-        ttps://pypi.org/p/libretro.py
+      url: https://pypi.org/p/libretro.py
     permissions:
       id-token: write # Required for trusted publishing
 
