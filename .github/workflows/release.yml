@@ -1,23 +1,75 @@
-name: release
+name: Build & Release
 
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - '*'
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - dev
 
 jobs:
   release:
+    name: Create Release
     runs-on: ubuntu-latest
+    environment:
+      name: release
+      url:
+        ttps://pypi.org/p/libretro.py
+    permissions:
+      id-token: write # Required for trusted publishing
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
-      - uses: actions/setup-python@v4
+      - name: Check Out Source
+        uses: actions/checkout@v4
         with:
-          python-version: '3.11'
+          fetch-depth: 0 # To ensure we have all tags
+
+      - name: Install Just
+        uses: extractions/setup-just@v2
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: setup.py
+
+      - name: Install Virtual Environment
+        run: just install
+
+      - name: Validate Formatting
+        run: just black-check isort-check
+
+      - name: Validate Security
+        run: just bandit
+
+      - name: Get Latest Changelog Version
+        id: changelog
+        uses: release-flow/keep-a-changelog-action@v3.0.0
+        with:
+          command: query
+          version: latest
+
+      - name: Get the Newest Tag
+        id: newest-tag
+        run: |
+          echo "version=`git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n1 | cut -c2-`" >> "$GITHUB_OUTPUT"
+
       - name: Build package
-        run: just install build
-    # Uncomment for your project
-    #   - name: Publish to PyPI
-    #     uses: pypa/gh-action-pypi-publish@release/v1
-    #     with:
-    #       password: ${{ secrets.PYPI_API_TOKEN }}
+        run: just build
+        # Uses the "build" recipe from the justfile
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.14
+        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version }}"
+
+      - name: Create Release
+        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version }}"
+        uses: softprops/action-gh-release@v2.0.4
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          tag_name: "v${{ steps.changelog.outputs.version }}"
+          body: "${{ steps.changelog.outputs.release-notes }}"
