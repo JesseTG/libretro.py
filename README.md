@@ -6,8 +6,8 @@ Ease of use, flexibility, and complete API support are top priorities.
 
 <div align="center">
 
-[![Build Status](https://github.com/JesseTG/libretro.py/workflows/build/badge.svg)](https://github.com/JesseTG/libretro.py/actions)
-[![PyPi](https://img.shields.io/pypi/v/PROJECT_NAME_URL)](https://pypi.org/project/PROJECT_NAME_URL)
+[![Workflow Status](https://github.com/JesseTG/libretro.py/actions/workflows/release.yml/badge.svg)](https://github.com/JesseTG/libretro.py/actions/workflows/release.yml)
+[![PyPi](https://img.shields.io/pypi/v/libretro.py)](https://pypi.org/project/libretro.py)
 [![License](https://img.shields.io/github/license/JesseTG/libretro.py)](LICENSE)
 
 </div>
