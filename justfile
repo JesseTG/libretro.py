@@ -24,7 +24,7 @@ help:
 
 # Scans the project for security vulnerabilities
 bandit: _validate_venv
-    {{_venv_bin}}/bandit -r src
+    {{_venv_bin}}/bandit -c pyproject.toml -r src
 
 # Builds the project in preparation for release
 build: install
