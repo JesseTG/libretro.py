@@ -11,6 +11,6 @@ with open(join(dirname(__file__), "CHANGELOG.md"), "r") as file:
     if not match:
         raise ValueError("Could not find the latest version in CHANGELOG.md")
 
-    version = match['version']
+    version = match["version"]
 
 setuptools.setup(version=version)

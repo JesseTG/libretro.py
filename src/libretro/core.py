@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from collections.abc import Sequence, Buffer
+from collections.abc import Buffer, Sequence
 from copy import deepcopy
 from ctypes import (
     CDLL,
