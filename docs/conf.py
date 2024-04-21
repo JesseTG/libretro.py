@@ -22,10 +22,13 @@ templates_path = ["_templates"]
 exclude_patterns = []
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
 set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+autodoc_class_signature = "separated"  # Separate class and constructor signatures
 autodoc_default_options = {
     "member-order": "bysource",
-    "special-members": True,  # '__init__'
-    "undoc-members": True,
+    "special-members": "__init__",  # Don't document any __dunder__ methods except these
+    "undoc-members": True,  # Generate documentation for members without docstrings
+    "inherited-members": "Protocol,int",  # Don't show inherited members from these classes
+    "show-inheritance": True,  # Show the base class(es) of a class
     "members": True,
 }
 autosummary_generate = True
