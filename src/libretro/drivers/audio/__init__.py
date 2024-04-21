@@ -1,5 +1,5 @@
 """
-Drivers for handling audio output.
+Drivers that receive and optionally process audio data emitted by the core.
 """
 
 from .array import *

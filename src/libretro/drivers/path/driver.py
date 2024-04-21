@@ -4,9 +4,16 @@ from typing import Protocol, runtime_checkable
 
 @runtime_checkable
 class PathDriver(Protocol):
+    """
+    Interface for a driver that defines various paths exposed to libretro cores.
+    """
+
     @property
     @abstractmethod
     def system_dir(self) -> bytes | None:
+        """
+        Corresponds to ``EnvironmentCall.GET_SYSTEM_DIRECTORY``.
+        """
         ...
 
     @property

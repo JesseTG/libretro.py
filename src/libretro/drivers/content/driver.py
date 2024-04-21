@@ -53,6 +53,10 @@ class ContentError(RuntimeError):
 
 @runtime_checkable
 class ContentDriver(Protocol):
+    """
+    Driver protocol for loading content and enforcing content attributes.
+    """
+
     @abstractmethod
     def load(
         self, content: Content | SubsystemContent | None

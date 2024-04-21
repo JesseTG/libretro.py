@@ -18,6 +18,14 @@ from libretro.api.options import (
 class OptionDriver(Protocol):
     @abstractmethod
     def get_variable(self, item: bytes) -> bytes | None:
+        """
+        :param item: The key of the core option to retrieve.
+        :return: If no option with the key given by ``item`` exists, return ``None``.
+            If the option has a valid value (as determined by the option definitions), return it.
+            Otherwise, return the default value.
+
+        :note: Corresponds to ``EnvironmentCall.GET_VARIABLE``.
+        """
         ...
 
     @abstractmethod

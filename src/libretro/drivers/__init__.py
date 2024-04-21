@@ -1,5 +1,10 @@
 """
-stuff for drivers
+Implementations of a subset of the libretro interface.
+
+Most drivers are implemented as ``Protocol`` classes to simplify their implementation
+or provide helper methods for common functionality.
+However, any type can be used in place of a driver
+so long as it implements the necessary methods.
 """
 
 from .audio import *
