@@ -116,7 +116,7 @@ class CoreInterface(Protocol):
         ...
 
     @abstractmethod
-    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview) -> None:
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str) -> None:
         ...
 
     @abstractmethod
@@ -555,7 +555,7 @@ class Core(CoreInterface):
         """
         self._core.retro_cheat_reset()
 
-    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | memoryview | Buffer):
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str):
         """
         Calls the core's ``retro_cheat_set`` function with the given arguments.
 
@@ -571,19 +571,18 @@ class Core(CoreInterface):
         if not isinstance(enabled, bool):
             raise TypeError(f"Expected bool, got {type(enabled).__name__}")
 
-        buf: memoryview
+        buf: bytes
         match code:
-            case bytes() | bytearray() | Buffer():
-                buf = memoryview(code)
-            case memoryview():
+            case bytes():
                 buf = code
+            case bytearray():
+                buf = bytes(code)
+            case str():
+                buf = code.encode()
             case _:
                 raise TypeError(
-                    f"Expected bytes, bytearray, memoryview, or Buffer; got {type(code).__name__}"
+                    f"Expected bytes, bytearray, or str; got {type(code).__name__}"
                 )
-
-        if 0 not in buf:
-            raise ValueError("code must contain a zero-terminated byte string")
 
         self._core.retro_cheat_set(index, enabled, buf)
 
