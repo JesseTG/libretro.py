@@ -32,7 +32,7 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
     ALL = VIDEO | AUDIO | FAST_SAVESTATES | HARD_DISABLE_AUDIO
 
 
-@dataclass
+@dataclass(init=False)
 class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
     base_width: c_uint
     base_height: c_uint
@@ -50,7 +50,7 @@ class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass
+@dataclass(init=False)
 class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
     fps: c_double
     sample_rate: c_double
@@ -59,7 +59,7 @@ class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
         return retro_system_timing(self.fps, self.sample_rate)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_system_av_info(Structure, metaclass=FieldsFromTypeHints):
     geometry: retro_game_geometry
     timing: retro_system_timing

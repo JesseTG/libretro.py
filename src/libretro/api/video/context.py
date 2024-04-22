@@ -46,7 +46,7 @@ retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
 retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
     context_type: retro_hw_context_type
     context_reset: retro_hw_context_reset_t

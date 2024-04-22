@@ -30,7 +30,7 @@ class NetpacketFlags(IntFlag):
 BROADCAST = RETRO_NETPACKET_BROADCAST
 
 
-@dataclass
+@dataclass(init=False)
 class retro_netpacket_callback(Structure, metaclass=FieldsFromTypeHints):
     start: retro_netpacket_start_t
     receive: retro_netpacket_receive_t

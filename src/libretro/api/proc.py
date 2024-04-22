@@ -8,7 +8,7 @@ retro_proc_address_t = CFUNCTYPE(None)
 retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints):
     get_proc_address: retro_get_proc_address_t
 

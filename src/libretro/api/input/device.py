@@ -56,7 +56,7 @@ class InputDevice(IntEnum):
         return InputDeviceFlag(1 << self.value)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
     port: c_uint
     device: c_uint
@@ -74,7 +74,7 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
         )
 
 
-@dataclass
+@dataclass(init=False)
 class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
     desc: c_char_p
     id: c_uint
@@ -83,7 +83,7 @@ class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
         return retro_controller_description(self.desc, self.id)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
     types: POINTER(retro_controller_description)
     num_types: c_uint

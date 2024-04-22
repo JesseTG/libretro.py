@@ -26,7 +26,7 @@ class PowerState(IntEnum):
         self._type_ = "I"
 
 
-@dataclass
+@dataclass(init=False)
 class retro_device_power(Structure, metaclass=FieldsFromTypeHints):
     state: retro_power_state
     seconds: c_int

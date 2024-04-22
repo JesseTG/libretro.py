@@ -41,7 +41,7 @@ class CameraCapabilityFlags(IntFlag):
     RAW_FRAMEBUFFER = 1 << CameraCapabilities.RAW_FRAMEBUFFER
 
 
-@dataclass
+@dataclass(init=False)
 class retro_camera_callback(Structure, metaclass=FieldsFromTypeHints):
     caps: c_uint64
     width: c_uint

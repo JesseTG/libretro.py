@@ -10,7 +10,7 @@ retro_audio_set_state_callback_t = CFUNCTYPE(None, c_bool)
 retro_audio_buffer_status_callback_t = CFUNCTYPE(None, c_bool, c_uint, c_bool)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_audio_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_audio_callback_t
     set_state: retro_audio_set_state_callback_t
@@ -19,7 +19,7 @@ class retro_audio_callback(Structure, metaclass=FieldsFromTypeHints):
         return retro_audio_callback(callback=self.callback, set_state=self.set_state)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_audio_buffer_status_callback(Structure, metaclass=FieldsFromTypeHints):
     callback: retro_audio_buffer_status_callback_t
 

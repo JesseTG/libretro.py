@@ -21,7 +21,7 @@ class retro_microphone(Structure):
     pass
 
 
-@dataclass
+@dataclass(init=False)
 class retro_microphone_params(Structure, metaclass=FieldsFromTypeHints):
     rate: c_uint
 
@@ -41,7 +41,7 @@ retro_get_mic_state_t = CFUNCTYPE(c_bool, POINTER(retro_microphone))
 retro_read_mic_t = CFUNCTYPE(c_int, POINTER(retro_microphone), POINTER(c_int16), c_size_t)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_microphone_interface(Structure, metaclass=FieldsFromTypeHints):
     interface_version: c_uint
     open_mic: retro_open_mic_t

@@ -36,7 +36,7 @@ class MessageType(IntEnum):
         self._type_ = "I"
 
 
-@dataclass
+@dataclass(init=False)
 class retro_message(Structure, metaclass=FieldsFromTypeHints):
     msg: c_char_p
     frames: c_uint
@@ -45,7 +45,7 @@ class retro_message(Structure, metaclass=FieldsFromTypeHints):
         return retro_message(msg=self.msg, frames=self.frames)
 
 
-@dataclass
+@dataclass(init=False)
 class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
     msg: c_char_p
     duration: c_uint
