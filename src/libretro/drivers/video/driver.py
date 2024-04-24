@@ -78,7 +78,7 @@ class VideoDriver(Protocol):
     def preferred_context(self) -> HardwareContext | None:
         """
         The preferred hardware context for this driver.
-        Corresponds to ``EnvironmentCall.GET_PREFERRED_HW_RENDER``
+        Corresponds to ``EnvironmentCall.GET_PREFERRED_HW_RENDER``.
 
         Must be a member of ``self.supported_contexts``,
         or ``None`` to indicate that ``EnvironmentCall.GET_PREFERRED_HW_RENDER`` is unavailable.
