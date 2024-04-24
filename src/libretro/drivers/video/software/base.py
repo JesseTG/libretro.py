@@ -12,7 +12,7 @@ from ..driver import VideoDriver
 _EMPTY = frozenset((HardwareContext.NONE,))
 
 
-class AbstractSoftwareVideoDriver(VideoDriver, ABC):
+class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
         # Software-rendered drivers don't need retro_hw_render_callback
@@ -89,4 +89,4 @@ class AbstractSoftwareVideoDriver(VideoDriver, ABC):
         pass
 
 
-__all__ = ["AbstractSoftwareVideoDriver"]
+__all__ = ["SoftwareVideoDriver"]

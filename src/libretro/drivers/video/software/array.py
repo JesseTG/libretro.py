@@ -6,11 +6,11 @@ from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 from libretro.error import UnsupportedEnvCall
 
-from .base import AbstractSoftwareVideoDriver
+from .base import SoftwareVideoDriver
 
 
 @final
-class ArrayVideoDriver(AbstractSoftwareVideoDriver):
+class ArrayVideoDriver(SoftwareVideoDriver):
     def __init__(self):
         self._frame: array | None = None
         self._pixel_format: PixelFormat = PixelFormat.RGB1555

@@ -8,11 +8,11 @@ from PIL.Image import Image
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 
-from .base import AbstractSoftwareVideoDriver
+from .base import SoftwareVideoDriver
 
 
 @final
-class PillowVideoDriver(AbstractSoftwareVideoDriver):
+class PillowVideoDriver(SoftwareVideoDriver):
     def __init__(self):
         self._framebuffer: Image | None = None
         self._rotation: Rotation = Rotation.NONE

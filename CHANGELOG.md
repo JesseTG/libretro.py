@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added API documentation for `VideoDriver`.
 - Allow `VideoDriver.can_dupe` to be settable and deletable.
 - Don't allow `VideoDriver.get_system_av_info` to return `None`.
+- **BREAKING**: Rename `AbstractSoftwareVideoDriver` to `SoftwareVideoDriver`.
 
 ## [0.0.1] - 2024-04-22
 
