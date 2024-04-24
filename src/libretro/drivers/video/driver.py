@@ -181,16 +181,6 @@ class VideoDriver(Protocol):
     def get_hw_framebuffer(self) -> int:
         ...
 
-    @property
-    @abstractmethod
-    def frame(self):
-        ...
-
-    @property
-    @abstractmethod
-    def frame_max(self):
-        ...
-
     @abstractmethod
     def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         ...
@@ -234,6 +224,16 @@ class VideoDriver(Protocol):
     @shared_context.setter
     @abstractmethod
     def shared_context(self, value: bool) -> None:
+        ...
+
+    @property
+    @abstractmethod
+    def frame(self):
+        ...
+
+    @property
+    @abstractmethod
+    def frame_max(self):
         ...
 
 
