@@ -197,7 +197,7 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def system_av_info(self) -> retro_system_av_info | None:
+    def system_av_info(self) -> retro_system_av_info:
         ...
 
     @system_av_info.setter
