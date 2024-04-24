@@ -9,7 +9,7 @@ from libretro.error import UnsupportedEnvCall
 
 from ..driver import VideoDriver
 
-_EMPTY = frozenset()
+_EMPTY = frozenset((HardwareContext.NONE,))
 
 
 class AbstractSoftwareVideoDriver(VideoDriver, ABC):
