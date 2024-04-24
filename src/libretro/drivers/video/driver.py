@@ -151,14 +151,24 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def can_dupe(self) -> bool:
+    def can_dupe(self) -> bool | None:
         """
         Whether the frontend can re-render the previous frame.
 
-        :note: Drivers may override this property to give it a setter.
-
         :raises UnsupportedEnvCall: If this driver doesn't support ``EnvironmentCall.CAN_DUPE``.
+        :raises NotImplementedError: If attempting to set or delete a value
+          and the driver doesn't support doing so.
         """
+        ...
+
+    @can_dupe.setter
+    @abstractmethod
+    def can_dupe(self, value: bool) -> None:
+        ...
+
+    @can_dupe.deleter
+    @abstractmethod
+    def can_dupe(self) -> None:
         ...
 
     @property
