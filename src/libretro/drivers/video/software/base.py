@@ -13,50 +13,82 @@ _EMPTY = frozenset((HardwareContext.NONE,))
 
 
 class SoftwareVideoDriver(VideoDriver, ABC):
-    @final
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
-        # Software-rendered drivers don't need retro_hw_render_callback
-        return None
+    """
+    A base class for software-only video drivers.
+
+    Provides common overrides that would be the same
+    for all software-only drivers.
+    """
 
     @property
     @override
     @final
     def supported_contexts(self) -> Set[HardwareContext]:
+        """
+        :return: A set containing only ``HardwareContext.NONE``.
+        """
         return _EMPTY
 
     @property
     @override
     @final
-    def active_context(self) -> HardwareContext | None:
-        return None
+    def active_context(self) -> HardwareContext:
+        """
+        :return: ``HardwareContext.NONE``.
+        """
+        return HardwareContext.NONE
 
     @property
     @override
     @final
-    def preferred_context(self) -> HardwareContext | None:
-        return None
+    def preferred_context(self) -> HardwareContext:
+        return HardwareContext.NONE
 
     @preferred_context.setter
     @override
     @final
     def preferred_context(self, context: HardwareContext) -> None:
-        pass
+        if context != HardwareContext.NONE:
+            raise RuntimeError("Software-rendered drivers only support HardwareContext.NONE")
 
     @preferred_context.deleter
     @override
     @final
     def preferred_context(self) -> None:
-        pass
+        raise RuntimeError("Software-rendered drivers only support HardwareContext.NONE")
+
+    @override
+    @final
+    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+        """
+        :return: ``None``, as software-rendered drivers don't need any hardware context.
+        """
+        return None
 
     @property
+    @override
     @final
-    def can_dupe(self) -> bool:
+    def can_dupe(self) -> bool | None:
         return True
 
+    @can_dupe.setter
+    @override
+    @final
+    def can_dupe(self, value: bool) -> None:
+        raise RuntimeError("Software-rendered drivers always support frame duplication")
+
+    @can_dupe.deleter
+    @override
+    @final
+    def can_dupe(self) -> None:
+        raise RuntimeError("Software-rendered drivers always support frame duplication")
+
+    @override
     @final
     def get_hw_framebuffer(self) -> int:
         return 0
 
+    @override
     @final
     def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         return None
@@ -73,16 +105,19 @@ class SoftwareVideoDriver(VideoDriver, ABC):
         return False
 
     @shared_context.setter
+    @override
     @final
     def shared_context(self, value: bool) -> None:
         # Software-rendered drivers don't need any hardware context
         raise UnsupportedEnvCall("Shared context is not supported")
 
+    @override
     @final
     def context_reset(self) -> None:
         # There's no context to reset
         pass
 
+    @override
     @final
     def context_destroy(self) -> None:
         # There's no context to destroy

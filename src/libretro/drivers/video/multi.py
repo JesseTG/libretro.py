@@ -63,7 +63,6 @@ class MultiVideoDriver(VideoDriver):
         self._preferred = preferred
         self._drivers = dict(drivers)
         self._supported_contexts = frozenset(self._drivers.keys())
-        self._current_type = preferred
         self._current = self._drivers[preferred](_INITIAL_CALLBACK)
 
         if not isinstance(self._current, VideoDriver):
@@ -85,7 +84,7 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def active_context(self) -> HardwareContext:
-        return self._current_type
+        return self._current.active_context
 
     @property
     @override
