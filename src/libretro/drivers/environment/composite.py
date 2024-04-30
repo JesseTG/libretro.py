@@ -504,9 +504,8 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         hw_render_ptr[0] = context
+        # Give the core the callbacks that the video driver defines
 
-        # TODO: Call the provided context_reset at the start of the next frame, not immediately
-        # TODO: Save the context
         return True
 
     @property
