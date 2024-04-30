@@ -108,7 +108,7 @@ from libretro.drivers.power import PowerDriver
 from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
-from libretro.drivers.video import VideoDriver
+from libretro.drivers.video import VideoDriver, FrameBufferSpecial
 
 from .default import DefaultEnvironmentDriver
 
@@ -318,14 +318,19 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
-        if data:
-            view = memoryview_at(data, pitch * height, readonly=True)
-            assert (
-                len(view) == pitch * height
-            ), f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
-            self._video.refresh(view, width, height, pitch)
-        else:
-            self._video.refresh(None, width, height, pitch)
+        match data:
+            case FrameBufferSpecial.DUPE:
+                self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
+            case FrameBufferSpecial.HARDWARE:
+                self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
+            case int() | c_void_p():
+                view = memoryview_at(data, pitch * height, readonly=True)
+                assert (
+                        len(view) == pitch * height
+                ), f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
+                self._video.refresh(view, width, height, pitch)
+            case _:
+                raise TypeError(f"Expected FrameBufferSpecial, int, or c_void_p, got {type(data).__name__}")
 
     @override
     def audio_sample(self, left: int, right: int) -> None:
