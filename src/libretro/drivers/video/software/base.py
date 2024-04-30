@@ -83,16 +83,6 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     def can_dupe(self) -> None:
         raise RuntimeError("Software-rendered drivers always support frame duplication")
 
-    @override
-    @final
-    def get_hw_framebuffer(self) -> int:
-        return 0
-
-    @override
-    @final
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
-        return None
-
     @property
     @final
     def hw_render_interface(self) -> retro_hw_render_interface | None:
@@ -110,18 +100,6 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     def shared_context(self, value: bool) -> None:
         # Software-rendered drivers don't need any hardware context
         raise UnsupportedEnvCall("Shared context is not supported")
-
-    @override
-    @final
-    def context_reset(self) -> None:
-        # There's no context to reset
-        pass
-
-    @override
-    @final
-    def context_destroy(self) -> None:
-        # There's no context to destroy
-        pass
 
 
 __all__ = ["SoftwareVideoDriver"]

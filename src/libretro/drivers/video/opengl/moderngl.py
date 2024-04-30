@@ -155,21 +155,6 @@ class ModernGlVideoDriver(VideoDriver):
     def can_dupe(self) -> bool:
         return True
 
-    def get_hw_framebuffer(self) -> int:
-        raise NotImplementedError()  # TODO: Implement
-
-    def __get_proc_address(self, sym: c_char_p) -> retro_proc_address_t:
-        return self.get_proc_address(bytes(sym))
-
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
-        if not sym:
-            return None
-
-        if not self._context:
-            raise RuntimeError("No OpenGL context has been initialized")
-
-        return retro_proc_address_t(self._context.load_opengl_function(sym))
-
     def get_software_framebuffer(
         self, width: int, size: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
@@ -181,8 +166,6 @@ class ModernGlVideoDriver(VideoDriver):
         # libretro doesn't define one of these for OpenGL, so no need
         return None
 
-    def context_reset(self) -> None:
-        pass  # TODO: Implement
 
     def context_destroy(self) -> None:
         if not self._context:

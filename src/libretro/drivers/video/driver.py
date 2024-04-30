@@ -114,22 +114,6 @@ class VideoDriver(Protocol):
         """
         ...
 
-    @abstractmethod
-    def context_reset(self) -> None:
-        """
-        Initializes the hardware context
-        and calls the core's registered ``context_reset`` callback.
-        """
-        ...
-
-    @abstractmethod
-    def context_destroy(self) -> None:
-        """
-        Destroys the hardware context
-        and calls the core's registered ``retro_hw_render_callback.context_destroy`` callback.
-        """
-        ...
-
     @property
     @abstractmethod
     def rotation(self) -> Rotation:
@@ -185,14 +169,6 @@ class VideoDriver(Protocol):
     @pixel_format.setter
     @abstractmethod
     def pixel_format(self, format: PixelFormat) -> None:
-        ...
-
-    @abstractmethod
-    def get_hw_framebuffer(self) -> int:
-        ...
-
-    @abstractmethod
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         ...
 
     @property

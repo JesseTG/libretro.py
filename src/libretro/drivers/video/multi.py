@@ -110,11 +110,7 @@ class MultiVideoDriver(VideoDriver):
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
         pass
 
-    def context_reset(self) -> None:
-        pass
 
-    def context_destroy(self) -> None:
-        pass
 
     @property
     @override
@@ -156,14 +152,6 @@ class MultiVideoDriver(VideoDriver):
             raise TypeError(f"Expected a PixelFormat, got {type(value).__name__}")
 
         self._current.pixel_format = value
-
-    @override
-    def get_hw_framebuffer(self) -> int:
-        return self._current.get_hw_framebuffer()
-
-    @override
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
-        return self._current.get_proc_address(sym)
 
     @property
     @override
