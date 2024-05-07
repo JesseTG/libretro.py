@@ -230,12 +230,23 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def frame(self):
+    def screenshot(self) -> array | None:
+        """
+        Captures the part of the most recently-rendered frame
+        that would be visible to the player
+        in a typical libretro frontend.
+
+        This should account for rotation, geometry dimensions, and aspect ratio.
+        """
         ...
 
     @property
     @abstractmethod
-    def frame_max(self):
+    def framebuffer(self) -> array | None:
+        """
+        Captures the complete raw framebuffer,
+        even the parts that aren't visible to the player.
+        """
         ...
 
 

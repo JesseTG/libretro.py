@@ -213,13 +213,13 @@ class MultiVideoDriver(VideoDriver):
 
     @property
     @override
-    def frame(self):
+    def screenshot(self) -> array:
         return self._current.frame
 
     @property
     @override
-    def frame_max(self):
-        return self._current.frame_max
+    def framebuffer(self) -> array:
+        return self._current.framebuffer
 
 
 __all__ = [

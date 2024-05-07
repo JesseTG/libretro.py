@@ -80,7 +80,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
     @property
     @override
-    def frame(self) -> array | None:
+    def screenshot(self) -> array | None:
         if not self._frame:
             return None
 
@@ -99,8 +99,8 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
     @property
     @override
-    def frame_max(self):
-        return array(self._pixel_format.pixel_typecode, self._frame) if self._frame else None
+    def framebuffer(self) -> array | None:
+        return array("B", self._frame) if self._frame else None
 
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess

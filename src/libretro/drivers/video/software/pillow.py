@@ -130,7 +130,7 @@ class PillowVideoDriver(SoftwareVideoDriver):
 
     @property
     @override
-    def frame(self) -> Image:
+    def screenshot(self) -> array | None:
         if not self._system_av_info or not self._framebuffer:
             raise RuntimeError("Cannot get frame until system AV info is initialized")
 
@@ -145,7 +145,7 @@ class PillowVideoDriver(SoftwareVideoDriver):
 
     @property
     @override
-    def frame_max(self) -> Image:
+    def framebuffer(self) -> array | None:
         if not self._system_av_info or not self._framebuffer:
             raise RuntimeError("Cannot get framebuffer until system AV info is initialized")
 
