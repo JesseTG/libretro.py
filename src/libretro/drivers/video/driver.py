@@ -32,7 +32,9 @@ class VideoDriverInitArgs(TypedDict, total=False):
 @runtime_checkable
 class VideoDriver(Protocol):
     @abstractmethod
-    def refresh(self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int) -> None:
+    def refresh(
+        self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+    ) -> None:
         """
         Updates the framebuffer with the given video data.
         This method is exposed to the core through ``retro_set_video_refresh``.
@@ -260,5 +262,6 @@ class VideoDriver(Protocol):
 
 __all__ = [
     "VideoDriver",
+    "VideoDriverInitArgs",
     "FrameBufferSpecial",
 ]

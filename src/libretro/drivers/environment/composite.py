@@ -108,7 +108,7 @@ from libretro.drivers.power import PowerDriver
 from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
-from libretro.drivers.video import VideoDriver, FrameBufferSpecial
+from libretro.drivers.video import FrameBufferSpecial, VideoDriver
 
 from .default import DefaultEnvironmentDriver
 

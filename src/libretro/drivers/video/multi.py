@@ -1,6 +1,6 @@
 from array import array
 from collections.abc import Callable, Mapping, Set
-from typing import override, final
+from typing import final, override
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
