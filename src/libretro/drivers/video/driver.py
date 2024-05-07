@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from array import array
 from collections.abc import Set
 from enum import Enum
 from typing import Protocol, TypedDict, runtime_checkable

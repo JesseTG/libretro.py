@@ -1,3 +1,4 @@
+from array import array
 from collections.abc import Callable, Mapping, Set
 from typing import override, final
 
