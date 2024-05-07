@@ -8,12 +8,13 @@ from PIL.Image import Image
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 
+from ..driver import VideoDriverInitArgs
 from .base import SoftwareVideoDriver
 
 
 @final
 class PillowVideoDriver(SoftwareVideoDriver):
-    def __init__(self):
+    def __init__(self, args: VideoDriverInitArgs):
         self._framebuffer: Image | None = None
         self._rotation: Rotation = Rotation.NONE
         self._pixel_format: PixelFormat = PixelFormat.RGB1555

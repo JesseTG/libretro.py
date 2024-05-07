@@ -13,9 +13,9 @@ from libretro.api.video import (
     retro_hw_render_interface,
 )
 
-from .driver import VideoDriver, FrameBufferSpecial
+from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
 
-DriverMap = Mapping[HardwareContext, Callable[[retro_hw_render_callback], VideoDriver]]
+DriverMap = Mapping[HardwareContext, Callable[[VideoDriverInitArgs], VideoDriver]]
 
 _INITIAL_CALLBACK = retro_hw_render_callback(HardwareContext.NONE)
 

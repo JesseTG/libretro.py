@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Set
 from enum import Enum
-from typing import Protocol, runtime_checkable
+from typing import Protocol, TypedDict, runtime_checkable
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -19,6 +19,13 @@ from libretro.api.video import (
 class FrameBufferSpecial(Enum):
     DUPE = None
     HARDWARE = -1
+
+
+class VideoDriverInitArgs(TypedDict, total=False):
+    callback: retro_hw_render_callback
+    shared_context: bool
+    pixel_format: PixelFormat
+    av_info: retro_system_av_info
 
 
 @runtime_checkable
