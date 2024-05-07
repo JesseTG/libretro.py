@@ -4,7 +4,9 @@ from array import array
 from collections.abc import Mapping, Set
 from copy import deepcopy
 from ctypes import c_char_p
+from sys import modules
 from typing import final, override
+from importlib import resources
 
 import moderngl
 from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray
@@ -27,10 +29,30 @@ from ..driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
 
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, HardwareContext.OPENGL))
 
+_DEFAULT_VERT_FILENAME = "moderngl_vertex.glsl"
+_DEFAULT_FRAG_FILENAME = "moderngl_frag.glsl"
+
 
 @final
 class ModernGlVideoDriver(VideoDriver):
-    def __init__(self):
+    def __init__(self, vertex_shader: str | None = None, fragment_shader: str | None = None):
+        package_files = resources.files(modules[__name__])
+        match vertex_shader:
+            case str():
+                self._vertex_shader = vertex_shader
+            case None:
+                self._vertex_shader = (package_files / _DEFAULT_VERT_FILENAME).read_text()
+            case _:
+                raise TypeError(f"Expected a str or None, got {type(vertex_shader).__name__}")
+
+        match fragment_shader:
+            case str():
+                self._fragment_shader = fragment_shader
+            case None:
+                self._fragment_shader = (package_files / _DEFAULT_FRAG_FILENAME).read_text()
+            case _:
+                raise TypeError(f"Expected a str or None, got {type(fragment_shader).__name__}")
+
         self._callback: retro_hw_render_callback | None = None
         self._prev_callback: retro_hw_render_callback | None = None
         self._pixel_format = PixelFormat.RGB1555
