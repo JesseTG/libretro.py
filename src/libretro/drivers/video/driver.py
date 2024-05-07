@@ -49,6 +49,22 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
+    def needs_reinit(self) -> bool:
+        """
+        Whether the driver must be reinitialized.
+        """
+        ...
+
+    @abstractmethod
+    def reinit(self) -> None:
+        """
+        Reinitializes the driver.
+        Calls context_reset() and context_destroy() as needed.
+        """
+        ...
+
+    @property
+    @abstractmethod
     def supported_contexts(self) -> Set[HardwareContext]:
         """
         The set of all hardware contexts supported by this driver.

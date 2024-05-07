@@ -69,12 +69,29 @@ class MultiVideoDriver(VideoDriver):
             raise TypeError(
                 f"Expected the callable mapped to {preferred} to return a VideoDriver, got {type(self._current).__name__}"
             )
+        self._current: VideoDriver | None = None
 
     @override
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
         self._current.refresh(data, width, height, pitch)
+
+    @property
+    @override
+    def needs_reinit(self) -> bool:
+        if not self._current:
+            return True
+
+        return self._current.needs_reinit
+
+    @override
+    def reinit(self) -> None:
+        # TODO: Use self._drivers[preferred]
+        pass
+        # TODO: If no video driver or if switching to a new API, reinit
+        # TODO: If using the same API, call reinit on the current video driver
+
 
     @property
     @override

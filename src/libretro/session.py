@@ -304,6 +304,9 @@ class Session:
         if self._is_exited or self._environment.is_shutdown:
             raise CoreShutDownException()
 
+        if self._environment.video.needs_reinit:
+            self._environment.video.reinit()
+
         # TODO: In RetroArch, retro_audio_callback.set_state is called on the main thread,
         # just before starting the audio thread and just after stopping it.
         # TODO: In RetroArch, retro_audio_callback.callback is called on the audio thread.

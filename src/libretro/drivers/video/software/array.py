@@ -39,6 +39,15 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                     pitch * i : pitch * i + pitch
                 ]
 
+    @override
+    @property
+    def needs_reinit(self) -> bool:
+        return self._recreate_frame
+
+    @override
+    def reinit(self) -> None:
+        raise NotImplementedError()
+
     @property
     @override
     def rotation(self) -> Rotation:
