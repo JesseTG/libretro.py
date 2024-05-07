@@ -1,7 +1,7 @@
 import ctypes
 import warnings
 from array import array
-from collections.abc import Mapping, Set
+from collections.abc import Mapping, Set, Sequence
 from copy import deepcopy
 from ctypes import c_char_p
 from sys import modules
@@ -35,8 +35,29 @@ _DEFAULT_FRAG_FILENAME = "moderngl_frag.glsl"
 
 @final
 class ModernGlVideoDriver(VideoDriver):
-    def __init__(self, vertex_shader: str | None = None, fragment_shader: str | None = None):
+    def __init__(
+            self,
+            vertex_shader: str | None = None,
+            fragment_shader: str | None = None,
+            varyings: Sequence[str] = ("transformedTexCoord",)
+    ):
+        """
+        Initializes the video driver.
+        Does not create an OpenGL context; that will occur when ``reinit`` is called.
+
+        This driver uses a basic shader program, but custom shaders can be provided.
+
+        :warning: The shaders are not compiled or linked until the OpenGL context is created,
+            so GLSL errors won't be detected until then.
+
+        :param vertex_shader: The GLSL source of the vertex shader to use for rendering,
+            or ``None`` to use the built-in default.
+        :param fragment_shader: The GLSL source of the fragment shader to use for rendering,
+            or ``None`` to use the built-in default.
+        :param varyings: The names of the "varyings" (vertex value outputs) to use.
+        """
         package_files = resources.files(modules[__name__])
+        # TODO: Support passing SPIR-V shaders as bytes
         match vertex_shader:
             case str():
                 self._vertex_shader = vertex_shader
@@ -53,6 +74,13 @@ class ModernGlVideoDriver(VideoDriver):
             case _:
                 raise TypeError(f"Expected a str or None, got {type(fragment_shader).__name__}")
 
+        if not isinstance(varyings, Sequence):
+            raise TypeError(f"Expected a sequence of str, got {type(varyings).__name__}")
+
+        if not all(isinstance(v, str) for v in varyings):
+            raise TypeError("All elements of 'varyings' must be str")
+
+        self._varyings = tuple(varyings)
         self._callback: retro_hw_render_callback | None = None
         self._prev_callback: retro_hw_render_callback | None = None
         self._pixel_format = PixelFormat.RGB1555
@@ -64,6 +92,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._hw_render_texture: Texture | None = None
         self._hw_render_rb_ds: Renderbuffer | None = None
         self._cpu_texture: Texture | None = None
+        self._shader_program: moderngl.Program | None = None
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
         self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
         self._needs_reinit_buffer = True
@@ -147,6 +176,7 @@ class ModernGlVideoDriver(VideoDriver):
             del self._hw_render_texture
             del self._hw_render_fbo
             del self._vao
+            del self._shader_program
             # Destroy the OpenGL context and create a new one
 
         match context_type:
@@ -160,6 +190,11 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
+        self._shader_program = self._context.program(
+            vertex_shader=self._vertex_shader,
+            fragment_shader=self._fragment_shader,
+            varyings=self._varyings
+        )
         self._vao = self._context.vertex_array()
 
         # TODO: Honor debug_context; enable debugging features if requested
