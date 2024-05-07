@@ -16,6 +16,7 @@ from libretro.api import (
     ThrottleMode,
     retro_device_power,
     retro_game_info,
+    retro_hw_render_callback,
     retro_throttle_state,
 )
 from libretro.core import Core
@@ -49,6 +50,7 @@ from libretro.drivers import (
     MessageInterface,
     MicrophoneDriver,
     MidiDriver,
+    MultiVideoDriver,
     OptionDriver,
     PathDriver,
     PerfDriver,
@@ -59,8 +61,19 @@ from libretro.drivers import (
     UnformattedLogDriver,
     UserDriver,
     VideoDriver,
+    VideoDriverInitArgs,
 )
 from libretro.session import Session
+
+try:
+    from libretro.drivers.video import PillowVideoDriver
+except ImportError:
+    PillowVideoDriver = None
+
+try:
+    from libretro.drivers.video import ModernGlVideoDriver
+except ImportError:
+    ModernGlVideoDriver = None
 
 type _RequiredFactory[T] = Callable[[], T]
 type _OptionalFactory[T] = Callable[[], T | None]
@@ -309,13 +322,43 @@ class SessionBuilder:
         return self
 
     def with_video(self, video: VideoDriverArg) -> Self:
+        """
+        Sets the video driver for this session.
+
+        The default video driver is a ``MultiVideoDriver`` that supports the following contexts:
+
+        - ``HardwareContext.NONE``: A ``PillowVideoDriver`` if the ``pillow`` package is installed,
+          or an ``ArrayVideoDriver`` if not.
+        - ``HardwareContext.OPENGL``: A ``ModernGlVideoDriver`` if the ``moderngl`` package is installed,
+          absent if not.
+
+        :param video: One of the following:
+
+            - A ``VideoDriver`` that will be used as-is.
+            - A ``Callable`` that returns a ``VideoDriver``.
+            - A :class:`Callable` that returns a :class:`VideoDriver`.
+            - :py:const:`DEFAULT` to use the default video driver.
+            - :py:const:`None` to raise an error.
+        :return: This builder object.
+        """
+
         match video:
             case Callable() as func:
                 self._args["video"] = func
             case VideoDriver():
                 self._args["video"] = lambda: video
             case _DefaultType.DEFAULT:
-                self._args["video"] = ArrayVideoDriver
+                drivers: dict[HardwareContext, Callable[[VideoDriverInitArgs], VideoDriver]] = dict()
+                if PillowVideoDriver:
+                    drivers[HardwareContext.NONE] = PillowVideoDriver
+                else:
+                    drivers[HardwareContext.NONE] = ArrayVideoDriver
+
+                if ModernGlVideoDriver:
+                    drivers[HardwareContext.OPENGL] = lambda args: ModernGlVideoDriver()
+                    drivers[HardwareContext.OPENGL_CORE] = lambda args: ModernGlVideoDriver()
+
+                self._args["video"] = lambda: MultiVideoDriver(drivers)
             case None:
                 raise ValueError("A video driver is required")
             case _:
