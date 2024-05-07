@@ -215,7 +215,7 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def screenshot(self) -> array:
-        return self._current.frame
+        return self._current.screenshot
 
     @property
     @override
