@@ -1,11 +1,13 @@
+import ctypes
+import warnings
 from array import array
-from collections.abc import Set
+from collections.abc import Mapping, Set
 from copy import deepcopy
 from ctypes import c_char_p
-from typing import override
+from typing import final, override
 
 import moderngl
-from glcontext.empty import GLContext
+from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -21,55 +23,147 @@ from libretro.api.video import (
     retro_hw_render_interface,
 )
 
-from ..driver import VideoDriver
+from ..driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
+
+_CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, HardwareContext.OPENGL))
 
 
+@final
 class ModernGlVideoDriver(VideoDriver):
-    def __init__(self, callback: retro_hw_render_callback | None = None):
-        self._context: GLContext | None = None
-        self._pixel_format: PixelFormat = PixelFormat.RGB1555
+    def __init__(self):
+        self._callback: retro_hw_render_callback | None = None
+        self._prev_callback: retro_hw_render_callback | None = None
+        self._pixel_format = PixelFormat.RGB1555
         self._system_av_info: retro_system_av_info | None = None
-        self._hw_render_callback = callback
-        self._use_shared_context = False
-        self._needs_recreate = True
+        self._shared = False
+        self._context: Context | None = None
+        self._vao: VertexArray | None = None
+        self._hw_render_fbo: Framebuffer | None = None
+        self._hw_render_texture: Texture | None = None
+        self._hw_render_rb_ds: Renderbuffer | None = None
+        self._cpu_texture: Texture | None = None
+        self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
+        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
+        self._needs_reinit_buffer = True
 
     def __del__(self):
-        if self._context:
-            self._context.release()
-
-            del self._context
-
-    def refresh(self, data: memoryview | None, width: int, height: int, pitch: int) -> None:
-        # TODO: Recreate the frame buffer based on the pixel format and system AV info
-        pass  # TODO: Implement
-
-    def supported_contexts(self) -> Set[HardwareContext]:
-        pass
-
-    @property
-    def preferred_context(self) -> HardwareContext | None:
-        pass
-
-    def active_context(self) -> HardwareContext | None:
-        if self._context:
-            return HardwareContext.OPENGL
-
-        return HardwareContext.NONE
+        del self._hw_render_texture
+        del self._hw_render_rb_ds
+        del self._hw_render_fbo
+        del self._cpu_texture
+        del self._vao
+        del self._context
 
     @override
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+        if callback is None:
+            return None
+
         if not isinstance(callback, retro_hw_render_callback):
             raise TypeError(f"Expected a retro_hw_render_callback, got {type(callback).__name__}")
 
-        self._hw_render_callback = deepcopy(callback)
-        self._hw_render_callback.get_current_framebuffer = retro_hw_get_current_framebuffer_t(
-            self.get_hw_framebuffer
-        )
-        self._hw_render_callback.get_proc_address = retro_hw_get_proc_address_t(
-            self.__get_proc_address
-        )
+        context_type = HardwareContext(callback.context_type)
+        if context_type not in _CONTEXTS:
+            return None
 
-        return self._hw_render_callback
+        self._prev_callback = self._callback
+        self._callback = deepcopy(callback)
+        self._callback.get_current_framebuffer = self._get_hw_framebuffer
+        self._callback.get_proc_address = self._get_proc_address
+        return deepcopy(self._callback)
+
+    def refresh(
+            self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+    ) -> None:
+
+        with self._vao.scope:
+            match data:
+                case FrameBufferSpecial.DUPE:
+                    # Do nothing, we're re-rendering the previous frame
+                    pass
+                case FrameBufferSpecial.HARDWARE:
+                    # No special treatment needed if rendering in hardware
+                    pass
+
+                case memoryview():
+                    self.__update_cpu_texture(data, width, height, pitch)
+
+            # TODO: Bind the framebuffer, clear it, then render the contents
+
+    @property
+    @override
+    def needs_reinit(self) -> bool:
+        if not self._context:
+            return True
+
+        if not self._vao:
+            return True
+
+        return False
+
+    @override
+    def reinit(self) -> None:
+        if not self._system_av_info:
+            raise RuntimeError("System AV info not set")
+
+        context_type = HardwareContext(
+            self._callback.context_type) if self._callback else HardwareContext.NONE
+
+        if context_type not in _CONTEXTS:
+            raise RuntimeError(f"Unsupported hardware context: {context_type}")
+
+        # TODO: Honor cache_context; try to avoid reinitializing the context
+        if self._context:
+            if self._callback and self._callback.context_destroy:
+                # If the core wants to clean up before the context is destroyed...
+                self._callback.context_destroy()
+
+            self._context.release()
+            del self._context
+
+            del self._hw_render_rb_ds
+            del self._hw_render_texture
+            del self._hw_render_fbo
+            del self._vao
+            # Destroy the OpenGL context and create a new one
+
+        match context_type:
+            case HardwareContext.NONE:
+                # Create a default context with OpenGL 3.3 core profile;
+                # do not expose it to the core, only use it for software rendering
+                self._context = create_context(standalone=True)
+            case HardwareContext.OPENGL:
+                self._context = create_context(standalone=True, share=self._shared)
+            case HardwareContext.OPENGL_CORE:
+                ver = self._callback.version_major * 100 + self._callback.version_minor * 10
+                self._context = create_context(require=ver, standalone=True, share=self._shared)
+
+        self._vao = self._context.vertex_array()
+
+        # TODO: Honor debug_context; enable debugging features if requested
+        if self._callback is not None and context_type != HardwareContext.NONE:
+            # If the core specifically wants to render with the OpenGL API...
+            self.__init_hw_render()
+
+            if self._callback.context_reset:
+                # If the core wants to set up resources after the context is created...
+                self._callback.context_reset()
+
+    @override
+    @property
+    def supported_contexts(self) -> Set[HardwareContext]:
+        return _CONTEXTS
+
+    @override
+    @property
+    def preferred_context(self) -> HardwareContext | None:
+        return HardwareContext.OPENGL_CORE
+
+    def active_context(self) -> HardwareContext | None:
+        if self._context and self._callback:
+            return HardwareContext(self._callback.context_type)
+
+        return HardwareContext.NONE
 
     @property
     @override
@@ -85,8 +179,13 @@ class ModernGlVideoDriver(VideoDriver):
         if not isinstance(geometry, retro_game_geometry):
             raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
 
-        self._system_av_info.geometry = geometry
-        # TODO: Crop the OpenGL texture if necessary
+        if not self._system_av_info:
+            raise RuntimeError("No system AV info has been set")
+
+        self._system_av_info.geometry.base_width = geometry.base_width
+        self._system_av_info.geometry.base_height = geometry.base_height
+        self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio
+        # TODO: Set the OpenGL viewport if necessary
 
     @property
     @override
@@ -104,7 +203,9 @@ class ModernGlVideoDriver(VideoDriver):
 
         if self._pixel_format != format:
             self._pixel_format = format
-            self._needs_recreate = True
+            self._needs_reinit_buffer = True
+            if self._cpu_texture:
+                del self._cpu_texture
 
     @property
     @override
@@ -118,8 +219,8 @@ class ModernGlVideoDriver(VideoDriver):
 
     @property
     @override
-    def system_av_info(self) -> retro_system_av_info | None:
-        return deepcopy(self._system_av_info) if self._system_av_info else None
+    def system_av_info(self) -> retro_system_av_info:
+        return deepcopy(self._system_av_info)
 
     @system_av_info.setter
     @override
@@ -127,36 +228,35 @@ class ModernGlVideoDriver(VideoDriver):
         if not isinstance(av_info, retro_system_av_info):
             raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
 
-        self._system_av_info = av_info
-        self._needs_recreate = True
+        self._system_av_info = deepcopy(av_info)
 
     @property
-    def frame(self):
-        pass
+    @override
+    def screenshot(self) -> array | None:
+        data = self._hw_render_fbo.read()
+        return array("B", data) if data else None
 
     @property
-    def frame_max(self):
+    @override
+    def framebuffer(self):
         pass
 
     @property
     @override
     def shared_context(self) -> bool:
-        return self._use_shared_context
+        return self._shared
 
     @shared_context.setter
     @override
     def shared_context(self, shared: bool) -> None:
-        self._use_shared_context = bool(shared)
-
-    def set_rotation(self, rotation: Rotation) -> bool:
-        raise NotImplementedError()  # TODO: Implement
+        self._shared = bool(shared)
 
     @property
     def can_dupe(self) -> bool:
         return True
 
     def get_software_framebuffer(
-        self, width: int, size: int, flags: MemoryAccess
+            self, width: int, size: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         # TODO: Map the OpenGL texture to a software framebuffer
         pass
@@ -166,13 +266,96 @@ class ModernGlVideoDriver(VideoDriver):
         # libretro doesn't define one of these for OpenGL, so no need
         return None
 
+    def __init_hw_render(self):
+        assert self._context is not None
+        assert self._callback is not None
+        assert self._system_av_info is not None
 
-    def context_destroy(self) -> None:
+        if self._hw_render_fbo:
+            del self._hw_render_fbo
+
+        if self._hw_render_texture:
+            del self._hw_render_texture
+
+        if self._hw_render_rb_ds:
+            del self._hw_render_rb_ds
+
+        # Equivalent to glGetIntegerv
+        max_fbo_size = self._context.info["GL_MAX_TEXTURE_SIZE"]
+        max_rb_size = self._context.info["GL_MAX_RENDERBUFFER_SIZE"]
+        geometry = self._system_av_info.geometry
+
+        width = min(geometry.max_width, max_fbo_size, max_rb_size)
+        height = min(geometry.max_height, max_fbo_size, max_rb_size)
+        size = (width, height)
+
+        # Similar to glGenTextures, glBindTexture, and glTexImage2D
+        self._hw_render_texture = self._context.texture(size, 4)
+        if self._callback.depth:
+            # If the core is asking for a depth attachment...
+            # Similar to glGenRenderbuffers, glBindRenderbuffer, and glRenderbufferStorage
+            self._hw_render_rb_ds = self._context.depth_renderbuffer(size)
+
+            if self._callback.stencil:
+                warnings.warn(
+                    "Core requested stencil attachment, but moderngl lacks support; ignoring")
+                # TODO: Implement stencil buffer support in moderngl
+
+        # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
+        self._hw_render_fbo = self._context.framebuffer(
+            self._hw_render_texture,
+            self._hw_render_rb_ds
+        )
+        self._hw_render_fbo.clear()
+
+        self._needs_reinit_buffer = False
+
+    def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
+        if not (self._cpu_texture and self._cpu_texture.size == (width, height)):
+            # If we don't have a CPU texture, or we need one of a new size...
+            del self._cpu_texture
+
+            # Equivalent to glGenTextures, glBindTexture, glTexImage2D, and glTexParameteri
+            match self._pixel_format:
+                case PixelFormat.XRGB8888:
+                    self._cpu_texture = self._context.texture((width, height), 4, data)  # GL_RGBA8
+                    self._cpu_texture.swizzle = "ABGR"
+                case PixelFormat.RGB565:
+                    GL_RGB565 = 0x8D62
+                    self._cpu_texture = self._context.texture(
+                        (width, height),
+                        3,
+                        data,
+                        internal_format=GL_RGB565
+                    )
+                    # moderngl can't natively express GL_RGB565
+                case PixelFormat.RGB1555:
+                    GL_RGB5 = 0x8050
+                    self._cpu_texture = self._context.texture(
+                        (width, height),
+                        3,
+                        data,
+                        internal_format=GL_RGB5
+                    )
+                    # moderngl can't natively express GL_RGB5
+        else:
+            self._cpu_texture.write(data)
+
+    def __get_hw_framebuffer(self) -> int:
+        if self._hw_render_fbo:
+            return self._hw_render_fbo.glo
+
+        return 0
+
+    def __get_proc_address(self, sym: bytes) -> int:
+        if not sym:
+            return 0
+
         if not self._context:
-            raise RuntimeError("No OpenGL context has been initialized")
+            raise RuntimeError("OpenGL context not initialized")
 
-        if self._hw_render_callback.context_destroy:
-            self._hw_render_callback.context_destroy()
+        # See here https://github.com/moderngl/glcontext?tab=readme-ov-file#structure
+        return self._context.mglo._context.load_opengl_function(sym.decode())
 
 
 __all__ = ["ModernGlVideoDriver"]
