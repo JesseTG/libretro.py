@@ -99,6 +99,12 @@ class ModernGlVideoDriver(VideoDriver):
         self._shared = False
         self._context: Context | None = None
         self._vao: VertexArray | None = None
+        self._vbo: Buffer | None = None
+
+        self._fbo: Framebuffer | None = None
+        self._color: Renderbuffer | None = None
+        self._depth: Renderbuffer | None = None
+
         self._hw_render_fbo: Framebuffer | None = None
         self._hw_render_texture: Texture | None = None
         self._hw_render_rb_ds: Renderbuffer | None = None
@@ -113,6 +119,7 @@ class ModernGlVideoDriver(VideoDriver):
         del self._hw_render_fbo
         del self._cpu_texture
         del self._vao
+        del self._fbo
         del self._context
 
     @override
@@ -148,7 +155,8 @@ class ModernGlVideoDriver(VideoDriver):
             case memoryview():
                 self.__update_cpu_texture(data, width, height, pitch)
 
-            # TODO: Bind the framebuffer, clear it, then render the contents
+        with self._context.scope(self._fbo):
+            self._vao.render()
 
     @property
     @override
@@ -185,6 +193,7 @@ class ModernGlVideoDriver(VideoDriver):
             del self._hw_render_texture
             del self._hw_render_fbo
             del self._vao
+            del self._fbo
             del self._shader_program
             # Destroy the OpenGL context and create a new one
 
@@ -199,6 +208,7 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
+        self.__init_fbo()
         self._shader_program = self._context.program(
             vertex_shader=self._vertex_shader,
             fragment_shader=self._fragment_shader,
@@ -299,13 +309,15 @@ class ModernGlVideoDriver(VideoDriver):
     @property
     @override
     def screenshot(self) -> array | None:
-        data = self._hw_render_fbo.read()
+        geometry = self._system_av_info.geometry
+        data = self._fbo.read(viewport=(0, 0, geometry.base_width, geometry.base_height))
         return array("B", data) if data else None
 
     @property
     @override
     def framebuffer(self):
-        pass
+        data = self._fbo.read()
+        return array("B", data) if data else None
 
     @property
     @override
@@ -332,6 +344,38 @@ class ModernGlVideoDriver(VideoDriver):
         # libretro doesn't define one of these for OpenGL, so no need
         return None
 
+    def __get_framebuffer_size(self) -> tuple[int, int]:
+        # Equivalent to glGetIntegerv
+        max_fbo_size = self._context.info["GL_MAX_TEXTURE_SIZE"]
+        max_rb_size = self._context.info["GL_MAX_RENDERBUFFER_SIZE"]
+        geometry = self._system_av_info.geometry
+
+        width = min(geometry.max_width, max_fbo_size, max_rb_size)
+        height = min(geometry.max_height, max_fbo_size, max_rb_size)
+        return width, height
+
+    def __init_fbo(self):
+        assert self._context is not None
+        assert self._system_av_info is not None
+
+        del self._fbo
+        del self._color
+        del self._depth
+
+        size = self.__get_framebuffer_size()
+
+        # Similar to glGenTextures, glBindTexture, and glTexImage2D
+        self._color = self._context.renderbuffer(size, 4)
+        self._depth = self._context.depth_renderbuffer(size)
+        print(f"Allocated default framebuffer FBO attachment of size {size}")
+
+        # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
+        self._fbo = self._context.framebuffer(
+            self._color,
+            self._depth
+        )
+        self._fbo.clear()
+
     def __init_hw_render(self):
         assert self._context is not None
         assert self._callback is not None
@@ -346,14 +390,7 @@ class ModernGlVideoDriver(VideoDriver):
         if self._hw_render_rb_ds:
             del self._hw_render_rb_ds
 
-        # Equivalent to glGetIntegerv
-        max_fbo_size = self._context.info["GL_MAX_TEXTURE_SIZE"]
-        max_rb_size = self._context.info["GL_MAX_RENDERBUFFER_SIZE"]
-        geometry = self._system_av_info.geometry
-
-        width = min(geometry.max_width, max_fbo_size, max_rb_size)
-        height = min(geometry.max_height, max_fbo_size, max_rb_size)
-        size = (width, height)
+        size = self.__get_framebuffer_size()
 
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
         self._hw_render_texture = self._context.texture(size, 4)
