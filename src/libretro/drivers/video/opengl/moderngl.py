@@ -1,4 +1,5 @@
 import ctypes
+import logging
 import struct
 import warnings
 from array import array
@@ -10,7 +11,8 @@ from typing import final, override
 from importlib import resources
 
 import moderngl
-from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray
+from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray, \
+    Scope, Buffer
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -102,22 +104,31 @@ class ModernGlVideoDriver(VideoDriver):
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
 
+        # Framebuffer, color, and depth attachments for the "default" framebuffer
+        # (equivalent to what a window would provide)
         self._fbo: Framebuffer | None = None
-        self._color: Renderbuffer | None = None
+        self._color: Texture | None = None
         self._depth: Renderbuffer | None = None
 
+        # Framebuffer, color, and depth attachments for the framebuffer
+        # that the core will directly render to.
+        # Will be copied to the default framebuffer for "display".
         self._hw_render_fbo: Framebuffer | None = None
-        self._hw_render_texture: Texture | None = None
-        self._hw_render_rb_ds: Renderbuffer | None = None
-        self._cpu_texture: Texture | None = None
+        self._hw_render_color: Renderbuffer | None = None
+        self._hw_render_depth: Renderbuffer | None = None
+
+        # Framebuffer for CPU-rendered output
+        self._cpu_fbo: Framebuffer | None = None
+        self._cpu_color: Texture | None = None
+
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
         self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
 
     def __del__(self):
-        del self._hw_render_texture
-        del self._hw_render_rb_ds
+        del self._hw_render_color
+        del self._hw_render_depth
         del self._hw_render_fbo
-        del self._cpu_texture
+        del self._cpu_color
         del self._vao
         del self._fbo
         del self._context
@@ -149,11 +160,13 @@ class ModernGlVideoDriver(VideoDriver):
                 # Do nothing, we're re-rendering the previous frame
                 pass
             case FrameBufferSpecial.HARDWARE:
-                # No special treatment needed if rendering in hardware
+                # TODO: Copy the hardware render buffer to self._fbo
                 pass
 
             case memoryview():
                 self.__update_cpu_texture(data, width, height, pitch)
+                assert self._cpu_color is not None
+                self._context.copy_framebuffer(self._fbo, self._cpu_fbo)
 
         with self._context.scope(self._fbo):
             self._vao.render()
@@ -189,14 +202,14 @@ class ModernGlVideoDriver(VideoDriver):
             self._context.release()
             del self._context
 
-            del self._hw_render_rb_ds
-            del self._hw_render_texture
+            del self._hw_render_depth
+            del self._hw_render_color
             del self._hw_render_fbo
             del self._vao
             del self._fbo
             del self._shader_program
             del self._vbo
-            del self._cpu_texture
+            del self._cpu_color
             # Destroy the OpenGL context and create a new one
 
         match context_type:
@@ -216,7 +229,14 @@ class ModernGlVideoDriver(VideoDriver):
             fragment_shader=self._fragment_shader,
             varyings=self._varyings
         )
-        self._vao = self._context.vertex_array()
+        self._vbo = self._context.buffer(_VERTEXES)
+        self._vao = self._context.vertex_array(
+            self._shader_program,
+            self._vbo,
+            "texCoord",
+            "vertexCoord"
+        )
+        # TODO: Make the particular names configurable
 
         # TODO: Honor debug_context; enable debugging features if requested
         if self._callback is not None and context_type != HardwareContext.NONE:
@@ -281,8 +301,8 @@ class ModernGlVideoDriver(VideoDriver):
 
         if self._pixel_format != format:
             self._pixel_format = format
-            if self._cpu_texture:
-                del self._cpu_texture
+            if self._cpu_color:
+                del self._cpu_color
 
     @property
     @override
@@ -366,7 +386,8 @@ class ModernGlVideoDriver(VideoDriver):
         size = self.__get_framebuffer_size()
 
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
-        self._color = self._context.renderbuffer(size, 4)
+        self._color = self._context.texture(size, 4)
+        self._color.swizzle = "ARGB"
         self._depth = self._context.depth_renderbuffer(size)
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
@@ -382,17 +403,17 @@ class ModernGlVideoDriver(VideoDriver):
         assert self._system_av_info is not None
 
         del self._hw_render_fbo
-        del self._hw_render_texture
-        del self._hw_render_rb_ds
+        del self._hw_render_color
+        del self._hw_render_depth
 
         size = self.__get_framebuffer_size()
 
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
-        self._hw_render_texture = self._context.texture(size, 4)
+        self._hw_render_color = self._context.texture(size, 4)
         if self._callback.depth:
             # If the core is asking for a depth attachment...
             # Similar to glGenRenderbuffers, glBindRenderbuffer, and glRenderbufferStorage
-            self._hw_render_rb_ds = self._context.depth_renderbuffer(size)
+            self._hw_render_depth = self._context.depth_renderbuffer(size)
 
             if self._callback.stencil:
                 warnings.warn(
@@ -401,26 +422,27 @@ class ModernGlVideoDriver(VideoDriver):
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._hw_render_fbo = self._context.framebuffer(
-            self._hw_render_texture,
-            self._hw_render_rb_ds
+            self._hw_render_color,
+            self._hw_render_depth
         )
         self._hw_render_fbo.clear()
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
-        if self._cpu_texture and self._cpu_texture.size == (width, height):
+        if self._cpu_color and self._cpu_color.size == (width, height):
             # If we have a texture for CPU-rendered output, and it's the right size...
-            self._cpu_texture.write(data)
+            self._cpu_color.write(data)
         else:
-            del self._cpu_texture
+            del self._cpu_fbo
+            del self._cpu_color
 
             # Equivalent to glGenTextures, glBindTexture, glTexImage2D, and glTexParameteri
             match self._pixel_format:
                 case PixelFormat.XRGB8888:
-                    self._cpu_texture = self._context.texture((width, height), 4, data)  # GL_RGBA8
-                    self._cpu_texture.swizzle = "ABGR"
+                    self._cpu_color = self._context.texture((width, height), 4, data)  # GL_RGBA8
+                    self._cpu_color.swizzle = "ARGB"
                 case PixelFormat.RGB565:
                     GL_RGB565 = 0x8D62
-                    self._cpu_texture = self._context.texture(
+                    self._cpu_color = self._context.texture(
                         (width, height),
                         3,
                         data,
@@ -429,13 +451,15 @@ class ModernGlVideoDriver(VideoDriver):
                     # moderngl can't natively express GL_RGB565
                 case PixelFormat.RGB1555:
                     GL_RGB5 = 0x8050
-                    self._cpu_texture = self._context.texture(
+                    self._cpu_color = self._context.texture(
                         (width, height),
                         3,
                         data,
                         internal_format=GL_RGB5
                     )
                     # moderngl can't natively express GL_RGB5
+
+            self._cpu_fbo = self._context.framebuffer(self._cpu_color)
 
     def __get_hw_framebuffer(self) -> int:
         if self._hw_render_fbo:
