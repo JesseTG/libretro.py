@@ -2,7 +2,6 @@
 
 in vec2 texCoord;
 in vec2 vertexCoord;
-in vec4 color;
 uniform mat4 mvp;
 out vec2 transformedTexCoord;
 
