@@ -98,6 +98,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._system_av_info: retro_system_av_info | None = None
         self._shared = False
         self._context: Context | None = None
+        self._shader_program: moderngl.Program | None = None
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
 
@@ -109,7 +110,6 @@ class ModernGlVideoDriver(VideoDriver):
         self._hw_render_texture: Texture | None = None
         self._hw_render_rb_ds: Renderbuffer | None = None
         self._cpu_texture: Texture | None = None
-        self._shader_program: moderngl.Program | None = None
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
         self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
 
