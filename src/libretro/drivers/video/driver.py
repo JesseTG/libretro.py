@@ -240,19 +240,22 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def screenshot(self) -> array | None:
+    def screenshot(self) -> memoryview | None:
         """
         Captures the part of the most recently-rendered frame
         that would be visible to the player
         in a typical libretro frontend.
 
         This should account for rotation, geometry dimensions, and aspect ratio.
+
+        :return: A ``memoryview`` over a screenshot in 24-bit RGB format,
+        regardless of the driver's pixel format.
         """
         ...
 
     @property
     @abstractmethod
-    def framebuffer(self) -> array | None:
+    def framebuffer(self) -> memoryview | None:
         """
         Captures the complete raw framebuffer,
         even the parts that aren't visible to the player.

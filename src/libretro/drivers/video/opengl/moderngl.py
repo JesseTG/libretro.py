@@ -329,16 +329,18 @@ class ModernGlVideoDriver(VideoDriver):
 
     @property
     @override
-    def screenshot(self) -> array | None:
+    def screenshot(self) -> memoryview | None:
         geometry = self._system_av_info.geometry
-        data = self._fbo.read(viewport=(0, 0, geometry.base_width, geometry.base_height))
-        return array("B", data) if data else None
+        data = self._fbo.read(
+            viewport=(0, 0, geometry.base_width, geometry.base_height)
+        )
+        return memoryview(data) if data else None
 
     @property
     @override
-    def framebuffer(self):
+    def framebuffer(self) -> memoryview | None:
         data = self._fbo.read()
-        return array("B", data) if data else None
+        return memoryview(data) if data else None
 
     @property
     @override
