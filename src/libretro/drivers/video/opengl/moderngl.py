@@ -195,6 +195,8 @@ class ModernGlVideoDriver(VideoDriver):
             del self._vao
             del self._fbo
             del self._shader_program
+            del self._vbo
+            del self._cpu_texture
             # Destroy the OpenGL context and create a new one
 
         match context_type:
@@ -279,7 +281,6 @@ class ModernGlVideoDriver(VideoDriver):
 
         if self._pixel_format != format:
             self._pixel_format = format
-            self._needs_reinit_buffer = True
             if self._cpu_texture:
                 del self._cpu_texture
 
@@ -381,14 +382,9 @@ class ModernGlVideoDriver(VideoDriver):
         assert self._callback is not None
         assert self._system_av_info is not None
 
-        if self._hw_render_fbo:
-            del self._hw_render_fbo
-
-        if self._hw_render_texture:
-            del self._hw_render_texture
-
-        if self._hw_render_rb_ds:
-            del self._hw_render_rb_ds
+        del self._hw_render_fbo
+        del self._hw_render_texture
+        del self._hw_render_rb_ds
 
         size = self.__get_framebuffer_size()
 
