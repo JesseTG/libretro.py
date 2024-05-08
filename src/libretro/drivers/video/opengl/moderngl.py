@@ -106,7 +106,6 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program: moderngl.Program | None = None
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
         self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
-        self._needs_reinit_buffer = True
 
     def __del__(self):
         del self._hw_render_texture
@@ -374,8 +373,6 @@ class ModernGlVideoDriver(VideoDriver):
             self._hw_render_rb_ds
         )
         self._hw_render_fbo.clear()
-
-        self._needs_reinit_buffer = False
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
         if not (self._cpu_texture and self._cpu_texture.size == (width, height)):
