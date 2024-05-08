@@ -368,7 +368,6 @@ class ModernGlVideoDriver(VideoDriver):
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
         self._color = self._context.renderbuffer(size, 4)
         self._depth = self._context.depth_renderbuffer(size)
-        print(f"Allocated default framebuffer FBO attachment of size {size}")
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._fbo = self._context.framebuffer(
@@ -408,8 +407,10 @@ class ModernGlVideoDriver(VideoDriver):
         self._hw_render_fbo.clear()
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
-        if not (self._cpu_texture and self._cpu_texture.size == (width, height)):
-            # If we don't have a CPU texture, or we need one of a new size...
+        if self._cpu_texture and self._cpu_texture.size == (width, height):
+            # If we have a texture for CPU-rendered output, and it's the right size...
+            self._cpu_texture.write(data)
+        else:
             del self._cpu_texture
 
             # Equivalent to glGenTextures, glBindTexture, glTexImage2D, and glTexParameteri
@@ -435,8 +436,6 @@ class ModernGlVideoDriver(VideoDriver):
                         internal_format=GL_RGB5
                     )
                     # moderngl can't natively express GL_RGB5
-        else:
-            self._cpu_texture.write(data)
 
     def __get_hw_framebuffer(self) -> int:
         if self._hw_render_fbo:
