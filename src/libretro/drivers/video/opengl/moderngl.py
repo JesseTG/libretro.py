@@ -138,17 +138,16 @@ class ModernGlVideoDriver(VideoDriver):
             self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
 
-        with self._vao.scope:
-            match data:
-                case FrameBufferSpecial.DUPE:
-                    # Do nothing, we're re-rendering the previous frame
-                    pass
-                case FrameBufferSpecial.HARDWARE:
-                    # No special treatment needed if rendering in hardware
-                    pass
+        match data:
+            case FrameBufferSpecial.DUPE:
+                # Do nothing, we're re-rendering the previous frame
+                pass
+            case FrameBufferSpecial.HARDWARE:
+                # No special treatment needed if rendering in hardware
+                pass
 
-                case memoryview():
-                    self.__update_cpu_texture(data, width, height, pitch)
+            case memoryview():
+                self.__update_cpu_texture(data, width, height, pitch)
 
             # TODO: Bind the framebuffer, clear it, then render the contents
 
