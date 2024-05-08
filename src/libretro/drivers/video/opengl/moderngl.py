@@ -1,4 +1,5 @@
 import ctypes
+import struct
 import warnings
 from array import array
 from collections.abc import Mapping, Set, Sequence
@@ -31,6 +32,16 @@ _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, Hardwa
 
 _DEFAULT_VERT_FILENAME = "moderngl_vertex.glsl"
 _DEFAULT_FRAG_FILENAME = "moderngl_frag.glsl"
+
+_vertex = struct.Struct("4f")  # 4 floats (one vec2 for screen coords, one for vec2 coords)
+_VERTEXES = b''.join(
+    (
+        _vertex.pack(0, 0, 0, 1),
+        _vertex.pack(1, 0, 1, 1),
+        _vertex.pack(0, 1, 0, 0),
+        _vertex.pack(1, 1, 1, 0),
+    )
+)
 
 
 @final
