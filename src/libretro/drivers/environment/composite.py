@@ -318,10 +318,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
+        # Handle the constants and their equivalent ints, just to be safe
         match data:
-            case FrameBufferSpecial.DUPE:
+            case FrameBufferSpecial.DUPE | 0 | None:
                 self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
-            case FrameBufferSpecial.HARDWARE:
+            case FrameBufferSpecial.HARDWARE | -1 | 18446744073709551615:
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
             case int() | c_void_p():
                 view = memoryview_at(data, pitch * height, readonly=True)
