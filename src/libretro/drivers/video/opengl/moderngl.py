@@ -38,16 +38,30 @@ _DEFAULT_VERT_FILENAME = "moderngl_vertex.glsl"
 _DEFAULT_FRAG_FILENAME = "moderngl_frag.glsl"
 
 _vertex = struct.Struct("4f")  # 4 floats (one vec2 for screen coords, one for vec2 coords)
+_POSITION_NORTHWEST = (-1, 1)
+_POSITION_NORTHEAST = (1, 1)
+_POSITION_SOUTHWEST = (-1, -1)
+_POSITION_SOUTHEAST = (1, -1)
+
+_NORTHWEST = _vertex.pack(0, 0, *_POSITION_NORTHWEST)
+_NORTHEAST = _vertex.pack(1, 0, *_POSITION_NORTHEAST)
+_SOUTHWEST = _vertex.pack(0, 1, *_POSITION_SOUTHWEST)
+_SOUTHEAST = _vertex.pack(1, 1, *_POSITION_SOUTHEAST)
+
 _VERTEXES = b''.join(
     (
-        _vertex.pack(0, 0, 0, 1),
-        _vertex.pack(1, 0, 1, 1),
-        _vertex.pack(0, 1, 0, 0),
-        _vertex.pack(1, 1, 1, 0),
+        _NORTHEAST,
+        _NORTHWEST,
+        _SOUTHWEST,
+
+        _NORTHEAST,
+        _SOUTHWEST,
+        _SOUTHEAST,
     )
 )
 
 _DEFAULT_WINDOW_IMPL = "pyglet"
+_IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
 
 GL_RGBA = 0x1908
 
@@ -303,6 +317,7 @@ class ModernGlVideoDriver(VideoDriver):
             fragment_shader=self._fragment_shader,
             varyings=self._varyings
         )
+        self._shader_program["mvp"].write(_IDENTITY_MAT4)
         self._vbo = self._context.buffer(_VERTEXES)
         self._vao = self._context.vertex_array(
             self._shader_program,
