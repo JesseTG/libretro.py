@@ -37,26 +37,27 @@ _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, Hardwa
 _DEFAULT_VERT_FILENAME = "moderngl_vertex.glsl"
 _DEFAULT_FRAG_FILENAME = "moderngl_frag.glsl"
 
-_vertex = struct.Struct("4f")  # 4 floats (one vec2 for screen coords, one for vec2 coords)
+_vertex = struct.Struct("2f 2f")  # 4 floats (one vec2 for screen coords, one for vec2 coords)
 _POSITION_NORTHWEST = (-1, 1)
 _POSITION_NORTHEAST = (1, 1)
 _POSITION_SOUTHWEST = (-1, -1)
 _POSITION_SOUTHEAST = (1, -1)
+_TEXCOORD_NORTHWEST = (0, 1)
+_TEXCOORD_NORTHEAST = (1, 1)
+_TEXCOORD_SOUTHWEST = (0, 0)
+_TEXCOORD_SOUTHEAST = (1, 0)
 
-_NORTHWEST = _vertex.pack(0, 0, *_POSITION_NORTHWEST)
-_NORTHEAST = _vertex.pack(1, 0, *_POSITION_NORTHEAST)
-_SOUTHWEST = _vertex.pack(0, 1, *_POSITION_SOUTHWEST)
-_SOUTHEAST = _vertex.pack(1, 1, *_POSITION_SOUTHEAST)
+_NORTHWEST = _vertex.pack(*_POSITION_NORTHWEST, *_TEXCOORD_NORTHWEST)
+_NORTHEAST = _vertex.pack(*_POSITION_NORTHEAST, *_TEXCOORD_NORTHEAST)
+_SOUTHWEST = _vertex.pack(*_POSITION_SOUTHWEST, *_TEXCOORD_SOUTHWEST)
+_SOUTHEAST = _vertex.pack(*_POSITION_SOUTHEAST, *_TEXCOORD_SOUTHEAST)
 
 _VERTEXES = b''.join(
     (
-        _NORTHEAST,
         _NORTHWEST,
         _SOUTHWEST,
-
         _NORTHEAST,
-        _SOUTHWEST,
-        _SOUTHEAST,
+        _SOUTHEAST
     )
 )
 
@@ -225,7 +226,7 @@ class ModernGlVideoDriver(VideoDriver):
                 self._context.copy_framebuffer(self._fbo, self._cpu_fbo)
 
         with self._context.scope(self._fbo):
-            self._vao.render()
+            self._vao.render(moderngl.TRIANGLE_STRIP)
 
             if self._window:
                 self._context.copy_framebuffer(self._window.fbo, self._fbo)
@@ -322,8 +323,8 @@ class ModernGlVideoDriver(VideoDriver):
         self._vao = self._context.vertex_array(
             self._shader_program,
             self._vbo,
-            "texCoord",
-            "vertexCoord"
+            "vertexCoord",
+            "texCoord"
         )
         # TODO: Make the particular names configurable
 

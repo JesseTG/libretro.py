@@ -1,7 +1,7 @@
 #version 330
 
-in vec2 texCoord;
 in vec2 vertexCoord;
+in vec2 texCoord;
 uniform mat4 mvp;
 out vec2 transformedTexCoord;
 
