@@ -138,8 +138,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._hw_render_color: Texture | None = None
         self._hw_render_depth: Renderbuffer | None = None
 
-        # Framebuffer for CPU-rendered output
-        self._cpu_fbo: Framebuffer | None = None
+        # Texture for CPU-rendered output
         self._cpu_color: Texture | None = None
 
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
@@ -158,9 +157,6 @@ class ModernGlVideoDriver(VideoDriver):
     def __del__(self):
         if self._cpu_color:
             del self._cpu_color
-
-        if self._cpu_fbo:
-            del self._cpu_fbo
 
         if self._hw_render_depth:
             del self._hw_render_depth
@@ -223,9 +219,9 @@ class ModernGlVideoDriver(VideoDriver):
             case memoryview():
                 self.__update_cpu_texture(data, width, height, pitch)
                 assert self._cpu_color is not None
-                self._context.copy_framebuffer(self._fbo, self._cpu_fbo)
 
         with self._context.scope(self._fbo):
+            self._context.clear(1, 0, 0, 1)
             self._vao.render(moderngl.TRIANGLE_STRIP)
 
             if self._window:
@@ -526,7 +522,6 @@ class ModernGlVideoDriver(VideoDriver):
             # If we have a texture for CPU-rendered output, and it's the right size...
             self._cpu_color.write(data)
         else:
-            del self._cpu_fbo
             del self._cpu_color
 
             # Equivalent to glGenTextures, glBindTexture, glTexImage2D, and glTexParameteri
@@ -552,8 +547,6 @@ class ModernGlVideoDriver(VideoDriver):
                         internal_format=GL_RGB5
                     )
                     # moderngl can't natively express GL_RGB5
-
-            self._cpu_fbo = self._context.framebuffer(self._cpu_color)
 
     def __get_hw_framebuffer(self) -> int:
         if self._hw_render_fbo:
