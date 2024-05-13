@@ -11,8 +11,10 @@ from typing import final, override
 from importlib import resources
 
 import moderngl
+import moderngl_window
 from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray, \
     Scope, Buffer
+from moderngl_window.context.base import BaseWindow
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -45,6 +47,9 @@ _VERTEXES = b''.join(
     )
 )
 
+_DEFAULT_WINDOW_IMPL = "pyglet"
+
+GL_RGBA = 0x1908
 
 @final
 class ModernGlVideoDriver(VideoDriver):
@@ -52,7 +57,8 @@ class ModernGlVideoDriver(VideoDriver):
             self,
             vertex_shader: str | None = None,
             fragment_shader: str | None = None,
-            varyings: Sequence[str] = ("transformedTexCoord",)
+            varyings: Sequence[str] = ("transformedTexCoord",),
+            window: str | None = None,
     ):
         """
         Initializes the video driver.
@@ -114,7 +120,7 @@ class ModernGlVideoDriver(VideoDriver):
         # that the core will directly render to.
         # Will be copied to the default framebuffer for "display".
         self._hw_render_fbo: Framebuffer | None = None
-        self._hw_render_color: Renderbuffer | None = None
+        self._hw_render_color: Texture | None = None
         self._hw_render_depth: Renderbuffer | None = None
 
         # Framebuffer for CPU-rendered output
@@ -124,14 +130,52 @@ class ModernGlVideoDriver(VideoDriver):
         self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
         self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
 
+        self._window: BaseWindow | None = None
+        self._window_class: type[BaseWindow] | None = None
+
+        if window is not None:
+            window_mode = _DEFAULT_WINDOW_IMPL if window == "default" else window
+            if not isinstance(window, str):
+                raise TypeError(f"Expected a str or None, got {type(window).__name__}")
+
+            self._window_class = moderngl_window.get_local_window_cls(window_mode)
+
     def __del__(self):
-        del self._hw_render_color
-        del self._hw_render_depth
-        del self._hw_render_fbo
-        del self._cpu_color
-        del self._vao
-        del self._fbo
-        del self._context
+        if self._cpu_color:
+            del self._cpu_color
+
+        if self._cpu_fbo:
+            del self._cpu_fbo
+
+        if self._hw_render_depth:
+            del self._hw_render_depth
+
+        if self._hw_render_color:
+            del self._hw_render_color
+
+        if self._hw_render_fbo:
+            del self._hw_render_fbo
+
+        if self._depth:
+            del self._depth
+
+        if self._color:
+            del self._color
+
+        if self._fbo:
+            del self._fbo
+
+        if self._vbo:
+            del self._vbo
+
+        if self._vao:
+            del self._vao
+
+        if self._shader_program:
+            del self._shader_program
+
+        if self._context:
+            del self._context
 
     @override
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
@@ -160,9 +204,7 @@ class ModernGlVideoDriver(VideoDriver):
                 # Do nothing, we're re-rendering the previous frame
                 pass
             case FrameBufferSpecial.HARDWARE:
-                # TODO: Copy the hardware render buffer to self._fbo
-                pass
-
+                self._context.copy_framebuffer(self._fbo, self._hw_render_fbo)
             case memoryview():
                 self.__update_cpu_texture(data, width, height, pitch)
                 assert self._cpu_color is not None
@@ -170,6 +212,10 @@ class ModernGlVideoDriver(VideoDriver):
 
         with self._context.scope(self._fbo):
             self._vao.render()
+
+            if self._window:
+                self._context.copy_framebuffer(self._window.fbo, self._fbo)
+                self._window.swap_buffers()
 
     @property
     @override
@@ -199,6 +245,10 @@ class ModernGlVideoDriver(VideoDriver):
                 # If the core wants to clean up before the context is destroyed...
                 self._callback.context_destroy()
 
+            if self._window:
+                self._window.destroy()
+                del self._window
+
             self._context.release()
             del self._context
 
@@ -212,7 +262,30 @@ class ModernGlVideoDriver(VideoDriver):
             del self._cpu_color
             # Destroy the OpenGL context and create a new one
 
+        geometry = self._system_av_info.geometry
+
         match context_type:
+            case HardwareContext.NONE | HardwareContext.OPENGL if self._window_class:
+                self._window = self._window_class(
+                    title="libretro.py",
+                    size=(geometry.base_width, geometry.base_height),
+                    resizable=False,
+                    visible=True,
+                    vsync=False,
+                )
+                moderngl_window.activate_context(self._window)
+                self._context = self._window.ctx
+            case HardwareContext.OPENGL_CORE if self._window_class:
+                self._window = self._window_class(
+                    title="libretro.py",
+                    gl_version=(self._callback.version_major, self._callback.version_minor),
+                    size=(geometry.base_width, geometry.base_height),
+                    resizable=False,
+                    visible=True,
+                    vsync=False,
+                )
+                moderngl_window.activate_context(self._window)
+                self._context = self._window.ctx
             case HardwareContext.NONE:
                 # Create a default context with OpenGL 3.3 core profile;
                 # do not expose it to the core, only use it for software rendering
@@ -224,6 +297,7 @@ class ModernGlVideoDriver(VideoDriver):
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
         self.__init_fbo()
+
         self._shader_program = self._context.program(
             vertex_shader=self._vertex_shader,
             fragment_shader=self._fragment_shader,
@@ -331,9 +405,11 @@ class ModernGlVideoDriver(VideoDriver):
     @override
     def screenshot(self) -> memoryview | None:
         geometry = self._system_av_info.geometry
-        data = self._fbo.read(
-            viewport=(0, 0, geometry.base_width, geometry.base_height)
-        )
+        if self._window:
+            data = self._window.fbo.read(viewport=(geometry.base_width, geometry.base_height))
+        else:
+            data = self._fbo.read(viewport=(geometry.base_width, geometry.base_height))
+
         return memoryview(data) if data else None
 
     @property
