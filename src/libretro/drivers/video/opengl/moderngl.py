@@ -307,6 +307,7 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
+        self._context.gc_mode = "auto"
         self.__init_fbo()
 
         self._shader_program = self._context.program(
