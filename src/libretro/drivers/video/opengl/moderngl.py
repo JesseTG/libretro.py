@@ -492,7 +492,6 @@ class ModernGlVideoDriver(VideoDriver):
 
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
         self._color = self._context.texture(size, 4)
-        self._color.swizzle = "ARGB"
         self._depth = self._context.depth_renderbuffer(size)
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
