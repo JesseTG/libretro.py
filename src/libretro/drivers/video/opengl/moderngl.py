@@ -501,6 +501,9 @@ class ModernGlVideoDriver(VideoDriver):
             GL.glObjectLabel(GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment")
             GL.glObjectLabel(GL.GL_RENDERBUFFER, self._depth.glo, -1, b"libretro.py Main FBO Depth Attachment")
             GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._fbo.glo, -1, b"libretro.py Main FBO")
+
+        self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
+        self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
         self._fbo.clear()
 
     def __init_hw_render(self):
