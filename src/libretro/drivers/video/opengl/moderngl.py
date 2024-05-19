@@ -67,6 +67,34 @@ _IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
 
 GL_RGBA = 0x1908
 
+
+def _create_orthogonal_projection(
+        left,
+        right,
+        bottom,
+        top,
+        near,
+        far,
+) -> array:
+    rml = right - left
+    tmb = top - bottom
+    fmn = far - near
+
+    A = 2. / rml
+    B = 2. / tmb
+    C = -2. / fmn
+    Tx = -(right + left) / rml
+    Ty = -(top + bottom) / tmb
+    Tz = -(far + near) / fmn
+
+    return array("f", (
+        A, 0., 0., 0.,
+        0., B, 0., 0.,
+        0., 0., C, 0.,
+        Tx, Ty, Tz, 1.,
+    ))
+
+
 @final
 class ModernGlVideoDriver(VideoDriver):
     def __init__(
