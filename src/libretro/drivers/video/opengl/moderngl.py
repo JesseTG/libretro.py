@@ -148,6 +148,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._window: BaseWindow | None = None
         self._window_class: type[BaseWindow] | None = None
 
+        # TODO: Honor os.environ.get("MODERNGL_WINDOW")
         if window is not None:
             window_mode = _DEFAULT_WINDOW_IMPL if window == "default" else window
             if not isinstance(window, str):
@@ -214,6 +215,7 @@ class ModernGlVideoDriver(VideoDriver):
         match data:
             case FrameBufferSpecial.DUPE:
                 # Do nothing, we're re-rendering the previous frame
+                # TODO: Re-render whichever framebuffer was most recently used
                 pass
             case FrameBufferSpecial.HARDWARE:
                 self._context.copy_framebuffer(self._fbo, self._hw_render_fbo)
