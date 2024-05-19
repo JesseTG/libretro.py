@@ -555,7 +555,7 @@ class ModernGlVideoDriver(VideoDriver):
             match self._pixel_format:
                 case PixelFormat.XRGB8888:
                     self._cpu_color = self._context.texture((width, height), 4, data)  # GL_RGBA8
-                    self._cpu_color.swizzle = "ARGB"
+                    self._cpu_color.swizzle = "BGR1"
                 case PixelFormat.RGB565:
                     GL_RGB565 = 0x8D62
                     self._cpu_color = self._context.texture(
