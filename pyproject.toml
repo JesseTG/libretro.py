@@ -57,6 +57,7 @@ docs = [
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [
     'moderngl == 5.10.*',
+    'PyOpenGL == 3.1.*',
 ]
 pillow = [
     'pillow == 10.2.*',

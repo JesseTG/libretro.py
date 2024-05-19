@@ -15,6 +15,7 @@ import moderngl_window
 from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray, \
     Scope, Buffer
 from moderngl_window.context.base import BaseWindow
+from OpenGL import GL
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -307,6 +308,10 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
+        self._has_debug = (
+                "GL_KHR_debug" in self._context.extensions or
+                "GL_ARB_debug_output" in self._context.extensions
+        )
         self._context.gc_mode = "auto"
         self.__init_fbo()
 
@@ -324,6 +329,11 @@ class ModernGlVideoDriver(VideoDriver):
             "texCoord"
         )
         # TODO: Make the particular names configurable
+
+        if self._has_debug:
+            GL.glObjectLabel(GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program")
+            GL.glObjectLabel(GL.GL_BUFFER, self._vbo.glo, -1, b"libretro.py Screen VBO")
+            GL.glObjectLabel(GL.GL_VERTEX_ARRAY, self._vao.glo, -1, b"libretro.py Screen VAO")
 
         # TODO: Honor debug_context; enable debugging features if requested
         if self._callback is not None and context_type != HardwareContext.NONE:
@@ -486,6 +496,11 @@ class ModernGlVideoDriver(VideoDriver):
             self._color,
             self._depth
         )
+
+        if self._has_debug:
+            GL.glObjectLabel(GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment")
+            GL.glObjectLabel(GL.GL_RENDERBUFFER, self._depth.glo, -1, b"libretro.py Main FBO Depth Attachment")
+            GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._fbo.glo, -1, b"libretro.py Main FBO")
         self._fbo.clear()
 
     def __init_hw_render(self):
@@ -518,6 +533,12 @@ class ModernGlVideoDriver(VideoDriver):
         )
         self._hw_render_fbo.clear()
 
+        if self._has_debug:
+            GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._hw_render_fbo.glo, -1, b"libretro.py Hardware Rendering FBO")
+            GL.glObjectLabel(GL.GL_TEXTURE, self._hw_render_color.glo, -1, b"libretro.py Hardware Rendering FBO Color Attachment")
+            if self._hw_render_depth:
+                GL.glObjectLabel(GL.GL_RENDERBUFFER, self._hw_render_depth.glo, -1, b"libretro.py Hardware Rendering FBO Depth Attachment")
+
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
         if self._cpu_color and self._cpu_color.size == (width, height):
             # If we have a texture for CPU-rendered output, and it's the right size...
@@ -548,6 +569,9 @@ class ModernGlVideoDriver(VideoDriver):
                         internal_format=GL_RGB5
                     )
                     # moderngl can't natively express GL_RGB5
+
+            if self._has_debug:
+                GL.glObjectLabel(GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame")
 
     def __get_hw_framebuffer(self) -> int:
         if self._hw_render_fbo:
