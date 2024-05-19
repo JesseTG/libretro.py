@@ -488,6 +488,7 @@ class ModernGlVideoDriver(VideoDriver):
         del self._color
         del self._depth
 
+        geometry = self._system_av_info.geometry
         size = self.__get_framebuffer_size()
 
         # Similar to glGenTextures, glBindTexture, and glTexImage2D
