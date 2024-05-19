@@ -320,7 +320,8 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program = self._context.program(
             vertex_shader=self._vertex_shader,
             fragment_shader=self._fragment_shader,
-            varyings=self._varyings
+            varyings=self._varyings,
+            fragment_outputs={"pixelColor": 0}
         )
         self._shader_program["mvp"].write(_IDENTITY_MAT4)
         self._vbo = self._context.buffer(_VERTEXES)
