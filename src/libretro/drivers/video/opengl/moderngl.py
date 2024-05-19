@@ -125,6 +125,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program: moderngl.Program | None = None
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
+        self._has_debug: bool | None = None
 
         # Framebuffer, color, and depth attachments for the "default" framebuffer
         # (equivalent to what a window would provide)
