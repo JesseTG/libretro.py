@@ -352,7 +352,13 @@ class ModernGlVideoDriver(VideoDriver):
             varyings=self._varyings,
             fragment_outputs={"pixelColor": 0}
         )
-        self._shader_program["mvp"].write(_IDENTITY_MAT4)
+
+        mvp = array("f", _IDENTITY_MAT4)
+        if not self._callback or not self._callback.bottom_left_origin:
+            # If we're only using software rendering, or if we want the origin at the top-left...
+            mvp[5] = -1  # ...then flip the screen vertically by negating the Y scale
+
+        self._shader_program["mvp"].write(mvp)
         self._vbo = self._context.buffer(_VERTEXES)
         self._vao = self._context.vertex_array(
             self._shader_program,
