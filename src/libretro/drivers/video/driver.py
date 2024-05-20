@@ -253,15 +253,6 @@ class VideoDriver(Protocol):
         """
         ...
 
-    @property
-    @abstractmethod
-    def framebuffer(self) -> memoryview | None:
-        """
-        Captures the complete raw framebuffer,
-        even the parts that aren't visible to the player.
-        """
-        ...
-
 
 __all__ = [
     "VideoDriver",

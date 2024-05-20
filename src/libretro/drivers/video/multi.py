@@ -217,11 +217,6 @@ class MultiVideoDriver(VideoDriver):
     def screenshot(self) -> array:
         return self._current.screenshot
 
-    @property
-    @override
-    def framebuffer(self) -> array:
-        return self._current.framebuffer
-
 
 __all__ = [
     "MultiVideoDriver",

@@ -486,12 +486,6 @@ class ModernGlVideoDriver(VideoDriver):
 
     @property
     @override
-    def framebuffer(self) -> memoryview | None:
-        data = self._fbo.read()
-        return memoryview(data) if data else None
-
-    @property
-    @override
     def shared_context(self) -> bool:
         return self._shared
 
