@@ -247,18 +247,29 @@ class ModernGlVideoDriver(VideoDriver):
                 # TODO: Re-render whichever framebuffer was most recently used
                 pass
             case FrameBufferSpecial.HARDWARE:
-                self._context.copy_framebuffer(self._fbo, self._hw_render_fbo)
+                self._context.copy_framebuffer(self._color, self._hw_render_fbo)
+                self._hw_render_color.use()
             case memoryview():
                 self.__update_cpu_texture(data, width, height, pitch)
                 assert self._cpu_color is not None
+                self._cpu_color.use()
 
-        with self._context.scope(self._fbo):
-            self._context.clear(1, 0, 0, 1)
-            self._vao.render(moderngl.TRIANGLE_STRIP)
+        self._context.viewport = (0, 0, width, height)
+        matrix = _create_orthogonal_projection(-1, 1, 1, -1, -1, 1)
+        self._shader_program["mvp"].write(matrix)
 
-            if self._window:
-                self._context.copy_framebuffer(self._window.fbo, self._fbo)
-                self._window.swap_buffers()
+        self._fbo.use()
+        self._context.clear(1, 0, 0, 1)
+        self._color.use(1)
+
+        self._vao.render(moderngl.TRIANGLE_STRIP)
+
+        if self._window:
+            self._window.fbo.use()
+            self._context.copy_framebuffer(self._window.fbo, self._fbo)
+            self._window.swap_buffers()
+
+        self._context.finish()
 
     @property
     @override
