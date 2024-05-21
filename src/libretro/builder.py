@@ -348,15 +348,12 @@ class SessionBuilder:
             case VideoDriver():
                 self._args["video"] = lambda: video
             case _DefaultType.DEFAULT:
-                drivers: dict[HardwareContext, Callable[[VideoDriverInitArgs], VideoDriver]] = dict()
-                if PillowVideoDriver:
-                    drivers[HardwareContext.NONE] = PillowVideoDriver
-                else:
-                    drivers[HardwareContext.NONE] = ArrayVideoDriver
+                drivers: dict[HardwareContext, Callable[[], VideoDriver]] = dict()
+                drivers[HardwareContext.NONE] = ArrayVideoDriver
 
                 if ModernGlVideoDriver:
-                    drivers[HardwareContext.OPENGL] = lambda args: ModernGlVideoDriver()
-                    drivers[HardwareContext.OPENGL_CORE] = lambda args: ModernGlVideoDriver()
+                    drivers[HardwareContext.OPENGL] = ModernGlVideoDriver
+                    drivers[HardwareContext.OPENGL_CORE] = ModernGlVideoDriver
 
                 self._args["video"] = lambda: MultiVideoDriver(drivers)
             case None:
