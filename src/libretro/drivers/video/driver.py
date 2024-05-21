@@ -199,7 +199,7 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def system_av_info(self) -> retro_system_av_info:
+    def system_av_info(self) -> retro_system_av_info | None:
         ...
 
     @system_av_info.setter
@@ -209,7 +209,7 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def geometry(self) -> retro_game_geometry:
+    def geometry(self) -> retro_game_geometry | None:
         ...
 
     @geometry.setter

@@ -1,5 +1,6 @@
 from array import array
 from collections.abc import Callable, Mapping, Set
+from copy import deepcopy
 from typing import final, override
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
@@ -16,7 +17,7 @@ from libretro.api.video import (
 
 from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
 
-DriverMap = Mapping[HardwareContext, Callable[[VideoDriverInitArgs], VideoDriver]]
+DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
 
 _INITIAL_CALLBACK = retro_hw_render_callback(HardwareContext.NONE)
 
@@ -27,7 +28,7 @@ class MultiVideoDriver(VideoDriver):
     A video driver that delegates to one of several possible video drivers,
     depending on what the core or frontend requests.
 
-    This class is useful for cores that support multiple hardware contexts,
+    This class is useful for a core that supports multiple hardware contexts,
     especially if it can switch between them at runtime.
     """
 
@@ -64,13 +65,13 @@ class MultiVideoDriver(VideoDriver):
         self._preferred = preferred
         self._drivers = dict(drivers)
         self._supported_contexts = frozenset(self._drivers.keys())
-        self._current = self._drivers[preferred](_INITIAL_CALLBACK)
-
-        if not isinstance(self._current, VideoDriver):
-            raise TypeError(
-                f"Expected the callable mapped to {preferred} to return a VideoDriver, got {type(self._current).__name__}"
-            )
+        self._pixel_format = PixelFormat.RGB1555
         self._current: VideoDriver | None = None
+        self._rotation: Rotation = Rotation.NONE
+        self._system_av_info: retro_system_av_info | None = None
+        self._callback: retro_hw_render_callback | None = None
+        self._can_dupe: bool | None = True
+        self._next_hw_context: HardwareContext | None = HardwareContext.NONE
 
     @override
     def refresh(
@@ -84,14 +85,44 @@ class MultiVideoDriver(VideoDriver):
         if not self._current:
             return True
 
+        if self._next_hw_context is not None:
+            return True
+
         return self._current.needs_reinit
 
     @override
     def reinit(self) -> None:
-        # TODO: Use self._drivers[preferred]
-        pass
-        # TODO: If no video driver or if switching to a new API, reinit
-        # TODO: If using the same API, call reinit on the current video driver
+        if self._current is not None and self._current.active_context == self._next_hw_context:
+            # If we're not switching to a whole new video driver...
+            self._current.reinit()  # ...then just let the driver reinit itself
+        elif self._current is not None:
+            # If we're switching to another hardware rendering API...
+            driver = self._drivers[self._next_hw_context]()
+            if not driver:
+                raise RuntimeError("Video driver not initialized")
+
+            pixel_format = self._current.pixel_format
+            system_av_info = self._current.system_av_info
+            rotation = self._current.rotation
+            shared = self._current.shared_context
+
+            driver.pixel_format = pixel_format
+            driver.rotation = rotation
+            driver.shared_context = shared
+
+            if system_av_info is not None:
+                driver.system_av_info = system_av_info
+
+            del self._current
+            self._current = driver
+        else:
+            driver = self._drivers[self._next_hw_context]()
+            if not driver:
+                raise RuntimeError("Video driver not initialized")
+
+            self._current = driver
+
+        self._next_hw_context = None
 
 
     @property
@@ -102,7 +133,7 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def active_context(self) -> HardwareContext:
-        return self._current.active_context
+        return self._current.active_context if self._current else HardwareContext.NONE
 
     @property
     @override
@@ -125,25 +156,39 @@ class MultiVideoDriver(VideoDriver):
     def preferred_context(self) -> None:
         self._preferred = None
 
+    @override
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
-        pass
+        if callback is None:
+            return None
 
+        if not isinstance(callback, retro_hw_render_callback):
+            raise TypeError(f"Expected a retro_hw_render_callback, got {type(callback).__name__}")
 
+        context_type = HardwareContext(callback.context_type)
+        if context_type not in self._supported_contexts:
+            return None
+
+        self._next_hw_context = context_type
+        # TODO: What to do if requesting NONE explicitly?
+        # TODO: Set the context to the one requested by the core
 
     @property
     @override
     def rotation(self) -> Rotation:
-        return self._current.rotation
+        return self._rotation
 
     @rotation.setter
     @override
     def rotation(self, value: Rotation) -> None:
-        self._current.rotation = value
+        self._rotation = value
+
+        if self._current:
+            self._current.rotation = value
 
     @property
     @override
     def can_dupe(self) -> bool | None:
-        return self._current.can_dupe
+        return self._can_dupe
 
     @can_dupe.setter
     @override
@@ -151,17 +196,20 @@ class MultiVideoDriver(VideoDriver):
         if not isinstance(value, bool):
             raise TypeError(f"Expected a bool, got {type(value).__name__}")
 
-        self._current.can_dupe = value
+        self._can_dupe = value
+
+        if self._current:
+            self._current.can_dupe = value
 
     @can_dupe.deleter
     @override
     def can_dupe(self) -> None:
-        del self._current.can_dupe
+        self._can_dupe = None
 
     @property
     @override
     def pixel_format(self) -> PixelFormat:
-        return self._current.pixel_format
+        return self._pixel_format
 
     @pixel_format.setter
     @override
@@ -169,27 +217,44 @@ class MultiVideoDriver(VideoDriver):
         if not isinstance(value, PixelFormat):
             raise TypeError(f"Expected a PixelFormat, got {type(value).__name__}")
 
-        self._current.pixel_format = value
+        self._pixel_format = value
+
+        if self._current is not None:
+            self._current.pixel_format = value
 
     @property
     @override
     def system_av_info(self) -> retro_system_av_info:
-        return self._current.system_av_info
+        return self._system_av_info
 
     @system_av_info.setter
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
-        self._current.system_av_info = av_info
+        if not isinstance(av_info, retro_system_av_info):
+            raise TypeError(f"Expected retro_system_av_info, got {type(av_info).__name__}")
+
+        self._system_av_info = deepcopy(av_info)
+
+        if self._current is not None:
+            self._current.system_av_info = av_info
 
     @property
     @override
-    def geometry(self) -> retro_game_geometry:
-        return self._current.geometry
+    def geometry(self) -> retro_game_geometry | None:
+        return deepcopy(self._system_av_info.geometry) if self._system_av_info else None
 
     @geometry.setter
     @override
     def geometry(self, value: retro_game_geometry) -> None:
-        self._current.geometry = value
+        if not isinstance(value, retro_game_geometry):
+            raise TypeError(f"Expected retro_game_geometry, got {type(value).__name__}")
+
+        self._system_av_info.geometry.base_width = value.base_width
+        self._system_av_info.geometry.base_height = value.base_height
+        self._system_av_info.geometry.aspect_ratio = value.aspect_ratio
+
+        if self._current is not None:
+            self._current.geometry = value
 
     @override
     def get_software_framebuffer(
@@ -213,10 +278,8 @@ class MultiVideoDriver(VideoDriver):
         self._current.shared_context = value
 
     @property
-    @override
-    def screenshot(self) -> array:
-        return self._current.screenshot
-
+    def screenshot(self) -> memoryview | None:
+        pass
 
 __all__ = [
     "MultiVideoDriver",
