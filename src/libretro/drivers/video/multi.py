@@ -1,3 +1,4 @@
+import warnings
 from array import array
 from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
@@ -14,6 +15,7 @@ from libretro.api.video import (
     retro_hw_render_callback,
     retro_hw_render_interface,
 )
+from libretro.error import UnsupportedEnvCall
 
 from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
 
@@ -71,6 +73,7 @@ class MultiVideoDriver(VideoDriver):
         self._system_av_info: retro_system_av_info | None = None
         self._callback: retro_hw_render_callback | None = None
         self._can_dupe: bool | None = True
+        self._shared_context = False
         self._next_hw_context: HardwareContext | None = HardwareContext.NONE
 
     @override
@@ -95,31 +98,38 @@ class MultiVideoDriver(VideoDriver):
         if self._current is not None and self._current.active_context == self._next_hw_context:
             # If we're not switching to a whole new video driver...
             self._current.reinit()  # ...then just let the driver reinit itself
-        elif self._current is not None:
+        else:
             # If we're switching to another hardware rendering API...
             driver = self._drivers[self._next_hw_context]()
             if not driver:
                 raise RuntimeError("Video driver not initialized")
 
-            pixel_format = self._current.pixel_format
-            system_av_info = self._current.system_av_info
-            rotation = self._current.rotation
-            shared = self._current.shared_context
+            if self._current:
+                pixel_format = self._current.pixel_format
+                system_av_info = self._current.system_av_info
+                rotation = self._current.rotation
+                shared = self._current.shared_context
+            else:
+                pixel_format = self._pixel_format
+                system_av_info = self._system_av_info
+                rotation = self._rotation
+                shared = self._shared_context
 
             driver.pixel_format = pixel_format
-            driver.rotation = rotation
-            driver.shared_context = shared
+            try:
+                driver.rotation = rotation
+            except UnsupportedEnvCall:
+                self._rotation = Rotation.NONE
+
+            try:
+                driver.shared_context = shared
+            except UnsupportedEnvCall:
+                self._shared_context = False
 
             if system_av_info is not None:
                 driver.system_av_info = system_av_info
 
             del self._current
-            self._current = driver
-        else:
-            driver = self._drivers[self._next_hw_context]()
-            if not driver:
-                raise RuntimeError("Video driver not initialized")
-
             self._current = driver
 
         self._next_hw_context = None
@@ -188,6 +198,9 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def can_dupe(self) -> bool | None:
+        if self._current is not None:
+            return self._current.can_dupe
+
         return self._can_dupe
 
     @can_dupe.setter
@@ -198,7 +211,7 @@ class MultiVideoDriver(VideoDriver):
 
         self._can_dupe = value
 
-        if self._current:
+        if self._current is not None:
             self._current.can_dupe = value
 
     @can_dupe.deleter
@@ -225,6 +238,9 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def system_av_info(self) -> retro_system_av_info:
+        if self._current is not None:
+            return self._current.system_av_info
+
         return self._system_av_info
 
     @system_av_info.setter
@@ -260,22 +276,37 @@ class MultiVideoDriver(VideoDriver):
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
-        return self._current.get_software_framebuffer(width, height, flags)
+        if self._current:
+            return self._current.get_software_framebuffer(width, height, flags)
+
+        return None
 
     @property
     @override
     def hw_render_interface(self) -> retro_hw_render_interface | None:
-        return self._current.hw_render_interface
+        if self._current:
+            return self._current.hw_render_interface
+
+        return None
 
     @property
     @override
     def shared_context(self) -> bool:
-        return self._current.shared_context
+        if self._current:
+            return self._current.shared_context
+
+        return self._shared_context
 
     @shared_context.setter
     @override
     def shared_context(self, value: bool) -> None:
-        self._current.shared_context = value
+        if not isinstance(value, bool):
+            raise TypeError(f"Expected bool, got {type(value).__name__}")
+
+        self._shared_context = value
+
+        if self._current:
+            self._current.shared_context = value
 
     @property
     def screenshot(self) -> memoryview | None:
