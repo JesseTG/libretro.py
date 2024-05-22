@@ -31,7 +31,7 @@ from libretro.api.video import (
     retro_hw_render_interface,
 )
 
-from ..driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
+from ..driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs, Screenshot
 
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, HardwareContext.OPENGL))
 
@@ -154,6 +154,9 @@ class ModernGlVideoDriver(VideoDriver):
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
         self._has_debug: bool | None = None
+        self._last_width: int | None = None
+        self._last_height: int | None = None
+        self._rotation: Rotation = Rotation.NONE
 
         # Framebuffer, color, and depth attachments for the "default" framebuffer
         # (equivalent to what a window would provide)
@@ -270,6 +273,8 @@ class ModernGlVideoDriver(VideoDriver):
             self._window.swap_buffers()
 
         self._context.finish()
+        self._last_width = width
+        self._last_height = height
 
     @property
     @override
@@ -483,16 +488,43 @@ class ModernGlVideoDriver(VideoDriver):
 
         self._system_av_info = deepcopy(av_info)
 
-    @property
     @override
-    def screenshot(self) -> memoryview | None:
-        geometry = self._system_av_info.geometry
-        if self._window:
-            data = self._window.fbo.read(viewport=(geometry.base_width, geometry.base_height))
-        else:
-            data = self._fbo.read(viewport=(geometry.base_width, geometry.base_height))
+    def screenshot(self) -> Screenshot | None:
+        if self._system_av_info is None:
+            return None
 
-        return memoryview(data) if data else None
+        size = (self._last_width, self._last_height)
+        if self._window:
+            frame = self._window.fbo.read(size, 4)
+        else:
+            frame = self._fbo.read(size, 4)
+
+        if frame is None:
+            return None
+
+        if not self._callback or not self._callback.bottom_left_origin:
+            # If we're using software rendering or the origin is at the bottom-left...
+            bytes_per_row = self._last_width * self._pixel_format.bytes_per_pixel
+            reversed_frame = array("B", frame)
+            reversed_frame_view = memoryview(reversed_frame)
+            frame_view = memoryview(frame)
+            frame_len = len(frame)
+            for i in range(self._last_height):
+                # For each row...
+                start = i * bytes_per_row
+                end = start + bytes_per_row
+                reversed_frame_view[start:end] = frame_view[frame_len - end:frame_len - start]
+                # ...copy row number (height - i) to row i
+
+            frame = reversed_frame_view
+
+        return Screenshot(
+            memoryview(frame),
+            self._last_width,
+            self._last_height,
+            self._rotation,
+            self._pixel_format
+        )
 
     @property
     @override
