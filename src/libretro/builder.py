@@ -322,8 +322,7 @@ class SessionBuilder:
 
         The default video driver is a ``MultiVideoDriver`` that supports the following contexts:
 
-        - ``HardwareContext.NONE``: A ``PillowVideoDriver`` if the ``pillow`` package is installed,
-          or an ``ArrayVideoDriver`` if not.
+        - ``HardwareContext.NONE``: An ``ArrayVideoDriver``.
         - ``HardwareContext.OPENGL``: A ``ModernGlVideoDriver`` if the ``moderngl`` package is installed,
           absent if not.
 
