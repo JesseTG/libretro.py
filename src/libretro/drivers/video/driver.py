@@ -1,11 +1,9 @@
 from abc import abstractmethod
-from array import array
 from collections.abc import Set
 from enum import Enum
-from typing import Protocol, TypedDict, runtime_checkable
+from typing import Protocol, TypedDict, runtime_checkable, NamedTuple
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
-from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
     HardwareContext,
     MemoryAccess,
@@ -27,6 +25,14 @@ class VideoDriverInitArgs(TypedDict, total=False):
     shared_context: bool
     pixel_format: PixelFormat
     av_info: retro_system_av_info
+
+
+class Screenshot(NamedTuple):
+    data: memoryview
+    width: int
+    height: int
+    rotation: Rotation
+    pixel_format: PixelFormat
 
 
 @runtime_checkable
@@ -238,18 +244,14 @@ class VideoDriver(Protocol):
     def shared_context(self, value: bool) -> None:
         ...
 
-    @property
     @abstractmethod
-    def screenshot(self) -> memoryview | None:
+    def screenshot(self) -> Screenshot | None:
         """
         Captures the part of the most recently-rendered frame
         that would be visible to the player
         in a typical libretro frontend.
 
         This should account for rotation, geometry dimensions, and aspect ratio.
-
-        :return: A ``memoryview`` over a screenshot in 24-bit RGB format,
-        regardless of the driver's pixel format.
         """
         ...
 
@@ -258,4 +260,5 @@ __all__ = [
     "VideoDriver",
     "VideoDriverInitArgs",
     "FrameBufferSpecial",
+    "Screenshot",
 ]
