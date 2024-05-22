@@ -129,6 +129,7 @@ class MultiVideoDriver(VideoDriver):
             if system_av_info is not None:
                 driver.system_av_info = system_av_info
 
+            driver.reinit()
             del self._current
             self._current = driver
 
