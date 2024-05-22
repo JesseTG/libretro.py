@@ -69,16 +69,12 @@ add one or more of the following extras to the `install` command:
   Required if contributing to libretro.py.
 - **`opengl`:** Support for the built-in OpenGL video driver.
   Required if testing a core's OpenGL support.
-- **`pillow`:** Support for the built-in software-only video driver
-  powered by the [Pillow][pillow] image processing library.
-  Not required for any particular feature,
-  but it simplifies tests that inspect the core's video output.
 
-For example, if you want to submit an improvement to the Pillow video driver,
+For example, if you want to submit an improvement to the OpenGL video driver,
 you would install libretro.py like so:
 
 ```bash
-pip install libretro.py[pillow,dev]
+pip install libretro.py[opengl,dev]
 ```
 
 And if you just want to test your libretro core's OpenGL support:
@@ -89,4 +85,3 @@ pip install libretro.py[opengl]
 
 [just]: https://just.systems
 [libretro]: https://www.libretro.com
-[pillow]: https://python-pillow.org

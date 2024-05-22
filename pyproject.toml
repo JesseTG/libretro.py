@@ -59,11 +59,7 @@ opengl = [
     'moderngl == 5.10.*',
     'PyOpenGL == 3.1.*',
 ]
-pillow = [
-    'pillow == 10.2.*',
-    'types-Pillow',
-]
-all = ["libretro.py[build,dev,docs,opengl,pillow]"]
+all = ["libretro.py[build,dev,docs,opengl]"]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"

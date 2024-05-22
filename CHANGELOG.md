@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow `VideoDriver.can_dupe` to be settable and deletable.
 - Don't allow `VideoDriver.get_system_av_info` to return `None`.
 - **BREAKING**: Rename `AbstractSoftwareVideoDriver` to `SoftwareVideoDriver`.
+- **BREAKING:** Remove `PillowVideoDriver`; use `ArrayVideoDriver` instead.
 
 ## [0.0.1] - 2024-04-22
 

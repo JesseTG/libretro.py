@@ -66,11 +66,6 @@ from libretro.drivers import (
 from libretro.session import Session
 
 try:
-    from libretro.drivers.video import PillowVideoDriver
-except ImportError:
-    PillowVideoDriver = None
-
-try:
     from libretro.drivers.video import ModernGlVideoDriver
 except ImportError:
     ModernGlVideoDriver = None
@@ -352,6 +347,7 @@ class SessionBuilder:
                 drivers[HardwareContext.NONE] = ArrayVideoDriver
 
                 if ModernGlVideoDriver:
+                    # If modern
                     drivers[HardwareContext.OPENGL] = ModernGlVideoDriver
                     drivers[HardwareContext.OPENGL_CORE] = ModernGlVideoDriver
 
