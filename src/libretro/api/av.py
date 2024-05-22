@@ -49,6 +49,14 @@ class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
             aspect_ratio=self.aspect_ratio,
         )
 
+    @property
+    def base_size(self) -> tuple[int, int]:
+        return self.base_width, self.base_height
+
+    @property
+    def max_size(self) -> tuple[int, int]:
+        return self.max_width, self.max_height
+
 
 @dataclass(init=False)
 class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
