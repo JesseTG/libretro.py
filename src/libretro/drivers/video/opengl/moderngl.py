@@ -453,12 +453,19 @@ class ModernGlVideoDriver(VideoDriver):
     @property
     @override
     def rotation(self) -> Rotation:
-        pass
+        return self._rotation
 
     @rotation.setter
     @override
     def rotation(self, rotation: Rotation) -> None:
-        pass  # TODO: Implement
+        if not isinstance(rotation, (Rotation, int)):
+            raise TypeError(f"Expected a Rotation, got {type(rotation).__name__}")
+
+        if rotation not in Rotation:
+            raise ValueError(f"Invalid rotation: {rotation}")
+
+        self._rotation = rotation
+        # TODO: Set the rotation matrix in the shader
 
     @property
     @override
