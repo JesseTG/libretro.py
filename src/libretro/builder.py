@@ -346,7 +346,7 @@ class SessionBuilder:
                 drivers[HardwareContext.NONE] = ArrayVideoDriver
 
                 if ModernGlVideoDriver:
-                    # If modern
+                    # If moderngl is installed...
                     drivers[HardwareContext.OPENGL] = ModernGlVideoDriver
                     drivers[HardwareContext.OPENGL_CORE] = ModernGlVideoDriver
 
