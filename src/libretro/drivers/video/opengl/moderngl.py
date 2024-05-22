@@ -462,7 +462,10 @@ class ModernGlVideoDriver(VideoDriver):
 
     @property
     @override
-    def system_av_info(self) -> retro_system_av_info:
+    def system_av_info(self) -> retro_system_av_info | None:
+        if not self._system_av_info:
+            return None
+
         return deepcopy(self._system_av_info)
 
     @system_av_info.setter
