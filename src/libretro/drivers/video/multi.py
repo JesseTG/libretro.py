@@ -17,7 +17,7 @@ from libretro.api.video import (
 )
 from libretro.error import UnsupportedEnvCall
 
-from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs
+from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs, Screenshot
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
 
@@ -309,9 +309,10 @@ class MultiVideoDriver(VideoDriver):
         if self._current:
             self._current.shared_context = value
 
-    @property
-    def screenshot(self) -> memoryview | None:
-        pass
+    @override
+    def screenshot(self) -> Screenshot | None:
+        return self._current.screenshot() if self._current else None
+
 
 __all__ = [
     "MultiVideoDriver",
