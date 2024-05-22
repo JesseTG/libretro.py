@@ -41,7 +41,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @property
     @override
     @final
-    def preferred_context(self) -> HardwareContext:
+    def preferred_context(self) -> HardwareContext | None:
         return HardwareContext.NONE
 
     @preferred_context.setter
