@@ -1,7 +1,7 @@
 from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from enum import IntEnum
 from typing import override
+from enum import Enum, auto
 
 from libretro._utils import Pollable
 from libretro.api.input import (
@@ -41,11 +41,11 @@ class Point:
 DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
 
 
-class Direction(IntEnum):
-    RIGHT = (0,)
-    UP = (1,)
-    LEFT = (2,)
-    DOWN = (3,)
+class Direction(Enum):
+    RIGHT = auto(),
+    UP = auto(),
+    LEFT = auto(),
+    DOWN = auto(),
 
     def matches_direction(self, other: DeviceIdJoypad | Key | DeviceIdLightgun) -> bool:
         match (self, other):
