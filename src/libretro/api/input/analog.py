@@ -63,6 +63,10 @@ class AnalogState(InputDeviceState):
     def right_x(self) -> int:
         return self.rstick[0]
 
+    @property
+    def right_y(self) -> int:
+        return self.rstick[1]
+
     def __getitem__(self, item) -> int:
         match item:
             case DeviceIdJoypad.B:
