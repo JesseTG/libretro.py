@@ -100,6 +100,15 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
         last_frame_length = self._last_width * self._last_height * self._pixel_format.bytes_per_pixel
         screen = self._frame[:last_frame_length]
+        for i in range(0, last_frame_length, self._pixel_format.bytes_per_pixel):
+            r, g, b, a = screen[i:i + self._pixel_format.bytes_per_pixel]
+            screen[i:i + self._pixel_format.bytes_per_pixel] = array('B', (b, g, r, a))
+            # the lower 8 bits of the pixel are the red channel;
+            # we need to swap them so images don't look wrong
+            # in common Python imaging libraries
+
+        # TODO: support RGB565 and RGB555
+        # TODO: support rotation
 
         return Screenshot(
             memoryview(screen),
