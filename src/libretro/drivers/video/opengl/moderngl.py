@@ -511,6 +511,7 @@ class ModernGlVideoDriver(VideoDriver):
             raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
 
         self._system_av_info = deepcopy(av_info)
+        self.reinit()
 
     @override
     def screenshot(self) -> Screenshot | None:

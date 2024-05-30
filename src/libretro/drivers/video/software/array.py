@@ -20,7 +20,6 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._rotation: Rotation = Rotation.NONE
         self._last_width: int | None = None
         self._last_height: int | None = None
-        self._needs_reinit: bool = True
 
     @override
     def refresh(
@@ -48,14 +47,13 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     @property
     def needs_reinit(self) -> bool:
-        return self._frame is None or self._needs_reinit
+        return self._frame is None
 
     @override
     def reinit(self) -> None:
         geometry = self._system_av_info.geometry
         bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
         self._frame = array("B", itertools.repeat(0, bufsize))
-        self._needs_reinit = False
 
     @property
     @override
@@ -134,11 +132,8 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         if not isinstance(av_info, retro_system_av_info):
             raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
 
-        geometry: retro_game_geometry = av_info.geometry
-        if not self._system_av_info or self._system_av_info.geometry.max_size != geometry.max_size:
-            self._needs_reinit = True
-
         self._system_av_info = deepcopy(av_info)
+        self.reinit()
 
     @property
     @override

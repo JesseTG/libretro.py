@@ -133,12 +133,20 @@ class MultiVideoDriver(VideoDriver):
             except UnsupportedEnvCall:
                 self._shared_context = False
 
+            old_driver = self._current
+            self._current = driver
+
+            # Must set the callback before setting the system AV info,
+            # as setting the system AV info reinitializes the video driver immediately
+            # and that requires calling the core-provided callbacks
+            driver.set_context(self._callback)
+
             if system_av_info is not None:
                 driver.system_av_info = system_av_info
+                # No need to call driver.reinit(); setting the system AV info should do that
 
-            driver.reinit()
-            del self._current
-            self._current = driver
+            del old_driver
+            # TODO: If initializing the new driver fails, keep the old one
 
         self._next_hw_context = None
 
@@ -187,8 +195,12 @@ class MultiVideoDriver(VideoDriver):
             return None
 
         self._next_hw_context = context_type
+        self._callback = deepcopy(callback)
+        self._callback.get_current_framebuffer = self._get_current_framebuffer
+        self._callback.get_proc_address = self._get_proc_address
         # TODO: What to do if requesting NONE explicitly?
-        # TODO: Set the context to the one requested by the core
+
+        return deepcopy(self._callback)
 
     @property
     @override
@@ -277,9 +289,7 @@ class MultiVideoDriver(VideoDriver):
             raise TypeError(f"Expected retro_system_av_info, got {type(av_info).__name__}")
 
         self._system_av_info = deepcopy(av_info)
-
-        if self._current is not None:
-            self._current.system_av_info = av_info
+        self.reinit()
 
     @property
     @override
