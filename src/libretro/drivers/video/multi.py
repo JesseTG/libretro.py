@@ -14,6 +14,8 @@ from libretro.api.video import (
     retro_framebuffer,
     retro_hw_render_callback,
     retro_hw_render_interface,
+    retro_hw_get_current_framebuffer_t,
+    retro_hw_get_proc_address_t,
 )
 from libretro.error import UnsupportedEnvCall
 
@@ -75,6 +77,11 @@ class MultiVideoDriver(VideoDriver):
         self._can_dupe: bool | None = True
         self._shared_context = False
         self._next_hw_context: HardwareContext | None = HardwareContext.NONE
+
+        # We need to keep these objects alive before we can pass these callbacks to the core,
+        # or else they'll be garbage-collected and the core will crash.
+        self._get_current_framebuffer = retro_hw_get_current_framebuffer_t(lambda: self.current_framebuffer)
+        self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
 
     @override
     def refresh(
@@ -182,6 +189,25 @@ class MultiVideoDriver(VideoDriver):
         self._next_hw_context = context_type
         # TODO: What to do if requesting NONE explicitly?
         # TODO: Set the context to the one requested by the core
+
+    @property
+    @override
+    def current_framebuffer(self) -> int:
+        if self._current is None:
+            return 0
+
+        framebuffer = self._current.current_framebuffer
+        if framebuffer is None:
+            return 0
+
+        return framebuffer
+
+    @override
+    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
+        if self._current is None:
+            return None
+
+        return self._current.get_proc_address(sym)
 
     @property
     @override

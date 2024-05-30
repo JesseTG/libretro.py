@@ -174,8 +174,8 @@ class ModernGlVideoDriver(VideoDriver):
         # Texture for CPU-rendered output
         self._cpu_color: Texture | None = None
 
-        self._get_proc_address = retro_hw_get_proc_address_t(self.__get_proc_address)
-        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(self.__get_hw_framebuffer)
+        self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
+        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(lambda: self.current_framebuffer)
 
         self._window: BaseWindow | None = None
         self._window_class: type[BaseWindow] | None = None
@@ -240,6 +240,30 @@ class ModernGlVideoDriver(VideoDriver):
         self._callback.get_proc_address = self._get_proc_address
         return deepcopy(self._callback)
 
+    @override
+    @property
+    def current_framebuffer(self) -> int | None:
+        if self._hw_render_fbo:
+            return self._hw_render_fbo.glo
+
+        return 0
+
+    @override
+    def get_proc_address(self, sym: bytes) -> int | None:
+        if not sym:
+            return None
+
+        if not self._context:
+            raise RuntimeError("OpenGL context not initialized")
+
+        # See here https://github.com/moderngl/glcontext?tab=readme-ov-file#structure
+        proc: int | None = self._context.mglo._context.load_opengl_function(sym.decode())
+        if proc is None:
+            return None
+
+        return proc
+
+    @override
     def refresh(
             self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
@@ -661,21 +685,7 @@ class ModernGlVideoDriver(VideoDriver):
             if self._has_debug:
                 GL.glObjectLabel(GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame")
 
-    def __get_hw_framebuffer(self) -> int:
-        if self._hw_render_fbo:
-            return self._hw_render_fbo.glo
 
-        return 0
-
-    def __get_proc_address(self, sym: bytes) -> int:
-        if not sym:
-            return 0
-
-        if not self._context:
-            raise RuntimeError("OpenGL context not initialized")
-
-        # See here https://github.com/moderngl/glcontext?tab=readme-ov-file#structure
-        return self._context.mglo._context.load_opengl_function(sym.decode())
 
 
 __all__ = ["ModernGlVideoDriver"]

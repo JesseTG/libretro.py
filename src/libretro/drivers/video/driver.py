@@ -148,6 +148,15 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
+    def current_framebuffer(self) -> int | None:
+        ...
+
+    @abstractmethod
+    def get_proc_address(self, sym: bytes) -> int | None:
+        ...
+
+    @property
+    @abstractmethod
     def rotation(self) -> Rotation:
         """
         Get the rotation of the video output.

@@ -68,6 +68,23 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @property
     @override
     @final
+    def current_framebuffer(self) -> int | None:
+        """
+        :return: ``None``, as software-rendered drivers don't have a hardware framebuffer.
+        """
+        return None
+
+    @override
+    @final
+    def get_proc_address(self, sym: bytes) -> int | None:
+        """
+        :return: ``None``, as software-rendered drivers don't have any hardware functions to call.
+        """
+        return None
+
+    @property
+    @override
+    @final
     def can_dupe(self) -> bool | None:
         return True
 
