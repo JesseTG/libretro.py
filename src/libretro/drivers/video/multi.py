@@ -1,5 +1,3 @@
-import warnings
-from array import array
 from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
 from typing import final, override
@@ -19,11 +17,9 @@ from libretro.api.video import (
 )
 from libretro.error import UnsupportedEnvCall
 
-from .driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs, Screenshot
+from .driver import FrameBufferSpecial, VideoDriver, Screenshot
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
-
-_INITIAL_CALLBACK = retro_hw_render_callback(HardwareContext.NONE)
 
 
 @final
@@ -92,7 +88,7 @@ class MultiVideoDriver(VideoDriver):
     @property
     @override
     def needs_reinit(self) -> bool:
-        if not self._current:
+        if self._current is None:
             return True
 
         if self._next_hw_context is not None:
@@ -109,9 +105,10 @@ class MultiVideoDriver(VideoDriver):
             # If we're switching to another hardware rendering API...
             driver = self._drivers[self._next_hw_context]()
             if not driver:
-                raise RuntimeError("Video driver not initialized")
+                raise RuntimeError(f"Video driver for {self._next_hw_context} not initialized")
 
-            if self._current:
+            if self._current is not None:
+                # Use the settings of the existing video driver if we're switching to a new one
                 pixel_format = self._current.pixel_format
                 system_av_info = self._current.system_av_info
                 rotation = self._current.rotation
@@ -348,6 +345,7 @@ class MultiVideoDriver(VideoDriver):
     @override
     def screenshot(self) -> Screenshot | None:
         return self._current.screenshot() if self._current else None
+
 
 
 __all__ = [
