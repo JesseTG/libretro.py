@@ -206,6 +206,14 @@ class VideoDriver(Protocol):
     @property
     @abstractmethod
     def system_av_info(self) -> retro_system_av_info | None:
+        """
+        The system AV info for the current session.
+        Initialized from retro_get_system_av_info,
+        but can be updated by the core at any time
+        using ``RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO``.
+        When that happens, the audio and video drivers
+        must be reinitialized immediately.
+        """
         ...
 
     @system_av_info.setter
