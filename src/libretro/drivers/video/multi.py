@@ -10,14 +10,14 @@ from libretro.api.video import (
     PixelFormat,
     Rotation,
     retro_framebuffer,
-    retro_hw_render_callback,
-    retro_hw_render_interface,
     retro_hw_get_current_framebuffer_t,
     retro_hw_get_proc_address_t,
+    retro_hw_render_callback,
+    retro_hw_render_interface,
 )
 from libretro.error import UnsupportedEnvCall
 
-from .driver import FrameBufferSpecial, VideoDriver, Screenshot
+from .driver import FrameBufferSpecial, Screenshot, VideoDriver
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
 
@@ -76,7 +76,9 @@ class MultiVideoDriver(VideoDriver):
 
         # We need to keep these objects alive before we can pass these callbacks to the core,
         # or else they'll be garbage-collected and the core will crash.
-        self._get_current_framebuffer = retro_hw_get_current_framebuffer_t(lambda: self.current_framebuffer)
+        self._get_current_framebuffer = retro_hw_get_current_framebuffer_t(
+            lambda: self.current_framebuffer
+        )
         self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
 
     @override
@@ -146,7 +148,6 @@ class MultiVideoDriver(VideoDriver):
             # TODO: If initializing the new driver fails, keep the old one
 
         self._next_hw_context = None
-
 
     @property
     @override
@@ -345,7 +346,6 @@ class MultiVideoDriver(VideoDriver):
     @override
     def screenshot(self) -> Screenshot | None:
         return self._current.screenshot() if self._current else None
-
 
 
 __all__ = [

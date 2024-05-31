@@ -1,14 +1,14 @@
 import itertools
-from warnings import warn
 from array import array
 from copy import deepcopy
 from typing import final, override
+from warnings import warn
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 
-from .base import SoftwareVideoDriver
 from ..driver import FrameBufferSpecial, Screenshot
+from .base import SoftwareVideoDriver
 
 
 @final
@@ -23,15 +23,15 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
     @override
     def refresh(
-            self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+        self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
         match data:
             case memoryview():
                 frameview = memoryview(self._frame)
-                frameview[:len(data)] = data
+                frameview[: len(data)] = data
 
             case FrameBufferSpecial.DUPE:
-                pass # Do nothing
+                pass  # Do nothing
 
             case FrameBufferSpecial.HARDWARE:
                 warn("RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback")
@@ -96,11 +96,13 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         if not self._frame:
             return None
 
-        last_frame_length = self._last_width * self._last_height * self._pixel_format.bytes_per_pixel
+        last_frame_length = (
+            self._last_width * self._last_height * self._pixel_format.bytes_per_pixel
+        )
         screen = self._frame[:last_frame_length]
         for i in range(0, last_frame_length, self._pixel_format.bytes_per_pixel):
-            r, g, b, a = screen[i:i + self._pixel_format.bytes_per_pixel]
-            screen[i:i + self._pixel_format.bytes_per_pixel] = array('B', (b, g, r, a))
+            r, g, b, a = screen[i : i + self._pixel_format.bytes_per_pixel]
+            screen[i : i + self._pixel_format.bytes_per_pixel] = array("B", (b, g, r, a))
             # the lower 8 bits of the pixel are the red channel;
             # we need to swap them so images don't look wrong
             # in common Python imaging libraries
@@ -113,11 +115,11 @@ class ArrayVideoDriver(SoftwareVideoDriver):
             self._last_width,
             self._last_height,
             self._rotation,
-            self._pixel_format
+            self._pixel_format,
         )
 
     def get_software_framebuffer(
-            self, width: int, height: int, flags: MemoryAccess
+        self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         pass
 

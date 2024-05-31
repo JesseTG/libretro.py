@@ -1,24 +1,27 @@
-import ctypes
-import logging
 import struct
 import warnings
 from array import array
-from collections.abc import Mapping, Set, Sequence
+from collections.abc import Sequence, Set
 from copy import deepcopy
-from ctypes import c_char_p
+from importlib import resources
 from sys import modules
 from typing import final, override
-from importlib import resources
 
 import moderngl
 import moderngl_window
-from moderngl import Context, Framebuffer, Renderbuffer, Texture, create_context, VertexArray, \
-    Scope, Buffer
+from moderngl import (
+    Buffer,
+    Context,
+    Framebuffer,
+    Renderbuffer,
+    Texture,
+    VertexArray,
+    create_context,
+)
 from moderngl_window.context.base import BaseWindow
 from OpenGL import GL
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
-from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
     HardwareContext,
     MemoryAccess,
@@ -31,7 +34,7 @@ from libretro.api.video import (
     retro_hw_render_interface,
 )
 
-from ..driver import FrameBufferSpecial, VideoDriver, VideoDriverInitArgs, Screenshot
+from ..driver import FrameBufferSpecial, Screenshot, VideoDriver
 
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, HardwareContext.OPENGL))
 
@@ -53,14 +56,7 @@ _NORTHEAST = _vertex.pack(*_POSITION_NORTHEAST, *_TEXCOORD_NORTHEAST)
 _SOUTHWEST = _vertex.pack(*_POSITION_SOUTHWEST, *_TEXCOORD_SOUTHWEST)
 _SOUTHEAST = _vertex.pack(*_POSITION_SOUTHEAST, *_TEXCOORD_SOUTHEAST)
 
-_VERTEXES = b''.join(
-    (
-        _NORTHWEST,
-        _SOUTHWEST,
-        _NORTHEAST,
-        _SOUTHEAST
-    )
-)
+_VERTEXES = b"".join((_NORTHWEST, _SOUTHWEST, _NORTHEAST, _SOUTHEAST))
 
 _DEFAULT_WINDOW_IMPL = "pyglet"
 _IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
@@ -69,40 +65,55 @@ GL_RGBA = 0x1908
 
 
 def _create_orthogonal_projection(
-        left,
-        right,
-        bottom,
-        top,
-        near,
-        far,
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    far,
 ) -> array:
     rml = right - left
     tmb = top - bottom
     fmn = far - near
 
-    A = 2. / rml
-    B = 2. / tmb
-    C = -2. / fmn
+    A = 2.0 / rml
+    B = 2.0 / tmb
+    C = -2.0 / fmn
     Tx = -(right + left) / rml
     Ty = -(top + bottom) / tmb
     Tz = -(far + near) / fmn
 
-    return array("f", (
-        A, 0., 0., 0.,
-        0., B, 0., 0.,
-        0., 0., C, 0.,
-        Tx, Ty, Tz, 1.,
-    ))
+    return array(
+        "f",
+        (
+            A,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            B,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            C,
+            0.0,
+            Tx,
+            Ty,
+            Tz,
+            1.0,
+        ),
+    )
 
 
 @final
 class ModernGlVideoDriver(VideoDriver):
     def __init__(
-            self,
-            vertex_shader: str | None = None,
-            fragment_shader: str | None = None,
-            varyings: Sequence[str] = ("transformedTexCoord",),
-            window: str | None = None,
+        self,
+        vertex_shader: str | None = None,
+        fragment_shader: str | None = None,
+        varyings: Sequence[str] = ("transformedTexCoord",),
+        window: str | None = None,
     ):
         """
         Initializes the video driver.
@@ -175,7 +186,9 @@ class ModernGlVideoDriver(VideoDriver):
         self._cpu_color: Texture | None = None
 
         self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
-        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(lambda: self.current_framebuffer)
+        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(
+            lambda: self.current_framebuffer
+        )
 
         self._window: BaseWindow | None = None
         self._window_class: type[BaseWindow] | None = None
@@ -265,9 +278,8 @@ class ModernGlVideoDriver(VideoDriver):
 
     @override
     def refresh(
-            self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+        self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
-
         match data:
             case FrameBufferSpecial.DUPE:
                 # Do nothing, we're re-rendering the previous frame
@@ -316,8 +328,11 @@ class ModernGlVideoDriver(VideoDriver):
         if not self._system_av_info:
             raise RuntimeError("System AV info not set")
 
-        context_type = HardwareContext(
-            self._callback.context_type) if self._callback else HardwareContext.NONE
+        context_type = (
+            HardwareContext(self._callback.context_type)
+            if self._callback
+            else HardwareContext.NONE
+        )
 
         if context_type not in _CONTEXTS:
             raise RuntimeError(f"Unsupported hardware context: {context_type}")
@@ -380,8 +395,8 @@ class ModernGlVideoDriver(VideoDriver):
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
         self._has_debug = (
-                "GL_KHR_debug" in self._context.extensions or
-                "GL_ARB_debug_output" in self._context.extensions
+            "GL_KHR_debug" in self._context.extensions
+            or "GL_ARB_debug_output" in self._context.extensions
         )
         self._context.gc_mode = "auto"
         self.__init_fbo()
@@ -390,7 +405,7 @@ class ModernGlVideoDriver(VideoDriver):
             vertex_shader=self._vertex_shader,
             fragment_shader=self._fragment_shader,
             varyings=self._varyings,
-            fragment_outputs={"pixelColor": 0}
+            fragment_outputs={"pixelColor": 0},
         )
 
         mvp = array("f", _IDENTITY_MAT4)
@@ -401,15 +416,14 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program["mvp"].write(mvp)
         self._vbo = self._context.buffer(_VERTEXES)
         self._vao = self._context.vertex_array(
-            self._shader_program,
-            self._vbo,
-            "vertexCoord",
-            "texCoord"
+            self._shader_program, self._vbo, "vertexCoord", "texCoord"
         )
         # TODO: Make the particular names configurable
 
         if self._has_debug:
-            GL.glObjectLabel(GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program")
+            GL.glObjectLabel(
+                GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program"
+            )
             GL.glObjectLabel(GL.GL_BUFFER, self._vbo.glo, -1, b"libretro.py Screen VBO")
             GL.glObjectLabel(GL.GL_VERTEX_ARRAY, self._vao.glo, -1, b"libretro.py Screen VAO")
 
@@ -538,7 +552,7 @@ class ModernGlVideoDriver(VideoDriver):
                 # For each row...
                 start = i * bytes_per_row
                 end = start + bytes_per_row
-                reversed_frame_view[start:end] = frame_view[frame_len - end:frame_len - start]
+                reversed_frame_view[start:end] = frame_view[frame_len - end : frame_len - start]
                 # ...copy row number (height - i) to row i
 
             frame = reversed_frame_view
@@ -548,7 +562,7 @@ class ModernGlVideoDriver(VideoDriver):
             self._last_width,
             self._last_height,
             self._rotation,
-            self._pixel_format
+            self._pixel_format,
         )
 
     @property
@@ -566,7 +580,7 @@ class ModernGlVideoDriver(VideoDriver):
         return True
 
     def get_software_framebuffer(
-            self, width: int, size: int, flags: MemoryAccess
+        self, width: int, size: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         # TODO: Map the OpenGL texture to a software framebuffer
         pass
@@ -602,14 +616,15 @@ class ModernGlVideoDriver(VideoDriver):
         self._depth = self._context.depth_renderbuffer(size)
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
-        self._fbo = self._context.framebuffer(
-            self._color,
-            self._depth
-        )
+        self._fbo = self._context.framebuffer(self._color, self._depth)
 
         if self._has_debug:
-            GL.glObjectLabel(GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment")
-            GL.glObjectLabel(GL.GL_RENDERBUFFER, self._depth.glo, -1, b"libretro.py Main FBO Depth Attachment")
+            GL.glObjectLabel(
+                GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment"
+            )
+            GL.glObjectLabel(
+                GL.GL_RENDERBUFFER, self._depth.glo, -1, b"libretro.py Main FBO Depth Attachment"
+            )
             GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._fbo.glo, -1, b"libretro.py Main FBO")
 
         self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
@@ -636,21 +651,36 @@ class ModernGlVideoDriver(VideoDriver):
 
             if self._callback.stencil:
                 warnings.warn(
-                    "Core requested stencil attachment, but moderngl lacks support; ignoring")
+                    "Core requested stencil attachment, but moderngl lacks support; ignoring"
+                )
                 # TODO: Implement stencil buffer support in moderngl
 
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._hw_render_fbo = self._context.framebuffer(
-            self._hw_render_color,
-            self._hw_render_depth
+            self._hw_render_color, self._hw_render_depth
         )
         self._hw_render_fbo.clear()
 
         if self._has_debug:
-            GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._hw_render_fbo.glo, -1, b"libretro.py Hardware Rendering FBO")
-            GL.glObjectLabel(GL.GL_TEXTURE, self._hw_render_color.glo, -1, b"libretro.py Hardware Rendering FBO Color Attachment")
+            GL.glObjectLabel(
+                GL.GL_FRAMEBUFFER,
+                self._hw_render_fbo.glo,
+                -1,
+                b"libretro.py Hardware Rendering FBO",
+            )
+            GL.glObjectLabel(
+                GL.GL_TEXTURE,
+                self._hw_render_color.glo,
+                -1,
+                b"libretro.py Hardware Rendering FBO Color Attachment",
+            )
             if self._hw_render_depth:
-                GL.glObjectLabel(GL.GL_RENDERBUFFER, self._hw_render_depth.glo, -1, b"libretro.py Hardware Rendering FBO Depth Attachment")
+                GL.glObjectLabel(
+                    GL.GL_RENDERBUFFER,
+                    self._hw_render_depth.glo,
+                    -1,
+                    b"libretro.py Hardware Rendering FBO Depth Attachment",
+                )
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
         if self._cpu_color and self._cpu_color.size == (width, height):
@@ -667,26 +697,20 @@ class ModernGlVideoDriver(VideoDriver):
                 case PixelFormat.RGB565:
                     GL_RGB565 = 0x8D62
                     self._cpu_color = self._context.texture(
-                        (width, height),
-                        3,
-                        data,
-                        internal_format=GL_RGB565
+                        (width, height), 3, data, internal_format=GL_RGB565
                     )
                     # moderngl can't natively express GL_RGB565
                 case PixelFormat.RGB1555:
                     GL_RGB5 = 0x8050
                     self._cpu_color = self._context.texture(
-                        (width, height),
-                        3,
-                        data,
-                        internal_format=GL_RGB5
+                        (width, height), 3, data, internal_format=GL_RGB5
                     )
                     # moderngl can't natively express GL_RGB5
 
             if self._has_debug:
-                GL.glObjectLabel(GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame")
-
-
+                GL.glObjectLabel(
+                    GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame"
+                )
 
 
 __all__ = ["ModernGlVideoDriver"]

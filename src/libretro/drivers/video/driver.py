@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Set
 from enum import Enum
-from typing import Protocol, TypedDict, runtime_checkable, NamedTuple
+from typing import NamedTuple, Protocol, TypedDict, runtime_checkable
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (
@@ -125,13 +125,11 @@ class VideoDriver(Protocol):
 
     @preferred_context.setter
     @abstractmethod
-    def preferred_context(self, context: HardwareContext) -> None:
-        ...
+    def preferred_context(self, context: HardwareContext) -> None: ...
 
     @preferred_context.deleter
     @abstractmethod
-    def preferred_context(self) -> None:
-        ...
+    def preferred_context(self) -> None: ...
 
     @abstractmethod
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
@@ -148,12 +146,10 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def current_framebuffer(self) -> int | None:
-        ...
+    def current_framebuffer(self) -> int | None: ...
 
     @abstractmethod
-    def get_proc_address(self, sym: bytes) -> int | None:
-        ...
+    def get_proc_address(self, sym: bytes) -> int | None: ...
 
     @property
     @abstractmethod
@@ -171,8 +167,7 @@ class VideoDriver(Protocol):
 
     @rotation.setter
     @abstractmethod
-    def rotation(self, rotation: Rotation) -> None:
-        ...
+    def rotation(self, rotation: Rotation) -> None: ...
 
     @property
     @abstractmethod
@@ -188,13 +183,11 @@ class VideoDriver(Protocol):
 
     @can_dupe.setter
     @abstractmethod
-    def can_dupe(self, value: bool) -> None:
-        ...
+    def can_dupe(self, value: bool) -> None: ...
 
     @can_dupe.deleter
     @abstractmethod
-    def can_dupe(self) -> None:
-        ...
+    def can_dupe(self) -> None: ...
 
     @property
     @abstractmethod
@@ -209,8 +202,7 @@ class VideoDriver(Protocol):
 
     @pixel_format.setter
     @abstractmethod
-    def pixel_format(self, format: PixelFormat) -> None:
-        ...
+    def pixel_format(self, format: PixelFormat) -> None: ...
 
     @property
     @abstractmethod
@@ -227,39 +219,32 @@ class VideoDriver(Protocol):
 
     @system_av_info.setter
     @abstractmethod
-    def system_av_info(self, av_info: retro_system_av_info) -> None:
-        ...
+    def system_av_info(self, av_info: retro_system_av_info) -> None: ...
 
     @property
     @abstractmethod
-    def geometry(self) -> retro_game_geometry | None:
-        ...
+    def geometry(self) -> retro_game_geometry | None: ...
 
     @geometry.setter
     @abstractmethod
-    def geometry(self, geometry: retro_game_geometry) -> None:
-        ...
+    def geometry(self, geometry: retro_game_geometry) -> None: ...
 
     @abstractmethod
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
-    ) -> retro_framebuffer | None:
-        ...
+    ) -> retro_framebuffer | None: ...
 
     @property
     @abstractmethod
-    def hw_render_interface(self) -> retro_hw_render_interface | None:
-        ...
+    def hw_render_interface(self) -> retro_hw_render_interface | None: ...
 
     @property
     @abstractmethod
-    def shared_context(self) -> bool:
-        ...
+    def shared_context(self) -> bool: ...
 
     @shared_context.setter
     @abstractmethod
-    def shared_context(self, value: bool) -> None:
-        ...
+    def shared_context(self, value: bool) -> None: ...
 
     @abstractmethod
     def screenshot(self) -> Screenshot | None:

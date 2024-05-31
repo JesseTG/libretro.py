@@ -11,7 +11,6 @@ from ctypes import (
     c_uint,
     c_uint64,
     c_void_p,
-    cast,
     memmove,
     pointer,
     sizeof,
@@ -327,11 +326,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             case int() | c_void_p():
                 view = memoryview_at(data, pitch * height, readonly=True)
                 assert (
-                        len(view) == pitch * height
+                    len(view) == pitch * height
                 ), f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
                 self._video.refresh(view, width, height, pitch)
             case _:
-                raise TypeError(f"Expected FrameBufferSpecial, int, or c_void_p, got {type(data).__name__}")
+                raise TypeError(
+                    f"Expected FrameBufferSpecial, int, or c_void_p, got {type(data).__name__}"
+                )
 
     @override
     def audio_sample(self, left: int, right: int) -> None:
