@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added OpenGL support via `ModernGlVideoDriver`.
+- Added support for switching video drivers at runtime
+  using `MultiVideoDriver`.
 - Added `pre-commit` hooks to enforce code style.
 
 ### Changed
@@ -23,7 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow `VideoDriver.can_dupe` to be settable and deletable.
 - Don't allow `VideoDriver.get_system_av_info` to return `None`.
 - **BREAKING**: Rename `AbstractSoftwareVideoDriver` to `SoftwareVideoDriver`.
-- **BREAKING:** Remove `PillowVideoDriver`; use `ArrayVideoDriver` instead.
+
+### Fixed
+
+- Swap the red and blue channels in `ArrayVideoDriver`.
+- Immediately reinitialize the video driver when a core calls
+  `RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO`, as the docs specify.
+
+### Removed
+
+- **BREAKING:** Removed `PillowVideoDriver`; use `ArrayVideoDriver` instead.
 
 ## [0.0.1] - 2024-04-22
 
