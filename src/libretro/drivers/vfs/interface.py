@@ -43,42 +43,33 @@ class FileHandle(Protocol):
         self._as_parameter_ = id(self)
 
     @abstractmethod
-    def close(self) -> bool:
-        ...
+    def close(self) -> bool: ...
 
     @property
     @abstractmethod
-    def path(self) -> bytes:
-        ...
+    def path(self) -> bytes: ...
 
     @property
     @abstractmethod
-    def size(self) -> int:
-        ...
+    def size(self) -> int: ...
 
     @abstractmethod
-    def tell(self) -> int:
-        ...
+    def tell(self) -> int: ...
 
     @abstractmethod
-    def seek(self, offset: int, whence: VfsSeekPosition) -> int:
-        ...
+    def seek(self, offset: int, whence: VfsSeekPosition) -> int: ...
 
     @abstractmethod
-    def read(self, buffer: bytearray | memoryview) -> int:
-        ...
+    def read(self, buffer: bytearray | memoryview) -> int: ...
 
     @abstractmethod
-    def write(self, buffer: bytes | bytearray | memoryview) -> int:
-        ...
+    def write(self, buffer: bytes | bytearray | memoryview) -> int: ...
 
     @abstractmethod
-    def flush(self) -> bool:
-        ...
+    def flush(self) -> bool: ...
 
     @abstractmethod
-    def truncate(self, length: int) -> int:
-        ...
+    def truncate(self, length: int) -> int: ...
 
 
 class DirEntry(NamedTuple):
@@ -94,8 +85,7 @@ class DirectoryHandle(Protocol):
         self._current_dirent: DirEntry | None = None
 
     @abstractmethod
-    def close(self) -> bool:
-        ...  # Corresponds to closedir
+    def close(self) -> bool: ...  # Corresponds to closedir
 
     def __iter__(self):
         return self
@@ -108,8 +98,7 @@ class DirectoryHandle(Protocol):
         return self._current_dirent
 
     @abstractmethod
-    def readdir(self) -> DirEntry | None:
-        ...
+    def readdir(self) -> DirEntry | None: ...
 
     def dirent_name(self) -> bytes | None:
         """
@@ -140,34 +129,27 @@ class FileSystemInterface(Protocol):
 
     @property
     @abstractmethod
-    def version(self) -> int:
-        ...
+    def version(self) -> int: ...
 
     @abstractmethod
     def open(
         self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
-    ) -> FileHandle | None:
-        ...
+    ) -> FileHandle | None: ...
 
     @abstractmethod
-    def remove(self, path: bytes) -> bool:
-        ...
+    def remove(self, path: bytes) -> bool: ...
 
     @abstractmethod
-    def rename(self, old_path: bytes, new_path: bytes) -> bool:
-        ...
+    def rename(self, old_path: bytes, new_path: bytes) -> bool: ...
 
     @abstractmethod
-    def stat(self, path: bytes) -> tuple[VfsStat, int] | None:
-        ...
+    def stat(self, path: bytes) -> tuple[VfsStat, int] | None: ...
 
     @abstractmethod
-    def mkdir(self, path: bytes) -> VfsMkdirResult:
-        ...
+    def mkdir(self, path: bytes) -> VfsMkdirResult: ...
 
     @abstractmethod
-    def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None:
-        ...
+    def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None: ...
 
     @property
     def _as_parameter_(self) -> retro_vfs_interface:

@@ -95,12 +95,10 @@ class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
         )
 
     @overload
-    def __getitem__(self, index: int) -> retro_controller_description:
-        ...
+    def __getitem__(self, index: int) -> retro_controller_description: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]:
-        ...
+    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]: ...
 
     def __getitem__(self, index):
         if not self.types:

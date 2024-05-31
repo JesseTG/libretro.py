@@ -11,8 +11,7 @@ class LogDriver(Protocol):
         self._as_parameter_ = retro_log_callback(retro_log_printf_t(self.log))
 
     @abstractmethod
-    def log(self, message: LogLevel, fmt: bytes, *args) -> None:
-        ...
+    def log(self, message: LogLevel, fmt: bytes, *args) -> None: ...
 
 
 __all__ = ["LogDriver"]

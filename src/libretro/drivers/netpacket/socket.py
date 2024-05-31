@@ -18,33 +18,27 @@ class SocketNetpacketDriver(NetpacketDriver):
 
     @property
     @override
-    def callback(self) -> retro_netpacket_callback | None:
-        ...
+    def callback(self) -> retro_netpacket_callback | None: ...
 
     @callback.setter
     @override
-    def callback(self, value: retro_netpacket_callback) -> None:
-        ...
+    def callback(self, value: retro_netpacket_callback) -> None: ...
 
     @callback.deleter
     @override
-    def callback(self) -> None:
-        ...
+    def callback(self) -> None: ...
 
     @property
     @override
-    def version(self) -> bytes | None:
-        ...
+    def version(self) -> bytes | None: ...
 
     @version.setter
     @override
-    def version(self, value: bytes) -> None:
-        ...
+    def version(self, value: bytes) -> None: ...
 
     @version.deleter
     @override
-    def version(self) -> None:
-        ...
+    def version(self) -> None: ...
 
     def start(self, client_id: ClientID) -> None:
         pass

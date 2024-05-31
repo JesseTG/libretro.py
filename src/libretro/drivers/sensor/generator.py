@@ -28,12 +28,10 @@ class PortSensorState:
     illuminance: SensorState = field(default_factory=SensorState)
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorState:
-        ...
+    def __getitem__(self, item: SensorType) -> SensorState: ...
 
     @overload
-    def __getitem__(self, item: SensorAction) -> bool:
-        ...
+    def __getitem__(self, item: SensorAction) -> bool: ...
 
     def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
         match item:
@@ -61,12 +59,10 @@ class PortSensorState:
                 )
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState):
-        ...
+    def __setitem__(self, key: SensorType, value: SensorState): ...
 
     @overload
-    def __setitem__(self, key: SensorAction, value: bool):
-        ...
+    def __setitem__(self, key: SensorAction, value: bool): ...
 
     def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
         match key, value:
@@ -101,12 +97,10 @@ class PortState:
     illuminance: SensorState = field(default_factory=SensorState)
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorState:
-        ...
+    def __getitem__(self, item: SensorType) -> SensorState: ...
 
     @overload
-    def __getitem__(self, item: SensorAction) -> bool:
-        ...
+    def __getitem__(self, item: SensorAction) -> bool: ...
 
     def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
         match item:
@@ -134,12 +128,10 @@ class PortState:
                 )
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState):
-        ...
+    def __setitem__(self, key: SensorType, value: SensorState): ...
 
     @overload
-    def __setitem__(self, key: SensorAction, value: bool):
-        ...
+    def __setitem__(self, key: SensorAction, value: bool): ...
 
     def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
         match key, value:
@@ -197,24 +189,19 @@ class PortInput:
     illuminance: IlluminanceInput = field(default_factory=IlluminanceInput)
 
     @overload
-    def __getitem__(self, item: Sensor) -> float:
-        ...
+    def __getitem__(self, item: Sensor) -> float: ...
 
     @overload
-    def __getitem__(self, item: Literal[SensorType.ACCELEROMETER]) -> AccelerometerInput:
-        ...
+    def __getitem__(self, item: Literal[SensorType.ACCELEROMETER]) -> AccelerometerInput: ...
 
     @overload
-    def __getitem__(self, item: Literal[SensorType.GYROSCOPE]) -> GyroscopeInput:
-        ...
+    def __getitem__(self, item: Literal[SensorType.GYROSCOPE]) -> GyroscopeInput: ...
 
     @overload
-    def __getitem__(self, item: Literal[SensorType.ILLUMINANCE]) -> IlluminanceInput:
-        ...
+    def __getitem__(self, item: Literal[SensorType.ILLUMINANCE]) -> IlluminanceInput: ...
 
     @overload
-    def __getitem__(self, item: SensorType) -> SensorInput:
-        ...
+    def __getitem__(self, item: SensorType) -> SensorInput: ...
 
     def __getitem__(self, item: Sensor | SensorType) -> float | SensorInput:
         match item:
@@ -242,24 +229,19 @@ class PortInput:
                 raise TypeError(f"Expected a Sensor or SensorType, got {type(item).__name__}")
 
     @overload
-    def __setitem__(self, key: Sensor, value: float):
-        ...
+    def __setitem__(self, key: Sensor, value: float): ...
 
     @overload
-    def __setitem__(self, key: Literal[SensorType.ACCELEROMETER], value: AccelerometerInput):
-        ...
+    def __setitem__(self, key: Literal[SensorType.ACCELEROMETER], value: AccelerometerInput): ...
 
     @overload
-    def __setitem__(self, key: Literal[SensorType.GYROSCOPE], value: GyroscopeInput):
-        ...
+    def __setitem__(self, key: Literal[SensorType.GYROSCOPE], value: GyroscopeInput): ...
 
     @overload
-    def __setitem__(self, key: Literal[SensorType.ILLUMINANCE], value: IlluminanceInput):
-        ...
+    def __setitem__(self, key: Literal[SensorType.ILLUMINANCE], value: IlluminanceInput): ...
 
     @overload
-    def __setitem__(self, key: SensorType, value: SensorState):
-        ...
+    def __setitem__(self, key: SensorType, value: SensorState): ...
 
     def __setitem__(self, key: Sensor | SensorType, value: float | SensorInput):
         match key, value:

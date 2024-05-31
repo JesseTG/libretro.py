@@ -8,13 +8,11 @@ from libretro.api.user import Language
 class UserDriver(Protocol):
     @property
     @abstractmethod
-    def username(self) -> bytes | None:
-        ...
+    def username(self) -> bytes | None: ...
 
     @property
     @abstractmethod
-    def language(self) -> Language | None:
-        ...
+    def language(self) -> Language | None: ...
 
 
 __all__ = ["UserDriver"]

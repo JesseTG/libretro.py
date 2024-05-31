@@ -16,8 +16,7 @@ class RumbleInterface(Protocol):
         self._as_parameter_.set_rumble_state = retro_set_rumble_state_t(self.__set_rumble_state)
 
     @abstractmethod
-    def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
-        ...
+    def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool: ...
 
     def set_rumble_state(self, port: int, effect: RumbleEffect | int, strength: int) -> bool:
         """

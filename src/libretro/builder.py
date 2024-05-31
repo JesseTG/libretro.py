@@ -304,9 +304,9 @@ class SessionBuilder:
 
                 self._args["input"] = _generate
             case _DefaultType.DEFAULT:
-                self._args[
-                    "input"
-                ] = GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
+                self._args["input"] = (
+                    GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
+                )
             case None:
                 raise ValueError("An input driver is required")
             case _:

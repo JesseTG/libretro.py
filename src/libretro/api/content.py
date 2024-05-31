@@ -100,12 +100,10 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
         return int(self.num_memory)
 
     @overload
-    def __getitem__(self, index: int) -> retro_subsystem_memory_info:
-        ...
+    def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]:
-        ...
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]: ...
 
     def __getitem__(self, index):
         if not self.memory:
@@ -153,12 +151,10 @@ class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
         return int(self.num_roms)
 
     @overload
-    def __getitem__(self, index: int) -> retro_subsystem_rom_info:
-        ...
+    def __getitem__(self, index: int) -> retro_subsystem_rom_info: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]:
-        ...
+    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]: ...
 
     def __getitem__(self, index):
         if not self.roms:

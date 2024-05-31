@@ -8,8 +8,7 @@ from libretro.api.power import retro_device_power
 class PowerDriver(Protocol):
     @property
     @abstractmethod
-    def device_power(self) -> retro_device_power:
-        ...
+    def device_power(self) -> retro_device_power: ...
 
 
 class ConstantPowerDriver(PowerDriver):

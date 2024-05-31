@@ -97,7 +97,7 @@ class Sensor(IntEnum):
     @property
     def type(self) -> SensorType:
         match self:
-            case (Sensor.ACCELEROMETER_X | Sensor.ACCELEROMETER_Y | Sensor.ACCELEROMETER_Z):
+            case Sensor.ACCELEROMETER_X | Sensor.ACCELEROMETER_Y | Sensor.ACCELEROMETER_Z:
                 return SensorType.ACCELEROMETER
             case Sensor.GYROSCOPE_X | Sensor.GYROSCOPE_Y | Sensor.GYROSCOPE_Z:
                 return SensorType.GYROSCOPE

@@ -8,12 +8,10 @@ from libretro.api import retro_message, retro_message_ext
 class MessageInterface(Protocol):
     @property
     @abstractmethod
-    def version(self) -> int:
-        ...
+    def version(self) -> int: ...
 
     @abstractmethod
-    def set_message(self, message: retro_message | retro_message_ext | None) -> bool:
-        ...
+    def set_message(self, message: retro_message | retro_message_ext | None) -> bool: ...
 
 
 __all__ = [

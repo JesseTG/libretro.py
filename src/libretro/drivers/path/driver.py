@@ -18,23 +18,19 @@ class PathDriver(Protocol):
 
     @property
     @abstractmethod
-    def libretro_path(self) -> bytes | None:
-        ...
+    def libretro_path(self) -> bytes | None: ...
 
     @property
     @abstractmethod
-    def core_assets_dir(self) -> bytes | None:
-        ...
+    def core_assets_dir(self) -> bytes | None: ...
 
     @property
     @abstractmethod
-    def save_dir(self) -> bytes | None:
-        ...
+    def save_dir(self) -> bytes | None: ...
 
     @property
     @abstractmethod
-    def playlist_dir(self) -> bytes | None:
-        ...
+    def playlist_dir(self) -> bytes | None: ...
 
 
 __all__ = [

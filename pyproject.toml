@@ -44,7 +44,7 @@ build = [
 ]
 dev = [
     'bandit == 1.7.*',
-    'black == 23.*',
+    'black == 24.*',
     'flake8 == 6.*',
     'isort == 5.*',
     'mypy == 1.5.*',

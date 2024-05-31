@@ -47,7 +47,7 @@ class DictOptionDriver(OptionDriver):
             {as_bytes(k): True for k in variables} if variables else {}
         )
 
-        self._update_display_callback: (retro_core_options_update_display_callback | None) = None
+        self._update_display_callback: retro_core_options_update_display_callback | None = None
         self._categories_us: dict[bytes, retro_core_option_v2_category] = {}
         self._options_us: dict[bytes, retro_core_option_v2_definition] = {}
         self._categories_intl: dict[bytes, retro_core_option_v2_category] = {}

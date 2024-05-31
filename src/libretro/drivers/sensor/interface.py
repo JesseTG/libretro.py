@@ -37,8 +37,7 @@ class SensorInterface(Protocol):
         return bool(self._set_sensor_state(port, SensorAction(action), rate))
 
     @abstractmethod
-    def _set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool:
-        ...
+    def _set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool: ...
 
     def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
         return self.set_sensor_state(port, SensorAction(action), rate)
@@ -62,8 +61,7 @@ class SensorInterface(Protocol):
                 )
 
     @abstractmethod
-    def _get_sensor_input(self, port: int, sensor: Sensor) -> float:
-        ...
+    def _get_sensor_input(self, port: int, sensor: Sensor) -> float: ...
 
     def __get_sensor_input(self, port: int, sensor: int) -> float:
         return self.get_sensor_input(port, Sensor(sensor))
