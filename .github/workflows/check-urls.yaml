@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    paths: ["**.md", "**.yaml", "**.yml", "**.py", "**.pyi", "**.rst", "**.txt"]
+    paths: ["**.md", "**.yaml", "**.yml", "**.py", "**.pyi", "**.rst", "**.txt", "**.toml"]
   schedule:
     - cron: "0 0 * * *" # Run every day at midnight UTC
 
@@ -18,7 +18,7 @@ jobs:
       - name: Validate URLs
         uses: urlstechie/urlchecker-action@0.0.34
         with:
-          file_types: .md,.yaml,.yml,.py,.pyi,.rst,.txt
+          file_types: .md,.yaml,.yml,.py,.pyi,.rst,.txt,.toml
           print_all: false
           timeout: 10
           retry_count: 3
