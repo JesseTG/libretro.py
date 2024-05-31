@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.2] - 2024-05-31
+
+### Fixed
+
+- Fixed the GLSL shaders used by `ModernGlVideoDriver` not being included in distributions.
+
 ## [0.1.1] - 2024-05-31
 
 ### Changed
