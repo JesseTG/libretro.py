@@ -63,10 +63,10 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.14
-        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version }}"
+        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version && github.event_name == 'push' && github.ref == 'refs/heads/main' }}"
 
       - name: Create Release
-        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version }}"
+        if: "${{ steps.changelog.outputs.version != steps.newest-tag.outputs.version && github.event_name == 'push' && github.ref == 'refs/heads/main'}}"
         uses: softprops/action-gh-release@v2.0.4
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
