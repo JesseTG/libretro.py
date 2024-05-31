@@ -55,6 +55,8 @@ lint-fix: black isort
 # Install the project locally and install all dependencies
 install: venv
     {{_venv_bin}}/pip install --editable ".[all]"
+    {{_venv_bin}}/pre-commit install
+
 
 # Sorts imports throughout the project
 isort: _validate_venv

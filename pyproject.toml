@@ -40,6 +40,7 @@ build = [
     'build == 1.2.1',
     'setuptools>=69.1.1',
     'twine == 5.0.0',
+    'pre-commit == 3.17.*',
 ]
 dev = [
     'bandit == 1.7.*',
