@@ -8,7 +8,14 @@ from sys import modules
 from typing import final, override
 
 import moderngl
-import moderngl_window
+
+try:
+    import moderngl_window
+    from moderngl_window.context.base import BaseWindow
+except ImportError:
+    moderngl_window = None
+    BaseWindow = None
+
 from moderngl import (
     Buffer,
     Context,
@@ -18,7 +25,6 @@ from moderngl import (
     VertexArray,
     create_context,
 )
-from moderngl_window.context.base import BaseWindow
 from OpenGL import GL
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
@@ -194,7 +200,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._window_class: type[BaseWindow] | None = None
 
         # TODO: Honor os.environ.get("MODERNGL_WINDOW")
-        if window is not None:
+        if window is not None and moderngl_window is not None:
             window_mode = _DEFAULT_WINDOW_IMPL if window == "default" else window
             if not isinstance(window, str):
                 raise TypeError(f"Expected a str or None, got {type(window).__name__}")
@@ -363,7 +369,7 @@ class ModernGlVideoDriver(VideoDriver):
         geometry = self._system_av_info.geometry
 
         match context_type:
-            case HardwareContext.NONE | HardwareContext.OPENGL if self._window_class:
+            case HardwareContext.NONE | HardwareContext.OPENGL if self._window_class is not None:
                 self._window = self._window_class(
                     title="libretro.py",
                     size=(geometry.base_width, geometry.base_height),
@@ -373,7 +379,7 @@ class ModernGlVideoDriver(VideoDriver):
                 )
                 moderngl_window.activate_context(self._window)
                 self._context = self._window.ctx
-            case HardwareContext.OPENGL_CORE if self._window_class:
+            case HardwareContext.OPENGL_CORE if self._window_class is not None:
                 self._window = self._window_class(
                     title="libretro.py",
                     gl_version=(self._callback.version_major, self._callback.version_minor),

@@ -57,10 +57,14 @@ docs = [
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [
-    'moderngl == 5.10.*',
+    'moderngl[headless] == 5.10.*',
     'PyOpenGL == 3.1.*',
 ]
-all = ["libretro.py[build,dev,docs,opengl]"]
+opengl-window = [
+    'moderngl-window == 2.4.*',
+    "libretro.py[opengl]"
+]
+all = ["libretro.py[build,dev,docs,opengl,opengl-window]"]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"

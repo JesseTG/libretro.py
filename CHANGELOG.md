@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.1] - 2024-05-31
+
+### Changed
+
+- Added `moderngl`'s `headless` extra when installing this package's `opengl` extra.
+
+### Fixed
+
+- Fixed a bug where `ModernGlVideoDriver` couldn't be used
+  without the `moderngl_window` package installed.
+
 ## [0.1.0] - 2024-05-31
 
 ### Added

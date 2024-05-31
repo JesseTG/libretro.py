@@ -69,6 +69,10 @@ add one or more of the following extras to the `install` command:
   Required if contributing to libretro.py.
 - **`opengl`:** Support for the built-in OpenGL video driver.
   Required if testing a core's OpenGL support.
+- **`opengl-window`:** Same as the `opengl` extra,
+  but with support for opening an actual window.
+  Can help simplify some debugging tasks,
+  e.g. RenderDoc usage.
 
 For example, if you want to submit an improvement to the OpenGL video driver,
 you would install libretro.py like so:
