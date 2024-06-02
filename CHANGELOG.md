@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--  Fixed a bug where logging invalid UTF-8 characters in `UnformattedLogDriver` would raise an exception.
+- Fixed a bug where logging invalid UTF-8 characters in `UnformattedLogDriver` would raise an exception.
+- Fixed a bug where fetching an unset option from a `DictOptionDriver` wouldn't register the default value for next time.
 
 ## [0.1.2] - 2024-05-31
 

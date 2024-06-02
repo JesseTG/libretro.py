@@ -66,11 +66,13 @@ class DictOptionDriver(OptionDriver):
             # For invalid keys, return None
             return None
 
-        if key not in self._variables:
-            # For unset options, return the default value
-            return string_at(self._options_us[key].default_value)
-
-        value = self._variables[key]
+        if key in self._variables:
+            # If we have a value for this option key...
+            value = self._variables[key]
+        else:
+            # Otherwise get the default value and save it to the dict
+            value = string_at(self._options_us[key].default_value)
+            self._variables[key] = value
 
         if value not in (string_at(v.value) for v in self._options_us[key].values if v.value):
             # For invalid values, return None
