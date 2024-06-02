@@ -28,7 +28,7 @@ class UnformattedLogDriver(LogDriver):
         return self._records
 
     def log(self, level: LogLevel, fmt: bytes, *args) -> None:
-        self._logger.log(level.logging_level, fmt.decode().rstrip())
+        self._logger.log(level.logging_level, fmt.decode(errors="replace").rstrip())
 
 
 __all__ = ["UnformattedLogDriver"]

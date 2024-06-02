@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+-  Fixed a bug where logging invalid UTF-8 characters in `UnformattedLogDriver` would raise an exception.
+
 ## [0.1.2] - 2024-05-31
 
 ### Fixed
