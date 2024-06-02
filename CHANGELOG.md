@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug where logging invalid UTF-8 characters in `UnformattedLogDriver` would raise an exception.
 - Fixed a bug where fetching an unset option from a `DictOptionDriver` wouldn't register the default value for next time.
+- Fixed a bug where `ModernGlVideoDriver` would try to use OpenGL debugging features even if they weren't available.
 
 ## [0.1.2] - 2024-05-31
 

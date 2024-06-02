@@ -426,7 +426,7 @@ class ModernGlVideoDriver(VideoDriver):
         )
         # TODO: Make the particular names configurable
 
-        if self._has_debug:
+        if self._has_debug and GL.glObjectLabel:
             GL.glObjectLabel(
                 GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program"
             )
@@ -624,7 +624,7 @@ class ModernGlVideoDriver(VideoDriver):
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._fbo = self._context.framebuffer(self._color, self._depth)
 
-        if self._has_debug:
+        if self._has_debug and GL.glObjectLabel:
             GL.glObjectLabel(
                 GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment"
             )
@@ -667,7 +667,7 @@ class ModernGlVideoDriver(VideoDriver):
         )
         self._hw_render_fbo.clear()
 
-        if self._has_debug:
+        if self._has_debug and GL.glObjectLabel:
             GL.glObjectLabel(
                 GL.GL_FRAMEBUFFER,
                 self._hw_render_fbo.glo,
@@ -713,7 +713,7 @@ class ModernGlVideoDriver(VideoDriver):
                     )
                     # moderngl can't natively express GL_RGB5
 
-            if self._has_debug:
+            if self._has_debug and GL.glObjectLabel:
                 GL.glObjectLabel(
                     GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame"
                 )
