@@ -12,6 +12,9 @@ import moderngl
 try:
     import moderngl_window
     from moderngl_window.context.base import BaseWindow
+
+    # These features require moderngl_window,
+    # but I don't want to require that it be installed
 except ImportError:
     moderngl_window = None
     BaseWindow = None
@@ -25,7 +28,11 @@ from moderngl import (
     VertexArray,
     create_context,
 )
-from OpenGL import GL
+
+try:
+    from OpenGL import GL
+except ImportError:
+    GL = None
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (
@@ -401,8 +408,12 @@ class ModernGlVideoDriver(VideoDriver):
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
         self._has_debug = (
-            "GL_KHR_debug" in self._context.extensions
-            or "GL_ARB_debug_output" in self._context.extensions
+            GL
+            and GL.glObjectLabel
+            and (
+                "GL_KHR_debug" in self._context.extensions
+                or "GL_ARB_debug_output" in self._context.extensions
+            )
         )
         self._context.gc_mode = "auto"
         self.__init_fbo()
@@ -426,7 +437,7 @@ class ModernGlVideoDriver(VideoDriver):
         )
         # TODO: Make the particular names configurable
 
-        if self._has_debug and GL.glObjectLabel:
+        if self._has_debug:
             GL.glObjectLabel(
                 GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program"
             )
@@ -624,7 +635,7 @@ class ModernGlVideoDriver(VideoDriver):
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._fbo = self._context.framebuffer(self._color, self._depth)
 
-        if self._has_debug and GL.glObjectLabel:
+        if self._has_debug:
             GL.glObjectLabel(
                 GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment"
             )
@@ -667,7 +678,7 @@ class ModernGlVideoDriver(VideoDriver):
         )
         self._hw_render_fbo.clear()
 
-        if self._has_debug and GL.glObjectLabel:
+        if self._has_debug:
             GL.glObjectLabel(
                 GL.GL_FRAMEBUFFER,
                 self._hw_render_fbo.glo,
@@ -713,7 +724,7 @@ class ModernGlVideoDriver(VideoDriver):
                     )
                     # moderngl can't natively express GL_RGB5
 
-            if self._has_debug and GL.glObjectLabel:
+            if self._has_debug:
                 GL.glObjectLabel(
                     GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame"
                 )

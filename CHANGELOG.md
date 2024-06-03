@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.4] - 2024-06-03
+
+### Fixed
+
+- Prevent a failure to import PyOpenGL from stopping `ModernGlVideoDriver`
+  from being imported.
+
 ## [0.1.3] - 2024-06-02
 
 ### Fixed
