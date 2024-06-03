@@ -28,11 +28,7 @@ from moderngl import (
     VertexArray,
     create_context,
 )
-
-try:
-    from OpenGL import GL
-except ImportError | AttributeError:
-    GL = None
+from OpenGL import GL
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (

@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.6] - 2024-06-03
+
+### Changed
+
+- Don't catch a failure to import `OpenGL` in `moderngl.py`.
+
 ## [0.1.5] - 2024-06-03
 
 ### Fixed
