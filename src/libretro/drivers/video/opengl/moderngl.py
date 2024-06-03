@@ -31,7 +31,7 @@ from moderngl import (
 
 try:
     from OpenGL import GL
-except ImportError:
+except ImportError | AttributeError:
     GL = None
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
