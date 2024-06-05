@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.8] - 2024-06-05
+
+### Fixed
+
+- Fixed an incorrect `import` shim in `_typing.py`,
+  resulting in the library failing to import on Python 3.12.
+
 ## [0.1.7] - 2024-06-05
 
 ### Changed
