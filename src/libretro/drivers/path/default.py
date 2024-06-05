@@ -1,5 +1,6 @@
 from os import PathLike, fsencode
-from typing import override
+
+from libretro._typing import override
 
 from .driver import PathDriver
 

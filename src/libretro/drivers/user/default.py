@@ -1,5 +1,4 @@
-from typing import override
-
+from libretro._typing import override
 from libretro.api.user import Language
 
 from .driver import UserDriver

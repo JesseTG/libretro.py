@@ -1,6 +1,6 @@
 import ctypes
 import mmap
-from collections.abc import Buffer, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
 from ctypes import (
@@ -26,6 +26,8 @@ from ctypes import (
 )
 from os import PathLike
 from typing import TypeAlias, get_type_hints
+
+from libretro._typing import Buffer
 
 # When https://github.com/python/cpython/issues/112015 is merged,
 # use ctypes.memoryview_at instead of this hack
@@ -71,7 +73,7 @@ def is_zeroed(struct: Structure) -> bool:
     return not any(view)
 
 
-def from_zero_terminated[S](ptr) -> Iterator[S]:
+def from_zero_terminated(ptr) -> Iterator:
     if ptr:
         i = 0
         while not is_zeroed(ptr[i]):

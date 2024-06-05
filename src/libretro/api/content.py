@@ -1,5 +1,5 @@
 import os
-from collections.abc import Buffer, Generator, Iterator, Mapping, Sequence
+from collections.abc import Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from ctypes import (
     POINTER,
@@ -19,6 +19,7 @@ from types import MappingProxyType
 from typing import Any, NamedTuple, TypeAlias, overload
 from zipfile import Path as ZipPath
 
+from libretro._typing import Buffer
 from libretro.api._utils import (
     FieldsFromTypeHints,
     as_bytes,

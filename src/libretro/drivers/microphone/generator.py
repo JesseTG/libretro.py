@@ -1,7 +1,7 @@
 from array import array
 from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
-from typing import override
 
+from libretro._typing import override
 from libretro.api.microphone import INTERFACE_VERSION, retro_microphone_params
 
 from .driver import Microphone, MicrophoneDriver

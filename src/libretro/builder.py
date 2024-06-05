@@ -3,7 +3,7 @@ from ctypes import CDLL
 from enum import Enum, auto
 from logging import Logger
 from os import PathLike
-from typing import AnyStr, Literal, Self, TypedDict
+from typing import AnyStr, Literal, Self, TypeAlias, TypedDict, TypeVar
 from zipfile import Path as ZipPath
 
 from libretro.api import (
@@ -70,12 +70,6 @@ try:
 except ImportError:
     ModernGlVideoDriver = None
 
-type _RequiredFactory[T] = Callable[[], T]
-type _OptionalFactory[T] = Callable[[], T | None]
-
-type _RequiredArg[T] = T | _RequiredFactory[T]
-type _OptionalArg[T] = T | _OptionalFactory[T] | Default | None
-
 
 class _DefaultType(Enum):
     DEFAULT = auto()
@@ -88,38 +82,50 @@ A placeholder that indicates the default value for a SessionBuilder argument.
 When passed to a SessionBuilder method, the method will use the default value for that argument.
 """
 
+T = TypeVar("T")
+
+_RequiredFactory: TypeAlias = Callable[[], T]
+_OptionalFactory: TypeAlias = Callable[[], T | None]
+
+_RequiredArg: TypeAlias = T | _RequiredFactory[T]
+_OptionalArg: TypeAlias = T | _OptionalFactory[T] | Default | None
+
 _nothing = lambda: None
-CoreArg = Core | str | PathLike | CDLL | _RequiredFactory[Core]
-AudioDriverArg = _RequiredArg[AudioDriver] | Default
-InputDriverArg = (
+CoreArg: TypeAlias = Core | str | PathLike | CDLL | _RequiredFactory[Core]
+AudioDriverArg: TypeAlias = _RequiredArg[AudioDriver] | Default
+InputDriverArg: TypeAlias = (
     _RequiredArg[InputDriver]
     | InputStateGenerator
     | InputStateIterable
     | InputStateIterator
     | Default
 )
-VideoDriverArg = _RequiredArg[VideoDriver] | Default
-ContentArg = Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
-ContentDriverArg = _OptionalArg[ContentDriver]
-BoolArg = _OptionalArg[bool]
-MessageDriverArg = _OptionalArg[MessageInterface] | Logger
-OptionDriverArg = _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
-PathDriverArg = _OptionalArg[PathDriver] | str | PathLike
-LogDriverArg = _OptionalArg[LogDriver] | Logger
-PerfDriverArg = _OptionalArg[PerfDriver]
-LocationDriverArg = _OptionalArg[LocationDriver] | LocationInputGenerator
-UserDriverArg = _OptionalArg[UserDriver]
-FileSystemArg = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
-LedDriverArg = _OptionalArg[LedDriver]
-AvEnableFlagsArg = _OptionalArg[AvEnableFlags]
-MidiDriverArg = _OptionalArg[MidiDriver]
-TimingDriverArg = _OptionalArg[TimingDriver]
-FloatArg = _OptionalArg[float | int]
-HardwareContextArg = _OptionalArg[HardwareContext]
-ThrottleStateArg = _OptionalArg[retro_throttle_state]
-SavestateContextArg = _OptionalArg[SavestateContext]
-MicDriverArg = _OptionalArg[MicrophoneDriver]
-PowerDriverArg = _OptionalArg[PowerDriver] | retro_device_power
+VideoDriverArg: TypeAlias = _RequiredArg[VideoDriver] | Default
+ContentArg: TypeAlias = (
+    Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
+)
+ContentDriverArg: TypeAlias = _OptionalArg[ContentDriver]
+BoolArg: TypeAlias = _OptionalArg[bool]
+MessageDriverArg: TypeAlias = _OptionalArg[MessageInterface] | Logger
+OptionDriverArg: TypeAlias = (
+    _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
+)
+PathDriverArg: TypeAlias = _OptionalArg[PathDriver] | str | PathLike
+LogDriverArg: TypeAlias = _OptionalArg[LogDriver] | Logger
+PerfDriverArg: TypeAlias = _OptionalArg[PerfDriver]
+LocationDriverArg: TypeAlias = _OptionalArg[LocationDriver] | LocationInputGenerator
+UserDriverArg: TypeAlias = _OptionalArg[UserDriver]
+FileSystemArg: TypeAlias = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
+LedDriverArg: TypeAlias = _OptionalArg[LedDriver]
+AvEnableFlagsArg: TypeAlias = _OptionalArg[AvEnableFlags]
+MidiDriverArg: TypeAlias = _OptionalArg[MidiDriver]
+TimingDriverArg: TypeAlias = _OptionalArg[TimingDriver]
+FloatArg: TypeAlias = _OptionalArg[float | int]
+HardwareContextArg: TypeAlias = _OptionalArg[HardwareContext]
+ThrottleStateArg: TypeAlias = _OptionalArg[retro_throttle_state]
+SavestateContextArg: TypeAlias = _OptionalArg[SavestateContext]
+MicDriverArg: TypeAlias = _OptionalArg[MicrophoneDriver]
+PowerDriverArg: TypeAlias = _OptionalArg[PowerDriver] | retro_device_power
 
 
 class RequiredError(RuntimeError):

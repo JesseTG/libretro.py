@@ -1,8 +1,8 @@
 from collections.abc import Callable, KeysView, Mapping
 from ctypes import c_void_p
 from types import MappingProxyType
-from typing import override
 
+from libretro._typing import override
 from libretro.api import EnvironmentCall
 from libretro.error import UnsupportedEnvCall
 

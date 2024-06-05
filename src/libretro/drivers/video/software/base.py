@@ -1,8 +1,8 @@
 from abc import ABC
 from collections.abc import Set
-from typing import final, override
+from typing import final
 
-from libretro.api.proc import retro_proc_address_t
+from libretro._typing import override
 from libretro.api.video.context import HardwareContext, retro_hw_render_callback
 from libretro.api.video.render import retro_hw_render_interface
 from libretro.error import UnsupportedEnvCall

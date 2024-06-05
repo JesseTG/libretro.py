@@ -2,8 +2,9 @@ import re
 from collections.abc import Mapping, MutableMapping, Sequence
 from copy import deepcopy
 from ctypes import Array, string_at
-from typing import AnyStr, override
+from typing import AnyStr
 
+from libretro._typing import override
 from libretro.api._utils import as_bytes, from_zero_terminated
 from libretro.api.options import (
     CoreOptionArray,

@@ -16,10 +16,11 @@ from ctypes import (
     sizeof,
     string_at,
 )
-from typing import AnyStr, Required, TypedDict, override
+from typing import AnyStr, Required, TypedDict
 
 from _ctypes import CFuncPtr
 
+from libretro._typing import override
 from libretro.api import (
     AvEnableFlags,
     HardwareContext,

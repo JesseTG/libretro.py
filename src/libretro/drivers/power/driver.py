@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from typing import Protocol, override, runtime_checkable
+from typing import Protocol, runtime_checkable
 
+from libretro._typing import override
 from libretro.api.power import retro_device_power
 
 

@@ -1,7 +1,8 @@
 from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
-from typing import final, override
+from typing import final
 
+from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (

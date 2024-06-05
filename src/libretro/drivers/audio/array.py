@@ -1,7 +1,7 @@
 from array import array
 from copy import deepcopy
-from typing import override
 
+from libretro._typing import override
 from libretro.api.audio import retro_audio_buffer_status_callback, retro_audio_callback
 from libretro.api.av import retro_system_av_info
 from libretro.error import UnsupportedEnvCall

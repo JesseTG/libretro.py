@@ -4,9 +4,9 @@ from contextlib import AbstractContextManager, ExitStack, contextmanager
 from ctypes import Array, c_void_p
 from os import PathLike
 from tempfile import TemporaryDirectory
-from typing import override
 from zipfile import Path as ZipPath
 
+from libretro._typing import override
 from libretro.api import (
     Content,
     ContentInfoOverrides,

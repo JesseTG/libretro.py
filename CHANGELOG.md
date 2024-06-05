@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Remove syntax that prevented compatibility with Python 3.10 and 3.11.
+- Added aliases to `typing` symbols as needed if using a Python version older than 3.12.
+- Added `typing_extensions` as a dependency if using a Python version older than 3.12.
+
 ## [0.1.6] - 2024-06-03
 
 ### Changed

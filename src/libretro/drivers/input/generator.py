@@ -1,8 +1,8 @@
 from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import override
 
+from libretro._typing import override
 from libretro._utils import Pollable
 from libretro.api.input import (
     AnalogState,

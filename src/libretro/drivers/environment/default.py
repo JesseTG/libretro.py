@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from ctypes import POINTER, c_bool, c_char_p, c_float, c_uint, c_uint64, cast
-from typing import override
 
+from libretro._typing import override
 from libretro.api import (
     EnvironmentCall,
     retro_audio_buffer_status_callback,

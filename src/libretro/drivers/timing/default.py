@@ -1,6 +1,4 @@
-from copy import deepcopy
-from typing import override
-
+from libretro._typing import override
 from libretro.api.timing import (
     retro_fastforwarding_override,
     retro_frame_time_callback,

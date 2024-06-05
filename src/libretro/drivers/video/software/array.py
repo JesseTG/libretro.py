@@ -1,9 +1,10 @@
 import itertools
 from array import array
 from copy import deepcopy
-from typing import final, override
+from typing import final
 from warnings import warn
 
+from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
 

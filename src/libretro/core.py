@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from collections.abc import Buffer, Callable, Sequence
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from ctypes import (
     CDLL,
@@ -19,6 +19,7 @@ from ctypes import (
 from os import PathLike
 from typing import Protocol
 
+from libretro._typing import Buffer
 from libretro.api import (
     Region,
     retro_audio_sample_batch_t,

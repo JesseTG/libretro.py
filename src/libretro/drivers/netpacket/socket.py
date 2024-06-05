@@ -1,6 +1,6 @@
 from socket import AddressFamily, SocketKind, socket
-from typing import override
 
+from libretro._typing import override
 from libretro.api.netpacket import NetpacketFlags, retro_netpacket_callback
 
 from .driver import ClientID, NetpacketDriver
