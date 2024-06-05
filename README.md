@@ -87,5 +87,12 @@ And if you just want to test your libretro core's OpenGL support:
 pip install libretro.py[opengl]
 ```
 
+Some of these extras have additional dependencies.
+
+### OpenGL
+
+If using OpenGL support on Linux,
+you may need to install the `libopengl0` package.
+
 [just]: https://just.systems
 [libretro]: https://www.libretro.com
