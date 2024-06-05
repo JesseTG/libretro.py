@@ -16,7 +16,7 @@ Ease of use, flexibility, and complete API support are top priorities.
 
 libretro.py has the following requirements:
 
-- Python 3.10 or newer.
+- Python 3.11 or newer.
   May not work on alternative Python implementations like PyPy.
 - Supported on Windows, macOS, and Linux.
   May work on other platforms, but no promises.
@@ -30,7 +30,7 @@ For details, run `just` (no arguments) in the project root.
 
 # Installing
 
-libretro.py supports **Python 3.10 or newer**.
+libretro.py supports **Python 3.11 or newer**.
 Nothing else is required for most functionality,
 but some extra features have additional dependencies.
 

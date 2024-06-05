@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: Raise the minimum required Python version to 3.11.
+
 ### Fixed
 
 - Remove syntax that prevented compatibility with Python 3.10 and 3.11.
