@@ -5,7 +5,7 @@ from collections.abc import Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
-from typing import final, override
+from typing import final
 
 import moderngl
 
@@ -30,6 +30,7 @@ from moderngl import (
 )
 from OpenGL import GL
 
+from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (
     HardwareContext,

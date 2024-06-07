@@ -38,6 +38,8 @@ from libretro.api._utils import memoryview_at
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
 
+_REGION_MEMBERS = Region.__members__.values()
+
 
 class CoreInterface(Protocol):
     """
@@ -639,7 +641,7 @@ class Core(CoreInterface):
             or as a plain ``int`` if not.
         """
         region: int = self._core.retro_get_region()
-        return Region(region) if region in Region else region
+        return Region(region) if region in _REGION_MEMBERS else region
 
     def get_memory_data(self, id: int) -> c_void_p | None:
         """

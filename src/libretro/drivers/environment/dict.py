@@ -10,6 +10,8 @@ from .driver import EnvironmentDriver
 
 EnvironmentCallbackFunction = Callable[[c_void_p], bool]
 
+_ENVCALL_MEMBERS = EnvironmentCall.__members__.values()
+
 
 class DictEnvironmentDriver(
     EnvironmentDriver, Mapping[EnvironmentCall, EnvironmentCallbackFunction]
@@ -33,7 +35,7 @@ class DictEnvironmentDriver(
 
     @override
     def environment(self, cmd: int, data: c_void_p) -> bool:
-        if cmd not in EnvironmentCall:
+        if cmd not in _ENVCALL_MEMBERS:
             return False
 
         envcall = EnvironmentCall(cmd)

@@ -31,6 +31,14 @@ from libretro.drivers.sensor import SensorInterface
 
 from .driver import InputDriver
 
+# Needed for Python 3.11 compatibility,
+# as "int() in MyIntEnumSubclass" wasn't available until Python 3.12
+_DEVICEID_ANALOG_MEMBERS = DeviceIdAnalog.__members__.values()
+_DEVICEID_JOYPAD_MEMBERS = DeviceIdJoypad.__members__.values()
+_DEVICEID_LIGHTGUN_MEMBERS = DeviceIdLightgun.__members__.values()
+_DEVICEID_MOUSE_MEMBERS = DeviceIdMouse.__members__.values()
+_KEY_MEMBERS = Key.__members__.values()
+
 
 @dataclass(order=True, slots=True)
 class Point:
@@ -279,7 +287,7 @@ class GeneratorInputDriver(InputDriver):
                 InputDevice.JOYPAD,
                 _,
                 id,
-            ) if id in DeviceIdJoypad:
+            ) if id in _DEVICEID_JOYPAD_MEMBERS:
                 # When asking for a specific joypad button,
                 # return 1 (True) if its pressed and 0 (False) if not
                 # NOTE: id in DeviceInJoypad is perfectly valid
@@ -327,7 +335,7 @@ class GeneratorInputDriver(InputDriver):
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.LEFT,
                 id,
-            ) if (id in DeviceIdAnalog):
+            ) if id in _DEVICEID_ANALOG_MEMBERS:
                 analog_state: AnalogState
                 return analog_state.lstick[id]
             case (
@@ -335,7 +343,7 @@ class GeneratorInputDriver(InputDriver):
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.RIGHT,
                 id,
-            ) if (id in DeviceIdAnalog):
+            ) if id in _DEVICEID_ANALOG_MEMBERS:
                 analog_state: AnalogState
                 return analog_state.rstick[id]
             case AnalogState(), _, _, _:
@@ -349,7 +357,7 @@ class GeneratorInputDriver(InputDriver):
                 InputDevice.MOUSE,
                 _,
                 id,
-            ) if id in DeviceIdMouse:
+            ) if id in _DEVICEID_MOUSE_MEMBERS:
                 # When asking for a specific mouse button,
                 # return 1 (True) if its pressed and 0 (False) if not
                 mouse_state: MouseState
@@ -382,7 +390,7 @@ class GeneratorInputDriver(InputDriver):
                 InputDevice.KEYBOARD,
                 _,
                 id,
-            ) if id in Key:
+            ) if id in _KEY_MEMBERS:
                 # KeyboardState overloads __getitem__ to return True for pressed keys
                 # and False for unpressed or invalid keys.
                 return keyboard_state[id]
@@ -391,7 +399,7 @@ class GeneratorInputDriver(InputDriver):
                 return 0
 
             # Yielding a Key value will expose it as a key press on the keyboard device.
-            case Key(key), InputDevice.KEYBOARD, _, id if key == id and id in Key:
+            case Key(key), InputDevice.KEYBOARD, _, id if key == id and id in _KEY_MEMBERS:
                 return 1
             case Key(_), _, _, _:  # When yielding a Key in all other cases, return 0
                 return 0
@@ -400,7 +408,7 @@ class GeneratorInputDriver(InputDriver):
             # with all other devices defaulting to 0.
             # Index is ignored.
             case LightGunState() as light_gun_state, InputDevice.LIGHTGUN, _, id if (
-                id in DeviceIdLightgun
+                id in _DEVICEID_LIGHTGUN_MEMBERS
             ):
                 light_gun_state: LightGunState
                 return light_gun_state[id]

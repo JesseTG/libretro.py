@@ -35,6 +35,9 @@ from libretro.api.vfs import (
     retro_vfs_write_t,
 )
 
+_VFS_SEEK_POSITION_MEMBERS = VfsSeekPosition.__members__.values()
+_VFS_MKDIR_RESULT_MEMBERS = VfsMkdirResult.__members__.values()
+
 
 @runtime_checkable
 class FileHandle(Protocol):
@@ -292,7 +295,7 @@ class FileSystemInterface(Protocol):
         assert isinstance(offset, int)
         assert isinstance(whence, int)
 
-        if whence not in VfsSeekPosition:
+        if whence not in _VFS_SEEK_POSITION_MEMBERS:
             return -1
 
         try:
@@ -473,7 +476,7 @@ class FileSystemInterface(Protocol):
         try:
             ok = self.mkdir(path)
 
-            if ok not in VfsMkdirResult:
+            if ok not in _VFS_MKDIR_RESULT_MEMBERS:
                 raise TypeError(
                     f"Expected mkdir to return a VfsMkdirResult, got: {type(ok).__name__}"
                 )

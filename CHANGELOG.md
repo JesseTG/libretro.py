@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.9] - 2024-06-07
+
+### Fixed
+
+- Remove some methods or other constructs that were added in Python 3.12,
+  to ensure compatibility with Python 3.11.
+
 ## [0.1.8] - 2024-06-05
 
 ### Fixed
