@@ -140,7 +140,7 @@ class ModernGlVideoDriver(VideoDriver):
             or ``None`` to use the built-in default.
         :param varyings: The names of the "varyings" (vertex value outputs) to use.
         """
-        package_files = resources.files(modules[__name__])
+        package_files = resources.files(modules[__name__].__package__)
         # TODO: Support passing SPIR-V shaders as bytes
         match vertex_shader:
             case str():
@@ -468,11 +468,8 @@ class ModernGlVideoDriver(VideoDriver):
 
     @property
     @override
-    def geometry(self) -> retro_game_geometry:
-        if not self._system_av_info:
-            raise RuntimeError("No system AV info has been set")
-
-        return deepcopy(self._system_av_info.geometry)
+    def geometry(self) -> retro_game_geometry | None:
+        return deepcopy(self._system_av_info.geometry) if self._system_av_info else None
 
     @geometry.setter
     @override

@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.10] - 2024-06-07
+
+### Fixed
+
+- Fix `ModernGlVideoDriver.geometry` having an incorrect return type.
+- Fix `ModernGlVideoDriver` failing to import in Python 3.11.
+
 ## [0.1.9] - 2024-06-07
 
 ### Fixed
