@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.1.11] - 2024-06-10
+
+### Changed
+
+- Raise a warning when the core's requested maximum framebuffer size
+  is larger than what the OpenGL implementation can provide.
+
 ## [0.1.10] - 2024-06-07
 
 ### Fixed

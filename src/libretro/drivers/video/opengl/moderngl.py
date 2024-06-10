@@ -607,6 +607,16 @@ class ModernGlVideoDriver(VideoDriver):
         max_rb_size = self._context.info["GL_MAX_RENDERBUFFER_SIZE"]
         geometry = self._system_av_info.geometry
 
+        if (
+            geometry.max_width > max_rb_size
+            or geometry.max_height > max_fbo_size
+            or geometry.max_height > max_rb_size
+            or geometry.max_width > max_fbo_size
+        ):
+            warnings.warn(
+                f"Core-provided framebuffer size ({geometry.max_width}x{geometry.max_height}) exceeds GL_MAX_TEXTURE_SIZE ({max_fbo_size}) or GL_MAX_RENDERBUFFER_SIZE ({max_rb_size})"
+            )
+
         width = min(geometry.max_width, max_fbo_size, max_rb_size)
         height = min(geometry.max_height, max_fbo_size, max_rb_size)
         return width, height
