@@ -21,6 +21,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._rotation: Rotation = Rotation.NONE
         self._last_width: int | None = None
         self._last_height: int | None = None
+        self._last_pitch: int | None = None
 
     @override
     def refresh(
@@ -28,6 +29,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     ) -> None:
         match data:
             case memoryview():
+                if len(data) > len(self._frame):
+                    # Reallocate frame buffer
+                    self._frame = array("B", itertools.repeat(0, len(data)))
                 frameview = memoryview(self._frame)
                 frameview[: len(data)] = data
 
@@ -44,6 +48,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
         self._last_width = width
         self._last_height = height
+        self._last_pitch = pitch
 
     @override
     @property
@@ -93,26 +98,93 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._pixel_format = format
 
     @override
-    def screenshot(self) -> Screenshot | None:
+    def screenshot(self, prerotate: bool = True) -> Screenshot | None:
         if not self._frame:
             return None
 
         last_frame_length = (
-            self._last_width * self._last_height * self._pixel_format.bytes_per_pixel
+            self._last_pitch * self._last_height
         )
         screen = self._frame[:last_frame_length]
-        for i in range(0, last_frame_length, self._pixel_format.bytes_per_pixel):
-            r, g, b, a = screen[i : i + self._pixel_format.bytes_per_pixel]
-            screen[i : i + self._pixel_format.bytes_per_pixel] = array("B", (b, g, r, a))
-            # the lower 8 bits of the pixel are the red channel;
-            # we need to swap them so images don't look wrong
-            # in common Python imaging libraries
+        screen_out = bytearray(self._last_width * self._last_height * 4)
+        pixel_buf = array("B", (0, 0, 0, 255))
 
-        # TODO: support RGB565 and RGB555
-        # TODO: support rotation
+        rot = self._rotation if prerotate else Rotation.NONE
 
+        match rot:
+            case Rotation.NONE:
+                sy = 0
+                dx = 4
+                dy = self._last_width * 4
+                is_sideways = False
+            case Rotation.NINETY:
+                sy = (self._last_width - 4) * self._last_height * 4
+                dx = self._last_height * -4
+                dy = 4
+                is_sideways = True
+            case Rotation.ONE_EIGHTY:
+                sy = self._last_width * self._last_height * 4 - 4
+                dx = -4
+                dy = self._last_width * -4
+                is_sideways = False
+            case Rotation.TWO_SEVENTY:
+                sy = self._last_height * 4 - 4
+                dx = self._last_height * 4
+                dy = -4
+                is_sideways = True
+            
+        if self._pixel_format == PixelFormat.XRGB8888:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = sy + y * dy
+                for x in range(self._last_width):
+                    ni = i + 3
+                    pixel_buf[2::-1] = screen[i : ni]
+                    screen_out[o : o + 4] = pixel_buf
+                    i = ni + 1
+                    o += dx
+        elif self._pixel_format == PixelFormat.RGB565:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = sy + y * dy
+                for x in range(self._last_width):
+                    ni = i + 2
+                    b, r = screen[i : ni]
+                    g = ((b & 0xE0) >> 3) | ((r & 0x07) << 5)
+                    b = (b & 0x1F) << 3
+                    pixel_buf[0] = (r & 0xF8) | (r >> 5)
+                    pixel_buf[1] = g | (g >> 6)
+                    pixel_buf[2] = b | (b >> 5)
+                    screen_out[o : o + 4] = pixel_buf
+                    i = ni
+                    o += dx
+        elif self._pixel_format == PixelFormat.RGB1555:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = sy + y * dy
+                for x in range(self._last_width):
+                    ni = i + 2
+                    b, g = screen[i : ni]
+                    r = (g & 0x7C) << 1
+                    g = ((b & 0xE0) >> 2) | ((g & 0x03) << 6)
+                    b = (b & 0x1F) << 3
+                    pixel_buf[0] = r | (r >> 5)
+                    pixel_buf[1] = g | (g >> 5)
+                    pixel_buf[2] = b | (b >> 5)
+                    screen_out[o : o + 4] = pixel_buf
+                    i = ni
+                    o += dx
+                
+        if is_sideways:
+            return Screenshot(
+                memoryview(screen_out),
+                self._last_height,
+                self._last_width,
+                self._rotation,
+                self._pixel_format,
+            )
         return Screenshot(
-            memoryview(screen),
+            memoryview(screen_out),
             self._last_width,
             self._last_height,
             self._rotation,

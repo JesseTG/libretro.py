@@ -247,7 +247,7 @@ class VideoDriver(Protocol):
     def shared_context(self, value: bool) -> None: ...
 
     @abstractmethod
-    def screenshot(self) -> Screenshot | None:
+    def screenshot(self, prerotate: bool = True) -> Screenshot | None:
         """
         Captures the part of the most recently-rendered frame
         that would be visible to the player
