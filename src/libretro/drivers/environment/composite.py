@@ -80,6 +80,7 @@ from libretro.api import (
     retro_savestate_context,
     retro_sensor_get_input_t,
     retro_sensor_interface,
+    retro_set_led_state_t,
     retro_set_rumble_state_t,
     retro_set_sensor_state_t,
     retro_subsystem_info,
@@ -1000,7 +1001,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return True
 
         if not self._led_cb:
-            self._led_cb = retro_led_interface(self.__set_led_state)
+            self._led_cb = retro_led_interface(
+                set_led_state=retro_set_led_state_t(self.__set_led_state)
+            )
 
         led_ptr[0] = self._led_cb
         return True
