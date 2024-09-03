@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Add `Language.GALICIAN` and `Language.NORWEGIAN`
+  to correspond with additions to `libretro.h`.
+
+### Fixed
+
+- Fix `Core.unserialize` being unable to accept `bytes` objects ([#4][4])
+- Fix a crash when a core uses `retro_led_interface` ([#7](7))
+
+[4]: https://github.com/JesseTG/libretro.py/issues/4
+[7]: https://github.com/JesseTG/libretro.py/issues/7
+
 ## [0.1.11] - 2024-06-10
 
 ### Changed
