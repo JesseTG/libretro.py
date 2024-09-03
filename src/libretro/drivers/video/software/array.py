@@ -102,9 +102,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         if not self._frame:
             return None
 
-        last_frame_length = (
-            self._last_pitch * self._last_height
-        )
+        last_frame_length = self._last_pitch * self._last_height
         screen = self._frame[:last_frame_length]
         screen_out = bytearray(self._last_width * self._last_height * 4)
         pixel_buf = array("B", (0, 0, 0, 255))
@@ -132,14 +130,14 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 dx = self._last_height * 4
                 dy = -4
                 is_sideways = True
-            
+
         if self._pixel_format == PixelFormat.XRGB8888:
             for y in range(self._last_height):
                 i = y * self._last_pitch
                 o = sy + y * dy
                 for x in range(self._last_width):
                     ni = i + 3
-                    pixel_buf[2::-1] = screen[i : ni]
+                    pixel_buf[2::-1] = screen[i:ni]
                     screen_out[o : o + 4] = pixel_buf
                     i = ni + 1
                     o += dx
@@ -149,7 +147,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 o = sy + y * dy
                 for x in range(self._last_width):
                     ni = i + 2
-                    b, r = screen[i : ni]
+                    b, r = screen[i:ni]
                     g = ((b & 0xE0) >> 3) | ((r & 0x07) << 5)
                     b = (b & 0x1F) << 3
                     pixel_buf[0] = (r & 0xF8) | (r >> 5)
@@ -164,7 +162,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 o = sy + y * dy
                 for x in range(self._last_width):
                     ni = i + 2
-                    b, g = screen[i : ni]
+                    b, g = screen[i:ni]
                     r = (g & 0x7C) << 1
                     g = ((b & 0xE0) >> 2) | ((g & 0x03) << 6)
                     b = (b & 0x1F) << 3
@@ -174,7 +172,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                     screen_out[o : o + 4] = pixel_buf
                     i = ni
                     o += dx
-                
+
         if is_sideways:
             return Screenshot(
                 memoryview(screen_out),
