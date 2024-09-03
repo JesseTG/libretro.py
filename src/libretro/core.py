@@ -513,7 +513,13 @@ class Core(CoreInterface):
         """
         buf: memoryview
         match data:
-            case bytes() | bytearray() | Buffer():
+            case bytes():
+                buf = memoryview_at(data, len(data), readonly=False)
+                # HACK! ctypes.Array.from_buffer requires a writable buffer,
+                # but bytes objects are read-only.
+                # retro_unserialize isn't supposed to modify the buffer,
+                # so we can blame undefined behavior if the core tries to write to it anyway.
+            case bytearray() | Buffer():
                 buf = memoryview(data)
             case memoryview():
                 buf = data
@@ -525,6 +531,7 @@ class Core(CoreInterface):
         buflen = len(buf)
         arraytype: Array = c_char * buflen
 
+        # TODO: Validate that the buffer wasn't written to, and raise a warning if it was. (Use zlib.crc32)
         return self._core.retro_unserialize(byref(arraytype.from_buffer(buf)), buflen)
 
     def cheat_reset(self):
