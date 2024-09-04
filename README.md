@@ -65,6 +65,8 @@ just venv
 To install additional features,
 add one or more of the following extras to the `install` command:
 
+- **`cli`:** Test scripts that don't rely on the nuances of any particular core.
+  Use these to simplify your own core's test process.
 - **`dev`:** Assorted tools used to help develop libretro.py.
   Required if contributing to libretro.py.
 - **`opengl`:** Support for the built-in OpenGL video driver.
