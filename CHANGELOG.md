@@ -12,20 +12,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Thanks to @JSensebe for his contributions!
+
 ### Added
 
 - Add `Language.GALICIAN` and `Language.NORWEGIAN`
   to correspond with additions to `libretro.h`.
 - Add a live documentation website [here][docs]. ([#11][11])
+- Allow `ArrayVideoDriver.screenshot()` to rotate the returned frame ([#3][3])
+- Add 16-bit pixel format support to `ArrayVideoDriver.screenshot()`. ([#5][5])
+
+### Changed
+
+- **BREAKING:** Rename `KeyboardState.return_` to `KeyboardState.return_key`
+- **BREAKING:** Rename `KeyboardState.break_` to `KeyboardState.break_key`
 
 ### Fixed
 
 - Fix `Core.unserialize` being unable to accept `bytes` objects ([#4][4])
+- Fix an exception when a core sets its geometry before its initial AV info is fetched. ([#6][6])
 - Fix a crash when a core uses `retro_led_interface` ([#7][7])
+- Fix an exception when passing a frame pitch inconsistent with the configured video format. ([#8][8])
 
 [docs]: https://libretropy.readthedocs.io/en/latest
+[3]: https://github.com/JesseTG/libretro.py/issues/3
 [4]: https://github.com/JesseTG/libretro.py/issues/4
+[5]: https://github.com/JesseTG/libretro.py/issues/5
+[6]: https://github.com/JesseTG/libretro.py/issues/6
 [7]: https://github.com/JesseTG/libretro.py/issues/7
+[8]: https://github.com/JesseTG/libretro.py/issues/8
 [11]: https://github.com/JesseTG/libretro.py/issues/11
 
 ## [0.1.11] - 2024-06-10
