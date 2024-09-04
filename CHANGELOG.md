@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix `Core.unserialize` being unable to accept `bytes` objects ([#4][4])
-- Fix a crash when a core uses `retro_led_interface` ([#7](7))
+- Fix a crash when a core uses `retro_led_interface` ([#7][7])
 
 [docs]: https://libretropy.readthedocs.io/en/latest
 [4]: https://github.com/JesseTG/libretro.py/issues/4
