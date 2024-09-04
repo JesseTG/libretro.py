@@ -17,7 +17,7 @@ Ease of use, flexibility, and complete API support are top priorities.
 .. toctree::
    :maxdepth: 4
 
-   guide/getting-started
+   guide/start
    guide/index
 
 .. autosummary::
