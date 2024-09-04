@@ -21,6 +21,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._rotation: Rotation = Rotation.NONE
         self._last_width: int | None = None
         self._last_height: int | None = None
+        self._last_pitch: int | None = None
 
     @override
     def refresh(
@@ -28,6 +29,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     ) -> None:
         match data:
             case memoryview():
+                if len(data) > len(self._frame):
+                    # Reallocate frame buffer
+                    self._frame = array("B", itertools.repeat(0, len(data)))
                 frameview = memoryview(self._frame)
                 frameview[: len(data)] = data
 
@@ -35,7 +39,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 pass  # Do nothing
 
             case FrameBufferSpecial.HARDWARE:
-                warn("RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback")
+                warn(
+                    "RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback"
+                )
 
             case _:
                 raise TypeError(
@@ -44,6 +50,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
         self._last_width = width
         self._last_height = height
+        self._last_pitch = pitch
 
     @override
     @property
@@ -53,7 +60,11 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def reinit(self) -> None:
         geometry = self._system_av_info.geometry
-        bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
+        bufsize = (
+            geometry.max_width
+            * geometry.max_height
+            * self._pixel_format.bytes_per_pixel
+        )
         self._frame = array("B", itertools.repeat(0, bufsize))
 
     @property
@@ -93,26 +104,96 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._pixel_format = format
 
     @override
-    def screenshot(self) -> Screenshot | None:
+    def screenshot(self, prerotate: bool = True) -> Screenshot | None:
         if not self._frame:
             return None
 
-        last_frame_length = (
-            self._last_width * self._last_height * self._pixel_format.bytes_per_pixel
-        )
+        last_frame_length = self._last_pitch * self._last_height
         screen = self._frame[:last_frame_length]
-        for i in range(0, last_frame_length, self._pixel_format.bytes_per_pixel):
-            r, g, b, a = screen[i : i + self._pixel_format.bytes_per_pixel]
-            screen[i : i + self._pixel_format.bytes_per_pixel] = array("B", (b, g, r, a))
-            # the lower 8 bits of the pixel are the red channel;
-            # we need to swap them so images don't look wrong
-            # in common Python imaging libraries
+        screen_out = bytearray(self._last_width * self._last_height * 4)
+        pixel_buf = array("B", (0, 0, 0, 255))
 
-        # TODO: support RGB565 and RGB555
-        # TODO: support rotation
+        rot = self._rotation if prerotate else Rotation.NONE
 
+        # Select rotation coefficients
+        # NOTE: output buffer is assumed to be four bytes per pixel (ABGR)
+        match rot:
+            case Rotation.NONE:
+                start_y = 0
+                delta_x = 4
+                delta_y = self._last_width * 4
+                is_sideways = False
+            case Rotation.NINETY:
+                start_y = (self._last_width - 4) * self._last_height * 4
+                delta_x = self._last_height * -4
+                delta_y = 4
+                is_sideways = True
+            case Rotation.ONE_EIGHTY:
+                start_y = self._last_width * self._last_height * 4 - 4
+                delta_x = -4
+                delta_y = self._last_width * -4
+                is_sideways = False
+            case Rotation.TWO_SEVENTY:
+                start_y = self._last_height * 4 - 4
+                delta_x = self._last_height * 4
+                delta_y = -4
+                is_sideways = True
+
+        # Copy from input buffer to output buffer, converting the pixel format
+        #   and taking into account rotation (if prerotate is True).
+        if self._pixel_format == PixelFormat.XRGB8888:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = start_y + y * delta_y
+                for x in range(self._last_width):
+                    next_i = i + 3
+                    pixel_buf[2::-1] = screen[i:next_i]
+                    screen_out[o : o + 4] = pixel_buf
+                    i = next_i + 1
+                    o += delta_x
+        elif self._pixel_format == PixelFormat.RGB565:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = start_y + y * delta_y
+                for x in range(self._last_width):
+                    next_i = i + 2
+                    b, r = screen[i:next_i]
+                    g = ((b & 0xE0) >> 3) | ((r & 0x07) << 5)
+                    b = (b & 0x1F) << 3
+                    pixel_buf[0] = (r & 0xF8) | (r >> 5)
+                    pixel_buf[1] = g | (g >> 6)
+                    pixel_buf[2] = b | (b >> 5)
+                    screen_out[o : o + 4] = pixel_buf
+                    i = next_i
+                    o += delta_x
+        elif self._pixel_format == PixelFormat.RGB1555:
+            for y in range(self._last_height):
+                i = y * self._last_pitch
+                o = start_y + y * delta_y
+                for x in range(self._last_width):
+                    next_i = i + 2
+                    b, g = screen[i:next_i]
+                    r = (g & 0x7C) << 1
+                    g = ((b & 0xE0) >> 2) | ((g & 0x03) << 6)
+                    b = (b & 0x1F) << 3
+                    pixel_buf[0] = r | (r >> 5)
+                    pixel_buf[1] = g | (g >> 5)
+                    pixel_buf[2] = b | (b >> 5)
+                    screen_out[o : o + 4] = pixel_buf
+                    i = next_i
+                    o += delta_x
+
+        # Swap width and height if buffer is rotated 90 or 270 degrees.
+        if is_sideways:
+            return Screenshot(
+                memoryview(screen_out),
+                self._last_height,
+                self._last_width,
+                self._rotation,
+                self._pixel_format,
+            )
         return Screenshot(
-            memoryview(screen),
+            memoryview(screen_out),
             self._last_width,
             self._last_height,
             self._rotation,
@@ -133,7 +214,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
         if not isinstance(av_info, retro_system_av_info):
-            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
+            raise TypeError(
+                f"Expected a retro_system_av_info, got {type(av_info).__name__}"
+            )
 
         self._system_av_info = deepcopy(av_info)
         self.reinit()
@@ -150,7 +233,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
-            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
+            raise TypeError(
+                f"Expected a retro_game_geometry, got {type(geometry).__name__}"
+            )
 
         self._system_av_info.geometry.base_width = geometry.base_width
         self._system_av_info.geometry.base_height = geometry.base_height

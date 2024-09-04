@@ -539,7 +539,7 @@ class ModernGlVideoDriver(VideoDriver):
         self.reinit()
 
     @override
-    def screenshot(self) -> Screenshot | None:
+    def screenshot(self, prerotate: bool = True) -> Screenshot | None:
         if self._system_av_info is None:
             return None
 

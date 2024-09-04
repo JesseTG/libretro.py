@@ -301,9 +301,10 @@ class MultiVideoDriver(VideoDriver):
         if not isinstance(value, retro_game_geometry):
             raise TypeError(f"Expected retro_game_geometry, got {type(value).__name__}")
 
-        self._system_av_info.geometry.base_width = value.base_width
-        self._system_av_info.geometry.base_height = value.base_height
-        self._system_av_info.geometry.aspect_ratio = value.aspect_ratio
+        if self._system_av_info:  # In case this gets called before the initial AV info get
+            self._system_av_info.geometry.base_width = value.base_width
+            self._system_av_info.geometry.base_height = value.base_height
+            self._system_av_info.geometry.aspect_ratio = value.aspect_ratio
 
         if self._current is not None:
             self._current.geometry = value
