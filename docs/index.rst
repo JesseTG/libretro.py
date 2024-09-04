@@ -15,17 +15,11 @@ Ease of use, flexibility, and complete API support are top priorities.
    :alt: GitHub License
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    guide/start
    guide/index
-
-.. autosummary::
-   :toctree: libretro
-   :recursive:
-
-   libretro
-
+   api/index
 
 
 Indices and tables
