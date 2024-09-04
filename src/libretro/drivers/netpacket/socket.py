@@ -63,3 +63,6 @@ class SocketNetpacketDriver(NetpacketDriver):
 
     def _poll_receive(self) -> None:
         pass
+
+
+__all__ = ["SocketNetpacketDriver"]
