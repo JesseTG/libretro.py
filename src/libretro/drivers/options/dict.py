@@ -139,12 +139,12 @@ class DictOptionDriver(OptionDriver):
             self._options_intl.clear()
         else:
             self._options_us = {
-                bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.us.contents)
+                bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.us)
             }
 
             if options.local:
                 self._options_intl = {
-                    bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.local.contents)
+                    bytes(o.key): deepcopy(o) for o in from_zero_terminated(options.local)
                 }
 
         self._variables_dirty = True
