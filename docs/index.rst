@@ -15,7 +15,7 @@ Ease of use, flexibility, and complete API support are top priorities.
    :alt: GitHub License
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    guide/start
    guide/index
