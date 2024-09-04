@@ -132,7 +132,9 @@ class VideoDriver(Protocol):
     def preferred_context(self) -> None: ...
 
     @abstractmethod
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(
+        self, callback: retro_hw_render_callback
+    ) -> retro_hw_render_callback | None:
         """
         Corresponds to ``EnvironmentCall.SET_HW_RENDER``.
 
@@ -254,6 +256,11 @@ class VideoDriver(Protocol):
         in a typical libretro frontend.
 
         This should account for rotation, geometry dimensions, and aspect ratio.
+
+        :param prerotate: True if this method should rotate the output buffer
+                          according to the _rotation field,
+                          False if it should be left to the frontend.
+
         """
         ...
 
