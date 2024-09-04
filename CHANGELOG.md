@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `Language.GALICIAN` and `Language.NORWEGIAN`
   to correspond with additions to `libretro.h`.
-- Add a live documentation website [here][docs].
+- Add a live documentation website [here][docs]. ([#11][11])
 
 ### Fixed
 
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [docs]: https://libretropy.readthedocs.io/en/latest
 [4]: https://github.com/JesseTG/libretro.py/issues/4
 [7]: https://github.com/JesseTG/libretro.py/issues/7
+[11]: https://github.com/JesseTG/libretro.py/issues/11
 
 ## [0.1.11] - 2024-06-10
 
