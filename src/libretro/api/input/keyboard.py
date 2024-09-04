@@ -305,7 +305,7 @@ class Key(IntEnum, boundary=EJECT):
     HELP = RETROK_HELP
     PRINT = RETROK_PRINT
     SYSREQ = RETROK_SYSREQ
-    BREAK_ = RETROK_BREAK
+    BREAK = RETROK_BREAK
     MENU = RETROK_MENU
     POWER = RETROK_POWER
     EURO = RETROK_EURO
@@ -351,7 +351,7 @@ class KeyboardState(InputDeviceState):
     backspace: bool = False
     tab: bool = False
     clear: bool = False
-    return_: bool = False
+    return_key: bool = False
     pause: bool = False
     escape: bool = False
     space: bool = False
@@ -487,18 +487,25 @@ class KeyboardState(InputDeviceState):
     help: bool = False
     print: bool = False
     sysreq: bool = False
-    break_: bool = False
+    break_key: bool = False
     menu: bool = False
     power: bool = False
     euro: bool = False
     oem_102: bool = False
 
-    def __getitem__(self, item: int) -> bool:
-        # TODO: Handle the keys that share names with keywords
-        if item in Key:
-            return getattr(self, Key(item).name.lower())
-        else:
-            return False
+    def __getitem__(self, item: int | Key) -> bool:
+        match item:
+            # Special cases due to overlap with Python keywords
+            case Key.RETURN:
+                return self.return_key
+            case Key.BREAK:
+                return self.break_key
+            case Key():
+                return getattr(self, item.name.lower())
+            case int(i) if i in Key:
+                return getattr(self, Key(i).name.lower())
+            case _:
+                raise KeyError(f"Invalid key: {item}")
 
 
 retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
