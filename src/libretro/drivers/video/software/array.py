@@ -39,14 +39,10 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 pass  # Do nothing
 
             case FrameBufferSpecial.HARDWARE:
-                warn(
-                    "RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback"
-                )
+                warn("RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback")
 
             case _:
-                raise TypeError(
-                    f"Expected a memoryview or a FrameBufferSpecial, got {type(data).__name__}"
-                )
+                raise TypeError(f"Expected a memoryview or a FrameBufferSpecial, got {type(data).__name__}")
 
         self._last_width = width
         self._last_height = height
