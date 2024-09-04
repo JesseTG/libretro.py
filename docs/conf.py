@@ -16,6 +16,9 @@ author = "Jesse Talavera"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
 ]
 
 templates_path = ["_templates"]
@@ -43,3 +46,15 @@ autodoc_default_options = {
     "members": True,
 }
 autosummary_generate = True
+
+# -- Options for extlinks extension ------------------------------------------
+
+extlinks = {"issue": ("https://github.com/JesseTG/libretro.py/issues/%s", "issue %s")}
+extlinks_detect_hardcoded_links = True
+
+# -- Options for intersphinx extension ---------------------------------------
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "moderngl": ("https://moderngl.readthedocs.io/en/stable", None),
+}

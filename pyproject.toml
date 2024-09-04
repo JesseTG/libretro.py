@@ -52,6 +52,7 @@ dev = [
 docs = [
     'Sphinx == 7.*',
     'sphinx-autobuild == 2024.*',
+    'sphinx-copybutton == 0.5.2',
     'furo',
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
