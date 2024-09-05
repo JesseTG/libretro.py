@@ -13,6 +13,8 @@ dist/
 *.pyc
 .*cache
 docs/libretro/
+docs/api/**
+!docs/api/index.rst
 
 # Cython extensions
 *.so
