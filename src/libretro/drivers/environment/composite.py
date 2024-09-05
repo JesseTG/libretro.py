@@ -40,6 +40,7 @@ from libretro.api import (
     retro_audio_callback,
     retro_av_enable_flags,
     retro_camera_callback,
+    retro_controller_description,
     retro_controller_info,
     retro_core_option_definition,
     retro_core_option_display,
@@ -90,7 +91,7 @@ from libretro.api import (
     retro_vfs_interface,
     retro_vfs_interface_info,
 )
-from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at
+from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at, deepcopy_array
 from libretro.drivers.audio import AudioDriver
 from libretro.drivers.camera import CameraDriver
 from libretro.drivers.content import ContentDriver
@@ -831,7 +832,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def controller_info(self) -> Sequence[retro_controller_info] | None:
+    def controller_info(self) -> Sequence[retro_controller_description] | None:
         return self._input.controller_info
 
     @override
@@ -839,7 +840,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not info_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
 
-        controller_infos = tuple(deepcopy(s) for s in from_zero_terminated(info_ptr))
+        controller_infos = tuple(deepcopy_array(info_ptr[0].types, info_ptr[0].num_types, memo=None) if info_ptr[0].types else None)
         self._input.controller_info = controller_infos
 
         return True

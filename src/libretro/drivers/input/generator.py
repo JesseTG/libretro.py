@@ -22,7 +22,7 @@ from libretro.api.input import (
     MouseState,
     Pointer,
     PointerState,
-    retro_controller_info,
+    retro_controller_description,
     retro_input_descriptor,
     retro_keyboard_callback,
 )
@@ -527,15 +527,15 @@ class GeneratorInputDriver(InputDriver):
 
     @property
     @override
-    def controller_info(self) -> Sequence[retro_controller_info] | None:
+    def controller_info(self) -> Sequence[retro_controller_description] | None:
         return self._controller_info
 
     @controller_info.setter
     @override
-    def controller_info(self, info: Sequence[retro_controller_info] | None) -> None:
+    def controller_info(self, info: Sequence[retro_controller_description] | None) -> None:
         if info is None:
             self._controller_info = None
-        elif all(isinstance(controller_info, retro_controller_info) for controller_info in info):
+        elif all(isinstance(controller_info, retro_controller_description) for controller_info in info):
             self._controller_info = tuple(info)
         else:
             raise TypeError(f"Expected None or a sequence of retro_controller_info, got {info!r}")

@@ -15,7 +15,7 @@ from libretro.api import (
     SerializationQuirks,
     SubsystemContent,
     Subsystems,
-    retro_controller_info,
+    retro_controller_description,
     retro_fastforwarding_override,
     retro_get_proc_address_interface,
     retro_input_descriptor,
@@ -133,7 +133,6 @@ class Session:
                     loaded = self._core.load_game_special(subsystem.id, game_infos)
                 case _, _:
                     raise RuntimeError("Failed to load content")
-
         if not loaded:
             raise RuntimeError("Failed to load game")
 
@@ -259,7 +258,7 @@ class Session:
         return self._environment.content.subsystem_info
 
     @property
-    def controller_info(self) -> Sequence[retro_controller_info] | None:
+    def controller_info(self) -> Sequence[retro_controller_description] | None:
         return self._environment.input.controller_info
 
     @property
