@@ -29,4 +29,7 @@ CoreArg = Annotated[
 
 VerboseOption = Annotated[int, Option("--verbose", "-v", count=True)]
 
-__all__ = ["CoreArg"]
+__all__ = [
+    "CoreArg",
+    "VerboseOption",
+]
