@@ -91,7 +91,12 @@ from libretro.api import (
     retro_vfs_interface,
     retro_vfs_interface_info,
 )
-from libretro.api._utils import as_bytes, from_zero_terminated, memoryview_at, deepcopy_array
+from libretro.api._utils import (
+    as_bytes,
+    deepcopy_array,
+    from_zero_terminated,
+    memoryview_at,
+)
 from libretro.drivers.audio import AudioDriver
 from libretro.drivers.camera import CameraDriver
 from libretro.drivers.content import ContentDriver
