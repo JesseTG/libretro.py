@@ -840,7 +840,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not info_ptr:
             raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
 
-        controller_infos = tuple(deepcopy_array(info_ptr[0].types, info_ptr[0].num_types, memo=None) if info_ptr[0].types else None)
+        controller_infos = tuple(
+            deepcopy_array(info_ptr[0].types, info_ptr[0].num_types, memo=None)
+            if info_ptr[0].types
+            else None
+        )
         self._input.controller_info = controller_infos
 
         return True

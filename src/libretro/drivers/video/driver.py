@@ -132,9 +132,7 @@ class VideoDriver(Protocol):
     def preferred_context(self) -> None: ...
 
     @abstractmethod
-    def set_context(
-        self, callback: retro_hw_render_callback
-    ) -> retro_hw_render_callback | None:
+    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
         """
         Corresponds to ``EnvironmentCall.SET_HW_RENDER``.
 

@@ -42,7 +42,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                 warn("RETRO_HW_FRAME_BUFFER_VALID passed to software-only video refresh callback")
 
             case _:
-                raise TypeError(f"Expected a memoryview or a FrameBufferSpecial, got {type(data).__name__}")
+                raise TypeError(
+                    f"Expected a memoryview or a FrameBufferSpecial, got {type(data).__name__}"
+                )
 
         self._last_width = width
         self._last_height = height
@@ -56,11 +58,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def reinit(self) -> None:
         geometry = self._system_av_info.geometry
-        bufsize = (
-            geometry.max_width
-            * geometry.max_height
-            * self._pixel_format.bytes_per_pixel
-        )
+        bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
         self._frame = array("B", itertools.repeat(0, bufsize))
 
     @property
@@ -210,9 +208,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
         if not isinstance(av_info, retro_system_av_info):
-            raise TypeError(
-                f"Expected a retro_system_av_info, got {type(av_info).__name__}"
-            )
+            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
 
         self._system_av_info = deepcopy(av_info)
         self.reinit()
@@ -229,9 +225,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
-            raise TypeError(
-                f"Expected a retro_game_geometry, got {type(geometry).__name__}"
-            )
+            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
 
         self._system_av_info.geometry.base_width = geometry.base_width
         self._system_av_info.geometry.base_height = geometry.base_height

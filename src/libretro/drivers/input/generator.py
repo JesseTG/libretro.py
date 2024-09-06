@@ -535,7 +535,9 @@ class GeneratorInputDriver(InputDriver):
     def controller_info(self, info: Sequence[retro_controller_description] | None) -> None:
         if info is None:
             self._controller_info = None
-        elif all(isinstance(controller_info, retro_controller_description) for controller_info in info):
+        elif all(
+            isinstance(controller_info, retro_controller_description) for controller_info in info
+        ):
             self._controller_info = tuple(info)
         else:
             raise TypeError(f"Expected None or a sequence of retro_controller_info, got {info!r}")
