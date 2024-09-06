@@ -8,7 +8,7 @@ from libretro.api import (
     Key,
     KeyModifier,
     Port,
-    retro_controller_info,
+    retro_controller_description,
     retro_input_descriptor,
     retro_keyboard_callback,
 )
@@ -69,11 +69,11 @@ class InputDriver(Protocol):
 
     @property
     @abstractmethod
-    def controller_info(self) -> Sequence[retro_controller_info] | None: ...
+    def controller_info(self) -> Sequence[retro_controller_description] | None: ...
 
     @controller_info.setter
     @abstractmethod
-    def controller_info(self, info: Sequence[retro_controller_info]) -> None: ...
+    def controller_info(self, info: Sequence[retro_controller_description]) -> None: ...
 
     @property
     @abstractmethod
