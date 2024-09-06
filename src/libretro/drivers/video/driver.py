@@ -255,9 +255,9 @@ class VideoDriver(Protocol):
 
         This should account for rotation, geometry dimensions, and aspect ratio.
 
-        :param prerotate: True if this method should rotate the output buffer
+        :param prerotate: ``True`` if this method should rotate the output buffer
                           according to the _rotation field,
-                          False if it should be left to the frontend.
+                          ``False`` if it should be left to the frontend.
 
         """
         ...

@@ -39,7 +39,8 @@ class WaveWriterAudioDriver(AudioDriver):
     def sample_batch(self, data: memoryview) -> int:
         self._file.writeframesraw(data)
 
-        return len(memoryview)
+        # Divide by two to return number of frames
+        return len(memoryview) // 2
 
     @property
     @override
