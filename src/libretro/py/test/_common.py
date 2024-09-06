@@ -23,7 +23,7 @@ CoreArg = Annotated[
         parser=load_core,
         help="Path to the libretro core to load. Must be a complete path, not a short name.",
         show_default=False,
-        metavar="core",
+        metavar="CORE",
     ),
 ]
 
