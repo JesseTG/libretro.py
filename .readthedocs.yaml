@@ -21,5 +21,6 @@ python:
     - method: pip
       path: .
       extra_requirements:
+        - cli
         - docs
         - opengl-window
