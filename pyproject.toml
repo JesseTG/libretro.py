@@ -69,9 +69,6 @@ opengl-window = [
 ]
 all = ["libretro.py[build,cli,dev,docs,opengl,opengl-window]"]
 
-[project.scripts]
-"libretro.py.loads" = "libretro.py.loads:main"
-
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
 Issues = "https://github.com/JesseTG/libretro.py/issues"
