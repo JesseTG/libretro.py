@@ -657,9 +657,9 @@ class ModernGlVideoDriver(VideoDriver):
         assert self._callback is not None
         assert self._system_av_info is not None
 
-        del self._hw_render_fbo
-        del self._hw_render_color
-        del self._hw_render_depth
+        self._hw_render_fbo = None
+        self._hw_render_color = None
+        self._hw_render_depth = None
 
         size = self.__get_framebuffer_size()
 
