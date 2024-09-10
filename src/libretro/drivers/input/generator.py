@@ -23,6 +23,7 @@ from libretro.api.input import (
     Pointer,
     PointerState,
     retro_controller_description,
+    retro_controller_info,
     retro_input_descriptor,
     retro_keyboard_callback,
 )
