@@ -259,10 +259,38 @@ class SessionBuilder:
     def with_content(self, content: ContentArg) -> Self:
         """
         Sets the content to use for this session.
+        Will be loaded and managed by this builder's assigned :class:`.ContentDriver`.
 
-        ``content`` may be one of the following:
+        :param content: The content to use for this session. May be one of the following:
 
-        TODO
+            :class:`str`, :class:`~os.PathLike`
+                Will load a single content file without enabling a subsystem.
+
+            :class:`zipfile.Path`
+                Will load a single content file within a ZIP archive without enabling a subsystem.
+
+            :class:`bytes`, :class:`bytearray`, :class:`memoryview`, :class:`~collections.abc.Buffer`
+                Will expose a single unnamed content buffer without enabling a subsystem.
+
+            :class:`.SubsystemContent`
+                Will enable a subsystem and load multiple associated content files.
+
+            :class:`.retro_game_info`
+                Will be passed to the core as-is without enabling a subsystem.
+
+            :obj:`None`
+                Will load the core without using any content or enabling a subsystem;
+                if not supported by the core, this will raise an error in :meth:`build`.
+                Note that ``retro_load_game`` **will** be called.
+
+            :class:`~collections.abc.Callable` () -> :data:`.Content` | :class:`.SubsystemContent` | :obj:`None`
+                Zero-argument function that returns one of the above.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`.SessionBuilder` object.
+        :raises TypeError: If ``content`` is not one of the permitted types.
+
+        :see: :meth:`.ContentDriver.load` for details on how loaded content is exposed to the core.
         """
         match content:
             case Callable() as func:
@@ -763,6 +791,8 @@ class SessionBuilder:
         Constructs a :py:class:`.Session` with the provided arguments.
 
         :raises RequiredError: If a :py:class:`.Core`, :py:class:`.AudioDriver`, :py:class:`.InputDriver`, or :py:class:`.VideoDriver` is not set.
+        :raises Exception: Any exception raised by a registered driver factory or initializer.
+
         :return: A :py:class:`.Session` object.
         """
         core = self._args["core"]()
