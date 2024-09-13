@@ -72,7 +72,7 @@ mypy: _validate_venv
 
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs: _validate_venv
-    {{_venv_bin}}/sphinx-autobuild --jobs auto --write-all --ignore "./docs/api/*" --builder dirhtml --keep-going --watch src docs build/doc
+    {{_venv_bin}}/sphinx-autobuild --jobs auto --ignore "./docs/api/*" --builder dirhtml --keep-going --watch src docs build/doc
 
 [private]
 [windows]
