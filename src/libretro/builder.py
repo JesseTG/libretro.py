@@ -203,6 +203,13 @@ class SessionBuilder:
             power=_nothing,
         )
 
+    @classmethod
+    def defaults(cls, core: CoreArg) -> Self:
+        """
+        Alias to :py:func:`defaults`.
+        """
+        return defaults(core)
+
     def with_core(self, core: CoreArg) -> Self:
         """
         Sets the core to use for the session.
