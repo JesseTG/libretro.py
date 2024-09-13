@@ -817,4 +817,5 @@ __all__ = [
     "SessionBuilder",
     "DEFAULT",
     "defaults",
+    "RequiredError",
 ]
