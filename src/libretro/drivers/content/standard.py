@@ -92,6 +92,8 @@ class StandardContentDriver(ContentDriver):
             raise RuntimeError("System info not set")
 
         with ExitStack() as stack:
+            # We may be loading several files, each of which needs its own context manager
+            # So we use ExitStack to manage all of their lives at once
             loaded_content: Sequence[LoadedContentFile | None] | None
             subsystem: retro_subsystem_info | None = None
             match content:
