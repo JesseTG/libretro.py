@@ -168,13 +168,23 @@ class _SessionBuilderArgs(TypedDict):
 
 class SessionBuilder:
     """
-    A builder class for constructing Session objects.
+    A builder class for constructing a :py:class:`.Session`.
 
-    A Session requires a Core, an AudioDriver, an InputDriver, and a VideoDriver;
-    each ``with_`` method sets an argument (mostly drivers) for the Session.
+    At minimum, a :py:class:`.Session` requires a :py:class:`.Core`,
+    an :py:class:`.AudioDriver`,
+    an :py:class:`.InputDriver`,
+    and a :py:class:`.VideoDriver`;
+    each ``with_`` method sets an argument (mostly drivers) for the :py:class:`.Session`.
     """
 
     def __init__(self):
+        """
+        Initializes a new :py:class:`SessionBuilder` with no arguments,
+        not even the required ones.
+
+        Calling :py:meth:`build` before setting any of the required arguments
+        will raise a :py:class:`RequiredError`.
+        """
         self._args = _SessionBuilderArgs(
             core=lambda: _raise_required_error("A Core is required"),
             audio=lambda: _raise_required_error("An AudioDriver is required"),
@@ -214,19 +224,22 @@ class SessionBuilder:
         """
         Sets the core to use for the session.
 
-        ``core`` may be one of the following:
+        :param core: The core to use for the session. May be one of the following:
 
-        - A :class:`Core` that will be used as-is.
-        - A :class:`str` or :class:`PathLike` that represents a path to the core.
-          It will be loaded as a :class:`Core` when the session is built.
-        - A :class:`CDLL` object that represents a loaded binary.
-          It will be loaded into a :class:`Core` when the session is built.
-        - A :class:`Callable` that returns one of the above types.
-          It will be evaluated when the session is built.
+            :class:`.Core`
+                Will be used as-is.
 
-        :param core: The core to use for the session.
-        :return: This builder object.
-        :raises ValueError: If ``core`` is :py:const:`Default`.
+            :class:`str`, :class:`~os.PathLike`
+                Will load a :class:`.Core` from this path in :meth:`build`.
+
+            :class:`~ctypes.CDLL`
+                Will load a :class:`.Core` from this library in :meth:`build`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.Core`
+                Zero-argument function that returns a :class:`.Core`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
         :raises TypeError: If ``core`` is not one of the permitted types.
         """
         match core:
@@ -236,11 +249,9 @@ class SessionBuilder:
                 self._args["core"] = lambda: core
             case str() | PathLike() | CDLL():
                 self._args["core"] = lambda: Core(core)
-            case _DefaultType.DEFAULT:
-                raise ValueError("Core does not have a default value")
             case _:
                 raise TypeError(
-                    f"Expected Core, str, PathLike, a CDLL, or a callable that returns one of them; got {type(core).__name__}"
+                    f"Expected Core, str, PathLike, a CDLL, or a callable that returns a Core; got {type(core).__name__}"
                 )
 
         return self
@@ -749,7 +760,10 @@ class SessionBuilder:
 
     def build(self) -> Session:
         """
-        Constructs a Session object with the provided arguments.
+        Constructs a :py:class:`.Session` with the provided arguments.
+
+        :raises RequiredError: If a :py:class:`.Core`, :py:class:`.AudioDriver`, :py:class:`.InputDriver`, or :py:class:`.VideoDriver` is not set.
+        :return: A :py:class:`.Session` object.
         """
         core = self._args["core"]()
         content = self._args["content"]()
@@ -784,6 +798,19 @@ class SessionBuilder:
 
 
 def defaults(core: CoreArg) -> SessionBuilder:
+    """
+    Constructs a :py:class:`SessionBuilder` with the recommended drivers and their default values.
+    Does not build the session, so these defaults may still be overridden.
+
+    :param core: The core to use for the session.
+
+    Examples::
+
+        builder = SessionBuilder.defaults(core)
+        with builder.with_log(None).build() as session:
+            pass
+
+    """
     return (
         SessionBuilder()
         .with_core(core)
