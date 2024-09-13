@@ -275,12 +275,12 @@ class StandardContentDriver(ContentDriver):
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
 
             # For test cases that provide content by path
-            case str(path) | PathLike(path), ContentAttributes(need_fullpath=True):
+            case (str() | PathLike()) as path, ContentAttributes(need_fullpath=True):
                 loaded_info = retro_game_info(os.fsencode(path), None, 0, None)
                 loaded_info_ext = _make_game_info_ext(loaded_info)
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
                 # There's no data to persist, so no cleanup needed
-            case str(path) | PathLike(path), ContentAttributes(persistent_data=False):
+            case (str() | PathLike()) as path, ContentAttributes(persistent_data=False):
                 with mmap_file(path) as view:
                     loaded_info = retro_game_info(
                         os.fsencode(path), addressof_buffer(view), len(view), None
@@ -288,7 +288,7 @@ class StandardContentDriver(ContentDriver):
                     loaded_info_ext = _make_game_info_ext(loaded_info)
                     yield LoadedContentFile(loaded_info, loaded_info_ext)
                     # Content is not persistent, so just let the with statement clean up the view
-            case str(path) | PathLike(path), ContentAttributes(persistent_data=True):
+            case (str() | PathLike()) as path, ContentAttributes(persistent_data=True):
                 context = mmap_file(path)
                 view = context.__enter__()
                 loaded_info = retro_game_info(
