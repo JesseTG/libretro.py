@@ -34,14 +34,15 @@ ContentArg = Annotated[
         exists=True,
         resolve_path=True,
         help="Path to the content file(s) to load.",
+        metavar="CONTENT",
     ),
 ]
 
 SubsystemOption = Annotated[
     str | None,
     Option(
-        help="The subsystem to use when loading the content. Error if not defined by the core.",
-        metavar="SUBSYSTEM",
+        help="Identifier of the subsystem to use when loading the content. Error if not defined by the core.",
+        metavar="IDENT",
     ),
 ]
 
