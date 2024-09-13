@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated
 
 from click import BadArgumentUsage, FileError
@@ -27,9 +28,28 @@ CoreArg = Annotated[
     ),
 ]
 
+ContentArg = Annotated[
+    list[Path],
+    Argument(
+        exists=True,
+        resolve_path=True,
+        help="Path to the content file(s) to load.",
+    ),
+]
+
+SubsystemOption = Annotated[
+    str | None,
+    Option(
+        help="The subsystem to use when loading the content. Error if not defined by the core.",
+        metavar="SUBSYSTEM",
+    ),
+]
+
 VerboseOption = Annotated[int, Option("--verbose", "-v", count=True)]
 
 __all__ = [
     "CoreArg",
     "VerboseOption",
+    "ContentArg",
+    "SubsystemOption",
 ]
