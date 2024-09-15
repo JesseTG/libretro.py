@@ -4,7 +4,7 @@ API Reference
 TODO
 
 .. autosummary::
-   :toctree:
+   :toctree: .
    :recursive:
 
    libretro
