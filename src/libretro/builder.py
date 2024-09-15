@@ -511,10 +511,6 @@ class SessionBuilder:
                 configured with an unspecified temporary directory
                 and the provided :class:`.Core`'s path.
 
-            :class:`str`, :class:`bytes`, :class:`~os.PathLike`
-                Will use a :class:`.TempDirPathDriver` with the given path as the root directory
-                and the provided :class:`.Core`'s path.
-
             :class:`~collections.abc.Callable` (:class:`.Core`) -> :class:`.PathDriver` | :obj:`None`
                 One-argument function that accepts a :class:`.Core`
                 and returns a :class:`.PathDriver` or :obj:`None`.

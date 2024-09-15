@@ -22,7 +22,7 @@ class TempDirPathDriver(PathDriver):
     def __init__(
         self,
         corepath: str | bytes | PathLike | Core | None = None,
-        root: str | bytes | PathLike | None = None,
+        prefix: str | bytes = b"libretro.py-",
     ):
         """
         Initializes a new :py:class:`.TempDirPathDriver` and creates the necessary directories.
@@ -46,19 +46,10 @@ class TempDirPathDriver(PathDriver):
             :obj:`None`
                 ``RETRO_ENVIRONMENT_GET_LIBRETRO_PATH`` will be unavailable to cores.
 
-        :param root: The root directory in which to create the temporary directories.
-            May be one of the following:
-
-            :class:`str`, :class:`bytes`, :class:`~os.PathLike`
-                The path to the directory that will contain the other directories
-                defined by this driver.
-
-            :obj:`None`
-                Creates a temporary directory with a random name.
-
+        :param prefix: A prefix that will be applied to the temporary directory's name.
+            Can be a :class:`str` or :class:`bytes`.
 
         :raises TypeError: If any of the arguments are not of the specified types.
-        :raises FileExistsError: If the root directory already exists and is not empty.
         """
         self._libretro: bytes | None
         match corepath:
@@ -76,16 +67,15 @@ class TempDirPathDriver(PathDriver):
                 )
 
         self._root: TemporaryDirectory[bytes]
-        match root:
-            case str() | bytes() | PathLike():
-                self._root = TemporaryDirectory(dir=fsencode(root))
+        match prefix:
+            case str() | bytes():
+                self._root = TemporaryDirectory(prefix=fsencode(prefix))
             case None:
                 self._root = TemporaryDirectory(prefix=b"libretro.py-")
             case _:
-                raise TypeError(
-                    f"Expected root to be a str, bytes, PathLike, or None; got {root!r}"
-                )
+                raise TypeError(f"Expected prefix to be a str or bytes; got {prefix!r}")
 
+        self._root_path = self._root.name
         self._system_path = os.path.join(self._root.name, b"system")
         self._assets_path = os.path.join(self._root.name, b"assets")
         self._save_path = os.path.join(self._root.name, b"save")
@@ -101,7 +91,7 @@ class TempDirPathDriver(PathDriver):
         """
         Path to the root directory created by this driver.
         """
-        return self._root.name
+        return self._root_path
 
     @override
     @property
