@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Add `TempDirPathDriver`.
+
+### Changed
+
+- **BREAKING:** Rename `DefaultPathDriver` to `ExplicitPathDriver`.
+- Make `TempDirPathDriver` the default path driver used by `SessionBuilder`.
+
 ## [0.2.0] - 2024-09-12
 
 Thanks to @JSensebe for his contributions!
