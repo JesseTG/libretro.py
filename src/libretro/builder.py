@@ -27,7 +27,6 @@ from libretro.drivers import (
     CompositeEnvironmentDriver,
     ConstantPowerDriver,
     ContentDriver,
-    DefaultPathDriver,
     DefaultPerfDriver,
     DefaultTimingDriver,
     DefaultUserDriver,
@@ -57,6 +56,7 @@ from libretro.drivers import (
     PowerDriver,
     StandardContentDriver,
     StandardFileSystemInterface,
+    TempDirPathDriver,
     TimingDriver,
     UnformattedLogDriver,
     UserDriver,
@@ -76,11 +76,15 @@ class _DefaultType(Enum):
 
 
 DEFAULT = _DefaultType.DEFAULT
-Default = Literal[_DefaultType.DEFAULT]
 """
-A placeholder that indicates the default value for a SessionBuilder argument.
-When passed to a SessionBuilder method, the method will use the default value for that argument.
+A placeholder that indicates the default value for one of :obj:`SessionBuilder`'s arguments.
+When passed to one of :obj:`.SessionBuilder`'s ``with_`` methods,
+it will use the default driver or argument configuration
+unless otherwise noted.
 """
+
+Default: TypeAlias = Literal[_DefaultType.DEFAULT]
+
 
 T = TypeVar("T")
 
@@ -110,7 +114,9 @@ MessageDriverArg: TypeAlias = _OptionalArg[MessageInterface] | Logger
 OptionDriverArg: TypeAlias = (
     _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
 )
-PathDriverArg: TypeAlias = _OptionalArg[PathDriver] | str | PathLike
+PathDriverArg: TypeAlias = (
+    PathDriver | str | PathLike | Callable[[Core], PathDriver | None] | Default | None
+)
 LogDriverArg: TypeAlias = _OptionalArg[LogDriver] | Logger
 PerfDriverArg: TypeAlias = _OptionalArg[PerfDriver]
 LocationDriverArg: TypeAlias = _OptionalArg[LocationDriver] | LocationInputGenerator
@@ -146,7 +152,7 @@ class _SessionBuilderArgs(TypedDict):
     overscan: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
-    path: _OptionalFactory[PathDriver]
+    path: Callable[[Core], PathDriver | None]
     log: _OptionalFactory[LogDriver]
     perf: _OptionalFactory[PerfDriver]
     location: _OptionalFactory[LocationDriver]
@@ -195,7 +201,7 @@ class SessionBuilder:
             overscan=_nothing,
             message=_nothing,
             options=_nothing,
-            path=_nothing,
+            path=lambda _: None,
             log=_nothing,
             perf=_nothing,
             location=_nothing,
@@ -492,15 +498,44 @@ class SessionBuilder:
         return self
 
     def with_paths(self, path: PathDriverArg) -> Self:
+        """
+        Configures the path driver for this session.
+
+        :param path: May be one of the following:
+
+            :class:`.PathDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.TempDirPathDriver`
+                configured with an unspecified temporary directory
+                and the provided :class:`.Core`'s path.
+
+            :class:`str`, :class:`bytes`, :class:`~os.PathLike`
+                Will use a :class:`.TempDirPathDriver` with the given path as the root directory
+                and the provided :class:`.Core`'s path.
+
+            :class:`~collections.abc.Callable` (:class:`.Core`) -> :class:`.PathDriver` | :obj:`None`
+                One-argument function that accepts a :class:`.Core`
+                and returns a :class:`.PathDriver` or :obj:`None`.
+                Will be called in :meth:`build` with the configured :class:`.Core` as the argument.
+
+            :obj:`None`
+                All environment calls that :class:`.PathDriver` normally implements
+                will be unavailable to the loaded :class:`.Core`.
+
+        :return: This :class:`.SessionBuilder` object.
+        :raises TypeError: If ``path`` is not one of the aforementioned types.
+        """
         match path:
             case Callable() as func:
                 self._args["path"] = func
             case PathDriver():
-                self._args["path"] = lambda: path
+                self._args["path"] = lambda _: path
             case _DefaultType.DEFAULT:
-                self._args["path"] = DefaultPathDriver  # TODO: How to pass core path?
+                self._args["path"] = lambda core: TempDirPathDriver(core)
             case None:
-                self._args["path"] = _nothing
+                self._args["path"] = lambda _: None
             case _:
                 raise TypeError(
                     f"Expected PathDriver, a callable that returns one, DEFAULT, or None; got {type(path).__name__}"
@@ -805,7 +840,7 @@ class SessionBuilder:
             overscan=self._args["overscan"](),
             message=self._args["message"](),
             options=self._args["options"](),
-            path=self._args["path"](),
+            path=self._args["path"](core),
             log=self._args["log"](),
             perf=self._args["perf"](),
             location=self._args["location"](),
