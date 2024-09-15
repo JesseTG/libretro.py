@@ -114,9 +114,7 @@ MessageDriverArg: TypeAlias = _OptionalArg[MessageInterface] | Logger
 OptionDriverArg: TypeAlias = (
     _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
 )
-PathDriverArg: TypeAlias = (
-    PathDriver | str | PathLike | Callable[[Core], PathDriver | None] | Default | None
-)
+PathDriverArg: TypeAlias = PathDriver | Callable[[Core], PathDriver | None] | Default | None
 LogDriverArg: TypeAlias = _OptionalArg[LogDriver] | Logger
 PerfDriverArg: TypeAlias = _OptionalArg[PerfDriver]
 LocationDriverArg: TypeAlias = _OptionalArg[LocationDriver] | LocationInputGenerator
