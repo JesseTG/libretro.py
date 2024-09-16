@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING:** Rename `DefaultPathDriver` to `ExplicitPathDriver`.
 - Make `TempDirPathDriver` the default path driver used by `SessionBuilder`.
 
+### Fixed
+
+- Improved documentation for parts of `SessionBuilder` and `VideoDriver`
+
+### Removed
+
+- **BREAKING:** Remove `VideoDriverInitArgs`.
+
 ## [0.2.0] - 2024-09-12
 
 Thanks to @JSensebe for his contributions!
