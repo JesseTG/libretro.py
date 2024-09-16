@@ -18,7 +18,7 @@ def main(
     subsystem: SubsystemOption = None,
     content_paths: ContentArg = None,
     frames: FrameCountOption = 60,
-    options: CoreOptionsOption = _EMPTY,
+    options: CoreOptionsOption = (),
 ):
     """
     Loads a libretro core with zero or more content files
@@ -26,8 +26,6 @@ def main(
 
     Exits with 0 if no errors are raised during this time.
     """
-
-    assert _EMPTY == []
 
     content: Content | SubsystemContent | None
     match subsystem, content_paths:
