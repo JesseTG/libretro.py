@@ -470,6 +470,41 @@ class SessionBuilder:
         return self
 
     def with_options(self, options: OptionDriverArg) -> Self:
+        """
+        Configures the options driver for this session.
+
+        :param options: May be one of the following:
+
+            :class:`.OptionDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :class:`~collections.abc.Mapping` [:obj:`~typing.AnyStr`, :obj:`~typing.AnyStr`]
+                Will be used to initialize a :class:`.DictOptionDriver` with the provided options
+                and with API version 2.
+                All keys and values must be either :class:`str` or :class:`bytes`;
+                mixing the two is not allowed.
+
+            ``0``, ``1``, or ``2``
+                Will be used to initialize a :class:`.DictOptionDriver` with no initial options
+                using the provided API version.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DictOptionDriver` with API version 2
+                and no initial options.
+
+            :obj:`None`
+                All environment calls that :class:`.OptionDriver` normally implements
+                will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.OptionDriver` | :obj:`None`
+                Zero-argument function that returns an :class:`.OptionDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`.SessionBuilder` object.
+        :raises TypeError: If ``options`` is not one of the aforementioned types.
+        :raises ValueError: If ``options`` is a :class:`~collections.abc.Mapping` whose keys and values
+            are not all :class:`str` or :class:`bytes`.
+        """
         _types = (str, bytes)
         match options:
             case Callable() as func:
@@ -477,11 +512,17 @@ class SessionBuilder:
             case OptionDriver() as driver:
                 driver: OptionDriver
                 self._args["options"] = lambda: driver
-            case dict(vars) if all(
-                isinstance(k, _types) and isinstance(v, _types) for k, v in vars.items()
-            ):
-                vars: Mapping[AnyStr, AnyStr]
-                self._args["options"] = lambda: DictOptionDriver(2, True, vars)
+            case Mapping() as optionvars:
+                optionvars: Mapping[AnyStr, AnyStr]
+                all_str = all(
+                    isinstance(k, str) and isinstance(v, str) for k, v in optionvars.items()
+                )
+                all_bytes = all(
+                    isinstance(k, bytes) and isinstance(v, bytes) for k, v in optionvars.items()
+                )
+                if not (all_str or all_bytes):
+                    raise ValueError("All keys and values must be either str or bytes")
+                self._args["options"] = lambda: DictOptionDriver(2, True, optionvars)
             case 0 | 1 | 2 as version:
                 self._args["options"] = lambda: DictOptionDriver(version)
             case _DefaultType.DEFAULT:
@@ -490,7 +531,7 @@ class SessionBuilder:
                 self._args["options"] = _nothing
             case _:
                 raise TypeError(
-                    f"Expected OptionDriver, a dict, a callable that returns one, DEFAULT, or None; got {type(options).__name__}"
+                    f"Expected an OptionDriver, a Mapping, DEFAULT, an API version, or a Callable that returns an OptionDriver, or None; got {type(options).__name__}"
                 )
 
         return self
