@@ -376,20 +376,22 @@ class SessionBuilder:
         """
         Sets the video driver for this session.
 
-        The default video driver is a ``MultiVideoDriver`` that supports the following contexts:
+        :param video: The video driver to use for this session. May be one of the following:
 
-        - ``HardwareContext.NONE``: An ``ArrayVideoDriver``.
-        - ``HardwareContext.OPENGL``: A ``ModernGlVideoDriver`` if the ``moderngl`` package is installed,
-          absent if not.
+            :class:`.VideoDriver`
+                Used by the built :class:`.Session` as-is.
 
-        :param video: One of the following:
+            :const:`DEFAULT`
+                Uses a :class:`.MultiVideoDriver` with its default configuration.
+                See its documentation for more details.
 
-            - A ``VideoDriver`` that will be used as-is.
-            - A ``Callable`` that returns a ``VideoDriver``.
-            - A :class:`Callable` that returns a :class:`VideoDriver`.
-            - :py:const:`DEFAULT` to use the default video driver.
-            - :py:const:`None` to raise an error.
-        :return: This builder object.
+            :class:`~collections.abc.Callable` () -> :class:`.VideoDriver`
+                Zero-argument function that returns a :class:`.VideoDriver`.
+                Called in :meth:`build`.
+
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``video`` is not one of the aforementioned types.
         """
 
         match video:
