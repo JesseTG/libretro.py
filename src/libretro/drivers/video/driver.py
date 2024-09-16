@@ -20,13 +20,6 @@ class FrameBufferSpecial(Enum):
     HARDWARE = -1
 
 
-class VideoDriverInitArgs(TypedDict, total=False):
-    callback: retro_hw_render_callback
-    shared_context: bool
-    pixel_format: PixelFormat
-    av_info: retro_system_av_info
-
-
 class Screenshot(NamedTuple):
     data: memoryview
     width: int
@@ -265,7 +258,6 @@ class VideoDriver(Protocol):
 
 __all__ = [
     "VideoDriver",
-    "VideoDriverInitArgs",
     "FrameBufferSpecial",
     "Screenshot",
 ]

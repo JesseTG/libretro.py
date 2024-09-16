@@ -61,7 +61,6 @@ from libretro.drivers import (
     UnformattedLogDriver,
     UserDriver,
     VideoDriver,
-    VideoDriverInitArgs,
 )
 from libretro.session import Session
 
