@@ -36,6 +36,7 @@ class HardwareContext(IntEnum):
     D3D11 = RETRO_HW_CONTEXT_D3D11
     D3D10 = RETRO_HW_CONTEXT_D3D10
     D3D12 = RETRO_HW_CONTEXT_D3D12
+    D3D9 = RETRO_HW_CONTEXT_D3D9
 
     def __init__(self, value):
         self._type_ = "I"
