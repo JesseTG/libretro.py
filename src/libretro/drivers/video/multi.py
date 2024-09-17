@@ -17,7 +17,6 @@ from libretro.api.video import (
     retro_hw_render_callback,
     retro_hw_render_interface,
 )
-from libretro.error import UnsupportedEnvCall
 
 from .driver import FrameBufferSpecial, Screenshot, VideoDriver
 from .software import ArrayVideoDriver
