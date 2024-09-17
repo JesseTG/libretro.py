@@ -53,6 +53,8 @@ ContentArg = Annotated[
 SubsystemOption = Annotated[
     str | None,
     Option(
+        "--subsystem",
+        "-s",
         help="Identifier of the subsystem to use when loading the content. Error if not defined by the core.",
         metavar="IDENT",
     ),
