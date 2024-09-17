@@ -16,13 +16,11 @@ from libretro.api import (
     ThrottleMode,
     retro_device_power,
     retro_game_info,
-    retro_hw_render_callback,
     retro_throttle_state,
 )
 from libretro.core import Core
 from libretro.drivers import (
     ArrayAudioDriver,
-    ArrayVideoDriver,
     AudioDriver,
     CompositeEnvironmentDriver,
     ConstantPowerDriver,
@@ -32,6 +30,7 @@ from libretro.drivers import (
     DefaultUserDriver,
     DictLedDriver,
     DictOptionDriver,
+    DriverMap,
     FileSystemInterface,
     GeneratorInputDriver,
     GeneratorLocationDriver,
@@ -63,11 +62,6 @@ from libretro.drivers import (
     VideoDriver,
 )
 from libretro.session import Session
-
-try:
-    from libretro.drivers.video import ModernGlVideoDriver
-except ImportError:
-    ModernGlVideoDriver = None
 
 
 class _DefaultType(Enum):
@@ -103,7 +97,7 @@ InputDriverArg: TypeAlias = (
     | InputStateIterator
     | Default
 )
-VideoDriverArg: TypeAlias = _RequiredArg[VideoDriver] | Default
+VideoDriverArg: TypeAlias = _RequiredArg[VideoDriver] | DriverMap | Default
 ContentArg: TypeAlias = (
     Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
 )
@@ -384,6 +378,9 @@ class SessionBuilder:
                 Uses a :class:`.MultiVideoDriver` with its default configuration.
                 See its documentation for more details.
 
+            :class:`~collections.abc.Mapping` [:class:`.HardwareContext`, :class:`~collections.abc.Callable` () -> :class:`.VideoDriver`]
+                Uses a :class:`.MultiVideoDriver` with the provided driver map.
+
             :class:`~collections.abc.Callable` () -> :class:`.VideoDriver`
                 Zero-argument function that returns a :class:`.VideoDriver`.
                 Called in :meth:`build`.
@@ -391,6 +388,7 @@ class SessionBuilder:
 
         :return: This :class:`SessionBuilder` object.
         :raises TypeError: If ``video`` is not one of the aforementioned types.
+        :raises ValueError: If ``video`` does not contain a mapping for :attr:`.HardwareContext.NONE`.
         """
 
         match video:
@@ -399,20 +397,28 @@ class SessionBuilder:
             case VideoDriver():
                 self._args["video"] = lambda: video
             case _DefaultType.DEFAULT:
-                drivers: dict[HardwareContext, Callable[[], VideoDriver]] = dict()
-                drivers[HardwareContext.NONE] = ArrayVideoDriver
+                self._args["video"] = MultiVideoDriver
+            case Mapping():
+                if HardwareContext.NONE not in video:
+                    raise ValueError("A driver for HardwareContext.NONE is required")
 
-                if ModernGlVideoDriver:
-                    # If moderngl is installed...
-                    drivers[HardwareContext.OPENGL] = ModernGlVideoDriver
-                    drivers[HardwareContext.OPENGL_CORE] = ModernGlVideoDriver
+                if not all(isinstance(k, HardwareContext) for k in video.keys()):
+                    raise TypeError(
+                        "Each key in the provided driver map must be a HardwareContext"
+                    )
 
-                self._args["video"] = lambda: MultiVideoDriver(drivers)
+                if not all(callable(v) for v in video.values()):
+                    raise TypeError(
+                        "Each value in the provided driver map must be a callable that returns a VideoDriver"
+                    )
+
+                self._args["video"] = lambda: MultiVideoDriver(video)
+
             case None:
                 raise ValueError("A video driver is required")
             case _:
                 raise TypeError(
-                    f"Expected a VideoDriver, a callable that returns one, or DEFAULT; got {type(video).__name__}"
+                    f"Expected a VideoDriver, a callable that returns one, a map of HardwareContexts to Callables, or DEFAULT; got {type(video).__name__}"
                 )
 
         return self
