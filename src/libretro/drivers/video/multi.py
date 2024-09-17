@@ -155,7 +155,11 @@ class MultiVideoDriver(VideoDriver):
                 rotation = self._rotation
                 shared = self._shared_context
 
-            driver.pixel_format = pixel_format
+            try:
+                driver.pixel_format = pixel_format
+            except NotImplementedError:
+                self._pixel_format = PixelFormat.RGB1555
+
             try:
                 driver.rotation = rotation
             except NotImplementedError:
