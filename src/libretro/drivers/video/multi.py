@@ -383,8 +383,8 @@ class MultiVideoDriver(VideoDriver):
             self._current.shared_context = value
 
     @override
-    def screenshot(self) -> Screenshot | None:
-        return self._current.screenshot() if self._current else None
+    def screenshot(self, prerotate: bool = True) -> Screenshot | None:
+        return self._current.screenshot(prerotate) if self._current else None
 
 
 __all__ = [
