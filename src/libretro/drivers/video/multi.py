@@ -1,3 +1,9 @@
+"""
+Types for delegating to different :class:`.VideoDriver` implementations at runtime,
+depending on the player's preferences
+and available hardware resources.
+"""
+
 from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
 from types import MappingProxyType
@@ -54,10 +60,10 @@ They are as follows:
 @final
 class MultiVideoDriver(VideoDriver):
     """
-    A video driver that delegates to one of several possible video drivers,
+    A video driver that delegates to one of several possible :class:`.VideoDriver` s,
     depending on what the core or frontend requests.
 
-    This class is useful for a core that supports multiple hardware contexts,
+    This class is useful for a :class:`.Core` that supports multiple graphics APIs,
     especially if it can switch between them at runtime.
     """
 
@@ -67,20 +73,21 @@ class MultiVideoDriver(VideoDriver):
         preferred: HardwareContext = HardwareContext.NONE,
     ):
         """
-        Initializes a new multi-video driver with the preferred hardware context.
-        A hardware rendering context may be initialized,
-        but it will only be exposed to the cores that use ``EnvironmentCall.SET_HW_RENDER``.
+        Initializes a new multi-video driver with the preferred :class:`.HardwareContext`.
 
         :param drivers: A map of hardware context types to callables;
           each callable should accept a ``retro_hw_render_callback``
           and return a new video driver instance.
+          Defaults to :data:`DEFAULT_DRIVER_MAP`.
+
         :param preferred: The initial hardware context type to use.
+
         :raises TypeError: If any parameter is not consistent with its documented types.
-        :raises ValueError: If ``preferred`` does not exist in ``drivers``.
+        :raises ValueError: If ``drivers`` doesn't contain an entry for both ``preferred`` and :attr:`.HardwareContext.NONE`.
         """
         if not isinstance(drivers, Mapping):
             raise TypeError(
-                f"Expected a mapping of hardware contexts to callables, got {type(drivers).__name__}"
+                f"Expected drivers to be a Mapping[HardwareContext, () -> VideoDriver], got {type(drivers).__name__}"
             )
 
         if preferred not in HardwareContext:
@@ -118,11 +125,21 @@ class MultiVideoDriver(VideoDriver):
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
+        """
+        Delegates to the active video driver's :meth:`.VideoDriver.refresh` method.
+        """
+
         self._current.refresh(data, width, height, pitch)
 
     @property
     @override
     def needs_reinit(self) -> bool:
+        """
+        :obj:`True` if no underlying :class:`.VideoDriver` has been initialized,
+        a new graphics API has been requested with :meth:`~.MultiVideoDriver.set_context`,
+        or the active driver's :attr:`~.VideoDriver.needs_reinit` is :obj:`True`.
+        """
+
         if self._current is None:
             return True
 
@@ -133,6 +150,19 @@ class MultiVideoDriver(VideoDriver):
 
     @override
     def reinit(self) -> None:
+        """
+        Initializes a new :class:`.VideoDriver` instance based on the most recent graphics API request,
+        or reinitializes the current one if no new context has been requested.
+
+        If initializing a new :class:`.VideoDriver` then
+        its :attr:`~.VideoDriver.pixel_format`, :attr:`~.VideoDriver.system_av_info`,
+        :attr:`~.VideoDriver.rotation`, and :attr:`~.VideoDriver.shared_context`
+        are set to the values used by the existing driver (if any) where supported.
+
+        .. note::
+
+            Does not use :attr:`~.VideoDriver.preferred_context`.
+        """
         if self._current is not None and self._current.active_context == self._next_hw_context:
             # If we're not switching to a whole new video driver...
             self._current.reinit()  # ...then just let the driver reinit itself
@@ -233,7 +263,9 @@ class MultiVideoDriver(VideoDriver):
         self._callback = deepcopy(callback)
         self._callback.get_current_framebuffer = self._get_current_framebuffer
         self._callback.get_proc_address = self._get_proc_address
-        # TODO: What to do if requesting NONE explicitly?
+        # TODO: If requesting NONE explicitly, check _callback.cache_context;
+        # if true, keep using this hardware context for software rendering.
+        # If not, switch to whatever driver is registered for NONE.
 
         return deepcopy(self._callback)
 
