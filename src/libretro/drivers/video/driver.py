@@ -458,7 +458,7 @@ class VideoDriver(Protocol):
 
         :param prerotate:
             :obj:`True` if this method should rotate the output buffer's contents
-            according to :attr:`.VideoDriver.rotation`,
+            according to :attr:`~.VideoDriver.rotation`,
             :obj:`False` if it should be left to the frontend.
         """
         ...
