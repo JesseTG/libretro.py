@@ -158,12 +158,12 @@ class MultiVideoDriver(VideoDriver):
             driver.pixel_format = pixel_format
             try:
                 driver.rotation = rotation
-            except UnsupportedEnvCall:
+            except NotImplementedError:
                 self._rotation = Rotation.NONE
 
             try:
                 driver.shared_context = shared
-            except UnsupportedEnvCall:
+            except NotImplementedError:
                 self._shared_context = False
 
             old_driver = self._current
