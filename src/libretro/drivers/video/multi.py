@@ -1,5 +1,6 @@
 from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
+from types import MappingProxyType
 from typing import final
 
 from libretro._typing import override
@@ -19,8 +20,36 @@ from libretro.api.video import (
 from libretro.error import UnsupportedEnvCall
 
 from .driver import FrameBufferSpecial, Screenshot, VideoDriver
+from .software import ArrayVideoDriver
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
+
+_default_driver_map: dict[HardwareContext, Callable[[], VideoDriver]] = {
+    HardwareContext.NONE: ArrayVideoDriver
+}
+
+try:
+    from libretro.drivers.video.opengl import ModernGlVideoDriver
+
+    _default_driver_map[HardwareContext.OPENGL_CORE] = ModernGlVideoDriver
+    _default_driver_map[HardwareContext.OPENGL] = ModernGlVideoDriver
+except ImportError:
+    ModernGlVideoDriver = None
+
+DEFAULT_DRIVER_MAP: DriverMap = MappingProxyType(_default_driver_map)
+"""
+The default mapping from context types to :class:`.VideoDriver` constructors.
+Defaults may vary based on the platform and installed packages.
+They are as follows:
+
+:attr:`.HardwareContext.NONE`
+    Always available and mapped to :class:`.ArrayVideoDriver`.
+
+:attr:`~.HardwareContext.OPENGL_CORE`, :attr:`~.HardwareContext.OPENGL`
+    Mapped to :class:`.ModernGlVideoDriver` if :py:mod:`moderngl` is installed, absent if not.
+
+:class:`.VideoDriver` s for other graphics APIs have not yet been implemented.
+"""
 
 
 @final
@@ -33,7 +62,11 @@ class MultiVideoDriver(VideoDriver):
     especially if it can switch between them at runtime.
     """
 
-    def __init__(self, drivers: DriverMap, preferred: HardwareContext = HardwareContext.NONE):
+    def __init__(
+        self,
+        drivers: DriverMap = DEFAULT_DRIVER_MAP,
+        preferred: HardwareContext = HardwareContext.NONE,
+    ):
         """
         Initializes a new multi-video driver with the preferred hardware context.
         A hardware rendering context may be initialized,
@@ -353,4 +386,5 @@ class MultiVideoDriver(VideoDriver):
 __all__ = [
     "MultiVideoDriver",
     "DriverMap",
+    "DEFAULT_DRIVER_MAP",
 ]
