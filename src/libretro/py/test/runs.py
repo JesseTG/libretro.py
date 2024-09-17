@@ -4,6 +4,7 @@ from libretro import (
     DEFAULT_DRIVER_MAP,
     Content,
     HardwareContext,
+    ModernGlVideoDriver,
     SessionBuilder,
     SubsystemContent,
 )
@@ -56,6 +57,11 @@ def main(
     )
 
     driver_map = dict(DEFAULT_DRIVER_MAP)
+    if windowed and HardwareContext.OPENGL in driver_map:
+        init_with_window = lambda: ModernGlVideoDriver(window="default")
+        driver_map[HardwareContext.OPENGL] = init_with_window
+        driver_map[HardwareContext.OPENGL_CORE] = init_with_window
+
     match software_video:
         case SoftwareVideoDriverType.OPENGL:
             driver_map[HardwareContext.NONE] = driver_map[HardwareContext.OPENGL]
