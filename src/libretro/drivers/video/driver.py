@@ -1,11 +1,11 @@
 """
-Types and classes for defining how a core renders its graphics.
+Types and classes for defining how a core renders graphics.
 """
 
 from abc import abstractmethod
 from collections.abc import Set
 from enum import Enum
-from typing import NamedTuple, Protocol, TypedDict, runtime_checkable
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (
@@ -81,7 +81,7 @@ class VideoDriver(Protocol):
     def needs_reinit(self) -> bool:
         """
         :obj:`True` if this video driver needs to be reinitialized,
-        either because the core requested it or because of internal changes.
+        usually because of core-requested state changes.
         Can also indicate that the driver hasn't yet been initialized at all.
 
         .. warning::
@@ -197,17 +197,18 @@ class VideoDriver(Protocol):
         """
         Requests the use of a particular graphics context,
         including :attr:`.HardwareContext.NONE` to revert to software rendering.
+        The driver won't be reinitialized until the next call to :meth:`.reinit`.
 
-        May not reset the video driver immediately;
-        may wait until the frame is finished before doing so.
+        :param callback: A :class:`.retro_hw_render_callback` with the context parameters
+            requested by the core,
+            plus callbacks to run at certain points in the context's lifecycle.
 
-        :param callback: TODO
+        :return: If ``callback`` is accepted,
+          a new :class:`.retro_hw_render_callback` with values and pointers
+          that the core can use to interact with the hardware context.
+          Otherwise, :obj:`None`.
 
         :raises TypeError: If ``callback`` is not a :class:`.retro_hw_render_callback`.
-        :return: If the request in ``callback`` is accepted, a new ``retro_hw_render_callback``
-          with values and pointers that the core can use to interact with the hardware context.
-          Otherwise, ``None``.
-
 
         .. note::
 
@@ -217,22 +218,61 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def current_framebuffer(self) -> int | None: ...
+    def current_framebuffer(self) -> int | None:
+        """
+        The current framebuffer for the active graphics context.
+        The core should use this framebuffer when rendering to the screen.
+        Software-rendered graphics will be drawn to this framebuffer.
+
+        :return: An integer identifier for the current framebuffer,
+            or :obj:`None` if the driver doesn't support or need this feature.
+
+        .. note::
+
+            Corresponds to :attr:`.retro_hw_render_callback.get_current_framebuffer`.
+
+            This property is generally only used by OpenGL and OpenGL ES,
+            but it's part of the general :class:`.retro_hw_render_callback` structure
+            for historical reasons.
+        """
+        ...
 
     @abstractmethod
-    def get_proc_address(self, sym: bytes) -> int | None: ...
+    def get_proc_address(self, sym: bytes) -> int | None:
+        """
+        Returns the address of the graphics API function with the given name.
+
+        :param sym: The name of the function to look up.
+        :return: The address of the function if found, :obj:`None` otherwise.
+            Will also return :obj:`None` if the driver doesn't support or need this feature.
+        :raises TypeError: If ``sym`` is not a :class:`bytes`.
+
+        .. note::
+
+            Corresponds to :attr:`.retro_hw_render_callback.get_proc_address`.
+
+            This property is generally only used by OpenGL and OpenGL ES,
+            but it's part of the general :class:`.retro_hw_render_callback` structure
+            for historical reasons.
+        """
+        ...
 
     @property
     @abstractmethod
     def rotation(self) -> Rotation:
         """
-        Get the rotation of the video output.
+        The angle by which the output should be rotated,
+        in increments of 90 degrees.
 
         If the video driver doesn't support rotation,
-        then this property should return ``Rotation.NONE``.
+        then this property will always return :attr:`.Rotation.NONE`.
 
-        :raise UnsupportedEnvCall: If setting a rotation
-          and this driver doesn't support ``EnvironmentCall.SET_ROTATION``.
+        :raise NotImplementedError: If setting or deleting this property
+          on a :class:`.VideoDriver` that doesn't support doing so.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_ROTATION``.
         """
         ...
 
@@ -246,9 +286,17 @@ class VideoDriver(Protocol):
         """
         Whether the frontend can re-render the previous frame.
 
-        :raises UnsupportedEnvCall: If this driver doesn't support ``EnvironmentCall.CAN_DUPE``.
-        :raises NotImplementedError: If attempting to set or delete a value
-          and the driver doesn't support doing so.
+        :obj:`True` if frame duping is supported,
+        :obj:`False` if not.
+
+        If :obj:`None`, then ``RETRO_ENVIRONMENT_GET_CAN_DUPE`` is unavailable to cores.
+
+        :raise NotImplementedError: If setting or deleting this property
+          on a :class:`.VideoDriver` that doesn't support doing so.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_GET_CAN_DUPE``.
         """
         ...
 
@@ -264,10 +312,17 @@ class VideoDriver(Protocol):
     @abstractmethod
     def pixel_format(self) -> PixelFormat:
         """
-        The pixel format that this driver uses for the frame buffer.
+        The pixel format that this driver uses for its frame buffer.
+        If a driver doesn't support setting the pixel format,
+        then this property will always return :attr:`.PixelFormat.RGB1555`.
 
-        :raise ValueError: If trying to set an invalid ``PixelFormat``.
-        :raise UnsupportedEnvCall: If this driver doesn't support ``EnvironmentCall.SET_PIXEL_FORMAT``.
+        :raise TypeError: If trying to set a value that isn't a :class:`.PixelFormat`.
+        :raise NotImplementedError: If setting this property
+            on a driver that doesn't support :attr:`.EnvironmentCall.SET_PIXEL_FORMAT`.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_PIXEL_FORMAT``.
         """
         ...
 
@@ -280,11 +335,19 @@ class VideoDriver(Protocol):
     def system_av_info(self) -> retro_system_av_info | None:
         """
         The system AV info for the current session.
-        Initialized from retro_get_system_av_info,
-        but can be updated by the core at any time
-        using ``RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO``.
-        When that happens, the audio and video drivers
-        must be reinitialized immediately.
+        May be :obj:`None` if not yet set.
+
+        Initialized from :meth:`.Core.get_system_av_info` some time after this driver is created.
+        After being set, this video driver is immediately reinitialized if necessary.
+
+        :raise TypeError: If trying to set a value that isn't a :class:`.retro_system_av_info`.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO``.
+
+            The getter will return a copy of the driver's :class:`.retro_system_av_info` object
+            to avoid accidental modification of the original.
         """
         ...
 
@@ -294,7 +357,29 @@ class VideoDriver(Protocol):
 
     @property
     @abstractmethod
-    def geometry(self) -> retro_game_geometry | None: ...
+    def geometry(self) -> retro_game_geometry | None:
+        """
+        The active screen geometry.
+        May be :obj:`None` if :attr:`~.VideoDriver.system_av_info` hasn't been set yet.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_GEOMETRY``.
+
+            The getter will return a copy of the driver's :class:`.retro_game_geometry` object
+            to avoid accidental modification of the original.
+
+        .. caution::
+
+            When setting this property, this driver's values of
+            :attr:`.retro_game_geometry.max_width` and :attr:`.retro_game_geometry.max_height`
+            are **not** updated.
+
+            libretro.h guarantees that ``RETRO_ENVIRONMENT_SET_GEOMETRY`` will complete in constant time
+            without needing to reinitialize the driver;
+            this may not be possible if the driver's framebuffer needs to be reallocated.
+        """
+        ...
 
     @geometry.setter
     @abstractmethod
@@ -303,15 +388,60 @@ class VideoDriver(Protocol):
     @abstractmethod
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
-    ) -> retro_framebuffer | None: ...
+    ) -> retro_framebuffer | None:
+        """
+        Returns a framebuffer of the given size,
+        usually (but not necessarily) mapped directly into GPU memory.
+        Can be used to accelerate software rendering,
+        as data doesn't need to be copied between the core and the GPU.
+
+        :param width: The width of the framebuffer, in pixels.
+        :param height: The height of the framebuffer, in pixels.
+        :param flags: Flags that describe how the core will access the framebuffer.
+
+        :return: A :class:`.retro_framebuffer` object with the requested properties,
+            or :obj:`None` if not supported by this :class:`.VideoDriver`.
+
+        :raises ValueError: If the framebuffer's width or height is less than 1.
+        :raises TypeError: If any parameter's type is not consistent with this method's signature.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER``.
+        """
+        ...
 
     @property
     @abstractmethod
-    def hw_render_interface(self) -> retro_hw_render_interface | None: ...
+    def hw_render_interface(self) -> retro_hw_render_interface | None:
+        """
+        Returns a :class:`.retro_hw_render_interface` subclass that can be used
+        for rendering operations specific to this :class:`.VideoDriver`.
+
+        Will be :obj:`None` if not supported or needed by this driver.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE``.
+        """
+        ...
 
     @property
     @abstractmethod
-    def shared_context(self) -> bool: ...
+    def shared_context(self) -> bool:
+        """
+        Whether to create a shared hardware context.
+        Takes effect the next time the driver is reinitialized.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT``.
+
+            This property is generally only used by OpenGL and OpenGL ES,
+            but it has its own environment call
+            for historical reasons.
+        """
+        ...
 
     @shared_context.setter
     @abstractmethod
@@ -326,10 +456,10 @@ class VideoDriver(Protocol):
 
         This should account for rotation, geometry dimensions, and aspect ratio.
 
-        :param prerotate: ``True`` if this method should rotate the output buffer
-                          according to the _rotation field,
-                          ``False`` if it should be left to the frontend.
-
+        :param prerotate:
+            :obj:`True` if this method should rotate the output buffer's contents
+            according to :attr:`.VideoDriver.rotation`,
+            :obj:`False` if it should be left to the frontend.
         """
         ...
 
