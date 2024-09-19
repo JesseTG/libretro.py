@@ -116,7 +116,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def shared_context(self, value: bool) -> None:
         # Software-rendered drivers don't need any hardware context
-        raise UnsupportedEnvCall("Shared context is not supported")
+        raise NotImplementedError("Shared context is not supported")
 
 
 __all__ = ["SoftwareVideoDriver"]
