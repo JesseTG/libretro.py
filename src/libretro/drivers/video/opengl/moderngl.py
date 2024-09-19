@@ -23,7 +23,10 @@ from moderngl import (
     Buffer,
     Context,
     Framebuffer,
+    Program,
+    Query,
     Renderbuffer,
+    Sampler,
     Texture,
     VertexArray,
     create_context,
@@ -72,6 +75,9 @@ _DEFAULT_WINDOW_IMPL = "pyglet"
 _IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
 
 GL_RGBA = 0x1908
+ModernGlResource = (
+    Buffer | Program | VertexArray | Query | Sampler | Texture | Renderbuffer | Framebuffer
+)
 
 
 def _create_orthogonal_projection(
@@ -434,12 +440,9 @@ class ModernGlVideoDriver(VideoDriver):
         )
         # TODO: Make the particular names configurable
 
-        if self._has_debug:
-            GL.glObjectLabel(
-                GL.GL_PROGRAM, self._shader_program.glo, -1, b"libretro.py Shader Program"
-            )
-            GL.glObjectLabel(GL.GL_BUFFER, self._vbo.glo, -1, b"libretro.py Screen VBO")
-            GL.glObjectLabel(GL.GL_VERTEX_ARRAY, self._vao.glo, -1, b"libretro.py Screen VAO")
+        self.__object_label(self._shader_program, b"libretro.py Shader Program")
+        self.__object_label(self._vbo, b"libretro.py Screen VBO")
+        self.__object_label(self._vao, b"libretro.py Screen VAO")
 
         # TODO: Honor debug_context; enable debugging features if requested
         if self._callback is not None and context_type != HardwareContext.NONE:
@@ -639,14 +642,9 @@ class ModernGlVideoDriver(VideoDriver):
         # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
         self._fbo = self._context.framebuffer(self._color, self._depth)
 
-        if self._has_debug:
-            GL.glObjectLabel(
-                GL.GL_TEXTURE, self._color.glo, -1, b"libretro.py Main FBO Color Attachment"
-            )
-            GL.glObjectLabel(
-                GL.GL_RENDERBUFFER, self._depth.glo, -1, b"libretro.py Main FBO Depth Attachment"
-            )
-            GL.glObjectLabel(GL.GL_FRAMEBUFFER, self._fbo.glo, -1, b"libretro.py Main FBO")
+        self.__object_label(self._color, b"libretro.py Main FBO Color Attachment")
+        self.__object_label(self._depth, b"libretro.py Main FBO Depth Attachment")
+        self.__object_label(self._fbo, b"libretro.py Main FBO")
 
         self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
         self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
@@ -682,26 +680,14 @@ class ModernGlVideoDriver(VideoDriver):
         )
         self._hw_render_fbo.clear()
 
-        if self._has_debug:
-            GL.glObjectLabel(
-                GL.GL_FRAMEBUFFER,
-                self._hw_render_fbo.glo,
-                -1,
-                b"libretro.py Hardware Rendering FBO",
+        self.__object_label(self._hw_render_fbo, b"libretro.py Hardware Rendering FBO")
+        self.__object_label(
+            self._hw_render_color, b"libretro.py Hardware Rendering FBO Color Attachment"
+        )
+        if self._hw_render_depth:
+            self.__object_label(
+                self._hw_render_depth, b"libretro.py Hardware Rendering FBO Depth Attachment"
             )
-            GL.glObjectLabel(
-                GL.GL_TEXTURE,
-                self._hw_render_color.glo,
-                -1,
-                b"libretro.py Hardware Rendering FBO Color Attachment",
-            )
-            if self._hw_render_depth:
-                GL.glObjectLabel(
-                    GL.GL_RENDERBUFFER,
-                    self._hw_render_depth.glo,
-                    -1,
-                    b"libretro.py Hardware Rendering FBO Depth Attachment",
-                )
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
         if self._cpu_color and self._cpu_color.size == (width, height):
@@ -728,10 +714,34 @@ class ModernGlVideoDriver(VideoDriver):
                     )
                     # moderngl can't natively express GL_RGB5
 
-            if self._has_debug:
-                GL.glObjectLabel(
-                    GL.GL_TEXTURE, self._cpu_color.glo, -1, b"libretro.py CPU-Rendered Frame"
-                )
+            self.__object_label(self._cpu_color, b"libretro.py CPU-Rendered Frame")
+
+    def __object_label(self, obj: ModernGlResource, label: bytes):
+        if not self._has_debug:
+            return
+
+        gltype: int
+        match obj:
+            case Buffer():
+                gltype = GL.GL_BUFFER
+            case Program():
+                gltype = GL.GL_PROGRAM
+            case VertexArray():
+                gltype = GL.GL_VERTEX_ARRAY
+            case Query():
+                gltype = GL.GL_QUERY
+            case Sampler():
+                gltype = GL.GL_SAMPLER
+            case Texture():
+                gltype = GL.GL_TEXTURE
+            case Renderbuffer():
+                gltype = GL.GL_RENDERBUFFER
+            case Framebuffer():
+                gltype = GL.GL_FRAMEBUFFER
+            case _:
+                raise TypeError(f"Unsupported object type: {type(obj).__name__}")
+
+        GL.glObjectLabel(gltype, obj.glo, -1, label)
 
 
 __all__ = ["ModernGlVideoDriver"]
