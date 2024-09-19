@@ -314,7 +314,6 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program["mvp"].write(matrix)
 
         self._fbo.use()
-        self._context.clear(1, 0, 0, 1)
         self._color.use(1)
 
         self._vao.render(moderngl.TRIANGLE_STRIP)
