@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `TempDirPathDriver`.
 - Added various runnable scripts for test purposes.
+- Add a new guide for taking a capture with RenderDoc.
 
 ### Changed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Improved documentation for parts of `SessionBuilder` and `VideoDriver`
+- Removed a `glClear` call in `ModernGlVideoDriver` that was left in by accident.
 
 ### Removed
 
