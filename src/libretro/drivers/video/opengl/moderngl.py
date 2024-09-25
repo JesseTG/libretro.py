@@ -138,7 +138,7 @@ def _debug_source(source: int) -> str:
         case GL.GL_DEBUG_SOURCE_OTHER:
             return "OTHER"
         case _:
-            return f"<unknown({type})>"
+            return f"<unknown({source})>"
 
 
 def _debug_type(type: int) -> str:
