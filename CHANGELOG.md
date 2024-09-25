@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `TempDirPathDriver`.
 - Added various runnable scripts for test purposes.
 - Add a new guide for taking a capture with RenderDoc.
+- Add labels to OpenGL objects created by `ModernGlVideoDriver`.
+- Add debug groups to important methods within `ModernGlVideoDriver`.
 
 ### Changed
 
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved documentation for parts of `SessionBuilder` and `VideoDriver`
 - Removed a `glClear` call in `ModernGlVideoDriver` that was left in by accident.
+- Clear the `glGetError` queue at various places in `ModernGlVideoDriver`
+  to prevent PyOpenGL from misreporting errors that came from moderngl or the loaded core.
 
 ### Removed
 
