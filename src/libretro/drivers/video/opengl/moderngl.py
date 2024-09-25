@@ -1,7 +1,7 @@
 import struct
 import warnings
 from array import array
-from collections.abc import Callable, Sequence, Set
+from collections.abc import Callable, Iterator, Sequence, Set
 from contextlib import contextmanager
 from copy import deepcopy
 from importlib import resources
@@ -9,6 +9,7 @@ from sys import modules
 from typing import final
 
 import moderngl
+from OpenGL import GL
 
 try:
     import moderngl_window
@@ -32,7 +33,6 @@ from moderngl import (
     VertexArray,
     create_context,
 )
-from OpenGL import GL
 
 from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
@@ -123,68 +123,27 @@ def _create_orthogonal_projection(
     )
 
 
-def _debug_source(source: int) -> str:
-    match source:
-        case GL.GL_DEBUG_SOURCE_API:
-            return "API"
-        case GL.GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-            return "WINDOW_SYSTEM"
-        case GL.GL_DEBUG_SOURCE_SHADER_COMPILER:
-            return "SHADER_COMPILER"
-        case GL.GL_DEBUG_SOURCE_THIRD_PARTY:
-            return "THIRD_PARTY"
-        case GL.GL_DEBUG_SOURCE_APPLICATION:
-            return "APPLICATION"
-        case GL.GL_DEBUG_SOURCE_OTHER:
-            return "OTHER"
-        case _:
-            return f"<unknown({source})>"
+def _extract_gl_errors() -> Iterator[int]:
+    # glGetError does _not_ return the most error;
+    # it turns out OpenGL maintains a queue of errors,
+    # and glGetError pops the most recent one.
+    err: int
+    while (err := GL.glGetError()) != GL.GL_NO_ERROR:
+        yield err
 
 
-def _debug_type(type: int) -> str:
-    match type:
-        case GL.GL_DEBUG_TYPE_ERROR:
-            return "ERROR"
-        case GL.GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-            return "DEPRECATED_BEHAVIOR"
-        case GL.GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-            return "UNDEFINED_BEHAVIOR"
-        case GL.GL_DEBUG_TYPE_PORTABILITY:
-            return "PORTABILITY"
-        case GL.GL_DEBUG_TYPE_PERFORMANCE:
-            return "PERFORMANCE"
-        case GL.GL_DEBUG_TYPE_OTHER:
-            return "OTHER"
-        case GL.GL_DEBUG_TYPE_MARKER:
-            return "MARKER"
-        case GL.GL_DEBUG_TYPE_PUSH_GROUP:
-            return "PUSH_GROUP"
-        case GL.GL_DEBUG_TYPE_POP_GROUP:
-            return "POP_GROUP"
-        case _:
-            return f"<unknown({type})>"
+def _warn_unhandled_gl_errors():
+    # Should be called as soon as possible after entering Python from the core;
+    # unhandled OpenGL errors from the core must not hamper the frontend.
+    unhandled_errors = tuple(_extract_gl_errors())
+    if unhandled_errors:
+        error_string = ", ".join(f"0x{e:X}" for e in unhandled_errors)
+        warnings.warn(f"Core did not handle the following OpenGL errors: {error_string}")
 
 
-def _debug_severity(severity: int) -> str:
-    match severity:
-        case GL.GL_DEBUG_SEVERITY_HIGH:
-            return "HIGH"
-        case GL.GL_DEBUG_SEVERITY_MEDIUM:
-            return "MEDIUM"
-        case GL.GL_DEBUG_SEVERITY_LOW:
-            return "LOW"
-        case GL.GL_DEBUG_SEVERITY_NOTIFICATION:
-            return "NOTIFICATION"
-        case _:
-            return f"<unknown({severity})>"
-
-
-def _debug_message_callback(
-    source: int, type: int, id: int, severity: int, length: int, message: bytes, userParam: int
-):
-    print(
-        f"GL_CALLBACK({_debug_source(source)}, {_debug_type(type)}, {_debug_severity(severity)}, {id}): {message!r}"
-    )
+def _clear_gl_errors():
+    for i in _extract_gl_errors():
+        pass
 
 
 @final
@@ -195,6 +154,9 @@ class ModernGlVideoDriver(VideoDriver):
         fragment_shader: str | None = None,
         varyings: Sequence[str] = ("transformedTexCoord",),
         window: str | None = None,
+        # TODO: Add ability to configure the OpenGL message callback
+        # TODO: Add ability to configure the OpenGL debug group
+        # TODO: Add ability to force an OpenGL version
     ):
         """
         Initializes the video driver.
@@ -285,7 +247,6 @@ class ModernGlVideoDriver(VideoDriver):
         self.__gl_push_debug_group: Callable[[int, int, int, bytes], None] | None = None
         self.__gl_pop_debug_group: Callable[[], None] | None = None
         self.__gl_object_label: Callable[[int, int, int, bytes], None] | None = None
-        self._debug_callback: GL.GLDEBUGPROC | None = None
 
     def __del__(self):
         if self._cpu_color:
@@ -366,6 +327,8 @@ class ModernGlVideoDriver(VideoDriver):
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
+        _clear_gl_errors()
+
         with self.__debug_group(b"libretro.ModernGlVideoDriver.refresh"):
             match data:
                 case FrameBufferSpecial.DUPE:
@@ -426,10 +389,13 @@ class ModernGlVideoDriver(VideoDriver):
 
         # TODO: Honor cache_context; try to avoid reinitializing the context
         if self._context:
+            _clear_gl_errors()
             if self._callback and self._callback.context_destroy:
                 # If the core wants to clean up before the context is destroyed...
                 with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit.context_destroy"):
                     self._callback.context_destroy()
+
+            _warn_unhandled_gl_errors()
 
             if self._window:
                 self._window.destroy()
@@ -496,27 +462,26 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
+        _clear_gl_errors()
         if self._context.version_code >= 430:
             self.__gl_push_debug_group = GL.glPushDebugGroup
             self.__gl_pop_debug_group = GL.glPopDebugGroup
             self.__gl_object_label = GL.glObjectLabel
-            GL.glEnable(GL.GL_DEBUG_OUTPUT)
-            GL.glEnable(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS)
-            self._debug_callback = GL.GLDEBUGPROC(_debug_message_callback)
-            # GL.glDebugMessageCallback(self._debug_callback, None)
-        elif "GL_KHR_debug" in self._context.extensions:
+            self._context.enable_direct(GL.GL_DEBUG_OUTPUT)
+            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS)
+        elif "GL_KHR_debug" in self._context.extensions and GL.glPushDebugGroupKHR:
             self.__gl_push_debug_group = GL.glPushDebugGroupKHR
             self.__gl_pop_debug_group = GL.glPopDebugGroupKHR
             self.__gl_object_label = GL.glObjectLabelKHR
-            GL.glEnable(GL.GL_DEBUG_OUTPUT_KHR)
-            GL.glEnable(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
-            self._debug_callback = GL.GLDEBUGPROCKHR(_debug_message_callback)
-            # GL.glDebugMessageCallbackKHR(self._debug_callback, None)
+            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_KHR)
+            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
+            # TODO: Contribute this stuff to moderngl
         else:
             self.__gl_push_debug_group = None
             self.__gl_pop_debug_group = None
             self.__gl_object_label = None
 
+        _clear_gl_errors()
         with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit"):
             self._context.gc_mode = "auto"
             self.__init_fbo()
@@ -551,8 +516,11 @@ class ModernGlVideoDriver(VideoDriver):
 
                 if self._callback.context_reset:
                     # If the core wants to set up resources after the context is created...
+                    _clear_gl_errors()
                     with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit.context_reset"):
                         self._callback.context_reset()
+
+                    _warn_unhandled_gl_errors()
 
     @override
     @property
@@ -648,6 +616,7 @@ class ModernGlVideoDriver(VideoDriver):
         if self._system_av_info is None:
             return None
 
+        _clear_gl_errors()
         with self.__debug_group(b"libretro.ModernGlVideoDriver.screenshot"):
             size = (self._last_width, self._last_height)
             if self._window:
@@ -658,6 +627,7 @@ class ModernGlVideoDriver(VideoDriver):
             if frame is None:
                 return None
 
+            _clear_gl_errors()
             if not self._callback or not self._callback.bottom_left_origin:
                 # If we're using software rendering or the origin is at the bottom-left...
                 bytes_per_row = self._last_width * self._pixel_format.bytes_per_pixel
@@ -755,6 +725,8 @@ class ModernGlVideoDriver(VideoDriver):
             self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
             self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
             self._fbo.clear()
+
+        _clear_gl_errors()
 
     def __init_hw_render(self):
         with self.__debug_group(b"libretro.ModernGlVideoDriver.__init_hw_render"):
