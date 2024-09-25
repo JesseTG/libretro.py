@@ -72,12 +72,15 @@ class DictOptionDriver(OptionDriver):
             value = self._variables[key]
         else:
             # Otherwise get the default value and save it to the dict
-            value = string_at(self._options_us[key].default_value)
+            value = self._options_us[key].default_value
+            value = string_at(value) if value is not None else None
             self._variables[key] = value
+            return value
 
         if value not in (string_at(v.value) for v in self._options_us[key].values if v.value):
             # For invalid values, return None
-            return string_at(self._options_us[key].default_value)
+            value = self._options_us[key].default_value
+            return string_at(value) if value is not None else None
 
         return self._variables[key]
 
