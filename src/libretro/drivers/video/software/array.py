@@ -4,6 +4,8 @@ from copy import deepcopy
 from typing import final
 from warnings import warn
 
+import numpy as np
+
 from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import MemoryAccess, PixelFormat, Rotation, retro_framebuffer
@@ -23,13 +25,17 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         self._last_height: int | None = None
         self._last_pitch: int | None = None
 
+        # Preallocate buffers
+        self.screen_out = None
+        self.pixel_buf = np.array([0, 0, 0, 255], dtype=np.uint8)
+
     @override
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
         match data:
             case memoryview():
-                if len(data) > len(self._frame):
+                if self._frame is None or len(data) > len(self._frame):
                     # Reallocate frame buffer
                     self._frame = array("B", itertools.repeat(0, len(data)))
                 frameview = memoryview(self._frame)
@@ -60,6 +66,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         geometry = self._system_av_info.geometry
         bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
         self._frame = array("B", itertools.repeat(0, bufsize))
+        self.screen_out = np.zeros((self._last_height or 0, self._last_width or 0, 4), dtype=np.uint8)
 
     @property
     @override
@@ -94,6 +101,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         if self._pixel_format != format:
             # If the pixel format has changed, recreate the frame buffer
             self._frame = None
+            self.screen_out = None
 
         self._pixel_format = format
 
@@ -103,96 +111,56 @@ class ArrayVideoDriver(SoftwareVideoDriver):
             return None
 
         last_frame_length = self._last_pitch * self._last_height
-        screen = self._frame[:last_frame_length]
-        screen_out = bytearray(self._last_width * self._last_height * 4)
-        pixel_buf = array("B", (0, 0, 0, 255))
+        screen = np.frombuffer(self._frame, dtype=np.uint8, count=last_frame_length).reshape((self._last_height, self._last_width, -1))
 
-        rot = self._rotation if prerotate else Rotation.NONE
+        # Perform rotation if needed
+        if prerotate and self._rotation != Rotation.NONE:
+            k = self._rotation.value // 90
+            screen = np.rot90(screen, k=k)
 
-        # Select rotation coefficients
-        # NOTE: output buffer is assumed to be four bytes per pixel (ABGR)
-        match rot:
-            case Rotation.NONE:
-                start_y = 0
-                delta_x = 4
-                delta_y = self._last_width * 4
-                is_sideways = False
-            case Rotation.NINETY:
-                start_y = (self._last_width - 4) * self._last_height * 4
-                delta_x = self._last_height * -4
-                delta_y = 4
-                is_sideways = True
-            case Rotation.ONE_EIGHTY:
-                start_y = self._last_width * self._last_height * 4 - 4
-                delta_x = -4
-                delta_y = self._last_width * -4
-                is_sideways = False
-            case Rotation.TWO_SEVENTY:
-                start_y = self._last_height * 4 - 4
-                delta_x = self._last_height * 4
-                delta_y = -4
-                is_sideways = True
+        # Pixel format conversion
+        match self._pixel_format:
+            case PixelFormat.XRGB8888:
+                # Convert XRGB8888 to RGBA
+                screen_out = screen[:, :, [2, 1, 0, 3]]
+            case PixelFormat.RGB565:
+                # Convert RGB565 to RGBA
+                r = ((screen[:, :, 1] & 0xF8)).astype(np.uint8)
+                g = (((screen[:, :, 0] & 0xE0) >> 3) | ((screen[:, :, 1] & 0x07) << 5)).astype(np.uint8)
+                b = ((screen[:, :, 0] & 0x1F) << 3).astype(np.uint8)
+                a = np.full_like(r, 255, dtype=np.uint8)
+                screen_out = np.stack((r, g, b, a), axis=-1)
+            case PixelFormat.RGB1555:
+                # Convert RGB1555 to RGBA
+                r = ((screen[:, :, 1] & 0xF8) | (screen[:, :, 1] >> 5)).astype(np.uint8)
+                g = (((screen[:, :, 0] & 0xE0) >> 2) | ((screen[:, :, 0] & 0x03) << 6)).astype(np.uint8)
+                b = ((screen[:, :, 0] & 0x1F) << 3 | (screen[:, :, 0] >> 5)).astype(np.uint8)
+                a = np.full_like(r, 255, dtype=np.uint8)
+                screen_out = np.stack((r, g, b, a), axis=-1)
+            case _:
+                raise ValueError(f"Unsupported pixel format: {self._pixel_format}")
 
-        # Copy from input buffer to output buffer, converting the pixel format
-        #   and taking into account rotation (if prerotate is True).
-        if self._pixel_format == PixelFormat.XRGB8888:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
-                o = start_y + y * delta_y
-                for x in range(self._last_width):
-                    next_i = i + 3
-                    pixel_buf[2::-1] = screen[i:next_i]
-                    screen_out[o : o + 4] = pixel_buf
-                    i = next_i + 1
-                    o += delta_x
-        elif self._pixel_format == PixelFormat.RGB565:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
-                o = start_y + y * delta_y
-                for x in range(self._last_width):
-                    next_i = i + 2
-                    b, r = screen[i:next_i]
-                    g = ((b & 0xE0) >> 3) | ((r & 0x07) << 5)
-                    b = (b & 0x1F) << 3
-                    pixel_buf[0] = (r & 0xF8) | (r >> 5)
-                    pixel_buf[1] = g | (g >> 6)
-                    pixel_buf[2] = b | (b >> 5)
-                    screen_out[o : o + 4] = pixel_buf
-                    i = next_i
-                    o += delta_x
-        elif self._pixel_format == PixelFormat.RGB1555:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
-                o = start_y + y * delta_y
-                for x in range(self._last_width):
-                    next_i = i + 2
-                    b, g = screen[i:next_i]
-                    r = (g & 0x7C) << 1
-                    g = ((b & 0xE0) >> 2) | ((g & 0x03) << 6)
-                    b = (b & 0x1F) << 3
-                    pixel_buf[0] = r | (r >> 5)
-                    pixel_buf[1] = g | (g >> 5)
-                    pixel_buf[2] = b | (b >> 5)
-                    screen_out[o : o + 4] = pixel_buf
-                    i = next_i
-                    o += delta_x
+        # Convert to contiguous array and prepare for Screenshot
+        screen_out = np.ascontiguousarray(screen_out)
+        screen_mv = screen_out.view(dtype=np.uint8)
 
-        # Swap width and height if buffer is rotated 90 or 270 degrees.
-        if is_sideways:
+        # Adjust width and height if rotated sideways
+        if self._rotation in [Rotation.NINETY, Rotation.TWO_SEVENTY]:
             return Screenshot(
-                memoryview(screen_out),
+                memoryview(screen_mv),
                 self._last_height,
                 self._last_width,
                 self._rotation,
                 self._pixel_format,
             )
-        return Screenshot(
-            memoryview(screen_out),
-            self._last_width,
-            self._last_height,
-            self._rotation,
-            self._pixel_format,
-        )
+        else:
+            return Screenshot(
+                memoryview(screen_mv),
+                self._last_width,
+                self._last_height,
+                self._rotation,
+                self._pixel_format,
+            )
 
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
