@@ -60,7 +60,7 @@ docs = [
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [
-    'moderngl[headless] >= 5.12.*',
+    'moderngl[headless] >= 5.12',
     'PyOpenGL == 3.1.*',
 ]
 opengl-window = [
