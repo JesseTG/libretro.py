@@ -345,7 +345,7 @@ class ModernGlVideoDriver(VideoDriver):
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
-        _clear_gl_errors()
+        _warn_unhandled_gl_errors()
 
         with self._context.debug_scope("libretro.ModernGlVideoDriver.refresh"):
             match data:
@@ -416,8 +416,7 @@ class ModernGlVideoDriver(VideoDriver):
                     "libretro.ModernGlVideoDriver.reinit.context_destroy"
                 ):
                     self._callback.context_destroy()
-
-            _warn_unhandled_gl_errors()
+                    _warn_unhandled_gl_errors()
 
             if self._window:
                 self._window.destroy()
@@ -530,8 +529,7 @@ class ModernGlVideoDriver(VideoDriver):
                         "libretro.ModernGlVideoDriver.reinit.context_reset"
                     ):
                         self._callback.context_reset()
-
-                    _warn_unhandled_gl_errors()
+                        _warn_unhandled_gl_errors()
 
     @override
     @property
