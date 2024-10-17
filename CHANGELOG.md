@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [0.3.1] - 2024-10-17
+
+### Changed
+
+- Updated moderngl to 5.12.
+
+### Fixed
+
+- Prevented unhandled OpenGL errors in cores from
+  cascading into the frontend as exceptions
+  raised from `moderngl` or PyOpenGL.
+
 ## [0.3.0] - 2024-09-25
 
 ### Added
