@@ -1,8 +1,7 @@
 import struct
 import warnings
 from array import array
-from collections.abc import Callable, Iterator, Sequence, Set
-from contextlib import contextmanager
+from collections.abc import Iterator, Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
@@ -267,11 +266,6 @@ class ModernGlVideoDriver(VideoDriver):
 
             self._window_class = moderngl_window.get_local_window_cls(window_mode)
 
-        self._debug_group_id = 0
-        self.__gl_push_debug_group: Callable[[int, int, int, bytes], None] | None = None
-        self.__gl_pop_debug_group: Callable[[], None] | None = None
-        self.__gl_object_label: Callable[[int, int, int, bytes], None] | None = None
-
     def __del__(self):
         if self._cpu_color:
             del self._cpu_color
@@ -353,7 +347,7 @@ class ModernGlVideoDriver(VideoDriver):
     ) -> None:
         _clear_gl_errors()
 
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.refresh"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.refresh"):
             match data:
                 case FrameBufferSpecial.DUPE:
                     # Do nothing, we're re-rendering the previous frame
@@ -377,7 +371,9 @@ class ModernGlVideoDriver(VideoDriver):
             self._vao.render(moderngl.TRIANGLE_STRIP)
 
             if self._window:
-                with self.__debug_group(b"libretro.ModernGlVideoDriver.refresh.swap_buffers"):
+                with self._context.debug_scope(
+                    "libretro.ModernGlVideoDriver.refresh.swap_buffers"
+                ):
                     self._window.fbo.use()
                     self._context.copy_framebuffer(self._window.fbo, self._fbo)
                     self._window.swap_buffers()
@@ -416,7 +412,9 @@ class ModernGlVideoDriver(VideoDriver):
             _clear_gl_errors()
             if self._callback and self._callback.context_destroy:
                 # If the core wants to clean up before the context is destroyed...
-                with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit.context_destroy"):
+                with self._context.debug_scope(
+                    "libretro.ModernGlVideoDriver.reinit.context_destroy"
+                ):
                     self._callback.context_destroy()
 
             _warn_unhandled_gl_errors()
@@ -436,9 +434,6 @@ class ModernGlVideoDriver(VideoDriver):
             del self._shader_program
             del self._vbo
             del self._cpu_color
-            del self.__gl_push_debug_group
-            del self.__gl_pop_debug_group
-            del self.__gl_object_label
             # Destroy the OpenGL context and create a new one
 
         geometry = self._system_av_info.geometry
@@ -488,25 +483,15 @@ class ModernGlVideoDriver(VideoDriver):
 
         _clear_gl_errors()
         if self._context.version_code >= 430:
-            self.__gl_push_debug_group = GL.glPushDebugGroup
-            self.__gl_pop_debug_group = GL.glPopDebugGroup
-            self.__gl_object_label = GL.glObjectLabel
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT)
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS)
         elif "GL_KHR_debug" in self._context.extensions and GL.glPushDebugGroupKHR:
-            self.__gl_push_debug_group = GL.glPushDebugGroupKHR
-            self.__gl_pop_debug_group = GL.glPopDebugGroupKHR
-            self.__gl_object_label = GL.glObjectLabelKHR
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT_KHR)
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
             # TODO: Contribute this stuff to moderngl
-        else:
-            self.__gl_push_debug_group = None
-            self.__gl_pop_debug_group = None
-            self.__gl_object_label = None
 
         _clear_gl_errors()
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.reinit"):
             self._context.gc_mode = "auto"
             self.__init_fbo()
 
@@ -529,9 +514,9 @@ class ModernGlVideoDriver(VideoDriver):
             )
             # TODO: Make the particular names configurable
 
-            self.__object_label(self._shader_program, b"libretro.py Shader Program")
-            self.__object_label(self._vbo, b"libretro.py Screen VBO")
-            self.__object_label(self._vao, b"libretro.py Screen VAO")
+            self._shader_program.label = "libretro.py Shader Program"
+            self._vbo.label = "libretro.py Screen VBO"
+            self._vao.label = "libretro.py Screen VAO"
 
             # TODO: Honor debug_context; enable debugging features if requested
             if self._callback is not None and context_type != HardwareContext.NONE:
@@ -540,8 +525,10 @@ class ModernGlVideoDriver(VideoDriver):
 
                 if self._callback.context_reset:
                     # If the core wants to set up resources after the context is created...
-                    _clear_gl_errors()
-                    with self.__debug_group(b"libretro.ModernGlVideoDriver.reinit.context_reset"):
+                    self._context.clear_errors()
+                    with self._context.debug_scope(
+                        "libretro.ModernGlVideoDriver.reinit.context_reset"
+                    ):
                         self._callback.context_reset()
 
                     _warn_unhandled_gl_errors()
@@ -641,7 +628,7 @@ class ModernGlVideoDriver(VideoDriver):
             return None
 
         _clear_gl_errors()
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.screenshot"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.screenshot"):
             size = (self._last_width, self._last_height)
             if self._window:
                 frame = self._window.fbo.read(size, 4)
@@ -724,7 +711,7 @@ class ModernGlVideoDriver(VideoDriver):
         return width, height
 
     def __init_fbo(self):
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.__init_fbo"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_fbo"):
             assert self._context is not None
             assert self._system_av_info is not None
 
@@ -742,9 +729,9 @@ class ModernGlVideoDriver(VideoDriver):
             # Similar to glGenFramebuffers, glBindFramebuffer, and glFramebufferTexture2D
             self._fbo = self._context.framebuffer(self._color, self._depth)
 
-            self.__object_label(self._color, b"libretro.py Main FBO Color Attachment")
-            self.__object_label(self._depth, b"libretro.py Main FBO Depth Attachment")
-            self.__object_label(self._fbo, b"libretro.py Main FBO")
+            self._color.label = "libretro.py Main FBO Color Attachment"
+            self._depth.label = "libretro.py Main FBO Depth Attachment"
+            self._fbo.label = "libretro.py Main FBO"
 
             self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
             self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
@@ -753,7 +740,7 @@ class ModernGlVideoDriver(VideoDriver):
         _clear_gl_errors()
 
     def __init_hw_render(self):
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.__init_hw_render"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_hw_render"):
             assert self._context is not None
             assert self._callback is not None
             assert self._system_av_info is not None
@@ -783,17 +770,13 @@ class ModernGlVideoDriver(VideoDriver):
             )
             self._hw_render_fbo.clear()
 
-            self.__object_label(self._hw_render_fbo, b"libretro.py Hardware Rendering FBO")
-            self.__object_label(
-                self._hw_render_color, b"libretro.py Hardware Rendering FBO Color Attachment"
-            )
+            self._hw_render_fbo.label = "libretro.py Hardware Rendering FBO"
+            self._hw_render_color.label = "libretro.py Hardware Rendering FBO Color Attachment"
             if self._hw_render_depth:
-                self.__object_label(
-                    self._hw_render_depth, b"libretro.py Hardware Rendering FBO Depth Attachment"
-                )
+                self._hw_render_depth.label = "libretro.py Hardware Rendering FBO Depth Attachment"
 
     def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
-        with self.__debug_group(b"libretro.ModernGlVideoDriver.__update_cpu_texture"):
+        with self._context.debug_scope("libretro.ModernGlVideoDriver.__update_cpu_texture"):
             if self._cpu_color and self._cpu_color.size == (width, height):
                 # If we have a texture for CPU-rendered output, and it's the right size...
                 self._cpu_color.write(data)
@@ -820,46 +803,7 @@ class ModernGlVideoDriver(VideoDriver):
                         )
                         # moderngl can't natively express GL_RGB5
 
-                self.__object_label(self._cpu_color, b"libretro.py CPU-Rendered Frame")
-
-    def __object_label(self, obj: ModernGlResource, label: bytes):
-        if self.__gl_object_label:
-            # TODO: Honor self._callback.debug_context
-            gltype: int
-            match obj:
-                case Buffer():
-                    gltype = GL.GL_BUFFER
-                case Program():
-                    gltype = GL.GL_PROGRAM
-                case VertexArray():
-                    gltype = GL.GL_VERTEX_ARRAY
-                case Query():
-                    gltype = GL.GL_QUERY
-                case Sampler():
-                    gltype = GL.GL_SAMPLER
-                case Texture():
-                    gltype = GL.GL_TEXTURE
-                case Renderbuffer():
-                    gltype = GL.GL_RENDERBUFFER
-                case Framebuffer():
-                    gltype = GL.GL_FRAMEBUFFER
-                case _:
-                    raise TypeError(f"Unsupported object type: {type(obj).__name__}")
-
-            self.__gl_object_label(gltype, obj.glo, -1, label)
-
-    @contextmanager
-    def __debug_group(self, label: bytes):
-        if self.__gl_push_debug_group:
-            self._debug_group_id = self._debug_group_id + 1
-            self.__gl_push_debug_group(
-                GL.GL_DEBUG_SOURCE_APPLICATION, self._debug_group_id, -1, label
-            )
-            yield None
-            self.__gl_pop_debug_group()
-            self._debug_group_id = self._debug_group_id - 1
-        else:
-            yield None
+                self._cpu_color.label = "libretro.py CPU-Rendered Frame"
 
 
 __all__ = ["ModernGlVideoDriver"]
