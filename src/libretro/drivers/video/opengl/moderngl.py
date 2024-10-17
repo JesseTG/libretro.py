@@ -132,12 +132,36 @@ def _extract_gl_errors() -> Iterator[int]:
         yield err
 
 
+def _gl_error_str(code: int) -> str:
+    match code:
+        case GL.GL_NO_ERROR:
+            return "GL_NO_ERROR"
+        case GL.GL_INVALID_ENUM:
+            return "GL_INVALID_ENUM"
+        case GL.GL_INVALID_VALUE:
+            return "GL_INVALID_VALUE"
+        case GL.GL_INVALID_OPERATION:
+            return "GL_INVALID_OPERATION"
+        case GL.GL_STACK_OVERFLOW:
+            return "GL_STACK_OVERFLOW"
+        case GL.GL_STACK_UNDERFLOW:
+            return "GL_STACK_UNDERFLOW"
+        case GL.GL_OUT_OF_MEMORY:
+            return "GL_OUT_OF_MEMORY"
+        case GL.GL_INVALID_FRAMEBUFFER_OPERATION:
+            return "GL_INVALID_FRAMEBUFFER_OPERATION"
+        case GL.GL_CONTEXT_LOST:
+            return "GL_CONTEXT_LOST"
+        case _:
+            return f"0x{code:X}"
+
+
 def _warn_unhandled_gl_errors():
     # Should be called as soon as possible after entering Python from the core;
     # unhandled OpenGL errors from the core must not hamper the frontend.
     unhandled_errors = tuple(_extract_gl_errors())
     if unhandled_errors:
-        error_string = ", ".join(f"0x{e:X}" for e in unhandled_errors)
+        error_string = ", ".join(_gl_error_str(e) for e in unhandled_errors)
         warnings.warn(f"Core did not handle the following OpenGL errors: {error_string}")
 
 
