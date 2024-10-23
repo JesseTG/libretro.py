@@ -32,7 +32,6 @@ from libretro.drivers import (
     DictOptionDriver,
     DriverMap,
     FileSystemInterface,
-    GeneratorInputDriver,
     GeneratorLocationDriver,
     GeneratorMicrophoneDriver,
     GeneratorMidiDriver,
@@ -40,6 +39,7 @@ from libretro.drivers import (
     InputStateGenerator,
     InputStateIterable,
     InputStateIterator,
+    IterableInputDriver,
     LedDriver,
     LocationDriver,
     LocationInputGenerator,
@@ -335,7 +335,7 @@ class SessionBuilder:
     def with_input(self, input: InputDriverArg) -> Self:
         match input:
             case Generator() as generator:
-                self._args["input"] = lambda: GeneratorInputDriver(generator)
+                self._args["input"] = lambda: IterableInputDriver(generator)
             case InputDriver():
                 self._args["input"] = lambda: input
             case Callable() as func:
@@ -343,7 +343,7 @@ class SessionBuilder:
                 def _generate():
                     match func():
                         case Generator() | Iterable() | Iterator() as gen:
-                            return GeneratorInputDriver(gen)
+                            return IterableInputDriver(gen)
                         case InputDriver() as driver:
                             return driver
                         case err:
@@ -354,7 +354,7 @@ class SessionBuilder:
                 self._args["input"] = _generate
             case _DefaultType.DEFAULT:
                 self._args["input"] = (
-                    GeneratorInputDriver  # TODO: Set the rumble and sensor interfaces
+                    IterableInputDriver  # TODO: Set the rumble and sensor interfaces
                 )
             case None:
                 raise ValueError("An input driver is required")

@@ -117,7 +117,7 @@ InputStateGenerator = Callable[[], InputStateIterator]
 InputStateSource = InputStateGenerator | InputStateIterable | InputStateIterator
 
 
-class GeneratorInputDriver(InputDriver):
+class IterableInputDriver(InputDriver):
     def __init__(
         self,
         input_generator: InputStateSource | None = None,
@@ -588,7 +588,7 @@ class GeneratorInputDriver(InputDriver):
 
 
 __all__ = [
-    "GeneratorInputDriver",
+    "IterableInputDriver",
     "InputPollResult",
     "InputStateSource",
     "InputStateIterator",
