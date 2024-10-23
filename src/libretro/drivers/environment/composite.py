@@ -617,14 +617,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             return False
 
         if not self._rumble:
-            self._rumble = retro_rumble_interface(self.__set_rumble_state)
+            self._rumble = retro_rumble_interface(
+                retro_set_rumble_state_t(self.__set_rumble_state)
+            )
             # So that even if the rumble/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
 
         rumble_ptr[0] = self._rumble
         return True
 
-    @retro_set_rumble_state_t
     def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
         if not self._input.rumble:
             return False

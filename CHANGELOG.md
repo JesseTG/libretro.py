@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING:** Rename `DefaultRumbleDriver` to `DictRumbleDriver`.
 - **BREAKING:** Rename `GeneratorInputDriver` to `IterableInputDriver`.
 
+### Fixed
+
+- Fix the rumble driver raising an exception when setting the rumble state.
+
 ## [0.3.1] - 2024-10-17
 
 ### Changed
