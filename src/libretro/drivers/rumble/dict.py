@@ -7,6 +7,10 @@ from .driver import RumbleDriver
 
 @dataclass(slots=True)
 class RumbleState:
+    """
+    Simulated state of a pair of rumble motors.
+    """
+
     strong: int
     weak: int
 
@@ -38,7 +42,12 @@ class RumbleState:
         return 2
 
 
-class DefaultRumbleDriver(RumbleDriver):
+class DictRumbleDriver(RumbleDriver):
+    """
+    A :class:`RumbleDriver` implementation that
+    stores rumble state in a dictionary.
+    """
+
     def __init__(self):
         super().__init__()
         self._rumble_state: dict[int, RumbleState] = {}
@@ -55,4 +64,4 @@ class DefaultRumbleDriver(RumbleDriver):
                 return RumbleState(0, 0)
 
 
-__all__ = ["DefaultRumbleDriver", "RumbleState"]
+__all__ = ["DictRumbleDriver", "RumbleState"]
