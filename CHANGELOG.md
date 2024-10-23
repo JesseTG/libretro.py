@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Changed
+
+- **BREAKING:** Rename `RumbleInterface` to `RumbleDriver`.
+
 ## [0.3.1] - 2024-10-17
 
 ### Changed

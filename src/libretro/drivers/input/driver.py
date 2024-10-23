@@ -12,7 +12,7 @@ from libretro.api import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
-from libretro.drivers.rumble import RumbleInterface
+from libretro.drivers.rumble import RumbleDriver
 from libretro.drivers.sensor import SensorInterface
 
 
@@ -49,7 +49,7 @@ class InputDriver(Protocol):
 
     @property
     @abstractmethod
-    def rumble(self) -> RumbleInterface | None: ...
+    def rumble(self) -> RumbleDriver | None: ...
 
     @property
     @abstractmethod

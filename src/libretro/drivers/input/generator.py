@@ -27,7 +27,7 @@ from libretro.api.input import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
-from libretro.drivers.rumble import RumbleInterface
+from libretro.drivers.rumble import RumbleDriver
 from libretro.drivers.sensor import SensorInterface
 
 from .driver import InputDriver
@@ -124,7 +124,7 @@ class GeneratorInputDriver(InputDriver):
         device_capabilities: InputDeviceFlag | None = InputDeviceFlag.ALL,
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
-        rumble: RumbleInterface | None = None,
+        rumble: RumbleDriver | None = None,
         sensor: SensorInterface | None = None,
     ):
         self._input_generator = input_generator
@@ -557,13 +557,13 @@ class GeneratorInputDriver(InputDriver):
         self._keyboard_callback = callback
 
     @property
-    def rumble(self) -> RumbleInterface | None:
+    def rumble(self) -> RumbleDriver | None:
         return self._rumble
 
     @rumble.setter
-    def rumble(self, value: RumbleInterface | None) -> None:
-        if value is not None and not isinstance(value, RumbleInterface):
-            raise TypeError(f"Expected None or a RumbleInterface, got {value!r}")
+    def rumble(self, value: RumbleDriver | None) -> None:
+        if value is not None and not isinstance(value, RumbleDriver):
+            raise TypeError(f"Expected None or a RumbleDriver, got {value!r}")
 
         self._rumble = value
 

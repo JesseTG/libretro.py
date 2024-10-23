@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from libretro.api.rumble import RumbleEffect
 
-from .interface import RumbleInterface
+from .driver import RumbleDriver
 
 
 @dataclass(slots=True)
@@ -38,7 +38,7 @@ class RumbleState:
         return 2
 
 
-class DefaultRumbleInterface(RumbleInterface):
+class DefaultRumbleDriver(RumbleDriver):
     def __init__(self):
         super().__init__()
         self._rumble_state: dict[int, RumbleState] = {}
@@ -55,4 +55,4 @@ class DefaultRumbleInterface(RumbleInterface):
                 return RumbleState(0, 0)
 
 
-__all__ = ["DefaultRumbleInterface", "RumbleState"]
+__all__ = ["DefaultRumbleDriver", "RumbleState"]

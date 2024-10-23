@@ -9,7 +9,7 @@ from libretro.api.rumble import (
 
 
 @runtime_checkable
-class RumbleInterface(Protocol):
+class RumbleDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_rumble_interface()
@@ -46,5 +46,5 @@ class RumbleInterface(Protocol):
 
 
 __all__ = [
-    "RumbleInterface",
+    "RumbleDriver",
 ]

@@ -40,7 +40,7 @@ from libretro.drivers import (
     MessageInterface,
     MidiDriver,
     OptionDriver,
-    RumbleInterface,
+    RumbleDriver,
     VideoDriver,
 )
 from libretro.error import CoreShutDownException
@@ -216,7 +216,7 @@ class Session:
         return self._environment.content.support_no_game
 
     @property
-    def rumble(self) -> RumbleInterface | None:
+    def rumble(self) -> RumbleDriver | None:
         return self._environment.input.rumble
 
     @property
