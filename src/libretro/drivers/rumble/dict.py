@@ -57,6 +57,12 @@ class DictRumbleDriver(RumbleDriver):
         return True
 
     def __getitem__(self, port: int) -> RumbleState:
+        """
+        Gets the state of the virtual rumble motors for a controller port.
+
+        :param port: The controller port to get the rumble state for.
+        :return: The rumble state for the controller port.
+        """
         match self._rumble_state.get(port, None):
             case RumbleState(strong=strong, weak=weak):
                 return RumbleState(strong, weak)
