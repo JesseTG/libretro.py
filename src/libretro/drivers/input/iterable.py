@@ -28,7 +28,7 @@ from libretro.api.input import (
     retro_keyboard_callback,
 )
 from libretro.drivers.rumble import RumbleDriver
-from libretro.drivers.sensor import SensorInterface
+from libretro.drivers.sensor import SensorDriver
 
 from .driver import InputDriver
 
@@ -125,7 +125,7 @@ class IterableInputDriver(InputDriver):
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
         rumble: RumbleDriver | None = None,
-        sensor: SensorInterface | None = None,
+        sensor: SensorDriver | None = None,
     ):
         self._input_generator = input_generator
         self._input_generator_state: (
@@ -572,12 +572,12 @@ class IterableInputDriver(InputDriver):
         self._rumble = None
 
     @property
-    def sensor(self) -> SensorInterface | None:
+    def sensor(self) -> SensorDriver | None:
         return self._sensor
 
     @sensor.setter
-    def sensor(self, value: SensorInterface | None) -> None:
-        if value is not None and not isinstance(value, SensorInterface):
+    def sensor(self, value: SensorDriver | None) -> None:
+        if value is not None and not isinstance(value, SensorDriver):
             raise TypeError(f"Expected None or a SensorInterface, got {value!r}")
 
         self._sensor = value

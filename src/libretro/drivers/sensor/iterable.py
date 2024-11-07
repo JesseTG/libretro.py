@@ -2,11 +2,11 @@ from collections import defaultdict
 from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import Literal, NamedTuple, overload
+from typing import Iterable, Literal, NamedTuple, overload
 
 from libretro.api.sensor import Sensor, SensorAction, SensorType
 
-from .interface import SensorInterface
+from .driver import SensorDriver
 
 
 class Vector3(NamedTuple):
@@ -272,14 +272,16 @@ class PortInput:
 
 
 SensorPollResult = Real | PortInput | SensorInput | Vector3 | None
-SensorInputIterator = Iterator[SensorPollResult | Sequence[SensorPollResult]]
-SensorInputGenerator = Callable[[], SensorInputIterator]
+SensorStateIterator = Iterator[SensorPollResult | Sequence[SensorPollResult]]
+SensorStateIterable = Iterable[SensorPollResult | Sequence[SensorPollResult]]
+SensorStateGenerator = Callable[[], SensorStateIterator]
+SensorStateSource = SensorStateIterator | SensorStateIterable | SensorStateGenerator
 
 
-class GeneratorSensorInterface(SensorInterface):
-    def __init__(self, generator: SensorInputGenerator | None = None):
+class IterableSensorDriver(SensorDriver):
+    def __init__(self, generator: SensorStateGenerator | None = None):
         self._generator = generator
-        self._generator_state: SensorInputIterator | None = None
+        self._generator_state: SensorStateIterator | None = None
         self._last_poll_result: SensorPollResult = None
         self._sensor_state: defaultdict[int, PortState] = defaultdict(PortState)
 
@@ -390,7 +392,8 @@ __all__ = [
     "IlluminanceInput",
     "PortInput",
     "SensorPollResult",
-    "SensorInputIterator",
-    "SensorInputGenerator",
-    "GeneratorSensorInterface",
+    "SensorStateIterator",
+    "SensorStateIterable",
+    "SensorStateGenerator",
+    "IterableSensorDriver",
 ]

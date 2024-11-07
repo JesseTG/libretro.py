@@ -13,7 +13,7 @@ from libretro.api import (
     retro_keyboard_callback,
 )
 from libretro.drivers.rumble import RumbleDriver
-from libretro.drivers.sensor import SensorInterface
+from libretro.drivers.sensor import SensorDriver
 
 
 @runtime_checkable
@@ -47,13 +47,15 @@ class InputDriver(Protocol):
         if callback:
             callback.callback(down, keycode, character, modifiers)
 
+    # TODO: Separate the rumble interface
     @property
     @abstractmethod
     def rumble(self) -> RumbleDriver | None: ...
 
+    # TODO: Separate the sensor interface, check max users in the environment driver
     @property
     @abstractmethod
-    def sensor(self) -> SensorInterface | None: ...
+    def sensor(self) -> SensorDriver | None: ...
 
     @property
     @abstractmethod

@@ -11,7 +11,7 @@ from libretro.api.sensor import (
 
 
 @runtime_checkable
-class SensorInterface(Protocol):
+class SensorDriver(Protocol):
     @abstractmethod
     def __init__(self):
         self._as_parameter_ = retro_sensor_interface()
@@ -68,5 +68,5 @@ class SensorInterface(Protocol):
 
 
 __all__ = [
-    "SensorInterface",
+    "SensorDriver",
 ]
