@@ -1,24 +1,44 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
-from libretro.api.sensor import (
-    Sensor,
-    SensorAction,
-    retro_sensor_get_input_t,
-    retro_sensor_interface,
-    retro_set_sensor_state_t,
-)
+from libretro.api.sensor import Sensor, SensorAction
 
 
 @runtime_checkable
 class SensorDriver(Protocol):
-    @abstractmethod
-    def __init__(self):
-        self._as_parameter_ = retro_sensor_interface()
-        self._as_parameter_.set_sensor_state = retro_set_sensor_state_t(self.__set_sensor_state)
-        self._as_parameter_.get_sensor_input = retro_sensor_get_input_t(self.__get_sensor_input)
+    """
+    Describes the interface for input from a device's sensors.
 
+    .. note::
+
+        Corresponds to ``RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE``.
+    """
+
+    @abstractmethod
     def set_sensor_state(self, port: int, action: SensorAction | int, rate: int) -> bool:
+        """
+        Configures a sensor on a port,
+        possibly with a specific query rate.
+
+        This method must be overridden,
+        but can be called by subclasses
+        to validate the input.
+
+        Corresponds to ``retro_set_sensor_state_t``.
+
+        .. note ::
+
+            The :class:`EnvironmentDriver` should validate ``port``
+            against the maximum number of players (if any),
+            skipping this method and returning :obj:`False`
+            if the port is invalid.
+
+        :param port: The input port to configure the sensors for.
+        :param action: The action to perform on the sensor.
+        :param rate: The rate at which to query the sensor.
+        :return: Whether the sensor was successfully configured.
+        """
+
         if not isinstance(port, int):
             raise TypeError(f"port must be an int, not {type(port).__name__}")
 
@@ -34,15 +54,18 @@ class SensorDriver(Protocol):
         if not (0 <= rate < ((2**32) - 1)):
             raise ValueError(f"Expected 0 <= rate < 2**32 - 1, got {rate}")
 
-        return bool(self._set_sensor_state(port, SensorAction(action), rate))
+        return False
 
     @abstractmethod
-    def _set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool: ...
+    def get_sensor_input(self, port: int, sensor: int | Sensor) -> float:
+        """
+        Corresponds to ``retro_sensor_get_input_t``.
 
-    def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
-        return self.set_sensor_state(port, SensorAction(action), rate)
+        This method must be overridden,
+        but can be called by subclasses
+        to validate the input.
+        """
 
-    def get_sensor_input(self, port: int, sensor: Sensor) -> float:
         if not isinstance(port, int):
             raise TypeError(f"port must be an int, not {type(port).__name__}")
 
@@ -52,19 +75,14 @@ class SensorDriver(Protocol):
         if sensor not in Sensor:
             raise ValueError(f"sensor must be a Sensor, not {sensor}")
 
-        match self._get_sensor_input(port, Sensor(sensor)):
-            case float(f) | bool(f) | int(f):
-                return float(f)
-            case e:
-                raise TypeError(
-                    f"Expected _get_sensor_input to return a float, got {type(e).__name__}"
-                )
+        return 0.0
 
     @abstractmethod
-    def _get_sensor_input(self, port: int, sensor: Sensor) -> float: ...
-
-    def __get_sensor_input(self, port: int, sensor: int) -> float:
-        return self.get_sensor_input(port, Sensor(sensor))
+    def poll(self):
+        """
+        Updates the sensor driver's readings.
+        """
+        ...
 
 
 __all__ = [
