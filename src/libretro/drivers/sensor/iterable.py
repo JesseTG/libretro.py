@@ -165,25 +165,52 @@ class SensorInput:
 
 @dataclass(slots=True)
 class AccelerometerInput(SensorInput):
+    """
+    Represents a reading from a 3D accelerometer.
+    """
+
     x: float = 0.0
+    """The acceleration along the x-axis, in meters per second squared."""
+
     y: float = 0.0
+    """The acceleration along the y-axis, in meters per second squared."""
+
     z: float = 0.0
+    """The acceleration along the z-axis, in meters per second squared."""
 
 
 @dataclass(slots=True)
 class GyroscopeInput(SensorInput):
+    """
+    Represents a reading from a 3D gyroscope.
+    """
+
     x: float = 0.0
+    """The angular velocity around the x-axis, in radians per second."""
+
     y: float = 0.0
+    """The angular velocity around the y-axis, in radians per second."""
+
     z: float = 0.0
+    """The angular velocity around the z-axis, in radians per second."""
 
 
 @dataclass(slots=True)
 class IlluminanceInput(SensorInput):
+    """
+    Represents a reading from an illuminance sensor.
+    """
+
     value: float = 0.0
+    """The illuminance value, in lux."""
 
 
 @dataclass(slots=True)
 class PortInput:
+    """
+    Represents the state of all possible sensors on a port.
+    """
+
     accelerometer: AccelerometerInput = field(default_factory=AccelerometerInput)
     gyroscope: GyroscopeInput = field(default_factory=GyroscopeInput)
     illuminance: IlluminanceInput = field(default_factory=IlluminanceInput)
