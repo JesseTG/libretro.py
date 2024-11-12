@@ -2,14 +2,15 @@ from collections import defaultdict
 from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import Iterable, Literal, NamedTuple, overload
+from typing import Iterable, Literal, overload
 
 from libretro.api.sensor import Sensor, SensorAction, SensorType
 
 from .driver import SensorDriver
 
 
-class Vector3(NamedTuple):
+@dataclass(slots=True)
+class Vector3:
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
