@@ -28,7 +28,6 @@ from libretro.api.input import (
     retro_keyboard_callback,
 )
 from libretro.drivers.rumble import RumbleDriver
-from libretro.drivers.sensor import SensorDriver
 
 from .driver import InputDriver
 
@@ -125,7 +124,6 @@ class IterableInputDriver(InputDriver):
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
         rumble: RumbleDriver | None = None,
-        sensor: SensorDriver | None = None,
     ):
         self._input_generator = input_generator
         self._input_generator_state: (
@@ -142,7 +140,6 @@ class IterableInputDriver(InputDriver):
         self._keyboard_callback: retro_keyboard_callback | None = None
 
         self._rumble = rumble
-        self._sensor = sensor
 
     @property
     @override
@@ -214,9 +211,6 @@ class IterableInputDriver(InputDriver):
             self._input_poll_result = next(self._input_generator_state, None)
 
             # TODO: Send keyboard callback events
-
-        if isinstance(self._sensor, Pollable):
-            self._sensor.poll()
 
         if isinstance(self._rumble, Pollable):
             self._rumble.poll()
@@ -570,21 +564,6 @@ class IterableInputDriver(InputDriver):
     @rumble.deleter
     def rumble(self) -> None:
         self._rumble = None
-
-    @property
-    def sensor(self) -> SensorDriver | None:
-        return self._sensor
-
-    @sensor.setter
-    def sensor(self, value: SensorDriver | None) -> None:
-        if value is not None and not isinstance(value, SensorDriver):
-            raise TypeError(f"Expected None or a SensorInterface, got {value!r}")
-
-        self._sensor = value
-
-    @sensor.deleter
-    def sensor(self) -> None:
-        self._sensor = None
 
 
 __all__ = [
