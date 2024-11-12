@@ -112,6 +112,7 @@ from libretro.drivers.options import OptionDriver
 from libretro.drivers.path import PathDriver
 from libretro.drivers.perf import PerfDriver
 from libretro.drivers.power import PowerDriver
+from libretro.drivers.sensor import SensorDriver
 from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
@@ -132,6 +133,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         message: MessageInterface | None
         options: OptionDriver | None
         path: PathDriver | None
+        sensor: SensorDriver | None
         camera: CameraDriver | None
         log: LogDriver | None
         perf: PerfDriver | None
@@ -190,6 +192,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._options is not None and not isinstance(self._options, OptionDriver):
             raise TypeError(
                 f"Expected OptionDriver or None, got {type(self._options).__qualname__}"
+            )
+
+        self._sensor = kwargs.get("sensor")
+        if self._sensor is not None and not isinstance(self._sensor, SensorDriver):
+            raise TypeError(
+                f"Expected SensorDriver or None, got {type(self._sensor).__qualname__}"
             )
 
         self._camera = kwargs.get("camera")
@@ -287,7 +295,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             )
 
         self._rumble: retro_rumble_interface | None = None
-        self._sensor: retro_sensor_interface | None = None
+        self._sensor_interface: retro_sensor_interface | None = None
         self._log_cb: retro_log_callback | None = None
         self._led_cb: retro_led_interface | None = None
 
@@ -306,6 +314,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     @property
     def content(self) -> ContentDriver | None:
         return self._content
+
+    @property
+    def sensor(self) -> SensorDriver | None:
+        return self._sensor
 
     @property
     def camera(self) -> CameraDriver | None:
@@ -358,6 +370,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def input_poll(self) -> None:
         # TODO: Ensure this isn't called more than once per frame
         self._input.poll()
+
+        if self._sensor:
+            self._sensor.poll()
 
     @override
     def input_state(self, port: int, device: int, index: int, id: int) -> int:
@@ -650,33 +665,41 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not sensor_ptr:
             raise ValueError("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE doesn't accept NULL")
 
-        if not self._input.sensor:
+        if not self._sensor:
             return False
 
-        if not self._sensor:
-            self._sensor = retro_sensor_interface(
-                set_sensor_state=self.__set_sensor_state,
-                get_sensor_input=self.__get_sensor_input,
+        if not self._sensor_interface:
+            self._sensor_interface = retro_sensor_interface(
+                set_sensor_state=retro_set_sensor_state_t(self.__set_sensor_state),
+                get_sensor_input=retro_sensor_get_input_t(self.__get_sensor_input),
             )
             # So that even if the sensor/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
 
-        sensor_ptr[0] = self._sensor
+        sensor_ptr[0] = self._sensor_interface
         return True
 
-    @retro_set_sensor_state_t
     def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
-        if not self._input.sensor:
+        if not self._sensor:
             return False
 
-        return self._input.sensor.set_sensor_state(port, SensorAction(action), rate)
+        max_users = self._input.max_users
+        if isinstance(max_users, int) and port >= max_users:
+            # If we have a max-user limit set, and the port number exceeds it...
+            return False
 
-    @retro_sensor_get_input_t
+        return self._sensor.set_sensor_state(port, SensorAction(action), rate)
+
     def __get_sensor_input(self, port: int, id: int) -> float:
-        if not self._input.sensor:
+        if not self._sensor:
             return 0.0
 
-        return self._input.sensor.get_sensor_input(port, Sensor(id))
+        max_users = self._input.max_users
+        if isinstance(max_users, int) and port >= max_users:
+            # If we have a max-user limit set, and the port number exceeds it...
+            return 0.0
+
+        return self._sensor.get_sensor_input(port, Sensor(id))
 
     @override
     def _get_camera_interface(self, callback_ptr: POINTER(retro_camera_callback)) -> bool:
