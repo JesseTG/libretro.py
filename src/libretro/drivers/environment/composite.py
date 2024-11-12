@@ -356,6 +356,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def input_poll(self) -> None:
+        # TODO: Ensure this isn't called more than once per frame
         self._input.poll()
 
     @override
