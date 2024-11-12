@@ -41,6 +41,7 @@ from libretro.drivers import (
     MidiDriver,
     OptionDriver,
     RumbleDriver,
+    SensorDriver,
     VideoDriver,
 )
 from libretro.error import CoreShutDownException
@@ -218,6 +219,10 @@ class Session:
     @property
     def rumble(self) -> RumbleDriver | None:
         return self._environment.input.rumble
+
+    @property
+    def sensor(self) -> SensorDriver | None:
+        return self._environment.sensor
 
     @property
     def log(self) -> LogDriver | None:
