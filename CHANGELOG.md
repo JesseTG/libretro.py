@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING:** Rename `SensorInterface` to `SensorDriver`.
 - **BREAKING:** Rename `GeneratorSensorInterface` to `IterableSensorDriver`
   and some accompanying type aliases.
+- **BREAKING:** Decouple `SensorDriver` and `InputDriver` so that
+  the former is no longer part of the latter.
+- Use `InputDriver.max_users` to filter sensor input
+  regardless of the underlying sensor driver.
+
+### Added
+
+- Add `SensorDriver.poll`.
+- Add `SessionBuilder.with_sensor`.
 
 ## [0.4.0] - 2024-10-23
 

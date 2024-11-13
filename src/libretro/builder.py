@@ -40,6 +40,7 @@ from libretro.drivers import (
     InputStateIterable,
     InputStateIterator,
     IterableInputDriver,
+    IterableSensorDriver,
     LedDriver,
     LocationDriver,
     LocationInputGenerator,
@@ -53,6 +54,10 @@ from libretro.drivers import (
     PathDriver,
     PerfDriver,
     PowerDriver,
+    SensorDriver,
+    SensorStateGenerator,
+    SensorStateIterable,
+    SensorStateIterator,
     StandardContentDriver,
     StandardFileSystemInterface,
     TempDirPathDriver,
@@ -108,6 +113,9 @@ OptionDriverArg: TypeAlias = (
     _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
 )
 PathDriverArg: TypeAlias = PathDriver | Callable[[Core], PathDriver | None] | Default | None
+SensorDriverArg: TypeAlias = (
+    _OptionalArg[SensorDriver] | SensorStateGenerator | SensorStateIterable | SensorStateIterator
+)
 LogDriverArg: TypeAlias = _OptionalArg[LogDriver] | Logger
 PerfDriverArg: TypeAlias = _OptionalArg[PerfDriver]
 LocationDriverArg: TypeAlias = _OptionalArg[LocationDriver] | LocationInputGenerator
@@ -144,6 +152,7 @@ class _SessionBuilderArgs(TypedDict):
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
     path: Callable[[Core], PathDriver | None]
+    sensor: _OptionalFactory[SensorDriver]
     log: _OptionalFactory[LogDriver]
     perf: _OptionalFactory[PerfDriver]
     location: _OptionalFactory[LocationDriver]
@@ -194,6 +203,7 @@ class SessionBuilder:
             options=_nothing,
             path=lambda _: None,
             log=_nothing,
+            sensor=_nothing,
             perf=_nothing,
             location=_nothing,
             user=_nothing,
@@ -353,9 +363,8 @@ class SessionBuilder:
 
                 self._args["input"] = _generate
             case _DefaultType.DEFAULT:
-                self._args["input"] = (
-                    IterableInputDriver  # TODO: Set the rumble and sensor interfaces
-                )
+                # TODO: Set the rumble interface
+                self._args["input"] = IterableInputDriver
             case None:
                 raise ValueError("An input driver is required")
             case _:
@@ -581,6 +590,71 @@ class SessionBuilder:
             case _:
                 raise TypeError(
                     f"Expected PathDriver, a callable that returns one, DEFAULT, or None; got {type(path).__name__}"
+                )
+
+        return self
+
+    def with_sensor(self, sensor: SensorDriverArg) -> Self:
+        """
+        Configures the sensor driver for this session.
+
+        :param sensor: May be one of the following:
+
+            :class:`.SensorDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :obj:`None`
+                All environment calls and interfaces
+                that :class:`.SensorDriver` normally implements
+                will be unavailable to the loaded :class:`.Core`.
+
+            :data:`.DEFAULT`
+                Will use an :class:`.IterableSensorDriver`
+                whose sensor state can be configured,
+                but does not produce any nonzero readings.
+
+            :class:`~collections.abc.Callable` () -> :class:`.SensorDriver`
+                Zero-argument function that returns the :class:`.SensorDriver`
+                that the built :class:`.Session` will use.
+
+            :class:`~collections.abc.Callable` () -> :class:`~collections.abc.Iterable` | :class:`~collections.abc.Iterator`
+                Zero-argument function that returns an iterator or generator
+                that yields elements as described in :class:`.IterableSensorDriver`.
+                An :class:`.IterableSensorDriver` will be created from this iterator.
+
+            :class:`~collections.abc.Iterable` | :class:`~collections.abc.Iterator`
+                An iterator, iterable, or generator function that yields
+                elements as described in :class:`.IterableSensorDriver`.
+                An :class:`.IterableSensorDriver` will be created from this iterator.
+
+        :return: This :class:`.SessionBuilder` object.
+        """
+        match sensor:
+            case (Generator() as source) | (Iterable() as source) | (Iterator() as source):
+                self._args["sensor"] = lambda: IterableSensorDriver(source)
+            case SensorDriver():
+                self._args["sensor"] = lambda: sensor
+            case Callable() as func:
+                # Either a generator or a driver type
+                def _generate():
+                    match func():
+                        case Generator() | Iterable() | Iterator() as gen:
+                            return IterableSensorDriver(gen)
+                        case SensorDriver() as driver:
+                            return driver
+                        case err:
+                            raise TypeError(
+                                f"Expected a generator, an iterable, an iterator, or a SensorDriver from the callable, got {type(err).__name__}"
+                            )
+
+                self._args["sensor"] = _generate
+            case _DefaultType.DEFAULT:
+                self._args["sensor"] = IterableSensorDriver
+            case None:
+                self._args["sensor"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected SensorDriver or a callable that returns one, a callable or iterator that yields SensorState; got {type(input).__name__}"
                 )
 
         return self
@@ -883,6 +957,7 @@ class SessionBuilder:
             message=self._args["message"](),
             options=self._args["options"](),
             path=self._args["path"](core),
+            sensor=self._args["sensor"](),
             log=self._args["log"](),
             perf=self._args["perf"](),
             location=self._args["location"](),
@@ -928,6 +1003,7 @@ def defaults(core: CoreArg) -> SessionBuilder:
         .with_overscan(DEFAULT)
         .with_message(DEFAULT)
         .with_options(DEFAULT)
+        .with_sensor(DEFAULT)
         .with_paths(DEFAULT)
         .with_log(DEFAULT)
         .with_perf(DEFAULT)
