@@ -1,9 +1,9 @@
-from collections import defaultdict
-from collections.abc import Callable, Iterator, MutableMapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import Iterable, Literal, overload
+from typing import Literal, overload
 
+from libretro._typing import override
 from libretro.api.sensor import Sensor, SensorAction, SensorType
 
 from .driver import SensorDriver
@@ -18,146 +18,28 @@ class Vector3:
 
 @dataclass(slots=True)
 class SensorState:
-    enabled: bool = False
-    rate: int = 0
+    accelerometer_enabled: bool = False
+    accelerometer_rate: int = 0
 
+    gyroscope_enabled: bool = False
+    gyroscope_rate: int = 0
 
-@dataclass(slots=True)
-class PortSensorState:
-    accelerometer: SensorState = field(default_factory=SensorState)
-    gyroscope: SensorState = field(default_factory=SensorState)
-    illuminance: SensorState = field(default_factory=SensorState)
+    illuminance_enabled: bool = False
+    illuminance_rate: int = 0
 
-    @overload
-    def __getitem__(self, item: SensorType) -> SensorState: ...
+    def is_enabled(self, sensor: SensorType) -> bool:
+        if not isinstance(sensor, SensorType):
+            raise TypeError(f"Expected a SensorType, got {type(sensor).__name__}")
 
-    @overload
-    def __getitem__(self, item: SensorAction) -> bool: ...
-
-    def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
-        match item:
+        match sensor:
             case SensorType.ACCELEROMETER:
-                return self.accelerometer
+                return self.accelerometer_enabled
             case SensorType.GYROSCOPE:
-                return self.gyroscope
+                return self.gyroscope_enabled
             case SensorType.ILLUMINANCE:
-                return self.illuminance
-            case SensorAction.ACCELEROMETER_ENABLE:
-                return self.accelerometer.enabled
-            case SensorAction.GYROSCOPE_ENABLE:
-                return self.gyroscope.enabled
-            case SensorAction.ILLUMINANCE_ENABLE:
-                return self.illuminance.enabled
-            case SensorAction.ACCELEROMETER_DISABLE:
-                return not self.accelerometer.enabled
-            case SensorAction.GYROSCOPE_DISABLE:
-                return not self.gyroscope.enabled
-            case SensorAction.ILLUMINANCE_DISABLE:
-                return not self.illuminance.enabled
+                return self.illuminance_enabled
             case _:
-                raise TypeError(
-                    f"Expected a SensorType or SensorAction, got {type(item).__name__}"
-                )
-
-    @overload
-    def __setitem__(self, key: SensorType, value: SensorState): ...
-
-    @overload
-    def __setitem__(self, key: SensorAction, value: bool): ...
-
-    def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
-        match key, value:
-            case SensorType.ACCELEROMETER, SensorState(s):
-                self.accelerometer = SensorState(s.enabled, s.rate)
-            case SensorType.GYROSCOPE, SensorState(s):
-                self.gyroscope = SensorState(s.enabled, s.rate)
-            case SensorType.ILLUMINANCE, SensorState(s):
-                self.illuminance = SensorState(s.enabled, s.rate)
-            case SensorAction.ACCELEROMETER_ENABLE, bool(value):
-                self.accelerometer.enabled = value
-            case SensorAction.GYROSCOPE_ENABLE, bool(value):
-                self.gyroscope.enabled = value
-            case SensorAction.ILLUMINANCE_ENABLE, bool(value):
-                self.illuminance.enabled = value
-            case SensorAction.ACCELEROMETER_DISABLE, bool(value):
-                self.accelerometer.enabled = not value
-            case SensorAction.GYROSCOPE_DISABLE, bool(value):
-                self.gyroscope.enabled = not value
-            case SensorAction.ILLUMINANCE_DISABLE, bool(value):
-                self.illuminance.enabled = not value
-            case (SensorType(k) | SensorAction(k)), _:
-                raise TypeError(f"Cannot set {k} from {type(value).__name__}")
-            case _, _:
-                raise TypeError(f"Expected a SensorType or SensorAction, got {type(key).__name__}")
-
-
-@dataclass(slots=True)
-class PortState:
-    accelerometer: SensorState = field(default_factory=SensorState)
-    gyroscope: SensorState = field(default_factory=SensorState)
-    illuminance: SensorState = field(default_factory=SensorState)
-
-    @overload
-    def __getitem__(self, item: SensorType) -> SensorState: ...
-
-    @overload
-    def __getitem__(self, item: SensorAction) -> bool: ...
-
-    def __getitem__(self, item: SensorType | SensorAction) -> SensorState | bool:
-        match item:
-            case SensorType.ACCELEROMETER:
-                return self.accelerometer
-            case SensorType.GYROSCOPE:
-                return self.gyroscope
-            case SensorType.ILLUMINANCE:
-                return self.illuminance
-            case SensorAction.ACCELEROMETER_ENABLE:
-                return self.accelerometer.enabled
-            case SensorAction.GYROSCOPE_ENABLE:
-                return self.gyroscope.enabled
-            case SensorAction.ILLUMINANCE_ENABLE:
-                return self.illuminance.enabled
-            case SensorAction.ACCELEROMETER_DISABLE:
-                return not self.accelerometer.enabled
-            case SensorAction.GYROSCOPE_DISABLE:
-                return not self.gyroscope.enabled
-            case SensorAction.ILLUMINANCE_DISABLE:
-                return not self.illuminance.enabled
-            case _:
-                raise TypeError(
-                    f"Expected a SensorType or SensorAction, got {type(item).__name__}"
-                )
-
-    @overload
-    def __setitem__(self, key: SensorType, value: SensorState): ...
-
-    @overload
-    def __setitem__(self, key: SensorAction, value: bool): ...
-
-    def __setitem__(self, key: SensorType | SensorAction, value: SensorState | bool):
-        match key, value:
-            case SensorType.ACCELEROMETER, SensorState(s):
-                self.accelerometer = SensorState(s.enabled, s.rate)
-            case SensorType.GYROSCOPE, SensorState(s):
-                self.gyroscope = SensorState(s.enabled, s.rate)
-            case SensorType.ILLUMINANCE, SensorState(s):
-                self.illuminance = SensorState(s.enabled, s.rate)
-            case SensorAction.ACCELEROMETER_ENABLE, bool(value):
-                self.accelerometer.enabled = value
-            case SensorAction.GYROSCOPE_ENABLE, bool(value):
-                self.gyroscope.enabled = value
-            case SensorAction.ILLUMINANCE_ENABLE, bool(value):
-                self.illuminance.enabled = value
-            case SensorAction.ACCELEROMETER_DISABLE, bool(value):
-                self.accelerometer.enabled = not value
-            case SensorAction.GYROSCOPE_DISABLE, bool(value):
-                self.gyroscope.enabled = not value
-            case SensorAction.ILLUMINANCE_DISABLE, bool(value):
-                self.illuminance.enabled = not value
-            case (SensorType(k) | SensorAction(k)), _:
-                raise TypeError(f"Cannot set {k} from {type(value).__name__}")
-            case _, _:
-                raise TypeError(f"Expected a SensorType or SensorAction, got {type(key).__name__}")
+                raise ValueError(f"Invalid sensor type: {sensor}")
 
 
 class SensorInput:
@@ -299,7 +181,7 @@ class PortInput:
                 raise TypeError(f"Cannot set {type(key).__name__} from {type(value).__name__}")
 
 
-SensorPollResult = Real | PortInput | SensorInput | Vector3 | None
+SensorPollResult = Real | tuple[Real, Real, Real] | PortInput | SensorInput | None
 SensorStateIterator = Iterator[SensorPollResult | Sequence[SensorPollResult]]
 SensorStateIterable = Iterable[SensorPollResult | Sequence[SensorPollResult]]
 SensorStateGenerator = Callable[[], SensorStateIterator]
@@ -307,42 +189,94 @@ SensorStateSource = SensorStateIterator | SensorStateIterable | SensorStateGener
 
 
 class IterableSensorDriver(SensorDriver):
-    def __init__(self, generator: SensorStateGenerator | None = None):
-        self._generator = generator
+    """
+    A :class:`.SensorDriver` that feeds input to the core
+    from the output of an iterator.
+    """
+
+    def __init__(self, source: SensorStateSource | None = None):
+        """
+        Initializes this sensor driver.
+
+        :param source: An iterator or iterable whose elements are each one of the following:
+
+            :obj:`None`
+                All sensors on all ports will return 0.0.
+
+            :class:`int` | :class:`float` | :class:`bool` | :class:`Real`
+                All sensors on all ports
+                will return the yielded value converted to a :class:`float`.
+
+            :class:`tuple`[:class:`Real`, :class:`Real`, :class:`Real`]
+                All three values will be converted to :class:`float`s
+                and used as the x, y, and z readings
+                for every port's sensors.
+                For the luminance sensor, only the first element will be used.
+        """
+        self._generator = source
         self._generator_state: SensorStateIterator | None = None
-        self._last_poll_result: SensorPollResult = None
-        self._sensor_state: defaultdict[int, PortState] = defaultdict(PortState)
+        self._poll_result: SensorPollResult = None
+        self._sensor_state: dict[int, SensorState] = dict()
 
     @property
-    def sensor_state(self) -> MutableMapping[int, PortState]:
+    def sensor_state(self) -> Mapping[int, SensorState]:
         return self._sensor_state
 
+    @override
     def poll(self) -> None:
         if self._generator:
             if self._generator_state is None:
-                self._generator_state = self._generator()
+                match self._generator:
+                    case Callable() as func:
+                        self._generator_state = func()
+                    case Iterable() | Iterator() | Generator() as it:
+                        self._generator_state = it
 
-            self._last_poll_result = next(self._generator_state, None)
+            self._poll_result = next(self._generator_state, None)
 
-    def _set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool:
-        sensor_type = action.sensor_type
-        sensor = self._sensor_state[port][sensor_type]
-        sensor.rate = rate
-        sensor.enabled = action.enabled
+    @override
+    def set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool:
+        super().set_sensor_state(port, action, rate)
+
+        if port not in self._sensor_state:
+            self._sensor_state[port] = SensorState()
+
+        match action:
+            case SensorAction.ACCELEROMETER_ENABLE:
+                self._sensor_state[port].accelerometer_enabled = True
+                self._sensor_state[port].accelerometer_rate = rate
+            case SensorAction.ACCELEROMETER_DISABLE:
+                self._sensor_state[port].accelerometer_enabled = False
+                self._sensor_state[port].accelerometer_rate = rate
+            case SensorAction.GYROSCOPE_ENABLE:
+                self._sensor_state[port].gyroscope_enabled = True
+                self._sensor_state[port].gyroscope_rate = rate
+            case SensorAction.GYROSCOPE_DISABLE:
+                self._sensor_state[port].gyroscope_enabled = False
+                self._sensor_state[port].gyroscope_rate = rate
+            case SensorAction.ILLUMINANCE_ENABLE:
+                self._sensor_state[port].illuminance_enabled = True
+                self._sensor_state[port].illuminance_rate = rate
+            case SensorAction.ILLUMINANCE_DISABLE:
+                self._sensor_state[port].illuminance_enabled = False
+                self._sensor_state[port].illuminance_rate = rate
 
         return True
 
-    def _get_sensor_input(self, port: int, sensor: Sensor) -> float:
+    @override
+    def get_sensor_input(self, port: int, sensor: Sensor) -> float:
+        super().get_sensor_input(port, sensor)
+
         if not self._generator:
             # An unassigned generator will default to 0
             return 0.0
 
-        match (self._last_poll_result, port, sensor):
+        match (self._poll_result, port, sensor):
             case (None | [], _, _):
                 # An empty result will default to 0
                 return 0.0
 
-            case _, _, _ if not self._sensor_state[port][sensor.type].enabled:
+            case _, _, _ if not self._sensor_state[port].is_enabled(sensor.type):
                 # Disabled sensors will always return 0
                 # (Non-existent ports are enforced at the environment layer, not here)
                 return 0.0
@@ -413,7 +347,6 @@ class IterableSensorDriver(SensorDriver):
 __all__ = [
     "Vector3",
     "SensorState",
-    "PortState",
     "SensorInput",
     "AccelerometerInput",
     "GyroscopeInput",
