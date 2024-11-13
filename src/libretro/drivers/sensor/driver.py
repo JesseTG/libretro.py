@@ -24,11 +24,11 @@ class SensorDriver(Protocol):
         but can be called by subclasses
         to validate the input.
 
-        Corresponds to ``retro_set_sensor_state_t``.
+        Corresponds to :obj:`.retro_set_sensor_state_t`.
 
         .. note ::
 
-            The :class:`EnvironmentDriver` should validate ``port``
+            The :class:`.EnvironmentDriver` should validate ``port``
             against the maximum number of players (if any),
             skipping this method and returning :obj:`False`
             if the port is invalid.
