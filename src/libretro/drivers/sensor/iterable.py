@@ -376,7 +376,7 @@ class IterableSensorDriver(SensorDriver):
                 return self._lookup_port_state(port_input[sensor], port, sensor)
 
             # yielding a number returns it unconditionally
-            case Real(r), _, _:
+            case Real() as r, _, _:
                 return float(r)
 
             # yielding a particular SensorState subclass will return the corresponding value for that sensor type
