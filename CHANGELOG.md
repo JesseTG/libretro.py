@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `SensorDriver.poll`.
 - Add `SessionBuilder.with_sensor`.
+- Add `Session.set_controller_port_device`.
 
 ### Fixed
 

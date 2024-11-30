@@ -335,6 +335,12 @@ class Session:
 
         self._core.reset()
 
+    def set_controller_port_device(self, port: int, device: int) -> None:
+        if self._is_exited or self._environment.is_shutdown:
+            raise CoreShutDownException()
+
+        self._core.set_controller_port_device(port, device)
+
 
 __all__ = [
     "Session",
