@@ -1,7 +1,7 @@
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import Literal, overload
+from typing import Literal, TypeAlias, overload
 
 from libretro._typing import override
 from libretro.api.sensor import Sensor, SensorAction, SensorType
@@ -207,7 +207,7 @@ class IterableSensorDriver(SensorDriver):
                 All sensors on all ports
                 will return the yielded value converted to a :class:`float`.
 
-            :class:`tuple`[:class:`Real`, :class:`Real`, :class:`Real`]
+            :class:`tuple`[ :class:`Real`, :class:`Real`, :class:`Real` ]
                 All three values will be converted to :class:`float`s
                 and used as the x, y, and z readings
                 for every port's sensors.
