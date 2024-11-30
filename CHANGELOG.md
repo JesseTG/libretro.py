@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
-## [Unreleased]
+## [0.5.0] - 2024-11-30
+
+Thanks to @JSensebe for his contributions!
 
 ### Changed
 
@@ -31,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Improved documentation for `IterableSensorDriver`.
+- Fix a `GET_VARIABLE` dereference error.
 
 ## [0.4.0] - 2024-10-23
 
