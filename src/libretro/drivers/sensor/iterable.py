@@ -197,21 +197,41 @@ class IterableSensorDriver(SensorDriver):
     def __init__(self, source: SensorStateSource | None = None):
         """
         Initializes this sensor driver.
+        If a sensor is disabled, then it will always output 0.0.
 
         :param source: An iterator or iterable whose elements are each one of the following:
 
             :obj:`None`
                 All sensors on all ports will return 0.0.
 
-            :class:`int` | :class:`float` | :class:`bool` | :class:`Real`
+            :class:`int` | :class:`float` | :class:`bool` | :class:`~numbers.Real`
                 All sensors on all ports
                 will return the yielded value converted to a :class:`float`.
 
-            :class:`tuple`[ :class:`Real`, :class:`Real`, :class:`Real` ]
-                All three values will be converted to :class:`float`s
-                and used as the x, y, and z readings
-                for every port's sensors.
-                For the luminance sensor, only the first element will be used.
+            :class:`.Vector3`
+                Each value be used as the x, y, and z readings
+                for every port's accelerometer and gyroscope.
+
+            :class:`.PortInput`
+                The fields on the yielded object will be used
+                as each port's sensor readings.
+
+            :class:`.AccelerometerInput`
+                The x, y, and z fields will be used
+                as each port's accelerometer readings.
+
+            :class:`.GyroscopeInput`
+                The x, y, and z fields will be used
+                as each port's gyroscope readings.
+
+            :class:`.IlluminanceInput`
+                The value field will be used
+                as each port's illuminance reading.
+
+            :class:`~collections.abc.Sequence` [ :class:`.PortInput` | :class:`.AccelerometerInput` | :class:`.GyroscopeInput` | :class:`.IlluminanceInput` ]
+                Each element in the sequence will be used
+                for its corresponding port's sensor readings
+                based on the aforementioned rules.
         """
         self._generator = source
         self._generator_state: SensorStateIterator | None = None
