@@ -1,7 +1,7 @@
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, is_dataclass
 from numbers import Real
-from typing import Literal, TypeAlias, overload
+from typing import Literal, overload
 
 from libretro._typing import override
 from libretro.api.sensor import Sensor, SensorAction, SensorType
