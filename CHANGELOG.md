@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `SensorDriver.poll`.
 - Add `SessionBuilder.with_sensor`.
 
+### Fixed
+
+- Improved documentation for `IterableSensorDriver`.
+
 ## [0.4.0] - 2024-10-23
 
 ### Changed
