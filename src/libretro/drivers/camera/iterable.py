@@ -15,7 +15,7 @@ class CameraFrame:
     # TODO: Add dimensions
 
 
-class GeneratorCameraDriver(CameraDriver):
+class IterableCameraDriver(CameraDriver):
     @override
     def __init__(self):
         super().__init__()
@@ -61,5 +61,5 @@ class GeneratorCameraDriver(CameraDriver):
 
 
 __all__ = [
-    "GeneratorCameraDriver",
+    "IterableCameraDriver",
 ]

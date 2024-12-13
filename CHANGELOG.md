@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Changed
+
+- **BREAKING:** Rename `GeneratorCameraDriver` to `IterableCameraDriver`.
+
 ## [0.5.0] - 2024-11-30
 
 Thanks to @JSensebe for his contributions!
