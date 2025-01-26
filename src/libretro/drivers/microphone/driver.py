@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from collections import deque
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from ctypes import POINTER, byref, c_int16, c_void_p, cast, memmove, sizeof
 from typing import NamedTuple, Protocol, runtime_checkable
 
@@ -70,6 +70,13 @@ class MicrophoneDriver(Protocol):
     @property
     @abstractmethod
     def version(self) -> int: ...
+
+    @property
+    def microphones(self) -> Collection[Microphone]:
+        """
+        Returns a collection of all open microphones.
+        """
+        return tuple(h.handle for h in self.__microphones.values())
 
     @abstractmethod
     def open_mic(self, params: retro_microphone_params | None) -> Microphone: ...

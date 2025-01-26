@@ -38,6 +38,7 @@ from libretro.drivers import (
     LoadedContentFile,
     LogDriver,
     MessageInterface,
+    MicrophoneDriver,
     MidiDriver,
     OptionDriver,
     RumbleDriver,
@@ -303,6 +304,10 @@ class Session:
         self,
     ) -> Sequence[retro_system_content_info_override] | None:
         return self._environment.content.overrides
+
+    @property
+    def mic(self) -> MicrophoneDriver:
+        return self._environment.microphones
 
     def run(self) -> None:
         if self._is_exited or self._environment.is_shutdown:

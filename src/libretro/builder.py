@@ -48,6 +48,7 @@ from libretro.drivers import (
     LoggerMessageInterface,
     MessageInterface,
     MicrophoneDriver,
+    MicrophoneSource,
     MidiDriver,
     MultiVideoDriver,
     OptionDriver,
@@ -129,7 +130,7 @@ FloatArg: TypeAlias = _OptionalArg[float | int]
 HardwareContextArg: TypeAlias = _OptionalArg[HardwareContext]
 ThrottleStateArg: TypeAlias = _OptionalArg[retro_throttle_state]
 SavestateContextArg: TypeAlias = _OptionalArg[SavestateContext]
-MicDriverArg: TypeAlias = _OptionalArg[MicrophoneDriver]
+MicDriverArg: TypeAlias = _OptionalArg[MicrophoneDriver] | MicrophoneSource
 PowerDriverArg: TypeAlias = _OptionalArg[PowerDriver] | retro_device_power
 
 

@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `MicrophoneDriver.microphones` to list all allocated `Microphone`s.
+- Added `Session.mic`.
+
 ### Changed
 
 - **BREAKING:** Rename `GeneratorCameraDriver` to `IterableCameraDriver`.
