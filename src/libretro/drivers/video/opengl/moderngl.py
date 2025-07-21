@@ -9,6 +9,7 @@ from typing import final
 
 import moderngl
 from OpenGL import GL
+from OpenGL.error import GLError
 
 try:
     import moderngl_window
@@ -122,12 +123,19 @@ def _create_orthogonal_projection(
     )
 
 
+def _get_gl_error() -> int:
+    try:
+        return GL.glGetError()
+    except GLError as e:
+        return e.err
+
+
 def _extract_gl_errors() -> Iterator[int]:
     # glGetError does _not_ return the most error;
     # it turns out OpenGL maintains a queue of errors,
     # and glGetError pops the most recent one.
     err: int
-    while (err := GL.glGetError()) != GL.GL_NO_ERROR:
+    while (err := _get_gl_error()) != GL.GL_NO_ERROR:
         yield err
 
 
@@ -398,6 +406,7 @@ class ModernGlVideoDriver(VideoDriver):
         if not self._system_av_info:
             raise RuntimeError("System AV info not set")
 
+        print("Reinitializing ModernGL video driver...")
         context_type = (
             HardwareContext(self._callback.context_type)
             if self._callback
@@ -409,8 +418,10 @@ class ModernGlVideoDriver(VideoDriver):
 
         # TODO: Honor cache_context; try to avoid reinitializing the context
         if self._context:
-            _clear_gl_errors()
+            print("Tearing down existing context...")
+            self._context.clear_errors()
             if self._callback and self._callback.context_destroy:
+                print("Cleaning up core resources...")
                 # If the core wants to clean up before the context is destroyed...
                 with self._context.debug_scope(
                     "libretro.ModernGlVideoDriver.reinit.context_destroy"
@@ -419,6 +430,7 @@ class ModernGlVideoDriver(VideoDriver):
                     _warn_unhandled_gl_errors()
 
             if self._window:
+                print("Destroying window...")
                 self._window.destroy()
                 del self._window
 
@@ -437,6 +449,7 @@ class ModernGlVideoDriver(VideoDriver):
 
         geometry = self._system_av_info.geometry
 
+        print("Creating new context...")
         match context_type, self._window_class:
             case HardwareContext.NONE, type() as window_class:
                 self._window = window_class(
@@ -480,7 +493,8 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
-        _clear_gl_errors()
+        print("Created new context")
+        self._context.clear_errors()
         if self._context.version_code >= 430:
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT)
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS)
@@ -489,7 +503,7 @@ class ModernGlVideoDriver(VideoDriver):
             self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
             # TODO: Contribute this stuff to moderngl
 
-        _clear_gl_errors()
+        self._context.clear_errors()
         with self._context.debug_scope("libretro.ModernGlVideoDriver.reinit"):
             self._context.gc_mode = "auto"
             self.__init_fbo()
@@ -625,7 +639,7 @@ class ModernGlVideoDriver(VideoDriver):
         if self._system_av_info is None:
             return None
 
-        _clear_gl_errors()
+        self._context.clear_errors()
         with self._context.debug_scope("libretro.ModernGlVideoDriver.screenshot"):
             size = (self._last_width, self._last_height)
             if self._window:
@@ -636,7 +650,7 @@ class ModernGlVideoDriver(VideoDriver):
             if frame is None:
                 return None
 
-            _clear_gl_errors()
+            self._context.clear_errors()
             if not self._callback or not self._callback.bottom_left_origin:
                 # If we're using software rendering or the origin is at the bottom-left...
                 bytes_per_row = self._last_width * self._pixel_format.bytes_per_pixel
@@ -735,7 +749,7 @@ class ModernGlVideoDriver(VideoDriver):
             self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
             self._fbo.clear()
 
-        _clear_gl_errors()
+        self._context.clear_errors()
 
     def __init_hw_render(self):
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_hw_render"):
