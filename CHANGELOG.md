@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Added some symbols to `libretro.api` to account for additions to `libretro.h`.
+- Added `PathDriver.file_browser_start_dir`,
+  and implement it in `ExplicitPathDriver` and `TempDirPathDriver`.
+
 ## [0.6.0] - 2025-01-27
 
 ### Added

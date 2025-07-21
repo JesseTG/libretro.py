@@ -118,6 +118,11 @@ class TempDirPathDriver(PathDriver):
     def playlist_dir(self) -> bytes | None:
         return self._playlist_path
 
+    @override
+    @property
+    def file_browser_start_dir(self) -> bytes | None:
+        return self._root_path
+
 
 __all__ = [
     "TempDirPathDriver",

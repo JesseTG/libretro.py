@@ -19,6 +19,7 @@ class ExplicitPathDriver(PathDriver):
         assets: str | bytes | PathLike | None = None,
         save: str | bytes | PathLike | None = None,
         playlist: str | bytes | PathLike | None = None,
+        file_browser_start: str | bytes | PathLike | None = None,
     ):
         """
         Initialize a new :class:`.ExplicitPathDriver`,
@@ -61,6 +62,11 @@ class ExplicitPathDriver(PathDriver):
         :param playlist: The directory where the core can read playlists.
             Can be a :class:`str`, :class:`bytes`, or :class:`~os.PathLike`.
             If :obj:`None`, ``RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY``
+            will not be available to the core.
+
+        :param file_browser_start: The directory that a frontend's file browser would start in.
+            Can be a :class:`str`, :class:`bytes`, or :class:`~os.PathLike`.
+            If :obj:`None`, ``RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY``
             will not be available to the core.
 
         :raises TypeError: If any of the arguments are not of the correct type.
@@ -130,10 +136,24 @@ class ExplicitPathDriver(PathDriver):
                     f"Expected playlist to be str, bytes, PathLike, or None, got {playlist!r}"
                 )
 
+        self._file_browser_start: bytes | None
+        match file_browser_start:
+            case str():
+                self._file_browser_start = file_browser_start.encode()
+            case bytes() | None:
+                self._file_browser_start = file_browser_start
+            case PathLike():
+                self._file_browser_start = fsencode(file_browser_start.encode())
+            case _:
+                raise TypeError(
+                    f"Expected file_browser_start to be str, bytes, PathLike, or None, got {file_browser_start!r}"
+                )
+
         os.makedirs(self._system, exist_ok=True)
         os.makedirs(self._assets, exist_ok=True)
         os.makedirs(self._save, exist_ok=True)
         os.makedirs(self._playlist, exist_ok=True)
+        os.makedirs(self._file_browser_start, exist_ok=True)
 
     @override
     @property
@@ -159,6 +179,11 @@ class ExplicitPathDriver(PathDriver):
     @property
     def playlist_dir(self) -> bytes | None:
         return self._playlist
+
+    @override
+    @property
+    def file_browser_start_dir(self) -> bytes | None:
+        return self._file_browser_start
 
 
 __all__ = ["ExplicitPathDriver"]

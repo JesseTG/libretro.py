@@ -149,7 +149,25 @@ RETROK_POWER = 320
 RETROK_EURO = 321
 RETROK_UNDO = 322
 RETROK_OEM_102 = 323
-RETROK_LAST = RETROK_OEM_102 + 1
+RETROK_BROWSER_BACK = 324
+RETROK_BROWSER_FORWARD = 325
+RETROK_BROWSER_REFRESH = 326
+RETROK_BROWSER_STOP = 327
+RETROK_BROWSER_SEARCH = 328
+RETROK_BROWSER_FAVORITES = 329
+RETROK_BROWSER_HOME = 330
+RETROK_VOLUME_MUTE = 331
+RETROK_VOLUME_DOWN = 332
+RETROK_VOLUME_UP = 333
+RETROK_MEDIA_NEXT = 334
+RETROK_MEDIA_PREV = 335
+RETROK_MEDIA_STOP = 336
+RETROK_MEDIA_PLAY_PAUSE = 337
+RETROK_LAUNCH_MAIL = 338
+RETROK_LAUNCH_MEDIA = 339
+RETROK_LAUNCH_APP1 = 340
+RETROK_LAUNCH_APP2 = 341
+RETROK_LAST = RETROK_LAUNCH_APP2 + 1
 RETROK_DUMMY = 0x7FFFFFFF
 
 retro_mod = c_int
@@ -311,6 +329,25 @@ class Key(IntEnum, boundary=EJECT):
     EURO = RETROK_EURO
     UNDO = RETROK_UNDO
     OEM_102 = RETROK_OEM_102
+
+    BROWSER_BACK = RETROK_BROWSER_BACK
+    BROWSER_FORWARD = RETROK_BROWSER_FORWARD
+    BROWSER_REFRESH = RETROK_BROWSER_REFRESH
+    BROWSER_STOP = RETROK_BROWSER_STOP
+    BROWSER_SEARCH = RETROK_BROWSER_SEARCH
+    BROWSER_FAVORITES = RETROK_BROWSER_FAVORITES
+    BROWSER_HOME = RETROK_BROWSER_HOME
+    VOLUME_MUTE = RETROK_VOLUME_MUTE
+    VOLUME_DOWN = RETROK_VOLUME_DOWN
+    VOLUME_UP = RETROK_VOLUME_UP
+    MEDIA_NEXT = RETROK_MEDIA_NEXT
+    MEDIA_PREV = RETROK_MEDIA_PREV
+    MEDIA_STOP = RETROK_MEDIA_STOP
+    MEDIA_PLAY_PAUSE = RETROK_MEDIA_PLAY_PAUSE
+    LAUNCH_MAIL = RETROK_LAUNCH_MAIL
+    LAUNCH_MEDIA = RETROK_LAUNCH_MEDIA
+    LAUNCH_APP1 = RETROK_LAUNCH_APP1
+    LAUNCH_APP2 = RETROK_LAUNCH_APP2
 
     def __init__(self, value):
         self._type_ = "I"
@@ -492,6 +529,25 @@ class KeyboardState(InputDeviceState):
     power: bool = False
     euro: bool = False
     oem_102: bool = False
+
+    browser_back: bool = False
+    browser_forward: bool = False
+    browser_refresh: bool = False
+    browser_stop: bool = False
+    browser_search: bool = False
+    browser_favorites: bool = False
+    browser_home: bool = False
+    volume_mute: bool = False
+    volume_down: bool = False
+    volume_up: bool = False
+    media_next: bool = False
+    media_prev: bool = False
+    media_stop: bool = False
+    media_play_pause: bool = False
+    launch_mail: bool = False
+    launch_media: bool = False
+    launch_app1: bool = False
+    launch_app2: bool = False
 
     def __getitem__(self, item: int | Key) -> bool:
         match item:

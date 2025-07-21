@@ -58,6 +58,16 @@ class PathDriver(Protocol):
         """
         ...
 
+    @property
+    @abstractmethod
+    def file_browser_start_dir(self) -> bytes | None:
+        """
+        Corresponds to :py:attr:`.EnvironmentCall.GET_FILE_BROWSER_START_DIRECTORY`.
+
+        If :py:obj:`None`, a core's call to ``RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY`` should return ``false``.
+        """
+        ...
+
 
 __all__ = [
     "PathDriver",
