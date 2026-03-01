@@ -64,7 +64,7 @@ opengl = [
     'PyOpenGL == 3.1.*',
 ]
 opengl-window = [
-    'moderngl-window == 2.4.*',
+    'moderngl-window == 3.*',
     "libretro.py[opengl]"
 ]
 all = ["libretro.py[build,cli,dev,docs,opengl,opengl-window]"]
