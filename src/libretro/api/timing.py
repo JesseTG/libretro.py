@@ -1,8 +1,7 @@
 from ctypes import CFUNCTYPE, Structure, c_bool, c_float, c_int64, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
-
-from libretro.api._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING
 
 RETRO_THROTTLE_NONE = 0
 RETRO_THROTTLE_FRAME_STEPPING = 1
@@ -14,13 +13,25 @@ RETRO_THROTTLE_UNBLOCKED = 6
 
 
 retro_usec_t = c_int64
-retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
+
+if TYPE_CHECKING:
+    from libretro.typing import CoreFunctionPointer
+
+    retro_frame_time_callback_t = CoreFunctionPointer[None, [retro_usec_t]]
+else:
+    retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
 
 
 @dataclass(init=False)
-class retro_frame_time_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_frame_time_callback_t
-    reference: retro_usec_t
+class retro_frame_time_callback(Structure):
+    if TYPE_CHECKING:
+        callback: retro_frame_time_callback_t | None
+        reference: int
+    else:
+        _fields_ = [
+            ("callback", retro_frame_time_callback_t),
+            ("reference", c_uint),
+        ]
 
     def __call__(self, time: int | None = None):
         if not isinstance(time, int) and time is not None:
@@ -50,11 +61,19 @@ class ThrottleMode(IntEnum):
 
 
 @dataclass(init=False)
-class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
-    ratio: c_float
-    fastforward: c_bool
-    notification: c_bool
-    inhibit_toggle: c_bool
+class retro_fastforwarding_override(Structure):
+    if TYPE_CHECKING:
+        ratio: float
+        fastforward: bool
+        notification: bool
+        inhibit_toggle: bool
+    else:
+        _fields_ = [
+            ("ratio", c_float),
+            ("fastforward", c_bool),
+            ("notification", c_bool),
+            ("inhibit_toggle", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_fastforwarding_override(
@@ -63,9 +82,15 @@ class retro_fastforwarding_override(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_throttle_state(Structure, metaclass=FieldsFromTypeHints):
-    mode: c_uint
-    rate: c_float
+class retro_throttle_state(Structure):
+    if TYPE_CHECKING:
+        mode: ThrottleMode
+        rate: float
+    else:
+        _fields_ = [
+            ("mode", c_uint),
+            ("rate", c_float),
+        ]
 
     def __deepcopy__(self, _):
         return retro_throttle_state(self.mode, self.rate)

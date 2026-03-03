@@ -1,22 +1,39 @@
 from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import FieldsFromTypeHints
+if TYPE_CHECKING:
+    from libretro.typing import FrontendFunctionPointer, Pointer
 
-retro_midi_input_enabled_t = CFUNCTYPE(c_bool)
-retro_midi_output_enabled_t = CFUNCTYPE(c_bool)
-retro_midi_read_t = CFUNCTYPE(c_bool, POINTER(c_uint8))
-retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
-retro_midi_flush_t = CFUNCTYPE(c_bool)
+    type retro_midi_input_enabled_t = FrontendFunctionPointer[c_bool, []]
+    type retro_midi_output_enabled_t = FrontendFunctionPointer[c_bool, []]
+    type retro_midi_read_t = FrontendFunctionPointer[c_bool, [Pointer[c_uint8]]]
+    type retro_midi_write_t = FrontendFunctionPointer[c_bool, [c_uint8, c_uint32]]
+    type retro_midi_flush_t = FrontendFunctionPointer[c_bool, []]
+else:
+    retro_midi_input_enabled_t = CFUNCTYPE(c_bool)
+    retro_midi_output_enabled_t = CFUNCTYPE(c_bool)
+    retro_midi_read_t = CFUNCTYPE(c_bool, POINTER(c_uint8))
+    retro_midi_write_t = CFUNCTYPE(c_bool, c_uint8, c_uint32)
+    retro_midi_flush_t = CFUNCTYPE(c_bool)
 
 
 @dataclass(init=False)
-class retro_midi_interface(Structure, metaclass=FieldsFromTypeHints):
-    input_enabled: retro_midi_input_enabled_t
-    output_enabled: retro_midi_output_enabled_t
-    read: retro_midi_read_t
-    write: retro_midi_write_t
-    flush: retro_midi_flush_t
+class retro_midi_interface(Structure):
+    if TYPE_CHECKING:
+        input_enabled: retro_midi_input_enabled_t | None
+        output_enabled: retro_midi_output_enabled_t | None
+        read: retro_midi_read_t | None
+        write: retro_midi_write_t | None
+        flush: retro_midi_flush_t | None
+    else:
+        _fields_ = [
+            ("input_enabled", retro_midi_input_enabled_t),
+            ("output_enabled", retro_midi_output_enabled_t),
+            ("read", retro_midi_read_t),
+            ("write", retro_midi_write_t),
+            ("flush", retro_midi_flush_t),
+        ]
 
     def __deepcopy__(self, _):
         return retro_midi_interface(

@@ -49,7 +49,18 @@ type CPointerArg[T: _CDataType] = _Pointer[T] | None
 type CNullableBufferArg[T: _CDataType] = CBufferArg[T] | None
 type Pointer[T: _CDataType] = _Pointer[T]
 
-class TypedCFuncPtr[R: _CDataType | bool | int | float | bytes | None, **P](CFuncPtr):
+class CoreFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
+    """
+    Type for a function defined in the core to be called in the frontend
+    """
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
+
+class FrontendFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
+    """
+    Type for a function defined in the frontend to be called in the core
+    """
+
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
 class AsParameter[T: _CDataType](Protocol):

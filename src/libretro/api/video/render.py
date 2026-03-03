@@ -1,7 +1,6 @@
 from ctypes import Structure, c_int, c_uint
 from enum import IntEnum
-
-from libretro.api._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING
 
 retro_hw_render_interface_type = c_int
 RETRO_HW_RENDER_INTERFACE_VULKAN = 0
@@ -35,9 +34,15 @@ class HardwareRenderInterfaceType(IntEnum):
         self._type_ = "I"
 
 
-class retro_hw_render_interface(Structure, metaclass=FieldsFromTypeHints):
-    interface_type: retro_hw_render_interface_type
-    interface_version: c_uint
+class retro_hw_render_interface(Structure):
+    if TYPE_CHECKING:
+        interface_type: HardwareRenderInterfaceType
+        interface_version: int
+    else:
+        _fields_ = [
+            ("interface_type", retro_hw_render_interface_type),
+            ("interface_version", c_uint),
+        ]
 
 
 __all__ = [

@@ -1,8 +1,7 @@
 from ctypes import Structure, c_double, c_float, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
-
-from libretro.api._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING
 
 RETRO_REGION_NTSC = 0
 RETRO_REGION_PAL = 1
@@ -33,12 +32,24 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
 
 
 @dataclass(init=False)
-class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
-    base_width: c_uint
-    base_height: c_uint
-    max_width: c_uint
-    max_height: c_uint
-    aspect_ratio: c_float
+class retro_game_geometry(Structure):
+    if TYPE_CHECKING:
+        # Structure subclasses implicitly convert primitive fields
+        # to and from their ctypes equivalents, so we can define these
+        # as their natural types for better type checking and readability.
+        base_width: int
+        base_height: int
+        max_width: int
+        max_height: int
+        aspect_ratio: float
+    else:
+        _fields_ = [
+            ("base_width", c_uint),
+            ("base_height", c_uint),
+            ("max_width", c_uint),
+            ("max_height", c_uint),
+            ("aspect_ratio", c_float),
+        ]
 
     def __deepcopy__(self, _):
         return retro_game_geometry(
@@ -59,18 +70,30 @@ class retro_game_geometry(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_system_timing(Structure, metaclass=FieldsFromTypeHints):
-    fps: c_double
-    sample_rate: c_double
+class retro_system_timing(Structure):
+    if TYPE_CHECKING:
+        fps: float
+        sample_rate: float
+    else:
+        _fields_ = [
+            ("fps", c_double),
+            ("sample_rate", c_double),
+        ]
 
     def __deepcopy__(self, _):
         return retro_system_timing(self.fps, self.sample_rate)
 
 
 @dataclass(init=False)
-class retro_system_av_info(Structure, metaclass=FieldsFromTypeHints):
-    geometry: retro_game_geometry
-    timing: retro_system_timing
+class retro_system_av_info(Structure):
+    if TYPE_CHECKING:
+        geometry: retro_game_geometry
+        timing: retro_system_timing
+    else:
+        _fields_ = [
+            ("geometry", retro_game_geometry),
+            ("timing", retro_system_timing),
+        ]
 
     def __deepcopy__(self, _):
         return retro_system_av_info(self.geometry, self.timing)

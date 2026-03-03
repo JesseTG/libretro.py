@@ -1,5 +1,6 @@
 import ctypes
 import mmap
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
@@ -25,7 +26,7 @@ from ctypes import (
     sizeof,
 )
 from os import PathLike
-from typing import TypeAlias, get_type_hints
+from typing import Literal, TypeAlias, overload
 
 from libretro._typing import Buffer
 
@@ -48,17 +49,12 @@ del t
 del _int_types
 
 
-# From https://blag.nullteilerfrei.de/2021/06/20/prettier-struct-definitions-for-python-ctypes
-# Please use it for all future struct definitions
-class FieldsFromTypeHints(type(Structure)):
-    def __new__(cls, name, bases, namespace):
-        class AnnotationDummy:
-            __annotations__ = namespace.get("__annotations__", {})
+@overload
+def as_bytes(value: str | bytes) -> bytes: ...
 
-        annotations = get_type_hints(AnnotationDummy)
-        namespace["_fields_"] = list(annotations.items())
-        namespace["__slots__"] = list(annotations.keys())
-        return type(Structure).__new__(cls, name, bases, namespace)
+
+@overload
+def as_bytes(value: None) -> None: ...
 
 
 def as_bytes(value: str | bytes | None) -> bytes | None:
@@ -157,7 +153,6 @@ def UNCHECKED(type):
 
 
 __all__ = [
-    "FieldsFromTypeHints",
     "as_bytes",
     "is_zeroed",
     "from_zero_terminated",

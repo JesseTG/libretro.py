@@ -1,9 +1,9 @@
 from ctypes import CFUNCTYPE, POINTER, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
-from typing import NewType, Sequence, overload
+from typing import TYPE_CHECKING, NewType, Sequence, overload
 
-from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
+from libretro.api._utils import deepcopy_array
 
 Port = NewType("Port", int)
 
@@ -15,8 +15,14 @@ RETRO_DEVICE_LIGHTGUN = 4
 RETRO_DEVICE_ANALOG = 5
 RETRO_DEVICE_POINTER = 6
 
-retro_input_poll_t = CFUNCTYPE(None)
-retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
+if TYPE_CHECKING:
+    from libretro.typing import FrontendFunctionPointer, Pointer
+
+    retro_input_poll_t = FrontendFunctionPointer[None, []]
+    retro_input_state_t = FrontendFunctionPointer[c_int16, [c_uint, c_uint, c_uint, c_uint]]
+else:
+    retro_input_poll_t = CFUNCTYPE(None)
+    retro_input_state_t = CFUNCTYPE(c_int16, c_uint, c_uint, c_uint, c_uint)
 
 
 RETRO_DEVICE_TYPE_SHIFT = 8
@@ -57,12 +63,21 @@ class InputDevice(IntEnum):
 
 
 @dataclass(init=False)
-class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
-    port: c_uint
-    device: c_uint
-    index: c_uint
-    id: c_uint
-    description: c_char_p
+class retro_input_descriptor(Structure):
+    if TYPE_CHECKING:
+        port: int
+        device: int
+        index: int
+        id: int
+        description: bytes | None
+    else:
+        _fields_ = [
+            ("port", c_uint),
+            ("device", c_uint),
+            ("index", c_uint),
+            ("id", c_uint),
+            ("description", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_input_descriptor(
@@ -75,18 +90,30 @@ class retro_input_descriptor(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_controller_description(Structure, metaclass=FieldsFromTypeHints):
-    desc: c_char_p
-    id: c_uint
+class retro_controller_description(Structure):
+    if TYPE_CHECKING:
+        desc: bytes | None
+        id: int
+    else:
+        _fields_ = [
+            ("desc", c_char_p),
+            ("id", c_uint),
+        ]
 
     def __deepcopy__(self, _):
         return retro_controller_description(self.desc, self.id)
 
 
 @dataclass(init=False)
-class retro_controller_info(Structure, metaclass=FieldsFromTypeHints):
-    types: POINTER(retro_controller_description)
-    num_types: c_uint
+class retro_controller_info(Structure):
+    if TYPE_CHECKING:
+        types: Pointer[retro_controller_description] | None
+        num_types: int
+    else:
+        _fields_ = [
+            ("types", POINTER(retro_controller_description)),
+            ("num_types", c_uint),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_controller_info(

@@ -1,36 +1,60 @@
 from copy import deepcopy
 from ctypes import CFUNCTYPE, POINTER, Array, Structure, c_bool, c_char_p, pointer
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
+from libretro.api._utils import deepcopy_array
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
-retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
+if TYPE_CHECKING:
+    from libretro.typing import CoreFunctionPointer, Pointer
+
+    retro_core_options_update_display_callback_t = CoreFunctionPointer[c_bool, []]
+else:
+    retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
 
 
 @dataclass(init=False)
-class retro_variable(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    value: c_char_p
+class retro_variable(Structure):
+    if TYPE_CHECKING:
+        key: bytes | None
+        value: bytes | None
+    else:
+        _fields_ = [
+            ("key", c_char_p),
+            ("value", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_variable(self.key, self.value)
 
 
 @dataclass(init=False)
-class retro_core_option_display(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    visible: c_bool
+class retro_core_option_display(Structure):
+    if TYPE_CHECKING:
+        key: bytes | None
+        visible: bool
+    else:
+        _fields_ = [
+            ("key", c_char_p),
+            ("visible", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_core_option_display(self.key, self.visible)
 
 
 @dataclass(init=False)
-class retro_core_option_value(Structure, metaclass=FieldsFromTypeHints):
-    value: c_char_p
-    label: c_char_p
+class retro_core_option_value(Structure):
+    if TYPE_CHECKING:
+        value: bytes | None
+        label: bytes | None
+    else:
+        _fields_ = [
+            ("value", c_char_p),
+            ("label", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_core_option_value(self.value, self.label)
@@ -41,12 +65,21 @@ CoreOptionArray: type[Array] = retro_core_option_value * RETRO_NUM_CORE_OPTION_V
 
 
 @dataclass(init=False)
-class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    info: c_char_p
-    values: CoreOptionArray
-    default_value: c_char_p
+class retro_core_option_definition(Structure):
+    if TYPE_CHECKING:
+        key: bytes | None
+        desc: bytes | None
+        info: bytes | None
+        values: Array[retro_core_option_value]
+        default_value: bytes | None
+    else:
+        _fields_ = [
+            ("key", c_char_p),
+            ("desc", c_char_p),
+            ("info", c_char_p),
+            ("values", CoreOptionArray),
+            ("default_value", c_char_p),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_core_option_definition(
@@ -59,9 +92,15 @@ class retro_core_option_definition(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
-    us: POINTER(retro_core_option_definition)
-    local: POINTER(retro_core_option_definition)
+class retro_core_options_intl(Structure):
+    if TYPE_CHECKING:
+        us: Pointer[retro_core_option_definition] | None
+        local: Pointer[retro_core_option_definition] | None
+    else:
+        _fields_ = [
+            ("us", POINTER(retro_core_option_definition)),
+            ("local", POINTER(retro_core_option_definition)),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_core_options_intl(
@@ -71,25 +110,44 @@ class retro_core_options_intl(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_core_option_v2_category(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    info: c_char_p
+class retro_core_option_v2_category(Structure):
+    if TYPE_CHECKING:
+        key: bytes | None
+        desc: bytes | None
+        info: bytes | None
+    else:
+        _fields_ = [
+            ("key", c_char_p),
+            ("desc", c_char_p),
+            ("info", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_core_option_v2_category(self.key, self.desc, self.info)
 
 
 @dataclass(init=False)
-class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
-    key: c_char_p
-    desc: c_char_p
-    desc_categorized: c_char_p
-    info: c_char_p
-    info_categorized: c_char_p
-    category_key: c_char_p
-    values: CoreOptionArray
-    default_value: c_char_p
+class retro_core_option_v2_definition(Structure):
+    if TYPE_CHECKING:
+        key: bytes | None
+        desc: bytes | None
+        desc_categorized: bytes | None
+        info: bytes | None
+        info_categorized: bytes | None
+        category_key: bytes | None
+        values: Array[retro_core_option_value]
+        default_value: bytes | None
+    else:
+        _fields_ = [
+            ("key", c_char_p),
+            ("desc", c_char_p),
+            ("desc_categorized", c_char_p),
+            ("info", c_char_p),
+            ("info_categorized", c_char_p),
+            ("category_key", c_char_p),
+            ("values", CoreOptionArray),
+            ("default_value", c_char_p),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_core_option_v2_definition(
@@ -105,9 +163,15 @@ class retro_core_option_v2_definition(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
-    categories: POINTER(retro_core_option_v2_category)
-    definitions: POINTER(retro_core_option_v2_definition)
+class retro_core_options_v2(Structure):
+    if TYPE_CHECKING:
+        categories: Pointer[retro_core_option_v2_category] | None
+        definitions: Pointer[retro_core_option_v2_definition] | None
+    else:
+        _fields_ = [
+            ("categories", POINTER(retro_core_option_v2_category)),
+            ("definitions", POINTER(retro_core_option_v2_definition)),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_core_options_v2(
@@ -117,9 +181,15 @@ class retro_core_options_v2(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
-    us: POINTER(retro_core_options_v2)
-    local: POINTER(retro_core_options_v2)
+class retro_core_options_v2_intl(Structure):
+    if TYPE_CHECKING:
+        us: Pointer[retro_core_options_v2] | None
+        local: Pointer[retro_core_options_v2] | None
+    else:
+        _fields_ = [
+            ("us", POINTER(retro_core_options_v2)),
+            ("local", POINTER(retro_core_options_v2)),
+        ]
 
     def __deepcopy__(self, memo):
         return retro_core_options_v2_intl(
@@ -129,8 +199,11 @@ class retro_core_options_v2_intl(Structure, metaclass=FieldsFromTypeHints):
 
 
 @dataclass(init=False)
-class retro_core_options_update_display_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_core_options_update_display_callback_t
+class retro_core_options_update_display_callback(Structure):
+    if TYPE_CHECKING:
+        callback: retro_core_options_update_display_callback_t | None
+    else:
+        _fields_ = [("callback", retro_core_options_update_display_callback_t)]
 
     def __call__(self) -> bool:
         if not self.callback:

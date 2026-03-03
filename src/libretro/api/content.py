@@ -16,26 +16,38 @@ from ctypes import (
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
-from typing import Any, NamedTuple, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, overload, override
 from zipfile import Path as ZipPath
 
 from libretro._typing import Buffer
 from libretro.api._utils import (
-    FieldsFromTypeHints,
     as_bytes,
     deepcopy_array,
     deepcopy_buffer,
+    memoryview_at,
     mmap_file,
 )
 
+if TYPE_CHECKING:
+    from libretro.typing import Pointer
 
-@dataclass(init=False)
-class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
-    library_name: c_char_p
-    library_version: c_char_p
-    valid_extensions: c_char_p
-    need_fullpath: c_bool
-    block_extract: c_bool
+
+@dataclass(init=False, slots=True)
+class retro_system_info(Structure):
+    if TYPE_CHECKING:
+        library_name: bytes | None
+        library_version: bytes | None
+        valid_extensions: bytes | None
+        need_fullpath: bool
+        block_extract: bool
+    else:
+        _fields_ = [
+            ("library_name", c_char_p),
+            ("library_version", c_char_p),
+            ("valid_extensions", c_char_p),
+            ("need_fullpath", c_bool),
+            ("block_extract", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_system_info(
@@ -48,16 +60,29 @@ class retro_system_info(Structure, metaclass=FieldsFromTypeHints):
 
     @property
     def extensions(self) -> Iterator[bytes]:
+        """
+        Returns an iterator over the valid extensions for this system, as bytes.
+        A convenience property for a common use of the ``valid_extensions`` field,
+        which is a pipe-delimited list of extensions.
+        """
         if self.valid_extensions:
             yield from self.valid_extensions.split(b"|")
 
 
 @dataclass(init=False)
-class retro_game_info(Structure, metaclass=FieldsFromTypeHints):
-    path: c_char_p
-    data: c_void_p
-    size: c_size_t
-    meta: c_char_p
+class retro_game_info(Structure):
+    if TYPE_CHECKING:
+        path: bytes | None
+        data: int | None
+        size: int
+        meta: bytes | None
+    else:
+        _fields_ = [
+            ("path", c_char_p),
+            ("data", c_void_p),
+            ("size", c_size_t),
+            ("meta", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_game_info(
@@ -79,23 +104,40 @@ class SubsystemContent(NamedTuple):
 
 
 @dataclass(init=False)
-class retro_subsystem_memory_info(Structure, metaclass=FieldsFromTypeHints):
-    extension: c_char_p
-    type: c_uint
+class retro_subsystem_memory_info(Structure):
+    if TYPE_CHECKING:
+        extension: bytes | None
+        type: int
+    else:
+        _fields_ = [
+            ("extension", c_char_p),
+            ("type", c_uint),
+        ]
 
     def __deepcopy__(self, _):
         return retro_subsystem_memory_info(self.extension, self.type)
 
 
 @dataclass(init=False)
-class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
-    desc: c_char_p
-    valid_extensions: c_char_p
-    need_fullpath: c_bool
-    block_extract: c_bool
-    required: c_bool
-    memory: POINTER(retro_subsystem_memory_info)
-    num_memory: c_uint
+class retro_subsystem_rom_info(Structure):
+    if TYPE_CHECKING:
+        desc: bytes | None
+        valid_extensions: bytes | None
+        need_fullpath: bool
+        block_extract: bool
+        required: bool
+        memory: Pointer[retro_subsystem_memory_info] | None
+        num_memory: int
+    else:
+        _fields_ = [
+            ("desc", c_char_p),
+            ("valid_extensions", c_char_p),
+            ("need_fullpath", c_bool),
+            ("block_extract", c_bool),
+            ("required", c_bool),
+            ("memory", POINTER(retro_subsystem_memory_info)),
+            ("num_memory", c_uint),
+        ]
 
     def __len__(self):
         return int(self.num_memory)
@@ -104,7 +146,7 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
     def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_memory_info]: ...
+    def __getitem__(self, index: slice) -> list[retro_subsystem_memory_info]: ...
 
     def __getitem__(self, index):
         if not self.memory:
@@ -140,13 +182,22 @@ class retro_subsystem_rom_info(Structure, metaclass=FieldsFromTypeHints):
             yield from self.valid_extensions.split(b"|")
 
 
-@dataclass(init=False)
-class retro_subsystem_info(Structure, metaclass=FieldsFromTypeHints):
-    desc: c_char_p
-    ident: c_char_p
-    roms: POINTER(retro_subsystem_rom_info)
-    num_roms: c_uint
-    id: c_uint
+@dataclass(init=False, slots=True)
+class retro_subsystem_info(Structure):
+    if TYPE_CHECKING:
+        desc: bytes | None
+        ident: bytes | None
+        roms: Pointer[retro_subsystem_rom_info] | None
+        num_roms: int
+        id: int
+    else:
+        _fields_ = [
+            ("desc", c_char_p),
+            ("ident", c_char_p),
+            ("roms", POINTER(retro_subsystem_rom_info)),
+            ("num_roms", c_uint),
+            ("id", c_uint),
+        ]
 
     def __len__(self):
         return int(self.num_roms)
@@ -214,9 +265,18 @@ class Subsystems(Sequence[retro_subsystem_info]):
             raise TypeError("All elements in the sequence must be retro_subsystem_info objects")
 
         self._subsystems = tuple(subsystems)
-        self._subsystems_by_ident = {bytes(subsystem.ident): subsystem for subsystem in subsystems}
+        self._subsystems_by_ident = {bytes(s.ident): s for s in subsystems if s.ident}
 
-    def __getitem__(self, item: int | str | bytes) -> retro_subsystem_info:
+    @overload
+    def __getitem__(self, item: int | str | bytes) -> retro_subsystem_info: ...
+
+    @overload
+    def __getitem__(self, item: slice) -> Sequence[retro_subsystem_info]: ...
+
+    @override
+    def __getitem__(
+        self, item: int | str | bytes | slice
+    ) -> retro_subsystem_info | Sequence[retro_subsystem_info]:
         length = len(self._subsystems)
         match item:
             case int() if -length <= item < length:
@@ -232,7 +292,8 @@ class Subsystems(Sequence[retro_subsystem_info]):
             case _:
                 raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
 
-    def __contains__(self, item: str | bytes | retro_subsystem_info):
+    @override
+    def __contains__(self, item: str | bytes | retro_subsystem_info | object):
         match item:
             case str(ident) | bytes(ident):
                 return as_bytes(ident) in self._subsystems_by_ident
@@ -250,11 +311,18 @@ class Subsystems(Sequence[retro_subsystem_info]):
         return len(self._subsystems)
 
 
-@dataclass(init=False)
-class retro_system_content_info_override(Structure, metaclass=FieldsFromTypeHints):
-    extensions: c_char_p
-    need_fullpath: c_bool
-    persistent_data: c_bool
+@dataclass(init=False, slots=True)
+class retro_system_content_info_override(Structure):
+    if TYPE_CHECKING:
+        extensions: bytes | None
+        need_fullpath: bool
+        persistent_data: bool
+    else:
+        _fields_ = [
+            ("extensions", c_char_p),
+            ("need_fullpath", c_bool),
+            ("persistent_data", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_system_content_info_override(
@@ -272,7 +340,8 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
     def __init__(self, overrides: Sequence[retro_system_content_info_override]):
         if not isinstance(overrides, Sequence):
             raise TypeError(
-                f"Expected a sequence of retro_system_content_info_override objects, got {type(overrides).__name__}"
+                f"Expected a sequence of retro_system_content_info_override objects, "
+                f"got {type(overrides).__name__}"
             )
 
         if not all(
@@ -294,7 +363,16 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
         self._overrides_by_ext = MappingProxyType(overrides_by_ext)
 
-    def __getitem__(self, item: int | slice | str | bytes) -> retro_system_content_info_override:
+    @overload
+    def __getitem__(self, item: int | str | bytes) -> retro_system_content_info_override: ...
+
+    @overload
+    def __getitem__(self, item: slice) -> Sequence[retro_system_content_info_override]: ...
+
+    @override
+    def __getitem__(
+        self, item: int | slice | str | bytes
+    ) -> retro_system_content_info_override | Sequence[retro_system_content_info_override]:
         match item:
             case int() if -len(self) <= item < len(self):
                 return self._overrides[item]
@@ -311,7 +389,10 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
             case _:
                 raise TypeError(f"Expected an int, str, or bytes; got {type(item).__name__}")
 
-    def __contains__(self, item: str | bytes | retro_system_content_info_override) -> bool:
+    @override
+    def __contains__(
+        self, item: str | bytes | retro_system_content_info_override | object
+    ) -> bool:
         """
         Tests if the given item is in the overrides list.
 
@@ -341,19 +422,34 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
         return self._overrides_by_ext
 
 
-@dataclass(init=False)
-class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
-    full_path: c_char_p
-    archive_path: c_char_p
-    archive_file: c_char_p
-    dir: c_char_p
-    name: c_char_p
-    ext: c_char_p
-    meta: c_char_p
-    data: c_void_p
-    size: c_size_t
-    file_in_archive: c_bool
-    persistent_data: c_bool
+@dataclass(init=False, slots=True)
+class retro_game_info_ext(Structure):
+    if TYPE_CHECKING:
+        full_path: bytes | None
+        archive_path: bytes | None
+        archive_file: bytes | None
+        dir: bytes | None
+        name: bytes | None
+        ext: bytes | None
+        meta: bytes | None
+        data: int | None
+        size: int
+        file_in_archive: bool
+        persistent_data: bool
+    else:
+        _fields_ = [
+            ("full_path", c_char_p),
+            ("archive_path", c_char_p),
+            ("archive_file", c_char_p),
+            ("dir", c_char_p),
+            ("name", c_char_p),
+            ("ext", c_char_p),
+            ("meta", c_char_p),
+            ("data", c_void_p),
+            ("size", c_size_t),
+            ("file_in_archive", c_bool),
+            ("persistent_data", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_game_info_ext(
@@ -375,6 +471,10 @@ class retro_game_info_ext(Structure, metaclass=FieldsFromTypeHints):
 def map_content(
     content: Content | None,
 ) -> Generator[retro_game_info | None, Any, None]:
+    """
+    Context manager for mapping a content file into memory.
+    The content is mapped on entering, and unmapped on exiting.
+    """
     match content:
         case None:
             yield None
@@ -387,24 +487,22 @@ def map_content(
                 size=info_ext.size,
                 meta=info_ext.meta,
             )
-        case str(path) | PathLike(path):
+        case str() | PathLike() as path:
             with mmap_file(path) as contentview:
-                # noinspection PyTypeChecker
                 # You can't directly get an address from a memoryview,
                 # so you need to resort to C-like casting
-                array_type: type[Array] = c_ubyte * len(contentview)
+                array_type = c_ubyte * len(contentview)
                 buffer_array = array_type.from_buffer(contentview)
 
                 info = retro_game_info(
-                    path.encode(), addressof(buffer_array), len(contentview), None
+                    os.fsencode(path), addressof(buffer_array), len(contentview), None
                 )
                 yield info
                 del info
                 del buffer_array
                 del array_type
                 # Need to clear all outstanding pointers, or else mmap will raise a BufferError
-        case bytes(data) | bytearray(data) | memoryview(data):
-            # noinspection PyTypeChecker
+        case bytes() | bytearray() | memoryview() as data:
             array_type: type[Array] = c_ubyte * len(data)
             buffer_array = array_type.from_buffer(data)
             yield retro_game_info(data=addressof(buffer_array), size=len(data))
@@ -424,7 +522,7 @@ def get_extension(content: Content | retro_game_info_ext) -> bytes | None:
             return e.removeprefix(b".")
         case bytes() | bytearray() | memoryview() | retro_game_info(path=None):
             return None
-        case retro_game_info(path=path):
+        case retro_game_info(path=path) if path is not None:
             _, ext = os.path.splitext(path)
             return ext.removeprefix(b".")
         case retro_game_info_ext():

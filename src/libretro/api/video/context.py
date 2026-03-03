@@ -1,8 +1,9 @@
 from ctypes import CFUNCTYPE, Structure, c_bool, c_char_p, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import UNCHECKED, FieldsFromTypeHints, c_uintptr
+from libretro.api._utils import UNCHECKED, c_uintptr
 from libretro.api.proc import retro_proc_address_t
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
@@ -42,25 +43,48 @@ class HardwareContext(IntEnum):
         self._type_ = "I"
 
 
-retro_hw_context_reset_t = CFUNCTYPE(None)
-retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
-retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
+if TYPE_CHECKING:
+    from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
+
+    retro_hw_context_reset_t = CoreFunctionPointer[None, []]
+    retro_hw_get_current_framebuffer_t = FrontendFunctionPointer[c_uintptr, []]
+    retro_hw_get_proc_address_t = FrontendFunctionPointer[retro_proc_address_t, [c_char_p]]
+else:
+    retro_hw_context_reset_t = CFUNCTYPE(None)
+    retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
+    retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
 
 
 @dataclass(init=False)
-class retro_hw_render_callback(Structure, metaclass=FieldsFromTypeHints):
-    context_type: retro_hw_context_type
-    context_reset: retro_hw_context_reset_t
-    get_current_framebuffer: retro_hw_get_current_framebuffer_t
-    get_proc_address: retro_hw_get_proc_address_t
-    depth: c_bool
-    stencil: c_bool
-    bottom_left_origin: c_bool
-    version_major: c_uint
-    version_minor: c_uint
-    cache_context: c_bool
-    context_destroy: retro_hw_context_reset_t
-    debug_context: c_bool
+class retro_hw_render_callback(Structure):
+    if TYPE_CHECKING:
+        context_type: HardwareContext
+        context_reset: retro_hw_context_reset_t | None
+        get_current_framebuffer: retro_hw_get_current_framebuffer_t | None
+        get_proc_address: retro_hw_get_proc_address_t | None
+        depth: bool
+        stencil: bool
+        bottom_left_origin: bool
+        version_major: int
+        version_minor: int
+        cache_context: bool
+        context_destroy: retro_hw_context_reset_t | None
+        debug_context: bool
+    else:
+        _fields_ = [
+            ("context_type", retro_hw_context_type),
+            ("context_reset", retro_hw_context_reset_t),
+            ("get_current_framebuffer", retro_hw_get_current_framebuffer_t),
+            ("get_proc_address", retro_hw_get_proc_address_t),
+            ("depth", c_bool),
+            ("stencil", c_bool),
+            ("bottom_left_origin", c_bool),
+            ("version_major", c_uint),
+            ("version_minor", c_uint),
+            ("cache_context", c_bool),
+            ("context_destroy", retro_hw_context_reset_t),
+            ("debug_context", c_bool),
+        ]
 
     def __deepcopy__(self, _):
         return retro_hw_render_callback(

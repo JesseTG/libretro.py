@@ -2,8 +2,7 @@ import logging
 from ctypes import CFUNCTYPE, Structure, c_char_p, c_int
 from dataclasses import dataclass
 from enum import IntEnum
-
-from libretro.api._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING
 
 RETRO_LOG_DEBUG = 0
 RETRO_LOG_INFO = RETRO_LOG_DEBUG + 1
@@ -12,7 +11,13 @@ RETRO_LOG_ERROR = RETRO_LOG_WARN + 1
 RETRO_LOG_DUMMY = 0x7FFFFFFF
 
 retro_log_level = c_int
-retro_log_printf_t = CFUNCTYPE(None, retro_log_level, c_char_p)
+
+if TYPE_CHECKING:
+    from libretro.typing import FrontendFunctionPointer
+
+    retro_log_printf_t = FrontendFunctionPointer[None, [retro_log_level, c_char_p]]
+else:
+    retro_log_printf_t = CFUNCTYPE(None, retro_log_level, c_char_p)
 
 
 class LogLevel(IntEnum):
@@ -38,9 +43,12 @@ class LogLevel(IntEnum):
                 return logging.ERROR
 
 
-@dataclass(init=False)
-class retro_log_callback(Structure, metaclass=FieldsFromTypeHints):
-    log: retro_log_printf_t
+@dataclass(init=False, slots=True)
+class retro_log_callback(Structure):
+    if TYPE_CHECKING:
+        log: retro_log_printf_t | None
+    else:
+        _fields_ = [("log", retro_log_printf_t)]
 
     def __call__(self, level: LogLevel, message: bytes) -> None:
         if self.log:

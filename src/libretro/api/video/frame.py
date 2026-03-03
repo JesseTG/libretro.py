@@ -1,9 +1,7 @@
 from ctypes import CFUNCTYPE, Structure, c_int, c_size_t, c_uint, c_void_p
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
-from typing import Literal
-
-from .._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING, Literal
 
 retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
@@ -14,8 +12,12 @@ RETRO_MEMORY_ACCESS_WRITE = 1 << 0
 RETRO_MEMORY_ACCESS_READ = 1 << 1
 RETRO_MEMORY_TYPE_CACHED = 1 << 0
 
+if TYPE_CHECKING:
+    from libretro.typing import FrontendFunctionPointer
 
-retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
+    retro_video_refresh_t = FrontendFunctionPointer[None, [c_void_p, c_uint, c_uint, c_size_t]]
+else:
+    retro_video_refresh_t = CFUNCTYPE(None, c_void_p, c_uint, c_uint, c_size_t)
 
 
 class PixelFormat(IntEnum):
@@ -75,14 +77,25 @@ class MemoryType(IntFlag):
 
 
 @dataclass(init=False)
-class retro_framebuffer(Structure, metaclass=FieldsFromTypeHints):
-    data: c_void_p
-    width: c_uint
-    height: c_uint
-    pitch: c_size_t
-    format: retro_pixel_format
-    access_flags: c_uint
-    memory_flags: c_uint
+class retro_framebuffer(Structure):
+    if TYPE_CHECKING:
+        data: int | None
+        width: int
+        height: int
+        pitch: int
+        format: PixelFormat
+        access_flags: MemoryAccess
+        memory_flags: MemoryType
+    else:
+        _fields_ = [
+            ("data", c_void_p),
+            ("width", c_uint),
+            ("height", c_uint),
+            ("pitch", c_size_t),
+            ("format", retro_pixel_format),
+            ("access_flags", c_uint),
+            ("memory_flags", c_uint),
+        ]
 
     # TODO: Should I copy framebuffer?
     def __deepcopy__(self, _):

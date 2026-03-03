@@ -1,8 +1,7 @@
 from ctypes import CFUNCTYPE, Structure, c_bool, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
-
-from libretro.api._utils import FieldsFromTypeHints
+from typing import TYPE_CHECKING
 
 from .device import InputDeviceState
 
@@ -564,12 +563,22 @@ class KeyboardState(InputDeviceState):
                 raise KeyError(f"Invalid key: {item}")
 
 
-retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
+if TYPE_CHECKING:
+    from libretro.typing import CoreFunctionPointer
+
+    retro_keyboard_event_t = CoreFunctionPointer[None, [c_bool, c_uint, c_uint32, c_uint16]]
+else:
+    retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
 
 @dataclass(init=False)
-class retro_keyboard_callback(Structure, metaclass=FieldsFromTypeHints):
-    callback: retro_keyboard_event_t
+class retro_keyboard_callback(Structure):
+    if TYPE_CHECKING:
+        callback: retro_keyboard_event_t | None
+    else:
+        _fields_ = [
+            ("callback", retro_keyboard_event_t),
+        ]
 
     def __deepcopy__(self, _):
         return retro_keyboard_callback(callback=self.callback)

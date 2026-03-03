@@ -1,5 +1,6 @@
 from ctypes import CFUNCTYPE, c_bool, c_uint, c_void_p
 from enum import IntEnum, unique
+from typing import TYPE_CHECKING
 
 RETRO_ENVIRONMENT_EXPERIMENTAL = 0x10000
 RETRO_ENVIRONMENT_PRIVATE = 0x20000
@@ -179,7 +180,12 @@ class EnvironmentCall(IntEnum):
         self._type_ = "I"
 
 
-retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
+if TYPE_CHECKING:
+    from libretro.typing import FrontendFunctionPointer, c_void_p
+
+    retro_environment_t = FrontendFunctionPointer[c_bool, [c_uint, c_void_p]]
+else:
+    retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
 
 
 __all__ = [

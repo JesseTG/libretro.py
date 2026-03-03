@@ -1,8 +1,12 @@
 from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64, c_void_p
 from dataclasses import dataclass
 from enum import IntFlag
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import FieldsFromTypeHints, deepcopy_array
+if TYPE_CHECKING:
+    from libretro.typing import Pointer
+
+from libretro.api._utils import deepcopy_array
 
 RETRO_MEMDESC_CONST = 1 << 0
 RETRO_MEMDESC_BIGENDIAN = 1 << 1
@@ -31,16 +35,28 @@ class MemoryDescriptorFlag(IntFlag):
     MINSIZE_8 = RETRO_MEMDESC_MINSIZE_8
 
 
-@dataclass(init=False)
-class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
-    flags: c_uint64
-    ptr: c_void_p
-    offset: c_size_t
-    start: c_size_t
-    select: c_size_t
-    disconnect: c_size_t
-    len: c_size_t
-    addrspace: c_char_p
+@dataclass(init=False, slots=True)
+class retro_memory_descriptor(Structure):
+    if TYPE_CHECKING:
+        flags: MemoryDescriptorFlag
+        ptr: int | None
+        offset: int
+        start: int
+        select: int
+        disconnect: int
+        len: int
+        addrspace: bytes | None
+    else:
+        _fields_ = [
+            ("flags", c_uint64),
+            ("ptr", c_void_p),
+            ("offset", c_size_t),
+            ("start", c_size_t),
+            ("select", c_size_t),
+            ("disconnect", c_size_t),
+            ("len", c_size_t),
+            ("addrspace", c_char_p),
+        ]
 
     def __deepcopy__(self, _):
         return retro_memory_descriptor(
@@ -58,10 +74,16 @@ class retro_memory_descriptor(Structure, metaclass=FieldsFromTypeHints):
     # TODO: Implement a buffer property (not __buffer__ because Structure provides that)
 
 
-@dataclass(init=False)
-class retro_memory_map(Structure, metaclass=FieldsFromTypeHints):
-    descriptors: POINTER(retro_memory_descriptor)
-    num_descriptors: c_uint
+@dataclass(init=False, slots=True)
+class retro_memory_map(Structure):
+    if TYPE_CHECKING:
+        descriptors: Pointer[retro_memory_descriptor] | None
+        num_descriptors: int
+    else:
+        _fields_ = [
+            ("descriptors", POINTER(retro_memory_descriptor)),
+            ("num_descriptors", c_uint),
+        ]
 
     def __len__(self):
         return self.num_descriptors

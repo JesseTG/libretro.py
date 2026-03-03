@@ -1,9 +1,9 @@
 from ctypes import Structure, c_char_p, c_int, c_int8, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import FieldsFromTypeHints
-from libretro.api.log import retro_log_level
+from libretro.api.log import LogLevel, retro_log_level
 
 RETRO_MESSAGE_TARGET_ALL = 0
 RETRO_MESSAGE_TARGET_OSD = RETRO_MESSAGE_TARGET_ALL + 1
@@ -37,23 +37,40 @@ class MessageType(IntEnum):
 
 
 @dataclass(init=False)
-class retro_message(Structure, metaclass=FieldsFromTypeHints):
-    msg: c_char_p
-    frames: c_uint
+class retro_message(Structure):
+    if TYPE_CHECKING:
+        msg: bytes | None
+        frames: int
+    else:
+        _fields_ = [
+            ("msg", c_char_p),
+            ("frames", c_uint),
+        ]
 
     def __deepcopy__(self, memodict):
         return retro_message(msg=self.msg, frames=self.frames)
 
 
 @dataclass(init=False)
-class retro_message_ext(Structure, metaclass=FieldsFromTypeHints):
-    msg: c_char_p
-    duration: c_uint
-    priority: c_uint
-    level: retro_log_level
-    target: retro_message_target
-    type: retro_message_type
-    progress: c_int8
+class retro_message_ext(Structure):
+    if TYPE_CHECKING:
+        msg: bytes | None
+        duration: int
+        priority: int
+        level: LogLevel
+        target: MessageTarget
+        type: MessageType
+        progress: int
+    else:
+        _fields_ = [
+            ("msg", c_char_p),
+            ("duration", c_uint),
+            ("priority", c_uint),
+            ("level", retro_log_level),
+            ("target", retro_message_target),
+            ("type", retro_message_type),
+            ("progress", c_int8),
+        ]
 
     def __deepcopy__(self, _):
         return retro_message_ext(

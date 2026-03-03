@@ -1,22 +1,39 @@
 from ctypes import CFUNCTYPE, Structure, c_char_p
 from dataclasses import dataclass
-from typing import AnyStr
+from typing import TYPE_CHECKING
 
-from libretro.api._utils import UNCHECKED, FieldsFromTypeHints
+from libretro.api._utils import UNCHECKED
 
-retro_proc_address_t = CFUNCTYPE(None)
-retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
+if TYPE_CHECKING:
+    from libretro.typing import CoreFunctionPointer
+
+    retro_proc_address_t = CoreFunctionPointer[None, []]
+    retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [c_char_p]]
+else:
+    retro_proc_address_t = CFUNCTYPE(None)
+    retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
 
 
-@dataclass(init=False)
-class retro_get_proc_address_interface(Structure, metaclass=FieldsFromTypeHints):
-    get_proc_address: retro_get_proc_address_t
+@dataclass(init=False, slots=True)
+class retro_get_proc_address_interface(Structure):
+    if TYPE_CHECKING:
+        get_proc_address: retro_get_proc_address_t | None
+    else:
+        _fields_ = [("get_proc_address", retro_get_proc_address_t)]
 
-    def __call__(self, sym: AnyStr) -> retro_proc_address_t:
+    def __call__(self, sym: str | bytes) -> retro_proc_address_t:
         if not self.get_proc_address:
             raise ValueError("get_proc_address is NULL")
 
-        return self.get_proc_address(sym)
+        match sym:
+            case str():
+                sym_bytes = sym.encode("utf-8")
+            case bytes():
+                sym_bytes = sym
+            case _:
+                raise TypeError(f"sym must be str or bytes, got {type(sym).__name__}")
+
+        return self.get_proc_address(sym_bytes)
 
     def __deepcopy__(self, _):
         return retro_get_proc_address_interface(self.get_proc_address)
