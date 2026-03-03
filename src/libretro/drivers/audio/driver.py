@@ -26,8 +26,8 @@ class AudioDriver(Protocol):
 
     def set_state(self, enabled: bool) -> None:
         callbacks = self.callbacks
-        if callbacks and callbacks.callback:
-            callbacks.callback(enabled)
+        if callbacks and callbacks.set_state:
+            callbacks.set_state(enabled)
 
     def callback(self) -> None:
         callbacks = self.callbacks

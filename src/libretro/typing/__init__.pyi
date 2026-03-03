@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from ctypes import *
-from typing import Any, Protocol
+from typing import Any, Protocol, Self, overload
 
 from _ctypes import CFuncPtr, _CDataType, _Pointer
 
@@ -29,7 +30,16 @@ CUint = (
 )
 CReal = c_float | c_double | c_longdouble
 CNumber = CInt | CUint | CReal
-c_bool_arg = c_bool | bool | Any
+to_c_bool = c_bool | bool | Any
+"""
+Type for a boolean argument to a function intended to be called from the frontend.
+"""
+
+to_c_int16 = c_int16 | int
+to_c_int64 = c_int64 | int
+to_c_uint = c_uint | int
+from_c_bool = bool
+from_c_size_t = int
 c_int_arg = c_int | int
 c_int16_arg = c_int16 | int
 c_int64_arg = c_int64 | int
@@ -49,6 +59,12 @@ type CPointerArg[T: _CDataType] = _Pointer[T] | None
 type CNullableBufferArg[T: _CDataType] = CBufferArg[T] | None
 type Pointer[T: _CDataType] = _Pointer[T]
 
+type PointerArg[T: _CDataType] = Pointer[T] | T | None
+"""
+Type for a pointer argument in a function intended to be called from the frontend.
+Can be a pointer, a value of the pointed type, or None (which is converted to NULL).
+"""
+
 class CoreFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
     """
     Type for a function defined in the core to be called in the frontend
@@ -56,27 +72,15 @@ class CoreFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
-class FrontendFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
+class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
     """
     Type for a function defined in the frontend to be called in the core
     """
 
+    @overload
+    def __call__(self, func: Callable[P, R]) -> Self: ...
+    @overload
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
 class AsParameter[T: _CDataType](Protocol):
     _as_parameter_: T
-
-__all__ = (
-    "c_int_arg",
-    "CBufferArg",
-    "c_int16_arg",
-    "c_int64_arg",
-    "c_size_t_arg",
-    "c_bool_arg",
-    "c_uint_arg",
-    "Pointer",
-    "TypedCFuncPtr",
-    "c_uint8_arg",
-    "c_uint32_arg",
-    "c_uint64_arg",
-)

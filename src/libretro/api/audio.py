@@ -3,13 +3,24 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, Pointer
+    from libretro.typing import (
+        CoreFunctionPointer,
+        FrontendFunctionPointer,
+        Pointer,
+        from_c_size_t,
+        to_c_bool,
+        to_c_uint,
+    )
 
     retro_audio_sample_t = FrontendFunctionPointer[None, [c_int16, c_int16]]
-    retro_audio_sample_batch_t = FrontendFunctionPointer[c_size_t, [Pointer[c_int16], c_size_t]]
+    retro_audio_sample_batch_t = FrontendFunctionPointer[
+        from_c_size_t, [Pointer[c_int16], c_size_t]
+    ]
     retro_audio_callback_t = CoreFunctionPointer[None, []]
-    retro_audio_set_state_callback_t = CoreFunctionPointer[None, [c_bool]]
-    retro_audio_buffer_status_callback_t = CoreFunctionPointer[None, [c_bool, c_uint, c_bool]]
+    retro_audio_set_state_callback_t = CoreFunctionPointer[None, [to_c_bool]]
+    retro_audio_buffer_status_callback_t = CoreFunctionPointer[
+        None, [to_c_bool, to_c_uint, to_c_bool]
+    ]
 else:
     retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
     retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)

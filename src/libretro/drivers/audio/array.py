@@ -14,15 +14,17 @@ class ArrayAudioDriver(AudioDriver):
         self._buffer = array("h")
         self._system_av_info: retro_system_av_info | None = None
 
+    @override
     def sample(self, left: int, right: int):
         self._buffer.append(left)
         self._buffer.append(right)
 
-    def sample_batch(self, data: memoryview) -> int:
-        self._buffer.frombytes(data.cast("B"))
+    @override
+    def sample_batch(self, frames: memoryview) -> int:
+        self._buffer.frombytes(frames.cast("B"))
 
         # Divide by two to return number of frames
-        return len(data) // 2
+        return len(frames) // 2
 
     @property
     @override
