@@ -1,4 +1,13 @@
-from ctypes import CFUNCTYPE, Structure, c_bool, c_int, c_size_t, c_uint16, c_void_p
+from ctypes import (
+    CFUNCTYPE,
+    Structure,
+    c_bool,
+    c_char_p,
+    c_int,
+    c_size_t,
+    c_uint16,
+    c_void_p,
+)
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
