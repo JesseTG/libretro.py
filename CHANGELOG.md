@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `PathDriver.file_browser_start_dir`,
   and implement it in `ExplicitPathDriver` and `TempDirPathDriver`.
 
+### Changed
+
+- **BREAKING:** Raise minimum required Python version to 3.12
+
 ## [0.6.0] - 2025-01-27
 
 ### Added
