@@ -1,21 +1,19 @@
 import ctypes
 import mmap
 import sys
-from collections.abc import Iterator
+from collections.abc import Buffer, Iterator, Sized
 from contextlib import contextmanager
 from copy import deepcopy
 from ctypes import (
     POINTER,
     Array,
-    Structure,
+    _CData,
+    _CDataType,
+    _Pointer,
     addressof,
     c_char_p,
     c_double,
     c_int,
-    c_int16,
-    c_int32,
-    c_int64,
-    c_size_t,
     c_ssize_t,
     c_ubyte,
     c_uint8,
@@ -26,27 +24,8 @@ from ctypes import (
     sizeof,
 )
 from os import PathLike
-from typing import Literal, TypeAlias, overload
-
-from libretro._typing import Buffer
-
-# When https://github.com/python/cpython/issues/112015 is merged,
-# use ctypes.memoryview_at instead of this hack
-# taken from https://stackoverflow.com/a/72968176/1089957
-pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
-pythonapi.PyMemoryView_FromMemory.restype = py_object
-
-_int_types = (c_int16, c_int32)
-if hasattr(ctypes, "c_int64"):
-    # Some builds of ctypes apparently do not have ctypes.c_int64
-    # defined; it's a pretty good bet that these builds do not
-    # have 64-bit pointers.
-    _int_types += (c_int64,)
-for t in _int_types:
-    if sizeof(t) == sizeof(c_size_t):
-        c_ptrdiff_t = t
-del t
-del _int_types
+from typing import Any, Literal, overload, runtime_checkable
+from warnings import deprecated
 
 
 @overload
@@ -63,13 +42,21 @@ def as_bytes(value: str | bytes | None) -> bytes | None:
     return value
 
 
-def is_zeroed(struct: Structure) -> bool:
+def is_zeroed(struct: _CData | _CDataType) -> bool:
+    """
+    Returns true if the given ``ctypes`` type is zeroed (all bytes are zero).
+    """
     view = memoryview_at(addressof(struct), sizeof(struct), True)
 
     return not any(view)
 
 
-def from_zero_terminated(ptr) -> Iterator:
+def from_zero_terminated[T: _CData](ptr: _Pointer[T]) -> Iterator[T]:
+    """
+    Returns an iterator that yields items from a zero-terminated array of ``ctypes`` types.
+    The iterator will stop when it encounters an item that is zeroed (all bytes are zero).
+    If no such item exists, the behavior is undefined.
+    """
     if ptr:
         i = 0
         while not is_zeroed(ptr[i]):
@@ -77,18 +64,49 @@ def from_zero_terminated(ptr) -> Iterator:
             i += 1
 
 
-Pointer: TypeAlias = ctypes._Pointer
+MemoDict = dict[int, Any] | None
 
 
-def deepcopy_array(array: Pointer, length: int, memo):
+@overload
+def deepcopy_array[
+    T: _CDataType
+](array: _Pointer[T], length: int, memo: MemoDict = None) -> Array[T] | None: ...
+@overload
+def deepcopy_array[T: _CDataType](array: Array[T], length: MemoDict = None) -> Array[T]: ...
+
+
+def deepcopy_array[
+    T: _CDataType
+](array: _Pointer[T] | Array[T], length: int | MemoDict = None, memo: MemoDict = None) -> (
+    Array[T] | None
+):
     if not array:
         return None
 
-    arraytype: type[Array] = array._type_ * length
-    return arraytype(*(deepcopy(array[i], memo) for i in range(length)))
+    match array, length, memo:
+        case Array(), dict() | None, None:
+            arraylength = len(array)
+            array_type = array._type_ * arraylength
+            memodict = length
+        case _Pointer(), int(length), dict() | None:
+            arraylength = length
+            array_type = array._type_ * arraylength
+            memodict = memo
+        case _:
+            raise TypeError(f"Invalid arguments: {array}, {length}, {memo}")
+
+    return array_type(*(deepcopy(array[i], memodict) for i in range(arraylength)))
 
 
-def deepcopy_buffer(ptr: c_void_p | int, size: int) -> c_void_p | None:
+@overload
+def deepcopy_buffer(ptr: None | Literal[0], size: int) -> Array[c_uint8]: ...
+
+
+@overload
+def deepcopy_buffer(ptr: c_void_p | int, size: int) -> Array[c_uint8] | None: ...
+
+
+def deepcopy_buffer(ptr: c_void_p | int | None, size: int) -> Array[c_uint8] | None:
     if ptr is not None and not isinstance(ptr, (c_void_p, int)):
         raise TypeError(f"Expected c_void_p or int, got {type(ptr).__name__}")
 
@@ -98,9 +116,14 @@ def deepcopy_buffer(ptr: c_void_p | int, size: int) -> c_void_p | None:
     if not size:
         return None
 
-    arraytype: type[Array] = c_uint8 * size
-    data = arraytype.from_buffer_copy(c_void_p(ptr))
-    return cast(data, c_void_p)
+    address = ptr if isinstance(ptr, int) else ptr.value
+
+    if not address:
+        return None
+
+    array_type = c_uint8 * size
+    existing_buffer = memoryview_at(address, size, True)
+    return array_type.from_buffer_copy(existing_buffer)
 
 
 @contextmanager
@@ -108,27 +131,41 @@ def mmap_file(path: str | PathLike, mode: str = "rb"):
     with open(path, mode, buffering=0) as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
             view = memoryview(m)
-            yield view
-            view.release()
+            try:
+                yield view
+            finally:
+                view.release()
             # If we don't release the memoryview manually,
             # we'll get a BufferError when the context manager exits
         f.close()
 
 
-def addressof_buffer(buffer: Buffer) -> int:
-    if not isinstance(buffer, Buffer):
-        raise TypeError(f"Expected Buffer, got {type(buffer).__name__}")
-    array_type: type[Array] = c_ubyte * len(buffer)
+@runtime_checkable
+class SizedBuffer(Sized, Buffer):
+    pass
+
+
+def addressof_buffer(buffer: SizedBuffer) -> int:
+    array_type = c_ubyte * len(buffer)
     buffer_array = array_type.from_buffer(buffer)
 
     return ctypes.addressof(buffer_array)
 
 
-def memoryview_at(
-    address: c_char_p | c_void_p | int | bytes, size: c_ssize_t | int, readonly=False
-) -> memoryview:
-    flags = c_int(0x100 if readonly else 0x200)
-    return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
+if sys.version_info >= (3, 14):
+    from ctypes import memoryview_at
+else:
+    # ctypes.memoryview_at was added in Python 3.14,
+    # so we need to define it ourselves for older versions.
+    # Taken from https://stackoverflow.com/a/72968176/1089957
+    pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
+    pythonapi.PyMemoryView_FromMemory.restype = py_object
+
+    def memoryview_at(
+        address: c_char_p | c_void_p | int | bytes, size: c_ssize_t | int, readonly=False
+    ) -> memoryview:
+        flags = c_int(0x100 if readonly else 0x200)
+        return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
 
 
 class c_uintptr(ctypes._SimpleCData):
@@ -145,6 +182,7 @@ c_double_p = POINTER(c_double)
 #
 # Non-primitive return values wrapped with UNCHECKED won't be
 # typechecked, and will be converted to ctypes.c_void_p.
+@deprecated("Remove")
 def UNCHECKED(type):
     if hasattr(type, "_type_") and isinstance(type._type_, str) and type._type_ != "P":
         return type
@@ -156,13 +194,11 @@ __all__ = [
     "as_bytes",
     "is_zeroed",
     "from_zero_terminated",
-    "Pointer",
     "deepcopy_array",
     "deepcopy_buffer",
     "mmap_file",
     "addressof_buffer",
     "memoryview_at",
-    "c_ptrdiff_t",
     "c_uintptr",
     "c_double_p",
     "UNCHECKED",
