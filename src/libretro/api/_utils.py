@@ -7,8 +7,6 @@ from copy import deepcopy
 from ctypes import (
     POINTER,
     Array,
-    _CData,
-    _CDataType,
     _Pointer,
     addressof,
     c_char_p,
@@ -24,8 +22,11 @@ from ctypes import (
     sizeof,
 )
 from os import PathLike
-from typing import Any, Literal, overload, runtime_checkable
+from typing import TYPE_CHECKING, Any, Literal, overload
 from warnings import deprecated
+
+if TYPE_CHECKING:
+    from ctypes import _CData, _CDataType
 
 
 @overload
@@ -140,7 +141,6 @@ def mmap_file(path: str | PathLike, mode: str = "rb"):
         f.close()
 
 
-@runtime_checkable
 class SizedBuffer(Sized, Buffer):
     pass
 
