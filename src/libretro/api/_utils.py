@@ -1,5 +1,6 @@
 import ctypes
 import mmap
+import struct
 import sys
 from collections.abc import Buffer, Iterator, Sized
 from contextlib import contextmanager
@@ -178,8 +179,21 @@ else:
         return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
 
 
-class c_uintptr(ctypes._SimpleCData):
-    _type_ = "P"
+if TYPE_CHECKING:
+
+    class c_uintptr(ctypes._SimpleCData):
+        pass
+
+else:
+    if struct.calcsize("P") == struct.calcsize("Q"):
+        c_uintptr = ctypes.c_uint64
+    elif struct.calcsize("P") == struct.calcsize("I"):
+        c_uintptr = ctypes.c_uint32
+    else:
+
+        class c_uintptr(ctypes._SimpleCData):
+            # Weird pointer size, but who am I to judge?
+            _type_ = "P"
 
 
 class c_buffer(c_void_p):
