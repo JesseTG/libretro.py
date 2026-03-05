@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 from libretro._typing import override
-from libretro._utils import Pollable
 from libretro.api.input import (
     AnalogState,
     DeviceIdAnalog,
@@ -28,6 +27,7 @@ from libretro.api.input import (
     retro_keyboard_callback,
 )
 from libretro.drivers.rumble import RumbleDriver
+from libretro.drivers.types import Pollable
 
 from .driver import InputDriver
 

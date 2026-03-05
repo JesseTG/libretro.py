@@ -81,6 +81,3 @@ class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
     def __call__(self, func: Callable[P, R]) -> Self: ...
     @overload
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
-
-class AsParameter[T: _CDataType](Protocol):
-    _as_parameter_: T

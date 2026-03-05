@@ -1,19 +1,22 @@
 from abc import abstractmethod
-from typing import Protocol, runtime_checkable
+from typing import Protocol, override, runtime_checkable
 
 from libretro.api.rumble import (
     RumbleEffect,
     retro_rumble_interface,
     retro_set_rumble_state_t,
 )
+from libretro.drivers.types import AsParameter
 
 
 @runtime_checkable
-class RumbleDriver(Protocol):
-    @abstractmethod
-    def __init__(self):
-        self._as_parameter_ = retro_rumble_interface()
-        self._as_parameter_.set_rumble_state = retro_set_rumble_state_t(self.__set_rumble_state)
+class RumbleDriver(AsParameter[retro_rumble_interface], Protocol):
+    @property
+    @override
+    def _as_parameter_(self) -> retro_rumble_interface:
+        return retro_rumble_interface(
+            set_rumble_state=retro_set_rumble_state_t(self.__set_rumble_state),
+        )
 
     @abstractmethod
     def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool: ...

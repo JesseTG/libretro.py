@@ -7,7 +7,6 @@ from typing import AnyStr, Type
 
 from _ctypes import CFuncPtr
 
-from libretro._utils import Pollable
 from libretro.api import (
     API_VERSION,
     AvEnableFlags,
@@ -45,6 +44,7 @@ from libretro.drivers import (
     SensorDriver,
     VideoDriver,
 )
+from libretro.drivers.types import Pollable
 from libretro.error import CoreShutDownException
 
 
