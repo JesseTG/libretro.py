@@ -50,10 +50,6 @@ class retro_log_callback(Structure):
     else:
         _fields_ = [("log", retro_log_printf_t)]
 
-    def __call__(self, level: LogLevel, message: bytes) -> None:
-        if self.log:
-            self.log(level, message)
-
     def __deepcopy__(self, _):
         return retro_log_callback(self.log)
 
