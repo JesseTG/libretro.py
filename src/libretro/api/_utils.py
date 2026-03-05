@@ -182,6 +182,14 @@ class c_uintptr(ctypes._SimpleCData):
     _type_ = "P"
 
 
+class c_buffer(c_void_p):
+    """
+    Subclass of c_void_p that does _not_ implicitly convert to an `int`
+    when returned from a Structure or passed from C as an argument to a callback."""
+
+    pass
+
+
 c_double_p = POINTER(c_double)
 
 
@@ -211,5 +219,6 @@ __all__ = [
     "memoryview_at",
     "c_uintptr",
     "c_double_p",
+    "c_buffer",
     "UNCHECKED",
 ]
