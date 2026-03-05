@@ -53,11 +53,13 @@ def is_zeroed(struct: _CData | _CDataType) -> bool:
     return not any(view)
 
 
-def from_zero_terminated[T: _CData](ptr: _Pointer[T]) -> Iterator[T]:
+def from_zero_terminated[T: _CData](ptr: _Pointer[T] | None) -> Iterator[T]:
     """
     Returns an iterator that yields items from a zero-terminated array of ``ctypes`` types.
     The iterator will stop when it encounters an item that is zeroed (all bytes are zero).
     If no such item exists, the behavior is undefined.
+
+    If ptr is ``None``, the iterator will be empty.
     """
     if ptr:
         i = 0
