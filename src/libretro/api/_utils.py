@@ -69,16 +69,20 @@ MemoDict = dict[int, Any] | None
 
 
 @overload
-def deepcopy_array[
-    T: _CDataType
-](array: _Pointer[T], length: int, memo: MemoDict = None) -> Array[T] | None: ...
+def deepcopy_array[T: _CDataType](array: None, length, memo) -> None: ...
+
+
 @overload
-def deepcopy_array[T: _CDataType](array: Array[T], length: MemoDict = None) -> Array[T]: ...
+def deepcopy_array[
+    T: _CDataType
+](array: _Pointer[T] | Array[T], length: int, memo: MemoDict = None) -> Array[T] | None: ...
+@overload
+def deepcopy_array[T: _CDataType](array: Array[T], length: MemoDict = None) -> Array[T] | None: ...
 
 
 def deepcopy_array[
     T: _CDataType
-](array: _Pointer[T] | Array[T], length: int | MemoDict = None, memo: MemoDict = None) -> (
+](array: _Pointer[T] | Array[T] | None, length: int | MemoDict = None, memo: MemoDict = None) -> (
     Array[T] | None
 ):
     if not array:
@@ -89,6 +93,12 @@ def deepcopy_array[
             arraylength = len(array)
             array_type = array._type_ * arraylength
             memodict = length
+        case Array(), int(length), _ if length > len(array):
+            raise ValueError(f"Expected length to be at most {len(array)}, got {length}")
+        case Array(), int(length), dict() | None:
+            arraylength = length
+            array_type = array._type_ * arraylength
+            memodict = memo
         case _Pointer(), int(length), dict() | None:
             arraylength = length
             array_type = array._type_ * arraylength
