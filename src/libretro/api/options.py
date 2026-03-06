@@ -61,7 +61,7 @@ class retro_core_option_value(Structure):
 
 
 NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
-CoreOptionArray: type[Array] = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
+CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
 @dataclass(init=False)
@@ -86,7 +86,7 @@ class retro_core_option_definition(Structure):
             self.key,
             self.desc,
             self.info,
-            deepcopy_array(self.values, NUM_CORE_OPTION_VALUES_MAX, memo),
+            deepcopy_array(self.values, memo),
             self.default_value,
         )
 
@@ -157,7 +157,7 @@ class retro_core_option_v2_definition(Structure):
             self.info,
             self.info_categorized,
             self.category_key,
-            deepcopy_array(self.values, NUM_CORE_OPTION_VALUES_MAX, memo),
+            deepcopy_array(self.values, memo),
             self.default_value,
         )
 
