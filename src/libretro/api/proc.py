@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from libretro.api._utils import UNCHECKED
 
 if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer
+    from libretro.typing import ConvertibleToString, CoreFunctionPointer
 
     retro_proc_address_t = CoreFunctionPointer[None, []]
-    retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [c_char_p]]
+    retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [ConvertibleToString]]
 else:
     retro_proc_address_t = CFUNCTYPE(None)
     retro_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)

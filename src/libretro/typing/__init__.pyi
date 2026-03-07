@@ -97,6 +97,7 @@ type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = Conve
 ] | U | _SimpleCData[U]
 type ConvertibleToBool = bool | ConvertibleTo[c_bool]
 type ConvertibleToInteger[T: (CUint, CInt)] = int | ConvertibleTo[T]
+type ConvertibleToString = bytes | ConvertibleTo[c_char_p]
 
 class StructureArray[T: Structure](Array[T]):
     @override
