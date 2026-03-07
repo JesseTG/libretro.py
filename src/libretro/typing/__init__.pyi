@@ -1,10 +1,10 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator
 from ctypes import *
-from typing import Any, Iterable, Literal, Protocol, Self, overload, override
+from typing import Any, Literal, Protocol, Self, overload, override
 
-from _ctypes import CFuncPtr, _CDataType, _Pointer
+from _ctypes import CFuncPtr, _CDataType, _Pointer, _SimpleCData
 
-CInt = (
+type CInt = (
     c_int
     | c_byte
     | c_short
@@ -16,7 +16,7 @@ CInt = (
     | c_int64
     | c_ssize_t
 )
-CUint = (
+type CUint = (
     c_uint
     | c_ubyte
     | c_ushort
