@@ -55,7 +55,7 @@ class DefaultPerfDriver(PerfDriver):
                 f"Expected counter.registered to be false upon registration, got {counter.registered}"
             )
 
-        ident: bytes = counter.ident.value
+        ident = counter.ident
         if ident in self._perf_counters:
             raise ValueError(f"counter with ident {ident} already exists")
 
