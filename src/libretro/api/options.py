@@ -8,7 +8,7 @@ from libretro.api._utils import deepcopy_array
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
 if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, Pointer
+    from libretro.typing import CoreFunctionPointer, Pointer, StructureArray
 
     retro_core_options_update_display_callback_t = CoreFunctionPointer[c_bool, []]
 else:
@@ -135,7 +135,7 @@ class retro_core_option_v2_definition(Structure):
         info: bytes | None
         info_categorized: bytes | None
         category_key: bytes | None
-        values: Array[retro_core_option_value]
+        values: StructureArray[retro_core_option_value]
         default_value: bytes | None
     else:
         _fields_ = [

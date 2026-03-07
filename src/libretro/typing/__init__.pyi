@@ -92,6 +92,29 @@ class AsParameter[T: _CDataType](Protocol):
     def _as_parameter_(self) -> T: ...
 
 type ConvertibleTo[T: _CDataType] = T | AsParameter[T]
+type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = ConvertibleTo[
+    T
+] | U | _SimpleCData[U]
+type ConvertibleToBool[T: _CDataType] = bool | ConvertibleTo[T]
+type ConvertibleToInteger[T: (CUint, CInt)] = int | ConvertibleTo[T]
+
+class StructureArray[T: Structure](Array[T]):
+    @override
+    def __init__(self, *args: ConvertibleTo[T]) -> None: ...
+    @override
+    @overload
+    def __getitem__(self, key: int, /) -> T: ...
+    @overload
+    def __getitem__(self, key: slice[T], /) -> list[T]: ...
+    @override
+    @overload
+    def __setitem__(self, key: int, value: ConvertibleTo[T], /) -> None: ...
+    @overload
+    def __setitem__(
+        self, key: slice[ConvertibleTo[T]], value: Iterable[ConvertibleTo[T]], /
+    ) -> None: ...
+    @override
+    def __iter__(self) -> Iterator[T]: ...
 
 class StructurePointer[T: Structure](_Pointer[T]):
     @override
