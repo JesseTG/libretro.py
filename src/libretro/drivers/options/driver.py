@@ -1,6 +1,6 @@
 from abc import abstractmethod
-from collections.abc import Mapping, MutableMapping, Sequence
-from typing import AnyStr, Protocol, runtime_checkable
+from collections.abc import Collection, Mapping, MutableMapping
+from typing import Protocol, runtime_checkable
 
 from libretro.api.options import (
     retro_core_option_definition,
@@ -17,10 +17,10 @@ from libretro.api.options import (
 @runtime_checkable
 class OptionDriver(Protocol):
     @abstractmethod
-    def get_variable(self, item: bytes) -> bytes | None:
+    def get_variable(self, key: bytes) -> bytes | None:
         """
-        :param item: The key of the core option to retrieve.
-        :return: If no option with the key given by ``item`` exists, return ``None``.
+        :param key: The key of the core option to retrieve.
+        :return: If no option with the key given by ``key`` exists, return ``None``.
             If the option has a valid value (as determined by the option definitions), return it.
             Otherwise, return the default value.
 
@@ -29,7 +29,7 @@ class OptionDriver(Protocol):
         ...
 
     @abstractmethod
-    def set_variables(self, variables: Sequence[retro_variable] | None): ...
+    def set_variables(self, variables: Collection[retro_variable] | None): ...
 
     @property
     @abstractmethod
@@ -40,13 +40,13 @@ class OptionDriver(Protocol):
     def version(self) -> int: ...
 
     @abstractmethod
-    def set_options(self, options: Sequence[retro_core_option_definition] | None): ...
+    def set_options(self, options: Collection[retro_core_option_definition] | None): ...
 
     @abstractmethod
     def set_options_intl(self, options: retro_core_options_intl | None): ...
 
     @abstractmethod
-    def set_display(self, var: bytes, visible: bool): ...
+    def set_display(self, key: bytes, visible: bool): ...
 
     @abstractmethod
     def set_options_v2(self, options: retro_core_options_v2 | None): ...
@@ -56,7 +56,7 @@ class OptionDriver(Protocol):
 
     @property
     @abstractmethod
-    def update_display_callback(self) -> retro_core_options_update_display_callback: ...
+    def update_display_callback(self) -> retro_core_options_update_display_callback | None: ...
 
     @update_display_callback.setter
     @abstractmethod
@@ -73,11 +73,11 @@ class OptionDriver(Protocol):
 
     @property
     @abstractmethod
-    def variables(self) -> MutableMapping[AnyStr, bytes]: ...
+    def variables(self) -> MutableMapping[bytes, bytes]: ...
 
     @property
     @abstractmethod
-    def visibility(self) -> Mapping[AnyStr, bool]: ...
+    def visibility(self) -> Mapping[bytes, bool]: ...
 
     @property
     @abstractmethod
