@@ -95,7 +95,7 @@ type ConvertibleTo[T: _CDataType] = T | AsParameter[T]
 type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = ConvertibleTo[
     T
 ] | U | _SimpleCData[U]
-type ConvertibleToBool[T: _CDataType] = bool | ConvertibleTo[T]
+type ConvertibleToBool = bool | ConvertibleTo[c_bool]
 type ConvertibleToInteger[T: (CUint, CInt)] = int | ConvertibleTo[T]
 
 class StructureArray[T: Structure](Array[T]):
