@@ -1,10 +1,10 @@
 from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64, c_void_p
 from dataclasses import dataclass
 from enum import IntFlag
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
-    from libretro.typing import Pointer
+    from libretro.typing import StructurePointer
 
 from libretro.api._utils import deepcopy_array
 
@@ -77,7 +77,7 @@ class retro_memory_descriptor(Structure):
 @dataclass(init=False, slots=True)
 class retro_memory_map(Structure):
     if TYPE_CHECKING:
-        descriptors: Pointer[retro_memory_descriptor] | None
+        descriptors: StructurePointer[retro_memory_descriptor] | None
         num_descriptors: int
     else:
         _fields_ = [
@@ -88,9 +88,22 @@ class retro_memory_map(Structure):
     def __len__(self):
         return self.num_descriptors
 
-    def __getitem__(self, item):
-        if item < 0 or item >= self.num_descriptors:
-            raise IndexError(f"Expected 0 <= index < {self.num_descriptors}, got {item}")
+    @overload
+    def __getitem__(self, item: int) -> retro_memory_descriptor: ...
+    @overload
+    def __getitem__(
+        self, item: slice[retro_memory_descriptor]
+    ) -> list[retro_memory_descriptor]: ...
+    def __getitem__(
+        self, item: int | slice[retro_memory_descriptor]
+    ) -> retro_memory_descriptor | list[retro_memory_descriptor]:
+        if isinstance(item, int):
+            if item < 0 or item >= self.num_descriptors:
+                raise IndexError(f"Expected 0 <= index < {self.num_descriptors}, got {item}")
+        # TODO: Validate the slice (not just the start and stop, but also the step)
+
+        if not self.descriptors:
+            raise RuntimeError("Memory map has no descriptors")
 
         return self.descriptors[item]
 

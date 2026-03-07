@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from ctypes import *
-from typing import Any, Protocol, Self, overload
+from typing import Any, Iterable, Literal, Protocol, Self, overload, override
 
 from _ctypes import CFuncPtr, _CDataType, _Pointer
 
@@ -81,3 +81,23 @@ class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
     def __call__(self, func: Callable[P, R]) -> Self: ...
     @overload
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
+
+class AsParameter[T: _CDataType](Protocol):
+    """
+    A type that can be converted to a ctypes object
+    with the _as_parameter_ property.
+    """
+
+    @property
+    def _as_parameter_(self) -> T: ...
+
+type ConvertibleTo[T: _CDataType] = T | AsParameter[T]
+
+class StructurePointer[T: Structure](_Pointer[T]):
+    @override
+    @overload
+    def __getitem__(self, key: int, /) -> T: ...
+    @overload
+    def __getitem__(self, key: slice[T], /) -> list[T]: ...
+    @override
+    def __setitem__(self, key: int, value: ConvertibleTo[T], /) -> None: ...
