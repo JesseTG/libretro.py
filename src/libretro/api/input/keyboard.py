@@ -564,9 +564,21 @@ class KeyboardState(InputDeviceState):
 
 
 if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer
+    from libretro.typing import (
+        ConvertibleToBool,
+        ConvertibleToInteger,
+        CoreFunctionPointer,
+    )
 
-    retro_keyboard_event_t = CoreFunctionPointer[None, [c_bool, c_uint, c_uint32, c_uint16]]
+    retro_keyboard_event_t = CoreFunctionPointer[
+        None,
+        [
+            ConvertibleToBool,
+            ConvertibleToInteger[c_uint],
+            ConvertibleToInteger[c_uint32],
+            ConvertibleToInteger[c_uint16],
+        ],
+    ]
 else:
     retro_keyboard_event_t = CFUNCTYPE(None, c_bool, c_uint, c_uint32, c_uint16)
 
@@ -584,10 +596,21 @@ class retro_keyboard_callback(Structure):
         return retro_keyboard_callback(callback=self.callback)
 
     def __call__(
-        self, pressed: bool, keycode: int, character: int, key_modifiers: KeyModifier
+        self, pressed: bool, keycode: Key, character: int | str | bytes, key_modifiers: KeyModifier
     ) -> None:
+        match character:
+            case int():
+                # UTF-32 codepoint
+                char = character
+            case str() | bytes() if len(character) == 1:
+                char = ord(character)
+            case _:
+                raise ValueError(
+                    f"Expected character to be an int, a single-character string, or a single byte, got {character!r}"
+                )
+
         if self.callback:
-            self.callback(pressed, keycode, character, key_modifiers)
+            self.callback(pressed, keycode, char, key_modifiers)
 
 
 __all__ = [
