@@ -12,6 +12,13 @@ class ExplicitPathDriver(PathDriver):
     A path driver that supports defining individual locations for each directory.
     """
 
+    _libretro: bytes | None
+    _system: bytes | None
+    _assets: bytes | None
+    _save: bytes | None
+    _playlist: bytes | None
+    _file_browser_start: bytes | None
+
     def __init__(
         self,
         corepath: str | bytes | PathLike | Core | None = None,
@@ -71,7 +78,6 @@ class ExplicitPathDriver(PathDriver):
 
         :raises TypeError: If any of the arguments are not of the correct type.
         """
-        self._libretro: bytes | None
         match corepath:
             case str():
                 self._libretro = corepath.encode()
@@ -86,102 +92,106 @@ class ExplicitPathDriver(PathDriver):
                     f"Expected corepath to be a str, bytes, PathLike, Core, or None; got {corepath!r}"
                 )
 
-        self._system: bytes | None
         match system:
             case str():
                 self._system = system.encode()
             case bytes() | None:
                 self._system = system
             case PathLike():
-                self._system = fsencode(system.encode())
+                self._system = fsencode(system)
             case _:
                 raise TypeError(
                     f"Expected system to be str, bytes, PathLike, or None, got {system!r}"
                 )
 
-        self._assets: bytes | None
         match assets:
             case str():
                 self._assets = assets.encode()
             case bytes() | None:
                 self._assets = assets
             case PathLike():
-                self._assets = fsencode(assets.encode())
+                self._assets = fsencode(assets)
             case _:
                 raise TypeError(
                     f"Expected assets to be str, bytes, PathLike, or None, got {assets!r}"
                 )
 
-        self._save: bytes | None
         match save:
             case str():
                 self._save = save.encode()
             case bytes() | None:
                 self._save = save
             case PathLike():
-                self._save = fsencode(save.encode())
+                self._save = fsencode(save)
             case _:
                 raise TypeError(f"Expected save to be str, bytes, PathLike, or None, got {save!r}")
 
-        self._playlist: bytes | None
         match playlist:
             case str():
                 self._playlist = playlist.encode()
             case bytes() | None:
                 self._playlist = playlist
             case PathLike():
-                self._playlist = fsencode(playlist.encode())
+                self._playlist = fsencode(playlist)
             case _:
                 raise TypeError(
                     f"Expected playlist to be str, bytes, PathLike, or None, got {playlist!r}"
                 )
 
-        self._file_browser_start: bytes | None
         match file_browser_start:
             case str():
                 self._file_browser_start = file_browser_start.encode()
             case bytes() | None:
                 self._file_browser_start = file_browser_start
             case PathLike():
-                self._file_browser_start = fsencode(file_browser_start.encode())
+                self._file_browser_start = fsencode(file_browser_start)
             case _:
                 raise TypeError(
                     f"Expected file_browser_start to be str, bytes, PathLike, or None, got {file_browser_start!r}"
                 )
 
-        os.makedirs(self._system, exist_ok=True)
-        os.makedirs(self._assets, exist_ok=True)
-        os.makedirs(self._save, exist_ok=True)
-        os.makedirs(self._playlist, exist_ok=True)
-        os.makedirs(self._file_browser_start, exist_ok=True)
+        if self._system is not None:
+            os.makedirs(self._system, exist_ok=True)
 
-    @override
+        if self._assets is not None:
+            os.makedirs(self._assets, exist_ok=True)
+
+        if self._save is not None:
+            os.makedirs(self._save, exist_ok=True)
+
+        if self._playlist is not None:
+            os.makedirs(self._playlist, exist_ok=True)
+
+        if self._file_browser_start is not None:
+            os.makedirs(self._file_browser_start, exist_ok=True)
+
     @property
+    @override
     def system_dir(self) -> bytes | None:
         return self._system
 
-    @override
     @property
+    @override
     def libretro_path(self) -> bytes | None:
         return self._libretro
 
-    @override
     @property
+    @override
     def core_assets_dir(self) -> bytes | None:
         return self._assets
 
-    @override
     @property
+    @override
     def save_dir(self) -> bytes | None:
         return self._save
 
-    @override
     @property
+    @override
     def playlist_dir(self) -> bytes | None:
         return self._playlist
 
-    @override
     @property
+    @override
     def file_browser_start_dir(self) -> bytes | None:
         return self._file_browser_start
 

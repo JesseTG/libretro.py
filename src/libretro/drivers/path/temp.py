@@ -3,7 +3,7 @@ Types and classes for creating temporary directories for the core to use.
 """
 
 import os
-from os import PathLike, fsdecode, fsencode
+from os import PathLike, fsencode
 from tempfile import TemporaryDirectory
 
 from libretro._typing import override
@@ -18,6 +18,13 @@ class TempDirPathDriver(PathDriver):
 
     Test cases should add required files to these directories before running the core.
     """
+
+    _root: TemporaryDirectory[bytes]
+    _libretro: bytes | None
+    _system_path: bytes
+    _assets_path: bytes
+    _save_path: bytes
+    _playlist_path: bytes
 
     def __init__(
         self,
@@ -51,7 +58,6 @@ class TempDirPathDriver(PathDriver):
 
         :raises TypeError: If any of the arguments are not of the specified types.
         """
-        self._libretro: bytes | None
         match corepath:
             case str():
                 self._libretro = corepath.encode()
@@ -66,7 +72,6 @@ class TempDirPathDriver(PathDriver):
                     f"Expected corepath to be a str, bytes, PathLike, Core, or None; got {corepath!r}"
                 )
 
-        self._root: TemporaryDirectory[bytes]
         match prefix:
             case str() | bytes():
                 self._root = TemporaryDirectory(prefix=fsencode(prefix))
@@ -93,33 +98,33 @@ class TempDirPathDriver(PathDriver):
         """
         return self._root_path
 
-    @override
     @property
+    @override
     def system_dir(self) -> bytes | None:
         return self._system_path
 
-    @override
     @property
+    @override
     def libretro_path(self) -> bytes | None:
         return self._libretro
 
-    @override
     @property
+    @override
     def core_assets_dir(self) -> bytes | None:
         return self._assets_path
 
-    @override
     @property
+    @override
     def save_dir(self) -> bytes | None:
         return self._save_path
 
-    @override
     @property
+    @override
     def playlist_dir(self) -> bytes | None:
         return self._playlist_path
 
-    @override
     @property
+    @override
     def file_browser_start_dir(self) -> bytes | None:
         return self._root_path
 
