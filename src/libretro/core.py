@@ -113,7 +113,7 @@ class CoreInterface(Protocol):
     def unload_game(self) -> None: ...
 
     @abstractmethod
-    def get_region(self) -> Region: ...
+    def get_region(self) -> Region | int: ...
 
     @abstractmethod
     def get_memory_data(self, id: int) -> c_void_p | None: ...
@@ -163,8 +163,8 @@ class Core(CoreInterface):
         match core:
             case CDLL():
                 self._core = core
-            case str(path) | PathLike(path):
-                self._core = cdll.LoadLibrary(path)
+            case (str() | PathLike()) as path:
+                self._core = cdll.LoadLibrary(str(path))
             case _:
                 raise TypeError(
                     f"Expected a CDLL instance or a path to a core, got {type(core).__name__}"
@@ -250,7 +250,9 @@ class Core(CoreInterface):
 
             self._core.retro_get_memory_data.argtypes = [c_uint]
             self._core.retro_get_memory_data.restype = POINTER(c_ubyte)
-            self._core.retro_get_memory_data.errcheck = lambda v, *a: cast(v, c_void_p)
+            self._core.retro_get_memory_data.errcheck = lambda v, *a: (
+                cast(v, c_void_p) if v else c_void_p()
+            )
 
             self._core.retro_get_memory_size.argtypes = [c_uint]
             self._core.retro_get_memory_size.restype = c_size_t
@@ -275,16 +277,7 @@ class Core(CoreInterface):
         :param env: The function that the core should use for environment calls.
         :raises TypeError: If ``env`` is not a ``retro_environment_t``.
         """
-        match env:
-            case retro_environment_t():
-                self._environment = env
-            case Callable():
-                self._environment = retro_environment_t(env)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_environment_t or an equivalent callable, got {type(env).__name__}"
-                )
-
+        self._environment = retro_environment_t(env)
         self._core.retro_set_environment(self._environment)
 
     def set_video_refresh(self, video: retro_video_refresh_t) -> None:
@@ -294,16 +287,7 @@ class Core(CoreInterface):
         :param video: The function that the core should call to update its video output.
         :raises TypeError: If ``video`` is not a ``retro_video_refresh_t``.
         """
-        match video:
-            case retro_video_refresh_t():
-                self._video_refresh = video
-            case Callable():
-                self._video_refresh = retro_video_refresh_t(video)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_video_refresh_t or an equivalent callable, got {type(video).__name__}"
-                )
-
+        self._video_refresh = retro_video_refresh_t(video)
         self._core.retro_set_video_refresh(self._video_refresh)
 
     def set_audio_sample(self, audio: retro_audio_sample_t) -> None:
@@ -313,16 +297,7 @@ class Core(CoreInterface):
         :param audio: The function that the core should call to render a single audio frame.
         :raises TypeError: If ``audio`` is not a ``retro_audio_sample_t``.
         """
-        match audio:
-            case retro_audio_sample_t():
-                self._audio_sample = audio
-            case Callable():
-                self._audio_sample = retro_audio_sample_t(audio)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_audio_sample_t or an equivalent callable, got {type(audio).__name__}"
-                )
-
+        self._audio_sample = retro_audio_sample_t(audio)
         self._core.retro_set_audio_sample(self._audio_sample)
 
     def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None:
@@ -332,16 +307,7 @@ class Core(CoreInterface):
         :param audio: The function that the core should call to render a batch of audio frames.
         :raises TypeError: If ``audio`` is not a ``retro_audio_sample_batch_t``.
         """
-        match audio:
-            case retro_audio_sample_batch_t():
-                self._audio_sample_batch = audio
-            case Callable():
-                self._audio_sample_batch = retro_audio_sample_batch_t(audio)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_audio_sample_batch_t or an equivalent callable, got {type(audio).__name__}"
-                )
-
+        self._audio_sample_batch = retro_audio_sample_batch_t(audio)
         self._core.retro_set_audio_sample_batch(self._audio_sample_batch)
 
     def set_input_poll(self, poll: retro_input_poll_t) -> None:
@@ -351,16 +317,7 @@ class Core(CoreInterface):
         :param poll: The function that the core should call to poll for updated input state.
         :raises TypeError: If ``poll`` is not a ``retro_input_poll_t``.
         """
-        match poll:
-            case retro_input_poll_t():
-                self._input_poll = poll
-            case Callable():
-                self._input_poll = retro_input_poll_t(poll)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_input_poll_t or an equivalent callable, got {type(poll).__name__}"
-                )
-
+        self._input_poll = retro_input_poll_t(poll)
         self._core.retro_set_input_poll(self._input_poll)
 
     def set_input_state(self, state: retro_input_state_t) -> None:
@@ -370,16 +327,7 @@ class Core(CoreInterface):
         :param state: The function that the core should call to request part of the input state.
         :raises TypeError: If ``state`` is not a ``retro_input_state_t``.
         """
-        match state:
-            case retro_input_state_t():
-                self._input_state = state
-            case Callable():
-                self._input_state = retro_input_state_t(state)
-            case _:
-                raise TypeError(
-                    f"Expected a retro_input_state_t or an equivalent callable, got {type(state).__name__}"
-                )
-
+        self._input_state = retro_input_state_t(state)
         self._core.retro_set_input_state(self._input_state)
 
     def init(self):
@@ -498,7 +446,7 @@ class Core(CoreInterface):
                 )
 
         buflength = len(buf)
-        arraytype: Array = c_char * buflength
+        arraytype = c_char * buflength
 
         return self._core.retro_serialize(byref(arraytype.from_buffer(buf)), buflength)
 
@@ -529,7 +477,7 @@ class Core(CoreInterface):
                 )
 
         buflen = len(buf)
-        arraytype: Array = c_char * buflen
+        arraytype = c_char * buflen
 
         # TODO: Validate that the buffer wasn't written to, and raise a warning if it was. (Use zlib.crc32)
         return self._core.retro_unserialize(byref(arraytype.from_buffer(buf)), buflen)
