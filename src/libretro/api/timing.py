@@ -15,9 +15,9 @@ RETRO_THROTTLE_UNBLOCKED = 6
 retro_usec_t = c_int64
 
 if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer
+    from libretro.typing import ConvertibleToInteger, CoreFunctionPointer
 
-    retro_frame_time_callback_t = CoreFunctionPointer[None, [retro_usec_t]]
+    retro_frame_time_callback_t = CoreFunctionPointer[None, [ConvertibleToInteger[retro_usec_t]]]
 else:
     retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
 
@@ -33,9 +33,11 @@ class retro_frame_time_callback(Structure):
             ("reference", c_uint),
         ]
 
-    def __call__(self, time: int | None = None):
-        if not isinstance(time, int) and time is not None:
-            raise TypeError(f"time must be an int or None, not {type(time).__name__}")
+    def __call__(self, time: ConvertibleToInteger[retro_usec_t] | None = None):
+        """
+        Calls the callback with the given time, or with the reference if time is None.
+        Does nothing if the callback is unset.
+        """
 
         if self.callback:
             if time is None:
