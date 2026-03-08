@@ -48,9 +48,6 @@ class DeviceIdLightgun(IntEnum):
     TURBO = RETRO_DEVICE_ID_LIGHTGUN_TURBO
     PAUSE = RETRO_DEVICE_ID_LIGHTGUN_PAUSE
 
-    def __init__(self, value: int):
-        self._type_ = "H"
-
     @property
     def is_button(self) -> bool:
         return self not in (

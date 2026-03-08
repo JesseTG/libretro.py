@@ -17,9 +17,6 @@ class DeviceIdPointer(IntEnum):
     COUNT = RETRO_DEVICE_ID_POINTER_COUNT
     IS_OFFSCREEN = RETRO_DEVICE_ID_POINTER_IS_OFFSCREEN
 
-    def __init__(self, value: int):
-        self._type_ = "H"
-
 
 @dataclass(frozen=True, slots=True)
 class Pointer:

@@ -30,9 +30,6 @@ class DeviceIdMouse(IntEnum):
     BUTTON_4 = RETRO_DEVICE_ID_MOUSE_BUTTON_4
     BUTTON_5 = RETRO_DEVICE_ID_MOUSE_BUTTON_5
 
-    def __init__(self, value: int):
-        self._type_ = "H"
-
 
 DeviceIdMouseButton = Literal[
     DeviceIdMouse.LEFT,
