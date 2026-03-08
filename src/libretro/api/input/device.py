@@ -1,9 +1,9 @@
 from ctypes import CFUNCTYPE, POINTER, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
-from typing import TYPE_CHECKING, NewType, Sequence, overload
+from typing import TYPE_CHECKING, NewType, overload
 
-from libretro.api._utils import deepcopy_array
+from libretro.api._utils import MemoDict, deepcopy_array
 
 Port = NewType("Port", int)
 
@@ -16,7 +16,7 @@ RETRO_DEVICE_ANALOG = 5
 RETRO_DEVICE_POINTER = 6
 
 if TYPE_CHECKING:
-    from libretro.typing import FrontendFunctionPointer, Pointer
+    from libretro.typing import FrontendFunctionPointer, StructurePointer
 
     retro_input_poll_t = FrontendFunctionPointer[None, []]
     retro_input_state_t = FrontendFunctionPointer[c_int16, [c_uint, c_uint, c_uint, c_uint]]
@@ -53,9 +53,6 @@ class InputDevice(IntEnum):
     LIGHTGUN = RETRO_DEVICE_LIGHTGUN
     ANALOG = RETRO_DEVICE_ANALOG
     POINTER = RETRO_DEVICE_POINTER
-
-    def __init__(self, value: int):
-        self._type_ = "H"
 
     @property
     def flag(self) -> InputDeviceFlag:
@@ -107,7 +104,7 @@ class retro_controller_description(Structure):
 @dataclass(init=False)
 class retro_controller_info(Structure):
     if TYPE_CHECKING:
-        types: Pointer[retro_controller_description] | None
+        types: StructurePointer[retro_controller_description] | None
         num_types: int
     else:
         _fields_ = [
@@ -115,7 +112,7 @@ class retro_controller_info(Structure):
             ("num_types", c_uint),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict):
         return retro_controller_info(
             types=(deepcopy_array(self.types, self.num_types, memo) if self.types else None),
             num_types=self.num_types,
@@ -125,27 +122,26 @@ class retro_controller_info(Structure):
     def __getitem__(self, index: int) -> retro_controller_description: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_controller_description]: ...
+    def __getitem__(
+        self, index: slice[retro_controller_description]
+    ) -> list[retro_controller_description]: ...
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int | slice[retro_controller_description]):
         if not self.types:
             raise ValueError("No controller types available")
 
         match index:
-            case int(i):
-                if not (0 <= i < self.num_types):
-                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+            case int(i) if 0 <= i < self.num_types:
                 return self.types[i]
-
+            case int(i):
+                raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
             case slice() as s:
-                s: slice
                 return self.types[s]
-
             case _:
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __len__(self):
-        return int(self.num_types)
+        return self.num_types
 
 
 class InputDeviceState:
