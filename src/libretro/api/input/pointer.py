@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Sequence
 
 from .device import InputDeviceState
 
@@ -32,7 +31,7 @@ class Pointer:
 
 @dataclass(frozen=True, slots=True)
 class PointerState(InputDeviceState):
-    pointers: Sequence[Pointer] = ()
+    pointers: tuple[Pointer, ...] = ()
 
 
 __all__ = ["DeviceIdPointer", "Pointer", "PointerState"]
