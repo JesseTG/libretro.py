@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import Literal, overload
 
 from .device import InputDeviceState
 
@@ -33,6 +34,27 @@ class DeviceIdMouse(IntEnum):
         self._type_ = "H"
 
 
+DeviceIdMouseButton = Literal[
+    DeviceIdMouse.LEFT,
+    DeviceIdMouse.RIGHT,
+    DeviceIdMouse.MIDDLE,
+    DeviceIdMouse.BUTTON_4,
+    DeviceIdMouse.BUTTON_5,
+]
+
+DeviceIdMouseWheel = Literal[
+    DeviceIdMouse.WHEELUP,
+    DeviceIdMouse.WHEELDOWN,
+    DeviceIdMouse.HORIZ_WHEELUP,
+    DeviceIdMouse.HORIZ_WHEELDOWN,
+]
+
+DeviceIdMouseAxis = Literal[
+    DeviceIdMouse.X,
+    DeviceIdMouse.Y,
+]
+
+
 @dataclass(frozen=True, slots=True)
 class MouseState(InputDeviceState):
     x: int = 0
@@ -47,7 +69,12 @@ class MouseState(InputDeviceState):
     button4: bool = False
     button5: bool = False
 
-    def __getitem__(self, item) -> bool | int:
+    @overload
+    def __getitem__(self, item: DeviceIdMouseAxis) -> int: ...
+    @overload
+    def __getitem__(self, item: DeviceIdMouseButton | DeviceIdMouseWheel) -> bool: ...
+
+    def __getitem__(self, item: DeviceIdMouse) -> bool | int:
         match item:
             case DeviceIdMouse.X:
                 return self.x
