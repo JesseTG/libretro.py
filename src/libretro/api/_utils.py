@@ -24,7 +24,6 @@ from ctypes import (
 )
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, overload
-from warnings import deprecated
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType
@@ -72,7 +71,7 @@ MemoDict = dict[int, Any] | None
 
 
 @overload
-def deepcopy_array[T: _CDataType](array: None, length, memo) -> None: ...
+def deepcopy_array(array: None, length: int, memo: MemoDict) -> None: ...
 
 
 @overload
@@ -141,7 +140,7 @@ def deepcopy_buffer(ptr: c_void_p | int | None, size: int) -> Array[c_uint8] | N
 
 
 @contextmanager
-def mmap_file(path: str | PathLike, mode: str = "rb"):
+def mmap_file(path: str | bytes | PathLike[str] | PathLike[bytes], mode: str = "rb"):
     with open(path, mode, buffering=0) as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
             view = memoryview(m)
@@ -183,7 +182,7 @@ else:
 
 if TYPE_CHECKING:
 
-    class c_uintptr(ctypes._SimpleCData):
+    class c_uintptr(ctypes._SimpleCData[int]):
         pass
 
 else:
@@ -193,7 +192,7 @@ else:
         c_uintptr = ctypes.c_uint32
     else:
 
-        class c_uintptr(ctypes._SimpleCData):
+        class c_uintptr(ctypes._SimpleCData[int]):
             # Weird pointer size, but who am I to judge?
             _type_ = "P"
 
