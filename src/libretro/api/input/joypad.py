@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import Literal, overload
 
 from .device import InputDeviceState
 
@@ -41,8 +42,25 @@ class DeviceIdJoypad(IntEnum):
     R3 = RETRO_DEVICE_ID_JOYPAD_R3
     MASK = RETRO_DEVICE_ID_JOYPAD_MASK
 
-    def __init__(self, value: int):
-        self._type_ = "H"
+
+DeviceIdJoypadButton = Literal[
+    DeviceIdJoypad.B,
+    DeviceIdJoypad.Y,
+    DeviceIdJoypad.SELECT,
+    DeviceIdJoypad.START,
+    DeviceIdJoypad.UP,
+    DeviceIdJoypad.DOWN,
+    DeviceIdJoypad.LEFT,
+    DeviceIdJoypad.RIGHT,
+    DeviceIdJoypad.A,
+    DeviceIdJoypad.X,
+    DeviceIdJoypad.L,
+    DeviceIdJoypad.R,
+    DeviceIdJoypad.L2,
+    DeviceIdJoypad.R2,
+    DeviceIdJoypad.L3,
+    DeviceIdJoypad.R3,
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,7 +82,11 @@ class JoypadState(InputDeviceState):
     l3: bool = False
     r3: bool = False
 
-    def __getitem__(self, item) -> bool | int:
+    @overload
+    def __getitem__(self, item: Literal[DeviceIdJoypad.MASK]) -> int: ...
+    @overload
+    def __getitem__(self, item: DeviceIdJoypadButton) -> bool: ...
+    def __getitem__(self, item: DeviceIdJoypad) -> bool | int:
         match item:
             case DeviceIdJoypad.B:
                 return self.b

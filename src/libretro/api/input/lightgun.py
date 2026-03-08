@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import Literal, overload
+from warnings import deprecated
 
 from .device import InputDeviceState
 
@@ -60,6 +62,29 @@ class DeviceIdLightgun(IntEnum):
         )
 
 
+DeviceIdLightGunAxis = Literal[
+    DeviceIdLightgun.SCREEN_X,
+    DeviceIdLightgun.SCREEN_Y,
+    DeviceIdLightgun.X,
+    DeviceIdLightgun.Y,
+]
+
+DeviceIdLightGunButton = Literal[
+    DeviceIdLightgun.TRIGGER,
+    DeviceIdLightgun.IS_OFFSCREEN,
+    DeviceIdLightgun.RELOAD,
+    DeviceIdLightgun.AUX_A,
+    DeviceIdLightgun.AUX_B,
+    DeviceIdLightgun.START,
+    DeviceIdLightgun.SELECT,
+    DeviceIdLightgun.AUX_C,
+    DeviceIdLightgun.DPAD_UP,
+    DeviceIdLightgun.DPAD_DOWN,
+    DeviceIdLightgun.DPAD_LEFT,
+    DeviceIdLightgun.DPAD_RIGHT,
+]
+
+
 @dataclass(frozen=True, slots=True)
 class LightGunState(InputDeviceState):
     screen_x: int = 0
@@ -80,18 +105,26 @@ class LightGunState(InputDeviceState):
     y: int = 0
 
     @property
+    @deprecated("The aux_a property is recommended instead")
     def cursor(self) -> bool:
         return self.aux_a
 
     @property
+    @deprecated("The aux_b property is recommended instead")
     def turbo(self) -> bool:
         return self.aux_b
 
     @property
+    @deprecated("The start property is recommended instead")
     def pause(self) -> bool:
         return self.start
 
-    def __getitem__(self, item) -> int | bool:
+    @overload
+    def __getitem__(self, item: DeviceIdLightGunAxis) -> int: ...
+    @overload
+    def __getitem__(self, item: DeviceIdLightGunButton) -> bool: ...
+
+    def __getitem__(self, item: DeviceIdLightgun) -> int | bool:
         match item:
             case DeviceIdLightgun.SCREEN_X:
                 return self.screen_x
