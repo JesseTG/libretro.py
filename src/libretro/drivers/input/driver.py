@@ -40,11 +40,11 @@ class InputDriver(Protocol):
     def keyboard_callback(self, callback: retro_keyboard_callback) -> None: ...
 
     def keyboard_event(
-        self, down: bool, keycode: Key, character: int, modifiers: KeyModifier
+        self, down: bool, keycode: Key, character: int | str | bytes, modifiers: KeyModifier
     ) -> None:
         callback = self.keyboard_callback
         if callback:
-            callback.callback(down, keycode, character, modifiers)
+            callback(down, keycode, character, modifiers)
 
     # TODO: Separate the rumble interface
     @property
