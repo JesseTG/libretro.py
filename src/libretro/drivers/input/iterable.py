@@ -31,14 +31,6 @@ from libretro.drivers.types import Pollable
 
 from .driver import InputDriver
 
-# Needed for Python 3.11 compatibility,
-# as "int() in MyIntEnumSubclass" wasn't available until Python 3.12
-_DEVICEID_ANALOG_MEMBERS = DeviceIdAnalog.__members__.values()
-_DEVICEID_JOYPAD_MEMBERS = DeviceIdJoypad.__members__.values()
-_DEVICEID_LIGHTGUN_MEMBERS = DeviceIdLightgun.__members__.values()
-_DEVICEID_MOUSE_MEMBERS = DeviceIdMouse.__members__.values()
-_KEY_MEMBERS = Key.__members__.values()
-
 
 @dataclass(order=True, slots=True)
 class Point:
@@ -117,6 +109,17 @@ InputStateSource = InputStateGenerator | InputStateIterable | InputStateIterator
 
 
 class IterableInputDriver(InputDriver):
+    _input_generator: InputStateSource | None
+    _input_generator_state: InputStateIterator | None
+    _input_poll_result: InputPollResult | Sequence[InputPollResult] | None
+    _input_descriptors: Sequence[retro_input_descriptor] | None
+    _controller_info: Sequence[retro_controller_description] | None
+    _device_capabilities: InputDeviceFlag | None
+    _bitmasks_supported: bool | None
+    _max_users: int | None
+    _keyboard_callback: retro_keyboard_callback | None
+    _rumble: RumbleDriver | None
+
     def __init__(
         self,
         input_generator: InputStateSource | None = None,
@@ -126,18 +129,15 @@ class IterableInputDriver(InputDriver):
         rumble: RumbleDriver | None = None,
     ):
         self._input_generator = input_generator
-        self._input_generator_state: (
-            Iterator[InputPollResult | Sequence[InputPollResult]] | None
-        ) = None
-        self._input_poll_result: InputPollResult = None
-        self._last_input_poll_result: InputPollResult = None
+        self._input_generator_state = None
+        self._input_poll_result = None
 
-        self._input_descriptors: Sequence[retro_input_descriptor] | None = None
-        self._controller_info: Sequence[retro_controller_info] | None = None
+        self._input_descriptors = None
+        self._controller_info = None
         self._device_capabilities = device_capabilities
         self._bitmasks_supported = bitmasks_supported
         self._max_users = max_users
-        self._keyboard_callback: retro_keyboard_callback | None = None
+        self._keyboard_callback = None
 
         self._rumble = rumble
 
@@ -148,12 +148,12 @@ class IterableInputDriver(InputDriver):
 
     @device_capabilities.setter
     @override
-    def device_capabilities(self, value: InputDeviceFlag) -> None:
-        if not isinstance(value, InputDeviceFlag):
-            raise TypeError(f"Expected an InputDeviceFlag, got {type(value).__name__}")
+    def device_capabilities(self, capabilities: InputDeviceFlag) -> None:
+        if not isinstance(capabilities, InputDeviceFlag):
+            raise TypeError(f"Expected an InputDeviceFlag, got {type(capabilities).__name__}")
 
         # Unrecognized devices will be filtered out by the CONFORM boundary on InputDeviceFlag
-        self._device_capabilities = InputDeviceFlag(value)
+        self._device_capabilities = InputDeviceFlag(capabilities)
 
     @device_capabilities.deleter
     @override
@@ -167,8 +167,8 @@ class IterableInputDriver(InputDriver):
 
     @bitmasks_supported.setter
     @override
-    def bitmasks_supported(self, value: bool) -> None:
-        self._bitmasks_supported = bool(value)
+    def bitmasks_supported(self, bitmask_supported: bool) -> None:
+        self._bitmasks_supported = bool(bitmask_supported)
 
     @bitmasks_supported.deleter
     @override
@@ -199,15 +199,17 @@ class IterableInputDriver(InputDriver):
         self._max_users = None
 
     def poll(self) -> None:
+        # TODO: handle cases where the core calls this method multiple times in a frame
         if self._input_generator:
             if self._input_generator_state is None:
                 match self._input_generator:
                     case Callable() as func:
                         self._input_generator_state = func()
-                    case Iterable() | Iterator() | Generator() as it:
+                    case Iterator() as it:
                         self._input_generator_state = it
+                    case Iterable() as it:
+                        self._input_generator_state = iter(it)
 
-            self._last_input_poll_result = self._input_poll_result
             self._input_poll_result = next(self._input_generator_state, None)
 
             # TODO: Send keyboard callback events
@@ -216,39 +218,35 @@ class IterableInputDriver(InputDriver):
             self._rumble.poll()
 
     def state(self, port: int, device: int, index: int, id: int) -> int:
-        match (
-            self._input_generator,
-            self._input_poll_result,
-            port,
-            InputDevice(device),
-        ):
-            case (None, _, _, _) | (_, [], _, _):
-                # An unassigned generator or an empty result list will default to 0
+        if not self._input_generator:
+            # If there's no input generator, all states will default to 0
+            return 0
+
+        match self._input_poll_result, port, InputDevice(device):
+            case ([], _, _):
+                # An empty result list will default to 0
                 return 0
-            case (_, _, port, _) if self._max_users is not None and not (
-                0 <= port < self._max_users
-            ):
+            case (_, port, _) if self._max_users is not None and not (0 <= port < self._max_users):
                 # If we limit the number of ports, any out-of-bounds port will default to 0
                 return 0
-            case _, _, _, device if (
+            case _, _, device if (
                 self._device_capabilities is not None
                 and device.flag not in self._device_capabilities
             ):
                 # If we filter by devices, any device not in the flag will default to 0
                 return 0
-            case _, [*results], port, device if 0 <= port < len(results) and not isinstance(
+            case [*results], port, device if 0 <= port < len(results) and not isinstance(
                 results, InputDeviceState
             ):
                 # Yielding a sequence of result types
                 # will expose it to the port that corresponds to each index,
                 # with unfilled ports defaulting to 0.
-                results: Sequence[InputPollResult]
                 return self._lookup_port_state(results[port], device, index, id)
-            case _, result, _, device if isinstance(result, InputPollResult):
+            case result, _, device if isinstance(result, InputPollResult):
                 # Yielding a type that's _not_ a sequence
                 # will expose it to all ports.
                 return self._lookup_port_state(result, device, index, id)
-            case _:
+            case _, _, _:
                 return 0
 
     def _lookup_port_state(
@@ -260,7 +258,6 @@ class IterableInputDriver(InputDriver):
             # All set devices will be exposed to the core as if the generator had yielded them alone.
             # All unset devices will be exposed to the core as 0.
             case PortState() as port_state, device, index, id:
-                port_state: PortState
                 # Recurse a little bit from the general port state into the specific device
                 return self._lookup_port_state(port_state[device], device, index, id)
 
@@ -268,26 +265,19 @@ class IterableInputDriver(InputDriver):
             # with all other devices defaulting to 0.
             # Index is ignored.
             case (
-                JoypadState() as joypad_state,
+                JoypadState() as joypad,
                 InputDevice.JOYPAD,
                 _,
                 DeviceIdJoypad.MASK,
             ) if self._bitmasks_supported:
                 # When asking for the joypad's button mask,
                 # return the mask as an integer
-                joypad_state: JoypadState
-                return joypad_state.mask
-            case (
-                JoypadState() as joypad_state,
-                InputDevice.JOYPAD,
-                _,
-                id,
-            ) if id in _DEVICEID_JOYPAD_MEMBERS:
+                return joypad.mask
+            case JoypadState() as joypad, InputDevice.JOYPAD, _, id if id in DeviceIdJoypad:
                 # When asking for a specific joypad button,
                 # return 1 (True) if its pressed and 0 (False) if not
                 # NOTE: id in DeviceInJoypad is perfectly valid
-                joypad_state: JoypadState
-                return joypad_state[id]
+                return joypad[id]
             case JoypadState(), _, _, _:
                 # When asking for something that joypads don't offer, return 0
                 return 0
@@ -309,7 +299,7 @@ class IterableInputDriver(InputDriver):
                 InputDevice.JOYPAD,
                 _,
                 id,
-            ) if device_id == id:
+            ) if (device_id == id):
                 # Yield 1 for the pressed button
                 return 1
             case DeviceIdJoypad(_), _, _, _:
@@ -318,45 +308,36 @@ class IterableInputDriver(InputDriver):
             # Yielding an AnalogState will expose it to the port's mouse device,
             # with all other devices defaulting to 0.
             case (
-                AnalogState() as analog_state,
+                AnalogState() as analog,
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.BUTTON,
                 id,
             ):
-                analog_state: AnalogState
-                return analog_state[id]
+                return analog[id]
             case (
-                AnalogState() as analog_state,
+                AnalogState() as analog,
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.LEFT,
                 id,
-            ) if id in _DEVICEID_ANALOG_MEMBERS:
-                analog_state: AnalogState
-                return analog_state.lstick[id]
+            ) if (id in DeviceIdAnalog):
+                return analog.lstick[id]
             case (
-                AnalogState() as analog_state,
+                AnalogState() as analog,
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.RIGHT,
                 id,
-            ) if id in _DEVICEID_ANALOG_MEMBERS:
-                analog_state: AnalogState
-                return analog_state.rstick[id]
+            ) if (id in DeviceIdAnalog):
+                return analog.rstick[id]
             case AnalogState(), _, _, _:
                 return 0
 
             # Yielding a MouseState will expose it to the port's mouse device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case (
-                MouseState() as mouse_state,
-                InputDevice.MOUSE,
-                _,
-                id,
-            ) if id in _DEVICEID_MOUSE_MEMBERS:
+            case MouseState() as mouse, InputDevice.MOUSE, _, id if id in DeviceIdMouse:
                 # When asking for a specific mouse button,
                 # return 1 (True) if its pressed and 0 (False) if not
-                mouse_state: MouseState
-                return mouse_state[id]
+                return mouse[id]
             case MouseState(), _, _, _:
                 # When asking for something that mice don't offer, return 0
                 return 0
@@ -380,21 +361,16 @@ class IterableInputDriver(InputDriver):
             # Yielding a KeyboardState will expose it to the port's keyboard device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case (
-                KeyboardState() as keyboard_state,
-                InputDevice.KEYBOARD,
-                _,
-                id,
-            ) if id in _KEY_MEMBERS:
+            case KeyboardState() as keyboard, InputDevice.KEYBOARD, _, id if id in Key:
                 # KeyboardState overloads __getitem__ to return True for pressed keys
                 # and False for unpressed or invalid keys.
-                return keyboard_state[id]
+                return keyboard[id]
             case KeyboardState(), _, _, _:
                 # When asking for something that keyboards don't offer, return 0
                 return 0
 
             # Yielding a Key value will expose it as a key press on the keyboard device.
-            case Key(key), InputDevice.KEYBOARD, _, id if key == id and id in _KEY_MEMBERS:
+            case Key(key), InputDevice.KEYBOARD, _, id if key == id and id in Key:
                 return 1
             case Key(_), _, _, _:  # When yielding a Key in all other cases, return 0
                 return 0
@@ -402,11 +378,10 @@ class IterableInputDriver(InputDriver):
             # Yielding a LightGunState will expose it to the port's light gun device,
             # with all other devices defaulting to 0.
             # Index is ignored.
-            case LightGunState() as light_gun_state, InputDevice.LIGHTGUN, _, id if (
-                id in _DEVICEID_LIGHTGUN_MEMBERS
+            case LightGunState() as lightgun, InputDevice.LIGHTGUN, _, id if (
+                id in DeviceIdLightgun
             ):
-                light_gun_state: LightGunState
-                return light_gun_state[id]
+                return lightgun[id]
             case LightGunState(), _, _, _:
                 # When asking for something that light guns don't offer, return 0
                 return 0
@@ -418,36 +393,35 @@ class IterableInputDriver(InputDriver):
 
             # Yielding a PointerState will expose it to the port's abstract pointer device.
             case (
-                PointerState() as pointer_state,
+                PointerState() as pointer,
                 InputDevice.POINTER,
                 _,
                 DeviceIdPointer.COUNT,
             ):
                 # The number of touches will be exposed as RETRO_DEVICE_ID_POINTER_COUNT.
                 # Index is ignored.
-                pointer_state: PointerState
-                return len(pointer_state.pointers)
+                return len(pointer.pointers)
             case (
-                PointerState() as pointer_state,
+                PointerState() as pointer,
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.X,
-            ) if (0 <= index < len(pointer_state.pointers)):
-                return pointer_state.pointers[index].x
+            ) if (0 <= index < len(pointer.pointers)):
+                return pointer.pointers[index].x
             case (
-                PointerState() as pointer_state,
+                PointerState() as pointer,
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.Y,
-            ) if (0 <= index < len(pointer_state.pointers)):
-                return pointer_state.pointers[index].y
+            ) if (0 <= index < len(pointer.pointers)):
+                return pointer.pointers[index].y
             case (
-                PointerState() as pointer_state,
+                PointerState() as pointer,
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.PRESSED,
-            ) if (0 <= index < len(pointer_state.pointers)):
-                return pointer_state.pointers[index].pressed
+            ) if (0 <= index < len(pointer.pointers)):
+                return pointer.pointers[index].pressed
             case PointerState(), _, _, _:
                 return 0
 
