@@ -348,9 +348,6 @@ class Key(IntEnum, boundary=EJECT):
     LAUNCH_APP1 = RETROK_LAUNCH_APP1
     LAUNCH_APP2 = RETROK_LAUNCH_APP2
 
-    def __init__(self, value):
-        self._type_ = "I"
-
     @property
     def is_modifier(self):
         return self in (
@@ -377,9 +374,6 @@ class KeyModifier(IntFlag):
     NUMLOCK = RETROKMOD_NUMLOCK
     CAPSLOCK = RETROKMOD_CAPSLOCK
     SCROLLOCK = RETROKMOD_SCROLLOCK
-
-    def __init__(self, value):
-        self._type_ = "I"
 
 
 @dataclass(frozen=True, slots=True)
