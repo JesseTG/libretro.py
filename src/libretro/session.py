@@ -51,16 +51,16 @@ from libretro.error import CoreShutDownException
 class Session:
     def __init__(
         self,
-        core: Core | CDLL | str | PathLike,
+        core: Core | CDLL | str | PathLike[str] | PathLike[bytes],
         content: Content | SubsystemContent | None,
         environment: CompositeEnvironmentDriver,
     ):
         match core:
             case Core():
                 self._core = core
-            case CDLL(dll):
-                self._core = Core(dll)
-            case str(path) | PathLike(path):
+            case CDLL():
+                self._core = Core(core)
+            case str() | PathLike() as path:
                 self._core = Core(path)
             case _:
                 raise TypeError(

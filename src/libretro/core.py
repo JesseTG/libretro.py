@@ -146,7 +146,7 @@ class Core(CoreInterface):
     that's left to ``Session`` or some custom abstraction layer.
     """
 
-    def __init__(self, core: CDLL | PathLike | str):
+    def __init__(self, core: CDLL | PathLike[str] | PathLike[bytes] | str):
         """
         Create a new ``Core`` instance.
 

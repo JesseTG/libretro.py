@@ -94,7 +94,7 @@ _RequiredArg: TypeAlias = T | _RequiredFactory[T]
 _OptionalArg: TypeAlias = T | _OptionalFactory[T] | Default | None
 
 _nothing = lambda: None
-CoreArg: TypeAlias = Core | str | PathLike | CDLL | _RequiredFactory[Core]
+CoreArg = Core | str | PathLike[str] | PathLike[bytes] | CDLL | _RequiredFactory[Core]
 AudioDriverArg: TypeAlias = _RequiredArg[AudioDriver] | Default
 InputDriverArg: TypeAlias = (
     _RequiredArg[InputDriver]
