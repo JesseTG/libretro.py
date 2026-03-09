@@ -16,7 +16,7 @@ from ctypes import (
     sizeof,
     string_at,
 )
-from typing import AnyStr, Required, TypedDict
+from typing import TYPE_CHECKING, AnyStr, Required, TypedDict
 
 from _ctypes import CFuncPtr
 
@@ -121,6 +121,8 @@ from libretro.drivers.video import FrameBufferSpecial, VideoDriver
 from .default import DefaultEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
+if TYPE_CHECKING:
+    from libretro.typing import BoolPointer, IntPointer, StringPointer, StructurePointer
 
 
 class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
@@ -359,7 +361,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._audio.sample(left, right)
 
     @override
-    def audio_sample_batch(self, data: POINTER(c_int16), frames: int) -> int:
+    def audio_sample_batch(self, data: IntPointer[c_int16], frames: int) -> int:
         sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16)).cast("h")
         assert (
             len(sample_view) == frames * 2
@@ -383,11 +385,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._video.rotation
 
     @override
-    def _set_rotation(self, rotation_ptr: POINTER(c_uint)) -> bool:
-        if not rotation_ptr:
+    def _set_rotation(self, rotation: IntPointer[c_uint]) -> bool:
+        if not rotation:
             raise ValueError("RETRO_ENVIRONMENT_SET_ROTATION doesn't accept NULL")
 
-        self._video.rotation = Rotation(rotation_ptr[0])
+        self._video.rotation = Rotation(rotation[0])
         return True
 
     @property
@@ -403,14 +405,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._overscan = None
 
     @override
-    def _get_overscan(self, overscan_ptr: POINTER(c_bool)) -> bool:
+    def _get_overscan(self, overscan: BoolPointer) -> bool:
         if self.overscan is None:
             return False
 
-        if not overscan_ptr:
+        if not overscan:
             raise ValueError("RETRO_ENVIRONMENT_GET_OVERSCAN doesn't accept NULL")
 
-        overscan_ptr[0] = self.overscan
+        overscan[0] = self.overscan
         return True
 
     @property
@@ -418,11 +420,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._video.can_dupe
 
     @override
-    def _get_can_dupe(self, can_dupe_ptr: POINTER(c_bool)) -> bool:
-        if not can_dupe_ptr:
+    def _get_can_dupe(self, can_dupe: BoolPointer) -> bool:
+        if not can_dupe:
             raise ValueError("RETRO_ENVIRONMENT_GET_CAN_DUPE doesn't accept NULL")
 
-        can_dupe_ptr[0] = self._video.can_dupe
+        if self._video.can_dupe is None:
+            return False
+
+        can_dupe[0] = self._video.can_dupe
         return True
 
     @property
@@ -430,15 +435,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._message
 
     @override
-    def _set_message(self, message_ptr: POINTER(retro_message)) -> bool:
+    def _set_message(self, message: StructurePointer[retro_message]) -> bool:
         if not self._message:
             return False
 
-        if not message_ptr:
+        if not message:
             raise ValueError("RETRO_ENVIRONMENT_SET_MESSAGE doesn't accept NULL")
 
-        message: retro_message = message_ptr[0]
-        return self._message.set_message(message)
+        return self._message.set_message(message[0])
 
     @property
     def is_shutdown(self) -> bool:
@@ -462,22 +466,22 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._performance_level = None
 
     @override
-    def _set_performance_level(self, level_ptr: POINTER(c_uint)) -> bool:
-        if not level_ptr:
+    def _set_performance_level(self, level: IntPointer[c_uint]) -> bool:
+        if not level:
             raise ValueError("RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL doesn't accept NULL")
 
-        self._performance_level = level_ptr[0]
+        self._performance_level = level[0]
         return True
 
     @override
-    def _get_system_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
+    def _get_system_directory(self, dir: StringPointer) -> bool:
         if self._path is None or self._path.system_dir is None:
             return False
 
-        if not dir_ptr:
+        if not dir:
             raise ValueError("RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._path.system_dir
+        dir[0] = self._path.system_dir
         return True
 
     @property
@@ -485,11 +489,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._video.pixel_format
 
     @override
-    def _set_pixel_format(self, format_ptr: POINTER(retro_pixel_format)) -> bool:
-        if not format_ptr:
+    def _set_pixel_format(self, fmt: IntPointer[retro_pixel_format]) -> bool:
+        if not fmt:
             raise ValueError("RETRO_ENVIRONMENT_SET_PIXEL_FORMAT doesn't accept NULL")
 
-        self._video.pixel_format = PixelFormat(format_ptr[0])
+        self._video.pixel_format = PixelFormat(fmt[0])
         return True
 
     @property
@@ -497,11 +501,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._input.descriptors
 
     @override
-    def _set_input_descriptors(self, descriptors_ptr: POINTER(retro_input_descriptor)) -> bool:
-        if not descriptors_ptr:
+    def _set_input_descriptors(
+        self, descriptors: StructurePointer[retro_input_descriptor]
+    ) -> bool:
+        if not descriptors:
             raise ValueError("RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS doesn't accept NULL")
 
-        self._input.descriptors = tuple(deepcopy(d) for d in from_zero_terminated(descriptors_ptr))
+        self._input.descriptors = tuple(deepcopy(d) for d in from_zero_terminated(descriptors))
         return True
 
     @property
@@ -509,27 +515,29 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._input.keyboard_callback
 
     @override
-    def _set_keyboard_callback(self, callback_ptr: POINTER(retro_keyboard_callback)) -> bool:
-        if not callback_ptr:
+    def _set_keyboard_callback(self, callback: StructurePointer[retro_keyboard_callback]) -> bool:
+        if not callback:
             raise ValueError("RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK doesn't accept NULL")
 
-        self._input.keyboard_callback = deepcopy(callback_ptr[0])
+        self._input.keyboard_callback = deepcopy(callback[0])
         return True
 
     @override
-    def _set_disk_control_interface(self, callback: POINTER(retro_disk_control_callback)) -> bool:
+    def _set_disk_control_interface(
+        self, callback: StructurePointer[retro_disk_control_callback]
+    ) -> bool:
         return False  # TODO: Implement
 
     @override
-    def _set_hw_render(self, hw_render_ptr: POINTER(retro_hw_render_callback)) -> bool:
-        if not hw_render_ptr:
+    def _set_hw_render(self, callback: StructurePointer[retro_hw_render_callback]) -> bool:
+        if not callback:
             raise ValueError("RETRO_ENVIRONMENT_SET_HW_RENDER doesn't accept NULL")
 
-        context = self._video.set_context(hw_render_ptr[0])
+        context = self._video.set_context(callback[0])
         if context is None:
             return False
 
-        hw_render_ptr[0] = context
+        callback[0] = context
         # Give the core the callbacks that the video driver defines
 
         return True
@@ -539,27 +547,27 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._options
 
     @override
-    def _get_variable(self, var_ptr: POINTER(retro_variable)) -> bool:
+    def _get_variable(self, variable: StructurePointer[retro_variable]) -> bool:
         if not self._options:
             return False
 
-        if var_ptr:
-            var: retro_variable = var_ptr[0]
+        if variable:
+            key = variable[0].key
 
-            result = self._options.get_variable(string_at(var.key) if var.key else None)
-            var.value = result
-            # Either a bytes for an option or None
+            if key is not None:
+                variable[0].value = self._options.get_variable(key)
 
         # This envcall supports passing NULL to query for support
         return True
 
     @override
-    def _set_variables(self, vars_ptr: POINTER(retro_variable)) -> bool:
+    def _set_variables(self, variables: StructurePointer[retro_variable]) -> bool:
         if not self._options:
             return False
 
-        if vars_ptr:
-            self._options.set_variables(tuple(deepcopy(s) for s in from_zero_terminated(vars_ptr)))
+        if variables:
+            definitions = tuple(deepcopy(s) for s in from_zero_terminated(variables))
+            self._options.set_variables(definitions)
         else:
             self._options.set_variables(None)
 
@@ -567,14 +575,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _get_variable_update(self, updated_ptr: POINTER(c_bool)) -> bool:
+    def _get_variable_update(self, updated: BoolPointer) -> bool:
         if not self._options:
             return False
 
-        if not updated_ptr:
+        if not updated:
             raise ValueError("RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE doesn't accept NULL")
 
-        updated_ptr[0] = self._options.variable_updated
+        updated[0] = self._options.variable_updated
         return True
 
     @property
@@ -585,48 +593,50 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._content.support_no_game
 
     @override
-    def _set_support_no_game(self, support_ptr: POINTER(c_bool)) -> bool:
+    def _set_support_no_game(self, support: BoolPointer) -> bool:
         if not self._content:
             return False
 
-        if not support_ptr:
+        if not support:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME doesn't accept NULL")
 
-        self._content.support_no_game = support_ptr[0]
+        self._content.support_no_game = support[0]
         return True
 
     @override
-    def _get_libretro_path(self, path_ptr: POINTER(c_char_p)) -> bool:
+    def _get_libretro_path(self, path: StringPointer) -> bool:
         if not self._path or not self._path.libretro_path:
             return False
 
-        if not path_ptr:
+        if not path:
             raise ValueError("RETRO_ENVIRONMENT_GET_LIBRETRO_PATH doesn't accept NULL")
 
-        path_ptr[0] = self._path.libretro_path
+        path[0] = self._path.libretro_path
         return True
 
     @override
-    def _set_frame_time_callback(self, callback_ptr: POINTER(retro_frame_time_callback)) -> bool:
+    def _set_frame_time_callback(
+        self, callback: StructurePointer[retro_frame_time_callback]
+    ) -> bool:
         if not self._timing:
             return False
 
-        if not callback_ptr:
+        if not callback:
             raise ValueError("RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK doesn't accept NULL")
 
-        self._timing.frame_time_callback = deepcopy(callback_ptr[0])
+        self._timing.frame_time_callback = deepcopy(callback[0])
         return True
 
     @override
-    def _set_audio_callback(self, callback_ptr: POINTER(retro_audio_callback)) -> bool:
-        if callback_ptr:
-            self._audio.callbacks = deepcopy(callback_ptr[0])
+    def _set_audio_callback(self, callback: StructurePointer[retro_audio_callback]) -> bool:
+        if callback:
+            self._audio.callbacks = deepcopy(callback[0])
 
         return True
 
     @override
-    def _get_rumble_interface(self, rumble_ptr: POINTER(retro_rumble_interface)) -> bool:
-        if not rumble_ptr:
+    def _get_rumble_interface(self, rumble: StructurePointer[retro_rumble_interface]) -> bool:
+        if not rumble:
             raise ValueError("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE doesn't accept NULL")
 
         if not self._input.rumble:
@@ -639,7 +649,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             # So that even if the rumble/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
 
-        rumble_ptr[0] = self._rumble
+        rumble[0] = self._rumble
         return True
 
     def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
@@ -649,20 +659,20 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._input.rumble.set_rumble_state(port, RumbleEffect(effect), strength)
 
     @override
-    def _get_input_device_capabilities(self, caps_ptr: POINTER(c_uint64)) -> bool:
-        if not caps_ptr:
+    def _get_input_device_capabilities(self, capabilities: IntPointer[c_uint64]) -> bool:
+        if not capabilities:
             raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES doesn't accept NULL")
 
         caps = self._input.device_capabilities
         if caps is None:
             return False
 
-        caps_ptr[0] = caps
+        capabilities[0] = caps
         return True
 
     @override
-    def _get_sensor_interface(self, sensor_ptr: POINTER(retro_sensor_interface)) -> bool:
-        if not sensor_ptr:
+    def _get_sensor_interface(self, interface: StructurePointer[retro_sensor_interface]) -> bool:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE doesn't accept NULL")
 
         if not self._sensor:
@@ -676,7 +686,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             # So that even if the sensor/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
 
-        sensor_ptr[0] = self._sensor_interface
+        interface[0] = self._sensor_interface
         return True
 
     def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
@@ -702,18 +712,18 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._sensor.get_sensor_input(port, Sensor(id))
 
     @override
-    def _get_camera_interface(self, callback_ptr: POINTER(retro_camera_callback)) -> bool:
+    def _get_camera_interface(self, interface: StructurePointer[retro_camera_callback]) -> bool:
         if not self._camera:
             return False
 
-        if not callback_ptr:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE doesn't accept NULL")
 
-        callback: retro_camera_callback = callback_ptr[0]
+        callback = interface[0]
         self._camera.width = callback.width
         self._camera.height = callback.height
 
-        callback_ptr[0] = retro_camera_callback.from_param(self._camera)
+        interface[0] = retro_camera_callback.from_param(self._camera)
 
         return True  # TODO: Implement
 
@@ -722,17 +732,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._log
 
     @override
-    def _get_log_interface(self, log_ptr: POINTER(retro_log_callback)) -> bool:
+    def _get_log_interface(self, interface: StructurePointer[retro_log_callback]) -> bool:
         if not self._log:
             return False
 
-        if not log_ptr:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
         if not self._log_cb:
             self._log_cb = retro_log_callback(log=retro_log_printf_t(self.__log))
 
-        log_ptr[0] = self._log_cb
+        interface[0] = self._log_cb
         return True
 
     def __log(self, level: int, message: bytes):
@@ -743,14 +753,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def perf(self) -> PerfDriver | None:
         return self._perf
 
-    def _get_perf_interface(self, perf_ptr: POINTER(retro_perf_callback)) -> bool:
+    @override
+    def _get_perf_interface(self, interface: StructurePointer[retro_perf_callback]) -> bool:
         if not self._perf:
             return False
 
-        if not perf_ptr:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_PERF_INTERFACE doesn't accept NULL")
 
-        perf_ptr[0] = retro_perf_callback.from_param(self._perf)
+        interface[0] = retro_perf_callback.from_param(self._perf)
         return True
 
     @property
@@ -758,54 +769,56 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._location
 
     @override
-    def _get_location_interface(self, location_ptr: POINTER(retro_location_callback)) -> bool:
+    def _get_location_interface(
+        self, interface: StructurePointer[retro_location_callback]
+    ) -> bool:
         if not self._location:
             return False
 
-        if not location_ptr:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE doesn't accept NULL")
 
-        location: retro_location_callback = location_ptr[0]
+        location = interface[0]
 
         self._location.initialized = location.initialized
         self._location.deinitialized = location.deinitialized
 
         memmove(
-            location_ptr,
+            interface,
             byref(retro_location_callback.from_param(self._location)),
             sizeof(retro_location_callback),
         )
         return True
 
     @override
-    def _get_core_assets_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
+    def _get_core_assets_directory(self, dir: StringPointer) -> bool:
         if self._path is None or self._path.core_assets_dir is None:
             return False
 
-        if not dir_ptr:
+        if not dir:
             raise ValueError("RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._path.core_assets_dir
+        dir[0] = self._path.core_assets_dir
         return True
 
     @override
-    def _get_save_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
+    def _get_save_directory(self, dir: StringPointer) -> bool:
         if self._path is None or self._path.save_dir is None:
             return False
 
-        if not dir_ptr:
+        if not dir:
             raise ValueError("RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._path.save_dir
+        dir[0] = self._path.save_dir
         return True
 
     @override
-    def _set_system_av_info(self, info_ptr: POINTER(retro_system_av_info)) -> bool:
-        if not info_ptr:
+    def _set_system_av_info(self, info: StructurePointer[retro_system_av_info]) -> bool:
+        if not info:
             return False
 
         # TODO: Provide a way to disable this envcall
-        av_info: retro_system_av_info = info_ptr[0]
+        av_info = info[0]
         self._video.system_av_info = av_info
         self._audio.system_av_info = av_info
         self._system_av_info = deepcopy(av_info)
@@ -835,12 +848,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_proc_address_callback(
-        self, procaddress_ptr: POINTER(retro_get_proc_address_interface)
+        self, callback: StructurePointer[retro_get_proc_address_interface]
     ) -> bool:
-        if not procaddress_ptr:
+        if not callback:
             self._proc_address_callback = None
         else:
-            self._proc_address_callback = deepcopy(procaddress_ptr[0])
+            self._proc_address_callback = deepcopy(callback[0])
 
         return True
 
@@ -852,14 +865,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._content.subsystem_info
 
     @override
-    def _set_subsystem_info(self, info_ptr: POINTER(retro_subsystem_info)) -> bool:
+    def _set_subsystem_info(self, info: StructurePointer[retro_subsystem_info]) -> bool:
         if not self._content:
             return False
 
-        if not info_ptr:
+        if not info:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO doesn't accept NULL")
 
-        self._content.subsystem_info = tuple(deepcopy(s) for s in from_zero_terminated(info_ptr))
+        self._content.subsystem_info = tuple(deepcopy(s) for s in from_zero_terminated(info))
         return True
 
     @property
@@ -867,15 +880,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._input.controller_info
 
     @override
-    def _set_controller_info(self, info_ptr: POINTER(retro_controller_info)) -> bool:
-        if not info_ptr:
+    def _set_controller_info(self, info: StructurePointer[retro_controller_info]) -> bool:
+        if not info:
             raise ValueError("RETRO_ENVIRONMENT_SET_CONTROLLER_INFO doesn't accept NULL")
 
-        controller_infos = tuple(
-            deepcopy_array(info_ptr[0].types, info_ptr[0].num_types, memo=None)
-            if info_ptr[0].types
+        controller_info = info[0]
+        array = (
+            deepcopy_array(controller_info.types, controller_info.num_types)
+            if controller_info.types
             else None
         )
+        controller_infos = tuple(array) if array else ()
         self._input.controller_info = controller_infos
 
         return True
@@ -885,12 +900,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._memory_maps
 
     @override
-    def _set_memory_maps(self, map_ptr: POINTER(retro_memory_map)) -> bool:
-        if not map_ptr:
+    def _set_memory_maps(self, maps: StructurePointer[retro_memory_map]) -> bool:
+        if not maps:
             raise ValueError("RETRO_ENVIRONMENT_SET_MEMORY_MAPS doesn't accept NULL")
 
-        memorymaps: retro_memory_map = map_ptr[0]
-        self._memory_maps = deepcopy(memorymaps)
+        self._memory_maps = deepcopy(maps[0])
         return True
 
     @property
@@ -898,49 +912,49 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._video.geometry
 
     @override
-    def _set_geometry(self, geometry_ptr: POINTER(retro_game_geometry)) -> bool:
-        if not geometry_ptr:
+    def _set_geometry(self, geometry: StructurePointer[retro_game_geometry]) -> bool:
+        if not geometry:
             raise ValueError("RETRO_ENVIRONMENT_SET_GEOMETRY doesn't accept NULL")
 
-        self._video.geometry = geometry_ptr[0]
+        self._video.geometry = geometry[0]
         return True
 
     @override
-    def _get_username(self, username_ptr: POINTER(c_char_p)) -> bool:
+    def _get_username(self, username: StringPointer) -> bool:
         if self._user is None or self._user.username is None:
             return False
 
-        if not username_ptr:
+        if not username:
             raise ValueError("RETRO_ENVIRONMENT_GET_USERNAME doesn't accept NULL")
 
-        username_ptr[0] = self._user.username
+        username[0] = self._user.username
         return True
 
     @override
-    def _get_language(self, language_ptr: POINTER(retro_language)) -> bool:
+    def _get_language(self, language: IntPointer[retro_language]) -> bool:
         if self._user is None or self._user.language is None:
             return False
 
-        if not language_ptr:
+        if not language:
             raise ValueError("RETRO_ENVIRONMENT_GET_LANGUAGE doesn't accept NULL")
 
-        language_ptr[0] = self._user.language
+        language[0] = self._user.language
         return True
 
     @override
     def _get_current_software_framebuffer(
-        self, framebuffer_ptr: POINTER(retro_framebuffer)
+        self, framebuffer: StructurePointer[retro_framebuffer]
     ) -> bool:
-        if not framebuffer_ptr:
+        if not framebuffer:
             raise ValueError(
                 "RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER doesn't accept NULL"
             )
 
-        core_fb: retro_framebuffer = framebuffer_ptr[0]
+        core_fb = framebuffer[0]
         width = core_fb.width
         height = core_fb.height
         access = core_fb.access_flags
-        fb = self._video.get_software_framebuffer(int(width), int(height), MemoryAccess(access))
+        fb = self._video.get_software_framebuffer(width, height, MemoryAccess(access))
         if not fb:
             return False
 
@@ -951,16 +965,18 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _get_hw_render_interface(self, hwrender_ptr: POINTER(retro_hw_render_interface)) -> bool:
-        if not hwrender_ptr:
+    def _get_hw_render_interface(
+        self, interface: StructurePointer[retro_hw_render_interface]
+    ) -> bool:
+        if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE doesn't accept NULL")
 
-        hwrender_interface = self._video.hw_render_interface
-        if not hwrender_interface:
+        driver_interface = self._video.hw_render_interface
+        if not driver_interface:
             # This video driver doesn't provide (or need) a hardware render interface
             return False
 
-        hwrender_ptr[0] = pointer(hwrender_interface)
+        interface[0] = driver_interface
         return True
 
     @property
@@ -968,16 +984,16 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._supports_achievements
 
     @override
-    def _set_support_achievements(self, support_ptr: POINTER(c_bool)) -> bool:
-        if not support_ptr:
+    def _set_support_achievements(self, support: BoolPointer) -> bool:
+        if not support:
             raise ValueError("RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS doesn't accept NULL")
 
-        self._supports_achievements = support_ptr[0]
+        self._supports_achievements = support[0]
         return True
 
     @override
     def _set_hw_render_context_negotiation_interface(
-        self, interface: POINTER(retro_hw_render_context_negotiation_interface)
+        self, interface: StructurePointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
         return False  # TODO: Implement
 
@@ -986,17 +1002,18 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._serialization_quirks
 
     @override
-    def _set_serialization_quirks(self, quirks_ptr: POINTER(c_uint64)) -> bool:
-        if not quirks_ptr:
+    def _set_serialization_quirks(self, quirks: IntPointer[c_uint64]) -> bool:
+        if not quirks:
             raise ValueError("RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS doesn't accept NULL")
 
-        self._serialization_quirks = SerializationQuirks(quirks_ptr[0])
+        self._serialization_quirks = SerializationQuirks(quirks[0])
         return True
 
     @property
     def hw_shared_context(self) -> bool:
         return self._video.shared_context
 
+    @override
     def _set_hw_shared_context(self) -> bool:
         self._video.shared_context = True
         return True
@@ -1006,14 +1023,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._vfs
 
     @override
-    def _get_vfs_interface(self, vfs_ptr: POINTER(retro_vfs_interface_info)) -> bool:
+    def _get_vfs_interface(self, vfs: StructurePointer[retro_vfs_interface_info]) -> bool:
         if not self._vfs:
             return False
 
-        if not vfs_ptr:
+        if not vfs:
             raise ValueError("RETRO_ENVIRONMENT_GET_VFS_INTERFACE doesn't accept NULL")
 
-        vfs_info: retro_vfs_interface_info = vfs_ptr[0]
+        vfs_info = vfs[0]
 
         if vfs_info.required_interface_version > self._vfs.version:
             # If the core wants a higher version than what we offer...
@@ -1027,11 +1044,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def led(self) -> LedDriver | None:
         return self._led
 
-    def _get_led_interface(self, led_ptr: POINTER(retro_led_interface)) -> bool:
+    @override
+    def _get_led_interface(self, led: StructurePointer[retro_led_interface]) -> bool:
         if not self._led:
             return False
 
-        if not led_ptr:
+        if not led:
             # This envcall supports passing NULL to query for support
             return True
 
@@ -1040,7 +1058,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 set_led_state=retro_set_led_state_t(self.__set_led_state)
             )
 
-        led_ptr[0] = self._led_cb
+        led[0] = self._led_cb
         return True
 
     def __set_led_state(self, led: int, state: int) -> None:
@@ -1062,9 +1080,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._av_enable = None
 
     @override
-    def _get_audio_video_enable(self, enable_ptr: POINTER(retro_av_enable_flags)) -> bool:
-        if enable_ptr:
-            enable_ptr[0] = self._av_enable
+    def _get_audio_video_enable(self, enable: IntPointer[retro_av_enable_flags]) -> bool:
+        if enable:
+            enable[0] = self._av_enable
 
         # This envcall supports passing NULL to query for support
         return True
@@ -1075,13 +1093,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._midi
 
     @override
-    def _get_midi_interface(self, midi_ptr: POINTER(retro_midi_interface)) -> bool:
+    def _get_midi_interface(self, midi: StructurePointer[retro_midi_interface]) -> bool:
         if not self._midi:
             return False
 
-        if midi_ptr:
+        if midi:
             memmove(
-                midi_ptr,
+                midi,
                 byref(retro_midi_interface.from_param(self._midi)),
                 sizeof(retro_midi_interface),
             )
@@ -1090,11 +1108,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _get_fastforwarding(self, fastforwarding_ptr: POINTER(c_bool)) -> bool:
+    def _get_fastforwarding(self, is_fastforwarding: BoolPointer) -> bool:
         if self._timing is None or self._timing.throttle_state is None:
             return False
 
-        if not fastforwarding_ptr:
+        if not is_fastforwarding:
             raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
 
         fastforwarding_ptr[0] = (
@@ -1103,14 +1121,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _get_target_refresh_rate(self, rate_ptr: POINTER(c_float)) -> bool:
+    def _get_target_refresh_rate(self, rate: FloatPointer[c_float]) -> bool:
         if self._timing is None or self._timing.target_refresh_rate is None:
             return False
 
-        if not rate_ptr:
+        if not rate:
             raise ValueError("RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE doesn't accept NULL")
 
-        rate_ptr[0] = self._timing.target_refresh_rate
+        rate[0] = self._timing.target_refresh_rate
         return True
 
     @property
@@ -1119,35 +1137,33 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_input_bitmasks(self) -> bool:
-        return bool(self._input.bitmasks_supported)
+        return self._input.bitmasks_supported
 
     @property
     def core_options_version(self) -> int | None:
         return self._options.version if self._options else None
 
     @override
-    def _get_core_options_version(self, version_ptr: POINTER(c_uint)) -> bool:
+    def _get_core_options_version(self, version: IntPointer[c_uint]) -> bool:
         if not self._options:
             return False
 
-        if not version_ptr:
+        if not version:
             raise ValueError("RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION doesn't accept NULL")
 
-        version_ptr[0] = self._options.version
+        version[0] = self._options.version
         return True
 
     @override
-    def _set_core_options(self, options_ptr: POINTER(retro_core_option_definition)) -> bool:
+    def _set_core_options(self, options: StructurePointer[retro_core_option_definition]) -> bool:
         if not self._options:
             return False
 
-        if options_ptr:
+        if options:
             if self._options.version < 1:
                 return False
 
-            self._options.set_options(
-                tuple(deepcopy(o) for o in from_zero_terminated(options_ptr))
-            )
+            self._options.set_options(tuple(deepcopy(o) for o in from_zero_terminated(options)))
         else:
             self._options.set_options(None)
 
@@ -1155,15 +1171,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @override
-    def _set_core_options_intl(self, options_ptr: POINTER(retro_core_options_intl)) -> bool:
+    def _set_core_options_intl(self, options: StructurePointer[retro_core_options_intl]) -> bool:
         if not self._options:
             return False
 
-        if options_ptr:
+        if options:
             if self._options.version < 1:
                 return False
 
-            self._options.set_options_intl(options_ptr[0])
+            self._options.set_options_intl(options[0])
         else:
             self._options.set_options_intl(None)
 
@@ -1172,13 +1188,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_core_options_display(
-        self, options_display_ptr: POINTER(retro_core_option_display)
+        self, options: StructurePointer[retro_core_option_display]
     ) -> bool:
         if not self._options:
             return False
 
-        if options_display_ptr:
-            opt_display: retro_core_option_display = options_display_ptr[0]
+        if options:
+            opt_display = options[0]
 
             if opt_display.key:
                 self._options.set_display(opt_display.key, opt_display.visible)
@@ -1202,14 +1218,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._preferred_hw = None
 
     @override
-    def _get_preferred_hw_render(self, preferred_ptr: POINTER(retro_hw_context_type)) -> bool:
+    def _get_preferred_hw_render(self, preferred: IntPointer[retro_hw_context_type]) -> bool:
         if self._preferred_hw is None:
             return False
 
-        if not preferred_ptr:
+        if not preferred:
             raise ValueError("RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER doesn't accept NULL")
 
-        preferred_ptr[0] = self._preferred_hw
+        preferred[0] = self._preferred_hw
 
         # This envcall returns True if the frontend supports the call
         # *and* the frontend can switch video drivers
@@ -1217,168 +1233,173 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Move RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER to the VideoDriver and _driver_switch_enable to the VideoDriver
 
     @override
-    def _get_disk_control_interface_version(self, version: POINTER(c_uint)) -> bool:
+    def _get_disk_control_interface_version(self, version: IntPointer[c_uint]) -> bool:
         return False  # TODO: Implement
 
     @override
     def _set_disk_control_ext_interface(
-        self, interface: POINTER(retro_disk_control_ext_callback)
+        self, interface: StructurePointer[retro_disk_control_ext_callback]
     ) -> bool:
         return False  # TODO: Implement
 
-    def _get_message_interface_version(self, version_ptr: POINTER(c_uint)) -> bool:
+    @override
+    def _get_message_interface_version(self, version: IntPointer[c_uint]) -> bool:
         if not self._message:
             return False
 
-        if not version_ptr:
+        if not version:
             raise ValueError("RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION doesn't accept NULL")
 
-        version_ptr[0] = self._message.version
+        version[0] = self._message.version
         return True
 
     @override
-    def _set_message_ext(self, message_ext_ptr: POINTER(retro_message_ext)) -> bool:
+    def _set_message_ext(self, message_ext: StructurePointer[retro_message_ext]) -> bool:
         if not self._message:
             return False
 
-        if not message_ext_ptr:
+        if not message_ext:
             raise ValueError("RETRO_ENVIRONMENT_SET_MESSAGE_EXT doesn't accept NULL")
 
-        return self._message.set_message(message_ext_ptr[0])
+        return self._message.set_message(message_ext[0])
 
     @override
-    def _get_input_max_users(self, max_users_ptr: POINTER(c_uint)) -> bool:
-        if not max_users_ptr:
+    def _get_input_max_users(self, max_users: IntPointer[c_uint]) -> bool:
+        if not max_users:
             raise ValueError("RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS doesn't accept NULL")
 
-        max_users = self._input.max_users
-        if max_users is None:
+        max_supported_users = self._input.max_users
+        if max_supported_users is None:
             return False
 
-        max_users_ptr[0] = max_users
+        max_users[0] = max_supported_users
         return True
 
     @override
     def _set_audio_buffer_status_callback(
-        self, callback_ptr: POINTER(retro_audio_buffer_status_callback)
+        self, callback: StructurePointer[retro_audio_buffer_status_callback]
     ) -> bool:
-        if callback_ptr:
-            self._audio.buffer_status = deepcopy(callback_ptr[0])
+        if callback:
+            self._audio.buffer_status = deepcopy(callback[0])
         else:
             self._audio.buffer_status = None
 
         return True
 
     @override
-    def _set_minimum_audio_latency(self, latency_ptr: POINTER(c_uint)) -> bool:
-        if latency_ptr:
-            self._audio.minimum_latency = latency_ptr[0]
+    def _set_minimum_audio_latency(self, latency: IntPointer[c_uint]) -> bool:
+        if latency:
+            self._audio.minimum_latency = latency[0]
 
         return True
 
     @override
     def _set_fastforwarding_override(
-        self, override_ptr: POINTER(retro_fastforwarding_override)
+        self, override: StructurePointer[retro_fastforwarding_override]
     ) -> bool:
         if not self._timing:
             return False
 
-        if override_ptr:
-            self._timing.fastforwarding_override = deepcopy(override_ptr[0])
+        if override:
+            self._timing.fastforwarding_override = deepcopy(override[0])
 
         # This envcall supports passing NULL to query for support
         return True
 
     @override
     def _set_content_info_override(
-        self, overrides_ptr: POINTER(retro_system_content_info_override)
+        self, override: StructurePointer[retro_system_content_info_override]
     ) -> bool:
         if not self._content:
             return False
 
-        if not overrides_ptr:
+        if not override:
             # This envcall supports passing NULL to query for support
             return True
 
-        self._content.overrides = tuple(deepcopy(o) for o in from_zero_terminated(overrides_ptr))
+        self._content.overrides = tuple(deepcopy(o) for o in from_zero_terminated(override))
         return True
 
     @override
-    def _get_game_info_ext(self, info_ptr: POINTER(retro_game_info_ext)) -> bool:
+    def _get_game_info_ext(self, info: StructurePointer[retro_game_info_ext]) -> bool:
         if not self._content:
             return False
 
-        if not info_ptr:
+        if not info:
             return False
 
-        info_ext: Array[retro_game_info_ext] | None = self._content.game_info_ext
+        info_ext = self._content.game_info_ext
         if info_ext is None:
             return False
 
-        info_ptr[0] = pointer(info_ext)
+        info[0] = pointer(info_ext)
         return True
 
     @override
-    def _set_core_options_v2(self, options_ptr: POINTER(retro_core_options_v2)) -> bool:
+    def _set_core_options_v2(self, options: StructurePointer[retro_core_options_v2]) -> bool:
         if not self._options:
             return False
 
         if self._options.version < 2:
             return False
 
-        if options_ptr:
-            self._options.set_options_v2(options_ptr[0])
+        if options:
+            self._options.set_options_v2(options[0])
         else:
             self._options.set_options_v2(None)
 
         return self._options.supports_categories
 
-    def _set_core_options_v2_intl(self, options_ptr: POINTER(retro_core_options_v2_intl)) -> bool:
+    @override
+    def _set_core_options_v2_intl(
+        self, options: StructurePointer[retro_core_options_v2_intl]
+    ) -> bool:
         if not self._options:
             return False
 
         if self._options.version < 2:
             return False
 
-        if options_ptr:
-            self._options.set_options_v2_intl(options_ptr[0])
+        if options:
+            self._options.set_options_v2_intl(options[0])
         else:
             self._options.set_options_v2_intl(None)
 
         return self._options.supports_categories
 
+    @override
     def _set_core_options_update_display_callback(
-        self, callback_ptr: POINTER(retro_core_options_update_display_callback)
+        self, callback: StructurePointer[retro_core_options_update_display_callback]
     ) -> bool:
         if not self._options:
             return False
 
-        if callback_ptr:
-            self._options.update_display_callback = callback_ptr[0]
+        if callback:
+            self._options.update_display_callback = callback[0]
 
         return True
 
     @override
-    def _set_variable(self, variable_ptr: POINTER(retro_variable)) -> bool:
+    def _set_variable(self, variable: StructurePointer[retro_variable]) -> bool:
         if not self._options:
             return False
 
-        if variable_ptr:
-            var: retro_variable = variable_ptr[0]
+        if variable:
+            var = variable[0]
             return self._options.set_variable(var.key, var.value)
 
         # This envcall supports passing NULL to query for support
         return True
 
     @override
-    def _get_throttle_state(self, throttle_ptr: POINTER(retro_throttle_state)) -> bool:
+    def _get_throttle_state(self, throttle: StructurePointer[retro_throttle_state]) -> bool:
         if not self._timing or not self._timing.throttle_state:
             return False
 
-        if not throttle_ptr:
+        if not throttle:
             raise ValueError("RETRO_ENVIRONMENT_GET_THROTTLE_STATE doesn't accept NULL")
 
-        throttle_ptr[0] = deepcopy(self._timing.throttle_state)
+        throttle[0] = deepcopy(self._timing.throttle_state)
 
         return True
 
@@ -1398,15 +1419,16 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._savestate_context = None
 
     @override
-    def _get_savestate_context(self, context_ptr: POINTER(retro_savestate_context)) -> bool:
-        if context_ptr:
-            context_ptr[0] = self._savestate_context
+    def _get_savestate_context(self, context: IntPointer[retro_savestate_context]) -> bool:
+        if context:
+            context[0] = self._savestate_context
 
         # This envcall supports passing NULL to query for support
         return True
 
+    @override
     def _get_hw_render_context_negotiation_interface_support(
-        self, support: POINTER(retro_hw_render_context_negotiation_interface)
+        self, support: StructurePointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
         return False  # TODO: Implement
 
@@ -1422,14 +1444,15 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def jit_capable(self) -> None:
         self._jit_capable = None
 
-    def _get_jit_capable(self, capable_ptr: POINTER(c_bool)) -> bool:
+    @override
+    def _get_jit_capable(self, capable: BoolPointer) -> bool:
         if self._jit_capable is None:
             return False
 
-        if not capable_ptr:
+        if not capable:
             raise ValueError("RETRO_ENVIRONMENT_GET_JIT_CAPABLE doesn't accept NULL")
 
-        capable_ptr[0] = self._jit_capable
+        capable[0] = self._jit_capable
         return True
 
     @property
@@ -1437,17 +1460,19 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._mic_interface
 
     @override
-    def _get_microphone_interface(self, mic_ptr: POINTER(retro_microphone_interface)) -> bool:
+    def _get_microphone_interface(
+        self, interface: StructurePointer[retro_microphone_interface]
+    ) -> bool:
         if not self._mic_interface:
             return False
 
-        if mic_ptr:
-            mic_interface: retro_microphone_interface = mic_ptr[0]
+        if interface:
+            mic_interface: retro_microphone_interface = interface[0]
 
             if mic_interface.interface_version != self._mic_interface.version:
                 return False
 
-            mic_ptr[0] = retro_microphone_interface.from_param(self._mic_interface)
+            interface[0] = retro_microphone_interface.from_param(self._mic_interface)
 
         # This envcall supports passing NULL to query for support
         return True
@@ -1457,29 +1482,31 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._device_power
 
     @override
-    def _get_device_power(self, power_ptr: POINTER(retro_device_power)) -> bool:
+    def _get_device_power(self, power: StructurePointer[retro_device_power]) -> bool:
         if not self._device_power:
             return False
 
-        if power_ptr:
-            power_ptr[0] = self._device_power.device_power
+        if power:
+            power[0] = self._device_power.device_power
 
         # This envcall supports passing NULL to query for support
         return True
 
     @override
-    def _set_netpacket_interface(self, interface: POINTER(retro_netpacket_callback)) -> bool:
+    def _set_netpacket_interface(
+        self, interface: StructurePointer[retro_netpacket_callback]
+    ) -> bool:
         return False  # TODO: Implement
 
     @override
-    def _get_playlist_directory(self, dir_ptr: POINTER(c_char_p)) -> bool:
+    def _get_playlist_directory(self, dir: StringPointer) -> bool:
         if self._path is None or self._path.playlist_dir is None:
             return False
 
-        if not dir_ptr:
+        if not dir:
             raise ValueError("RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY doesn't accept NULL")
 
-        dir_ptr[0] = self._path.playlist_dir
+        dir[0] = self._path.playlist_dir
         return True
 
 
