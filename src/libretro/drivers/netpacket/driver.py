@@ -1,13 +1,16 @@
 from abc import abstractmethod
 from typing import NewType, Protocol, runtime_checkable
 
-import libretro.api.netpacket
-from libretro.api.netpacket import NetpacketFlags, retro_netpacket_callback
+from libretro.api.netpacket import (
+    RETRO_NETPACKET_BROADCAST,
+    NetpacketFlags,
+    retro_netpacket_callback,
+)
 
 ClientID = NewType("ClientID", int)
 
 LOCAL = ClientID(0)
-BROADCAST = ClientID(libretro.api.netpacket.BROADCAST)
+BROADCAST = ClientID(RETRO_NETPACKET_BROADCAST)
 
 
 @runtime_checkable

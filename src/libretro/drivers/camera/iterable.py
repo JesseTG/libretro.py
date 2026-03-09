@@ -1,11 +1,11 @@
 from libretro._typing import override
-
-from ... import (
+from libretro.api.camera import (
     CameraCapabilityFlags,
     retro_camera_frame_opengl_texture_t,
     retro_camera_frame_raw_framebuffer_t,
     retro_camera_lifetime_status_t,
 )
+
 from .driver import CameraDriver
 
 
