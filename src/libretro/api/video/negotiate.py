@@ -1,4 +1,5 @@
 from ctypes import Structure, c_int, c_uint
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,7 @@ class ContextNegotiationInterfaceType(IntEnum):
     VULKAN = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN
 
 
+@dataclass(init=False)
 class retro_hw_render_context_negotiation_interface(Structure):
     if TYPE_CHECKING:
         interface_type: ContextNegotiationInterfaceType
