@@ -19,7 +19,7 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import TYPE_CHECKING
 
-from _utils import MemoDict
+from ._utils import MemoDict
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1

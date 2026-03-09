@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from _utils import MemoDict
-
 from libretro.api.log import LogLevel, retro_log_level
+
+from ._utils import MemoDict
 
 RETRO_MESSAGE_TARGET_ALL = 0
 RETRO_MESSAGE_TARGET_OSD = RETRO_MESSAGE_TARGET_ALL + 1
