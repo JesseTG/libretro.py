@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, overload
 if TYPE_CHECKING:
     from libretro.typing import StructurePointer
 
-from libretro.api._utils import deepcopy_array
+from ._utils import MemoDict, deepcopy_array
 
 RETRO_MEMDESC_CONST = 1 << 0
 RETRO_MEMDESC_BIGENDIAN = 1 << 1
@@ -107,7 +107,7 @@ class retro_memory_map(Structure):
 
         return self.descriptors[item]
 
-    def __deepcopy__(self, memodict):
+    def __deepcopy__(self, memodict: MemoDict = None):
         return retro_memory_map(
             descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
             num_descriptors=self.num_descriptors,

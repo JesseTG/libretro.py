@@ -21,6 +21,7 @@ from zipfile import Path as ZipPath
 
 from libretro._typing import Buffer
 from libretro.api._utils import (
+    MemoDict,
     as_bytes,
     deepcopy_array,
     deepcopy_buffer,
@@ -225,7 +226,7 @@ class retro_subsystem_info(Structure):
             case _:
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_subsystem_info(
             desc=self.desc,
             ident=self.ident,

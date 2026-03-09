@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
+from _utils import MemoDict
+
 from libretro.api.log import LogLevel, retro_log_level
 
 RETRO_MESSAGE_TARGET_ALL = 0
@@ -41,7 +43,7 @@ class retro_message(Structure):
             ("frames", c_uint),
         ]
 
-    def __deepcopy__(self, memodict):
+    def __deepcopy__(self, memodict: MemoDict = None):
         return retro_message(msg=self.msg, frames=self.frames)
 
 
@@ -66,7 +68,7 @@ class retro_message_ext(Structure):
             ("progress", c_int8),
         ]
 
-    def __deepcopy__(self, _):
+    def __deepcopy__(self, memodict: MemoDict = None):
         return retro_message_ext(
             msg=self.msg,
             duration=self.duration,

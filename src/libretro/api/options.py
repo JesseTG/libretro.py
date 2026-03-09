@@ -3,7 +3,7 @@ from ctypes import CFUNCTYPE, POINTER, Array, Structure, c_bool, c_char_p, point
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.api._utils import deepcopy_array
+from libretro.api._utils import MemoDict, deepcopy_array
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
@@ -81,7 +81,7 @@ class retro_core_option_definition(Structure):
             ("default_value", c_char_p),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_option_definition(
             self.key,
             self.desc,
@@ -102,7 +102,7 @@ class retro_core_options_intl(Structure):
             ("local", POINTER(retro_core_option_definition)),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_intl(
             pointer(deepcopy(self.us[0], memo)) if self.us else None,
             pointer(deepcopy(self.local[0], memo)) if self.local else None,
@@ -149,7 +149,7 @@ class retro_core_option_v2_definition(Structure):
             ("default_value", c_char_p),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_option_v2_definition(
             self.key,
             self.desc,
@@ -173,7 +173,7 @@ class retro_core_options_v2(Structure):
             ("definitions", POINTER(retro_core_option_v2_definition)),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_v2(
             pointer(deepcopy(self.categories[0], memo)) if self.categories else None,
             pointer(deepcopy(self.definitions[0], memo)) if self.definitions else None,
@@ -191,7 +191,7 @@ class retro_core_options_v2_intl(Structure):
             ("local", POINTER(retro_core_options_v2)),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_v2_intl(
             pointer(deepcopy(self.us[0], memo)) if self.us else None,
             pointer(deepcopy(self.local[0], memo)) if self.local else None,
