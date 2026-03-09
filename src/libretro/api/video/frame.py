@@ -26,7 +26,7 @@ class PixelFormat(IntEnum):
     RGB565 = RETRO_PIXEL_FORMAT_RGB565
 
     @property
-    def bytes_per_pixel(self) -> int:
+    def bytes_per_pixel(self) -> Literal[2, 4]:
         match self:
             case self.RGB1555:
                 return 2
@@ -50,7 +50,7 @@ class PixelFormat(IntEnum):
                 raise ValueError(f"Unknown pixel format: {self}")
 
     @property
-    def pillow_mode(self) -> str:
+    def pillow_mode(self) -> Literal["BGR;15", "RGBX", "BGR;16"]:
         match self:
             case self.RGB1555:
                 return "BGR;15"
