@@ -58,9 +58,6 @@ class ThrottleMode(IntEnum):
     VSYNC = RETRO_THROTTLE_VSYNC
     UNBLOCKED = RETRO_THROTTLE_UNBLOCKED
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 @dataclass(init=False)
 class retro_fastforwarding_override(Structure):

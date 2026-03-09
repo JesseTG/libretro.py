@@ -61,9 +61,6 @@ class SensorAction(IntEnum):
     ILLUMINANCE_ENABLE = RETRO_SENSOR_ILLUMINANCE_ENABLE
     ILLUMINANCE_DISABLE = RETRO_SENSOR_ILLUMINANCE_DISABLE
 
-    def __init__(self, value):
-        self._type_ = "i"
-
     @property
     def sensor_type(self) -> SensorType:
         match self:
@@ -103,9 +100,6 @@ class Sensor(IntEnum):
     GYROSCOPE_Y = RETRO_SENSOR_GYROSCOPE_Y
     GYROSCOPE_Z = RETRO_SENSOR_GYROSCOPE_Z
     ILLUMINANCE = RETRO_SENSOR_ILLUMINANCE
-
-    def __init__(self, value):
-        self._type_ = "i"
 
     @property
     def type(self) -> SensorType:

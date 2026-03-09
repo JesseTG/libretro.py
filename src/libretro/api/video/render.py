@@ -1,4 +1,5 @@
 from ctypes import Structure, c_int, c_uint
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
@@ -18,9 +19,6 @@ class Rotation(IntEnum):
     ONE_EIGHTY = 2
     TWO_SEVENTY = 3
 
-    def __init__(self, value):
-        self._type_ = "I"
-
 
 class HardwareRenderInterfaceType(IntEnum):
     VULKAN = RETRO_HW_RENDER_INTERFACE_VULKAN
@@ -30,10 +28,8 @@ class HardwareRenderInterfaceType(IntEnum):
     D3D12 = RETRO_HW_RENDER_INTERFACE_D3D12
     GSKIT_PS2 = RETRO_HW_RENDER_INTERFACE_GSKIT_PS2
 
-    def __init__(self, value):
-        self._type_ = "I"
 
-
+@dataclass(init=False)
 class retro_hw_render_interface(Structure):
     if TYPE_CHECKING:
         interface_type: HardwareRenderInterfaceType

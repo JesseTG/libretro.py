@@ -176,9 +176,6 @@ class EnvironmentCall(IntEnum):
     GET_PLAYLIST_DIRECTORY = RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY
     GET_FILE_BROWSER_START_DIRECTORY = RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 if TYPE_CHECKING:
     from libretro.typing import FrontendFunctionPointer, c_void_p

@@ -25,9 +25,6 @@ class PixelFormat(IntEnum):
     XRGB8888 = RETRO_PIXEL_FORMAT_XRGB8888
     RGB565 = RETRO_PIXEL_FORMAT_RGB565
 
-    def __init__(self, value):
-        self._type_ = "I"
-
     @property
     def bytes_per_pixel(self) -> int:
         match self:

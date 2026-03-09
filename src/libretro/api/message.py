@@ -22,18 +22,12 @@ class MessageTarget(IntEnum):
     OSD = RETRO_MESSAGE_TARGET_OSD
     LOG = RETRO_MESSAGE_TARGET_LOG
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 class MessageType(IntEnum):
     NOTIFICATION = RETRO_MESSAGE_TYPE_NOTIFICATION
     NOTIFICATION_ALT = RETRO_MESSAGE_TYPE_NOTIFICATION_ALT
     STATUS = RETRO_MESSAGE_TYPE_STATUS
     PROGRESS = RETRO_MESSAGE_TYPE_PROGRESS
-
-    def __init__(self, value: int):
-        self._type_ = "I"
 
 
 @dataclass(init=False)

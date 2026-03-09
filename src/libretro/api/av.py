@@ -18,9 +18,6 @@ class Region(IntEnum):
     NTSC = RETRO_REGION_NTSC
     PAL = RETRO_REGION_PAL
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 class AvEnableFlags(IntFlag, boundary=CONFORM):
     VIDEO = RETRO_AV_ENABLE_VIDEO

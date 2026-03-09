@@ -80,9 +80,6 @@ class Language(IntEnum):
     NORWEGIAN = RETRO_LANGUAGE_NORWEGIAN
     IRISH = RETRO_LANGUAGE_IRISH
 
-    def __init__(self, value):
-        self._type_ = "I"
-
 
 __all__ = [
     "Language",

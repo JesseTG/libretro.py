@@ -43,9 +43,6 @@ class SavestateContext(IntEnum):
     RUNAHEAD_SAME_BINARY = RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY
     ROLLBACK_NETPLAY = RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY
 
-    def __init__(self, value: int):
-        self._type_ = "i"
-
 
 __all__ = [
     "SerializationQuirks",

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from libretro.api._utils import UNCHECKED, c_uintptr
+from libretro.api._utils import c_uintptr
 from libretro.api.proc import retro_proc_address_t
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
@@ -39,9 +39,6 @@ class HardwareContext(IntEnum):
     D3D12 = RETRO_HW_CONTEXT_D3D12
     D3D9 = RETRO_HW_CONTEXT_D3D9
 
-    def __init__(self, value):
-        self._type_ = "I"
-
 
 if TYPE_CHECKING:
     from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
@@ -52,7 +49,7 @@ if TYPE_CHECKING:
 else:
     retro_hw_context_reset_t = CFUNCTYPE(None)
     retro_hw_get_current_framebuffer_t = CFUNCTYPE(c_uintptr)
-    retro_hw_get_proc_address_t = CFUNCTYPE(UNCHECKED(retro_proc_address_t), c_char_p)
+    retro_hw_get_proc_address_t = CFUNCTYPE(retro_proc_address_t, c_char_p)
 
 
 @dataclass(init=False)

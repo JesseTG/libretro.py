@@ -21,9 +21,6 @@ class PowerState(IntEnum):
     CHARGED = RETRO_POWERSTATE_CHARGED
     PLUGGED_IN = RETRO_POWERSTATE_PLUGGED_IN
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 @dataclass(init=False)
 class retro_device_power(Structure):

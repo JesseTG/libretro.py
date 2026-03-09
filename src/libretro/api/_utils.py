@@ -208,21 +208,6 @@ class c_buffer(c_void_p):
 c_double_p = POINTER(c_double)
 
 
-# As of ctypes 1.0, ctypes does not support custom error-checking
-# functions on callbacks, nor does it support custom datatypes on
-# callbacks, so we must ensure that all callbacks return
-# primitive datatypes.
-#
-# Non-primitive return values wrapped with UNCHECKED won't be
-# typechecked, and will be converted to ctypes.c_void_p.
-@deprecated("Remove")
-def UNCHECKED(type):
-    if hasattr(type, "_type_") and isinstance(type._type_, str) and type._type_ != "P":
-        return type
-    else:
-        return c_void_p
-
-
 __all__ = [
     "as_bytes",
     "is_zeroed",
@@ -235,5 +220,4 @@ __all__ = [
     "c_uintptr",
     "c_double_p",
     "c_buffer",
-    "UNCHECKED",
 ]

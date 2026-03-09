@@ -11,8 +11,6 @@ from ctypes import (
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.api._utils import UNCHECKED
-
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
 
@@ -50,9 +48,7 @@ if TYPE_CHECKING:
         c_int, [Pointer[retro_microphone], Pointer[c_int16], c_size_t]
     ]
 else:
-    retro_open_mic_t = CFUNCTYPE(
-        UNCHECKED(POINTER(retro_microphone)), POINTER(retro_microphone_params)
-    )
+    retro_open_mic_t = CFUNCTYPE(POINTER(retro_microphone), POINTER(retro_microphone_params))
     retro_close_mic_t = CFUNCTYPE(None, POINTER(retro_microphone))
     retro_get_mic_params_t = CFUNCTYPE(
         c_bool, POINTER(retro_microphone), POINTER(retro_microphone_params)
