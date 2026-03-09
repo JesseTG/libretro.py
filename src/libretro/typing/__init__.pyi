@@ -1,6 +1,6 @@
 from collections.abc import Callable, Iterable, Iterator
 from ctypes import *
-from typing import Any, Literal, Protocol, Self, overload, override
+from typing import Any, Protocol, Self, overload, override
 
 from _ctypes import CFuncPtr, _CDataType, _Pointer, _SimpleCData
 
