@@ -19,7 +19,7 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import TYPE_CHECKING
 
-from libretro.api._utils import UNCHECKED
+from _utils import MemoDict
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
@@ -53,9 +53,6 @@ class VfsFileAccess(IntFlag):
     UPDATE_EXISTING = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
 
     READ_WRITE_EXISTING = READ_WRITE | UPDATE_EXISTING
-
-    def __init__(self, value: int):
-        self._type_ = "I"
 
     @property
     def open_flag(self) -> str:
@@ -108,9 +105,7 @@ if TYPE_CHECKING:
     retro_vfs_closedir_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_dir_handle]]]
 else:
     retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
-    retro_vfs_open_t = CFUNCTYPE(
-        UNCHECKED(POINTER(retro_vfs_file_handle)), c_char_p, c_uint, c_uint
-    )
+    retro_vfs_open_t = CFUNCTYPE(POINTER(retro_vfs_file_handle), c_char_p, c_uint, c_uint)
     retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
     retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
     retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
@@ -210,7 +205,7 @@ class retro_vfs_interface_info(Structure):
             ("iface", POINTER(retro_vfs_interface)),
         ]
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_vfs_interface_info(
             self.required_interface_version,
             pointer(deepcopy(self.iface[0], memo)) if self.iface else None,
@@ -221,17 +216,11 @@ class VfsFileAccessHint(IntFlag):
     NONE = RETRO_VFS_FILE_ACCESS_HINT_NONE
     FREQUENT_ACCESS = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 class VfsSeekPosition(IntEnum):
     START = RETRO_VFS_SEEK_POSITION_START
     CURRENT = RETRO_VFS_SEEK_POSITION_CURRENT
     END = RETRO_VFS_SEEK_POSITION_END
-
-    def __init__(self, value: int):
-        self._type_ = "I"
 
 
 class VfsStat(IntFlag):
@@ -239,20 +228,14 @@ class VfsStat(IntFlag):
     IS_DIRECTORY = RETRO_VFS_STAT_IS_DIRECTORY
     IS_CHARACTER_SPECIAL = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-
 
 class VfsMkdirResult(IntEnum):
     SUCCESS = 0
     ERROR = -1
     ALREADY_EXISTS = -2
 
-    def __init__(self, value: int):
-        self._type_ = "I"
 
-
-VfsPath = bytes | str | PathLike
+VfsPath = bytes | str | PathLike[bytes] | PathLike[str]
 
 __all__ = [
     "retro_vfs_file_handle",
