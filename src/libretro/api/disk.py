@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_char_p, c_size_t, c_uint
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from libretro.api.content import retro_game_info
 
@@ -78,6 +78,7 @@ class retro_disk_control_ext_callback(retro_disk_control_callback):
             ("get_image_label", retro_get_image_label_t),
         ]
 
+    @override
     def __deepcopy__(self, _):
         return retro_disk_control_ext_callback(
             set_eject_state=self.set_eject_state,
