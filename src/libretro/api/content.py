@@ -94,8 +94,8 @@ class retro_game_info(Structure):
         )
 
 
-ContentPath = str | PathLike | ZipPath
-ContentData = bytes | bytearray | memoryview | Buffer
+ContentPath = str | PathLike[str] | PathLike[bytes] | ZipPath
+ContentData = bytes | bytearray | memoryview[int] | Buffer
 Content: TypeAlias = ContentPath | ContentData | retro_game_info
 
 
@@ -147,9 +147,11 @@ class retro_subsystem_rom_info(Structure):
     def __getitem__(self, index: int) -> retro_subsystem_memory_info: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[retro_subsystem_memory_info]: ...
+    def __getitem__(
+        self, index: slice[retro_subsystem_memory_info]
+    ) -> list[retro_subsystem_memory_info]: ...
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int | slice[retro_subsystem_memory_info]):
         if not self.memory:
             raise ValueError("No subsystem ROM memory types available")
 
@@ -160,13 +162,12 @@ class retro_subsystem_rom_info(Structure):
                 return self.memory[i]
 
             case slice() as s:
-                s: slice
                 return self.memory[s]
 
             case _:
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: MemoDict = None):
         return retro_subsystem_rom_info(
             desc=self.desc,
             valid_extensions=self.valid_extensions,
@@ -207,9 +208,13 @@ class retro_subsystem_info(Structure):
     def __getitem__(self, index: int) -> retro_subsystem_rom_info: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[retro_subsystem_rom_info]: ...
+    def __getitem__(
+        self, index: slice[retro_subsystem_rom_info]
+    ) -> list[retro_subsystem_rom_info]: ...
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: int | slice[retro_subsystem_rom_info]
+    ) -> retro_subsystem_rom_info | list[retro_subsystem_rom_info]:
         if not self.roms:
             raise ValueError("No subsystem ROM types available")
 
@@ -220,7 +225,6 @@ class retro_subsystem_info(Structure):
                 return self.roms[i]
 
             case slice() as s:
-                s: slice
                 return self.roms[s]
 
             case _:
@@ -305,10 +309,12 @@ class Subsystems(Sequence[retro_subsystem_info]):
                     f"Expected a str, bytes, or retro_subsystem_info object; got {type(item).__name__}"
                 )
 
-    def __iter__(self):
+    @override
+    def __iter__(self) -> Iterator[retro_subsystem_info]:
         return iter(self._subsystems)
 
-    def __len__(self):
+    @override
+    def __len__(self) -> int:
         return len(self._subsystems)
 
 
@@ -412,10 +418,12 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
                     f"Expected a str, bytes, or retro_system_content_info_override object; got {type(item).__name__}"
                 )
 
-    def __iter__(self):
+    @override
+    def __iter__(self) -> Iterator[retro_system_content_info_override]:
         return iter(self._overrides)
 
-    def __len__(self):
+    @override
+    def __len__(self) -> int:
         return len(self._overrides)
 
     @property
@@ -503,8 +511,13 @@ def map_content(
                 del buffer_array
                 del array_type
                 # Need to clear all outstanding pointers, or else mmap will raise a BufferError
-        case bytes() | bytearray() | memoryview() as data:
-            array_type: type[Array] = c_ubyte * len(data)
+        case memoryview():
+            data = content.cast("B")
+            array_type = c_ubyte * len(data)
+            buffer_array = array_type.from_buffer(data)
+            yield retro_game_info(data=addressof(buffer_array), size=len(data))
+        case bytes() | bytearray() as data:
+            array_type = c_ubyte * len(data)
             buffer_array = array_type.from_buffer(data)
             yield retro_game_info(data=addressof(buffer_array), size=len(data))
         case _:
