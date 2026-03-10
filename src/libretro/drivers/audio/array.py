@@ -72,7 +72,7 @@ class ArrayAudioDriver(AudioDriver):
         self._system_av_info = deepcopy(info)
 
     @property
-    def buffer(self) -> array:
+    def buffer(self) -> array[int]:
         return self._buffer
 
 

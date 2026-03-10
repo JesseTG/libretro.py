@@ -14,7 +14,7 @@ from .driver import AudioDriver
 class WaveWriterAudioDriver(AudioDriver):
     _file: wave.Wave_write
 
-    def __init__(self, file: str | bytes | PathLike | IO[bytes]):
+    def __init__(self, file: str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]):
         match file:
             case str() as name:
                 self._file = wave.open(name, "wb")
