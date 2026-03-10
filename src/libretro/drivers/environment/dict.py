@@ -1,4 +1,4 @@
-from collections.abc import Callable, KeysView, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from ctypes import c_void_p
 from types import MappingProxyType
 
@@ -30,8 +30,8 @@ class DictEnvironmentDriver(
         return len(self._envcalls)
 
     @override
-    def __iter__(self) -> KeysView[EnvironmentCall]:
-        return self._envcalls.keys()
+    def __iter__(self) -> Iterator[EnvironmentCall]:
+        return iter(self._envcalls.keys())
 
     @override
     def environment(self, cmd: int, data: c_void_p) -> bool:
