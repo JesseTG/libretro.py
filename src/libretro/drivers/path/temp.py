@@ -28,7 +28,7 @@ class TempDirPathDriver(PathDriver):
 
     def __init__(
         self,
-        corepath: str | bytes | PathLike | Core | None = None,
+        corepath: str | bytes | PathLike[str] | PathLike[bytes] | Core | None = None,
         prefix: str | bytes = b"libretro.py-",
     ):
         """

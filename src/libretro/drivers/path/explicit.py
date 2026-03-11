@@ -21,12 +21,12 @@ class ExplicitPathDriver(PathDriver):
 
     def __init__(
         self,
-        corepath: str | bytes | PathLike | Core | None = None,
-        system: str | bytes | PathLike | None = None,
-        assets: str | bytes | PathLike | None = None,
-        save: str | bytes | PathLike | None = None,
-        playlist: str | bytes | PathLike | None = None,
-        file_browser_start: str | bytes | PathLike | None = None,
+        corepath: str | bytes | PathLike[str] | PathLike[bytes] | Core | None = None,
+        system: str | bytes | PathLike[str] | PathLike[bytes] | None = None,
+        assets: str | bytes | PathLike[str] | PathLike[bytes] | None = None,
+        save: str | bytes | PathLike[str] | PathLike[bytes] | None = None,
+        playlist: str | bytes | PathLike[str] | PathLike[bytes] | None = None,
+        file_browser_start: str | bytes | PathLike[str] | PathLike[bytes] | None = None,
     ):
         """
         Initialize a new :class:`.ExplicitPathDriver`,
