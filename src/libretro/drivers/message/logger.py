@@ -1,6 +1,7 @@
+from collections.abc import Sequence
 from copy import deepcopy
 from logging import Logger
-from typing import Sequence
+from typing import override
 
 from libretro.api import LogLevel, MessageTarget, retro_message, retro_message_ext
 
@@ -15,6 +16,7 @@ class LoggerMessageInterface(MessageInterface):
         self._message_exts: list[retro_message_ext] = []
 
     @property
+    @override
     def version(self) -> int:
         return self._version
 
@@ -26,6 +28,7 @@ class LoggerMessageInterface(MessageInterface):
     def message_exts(self) -> Sequence[retro_message_ext]:
         return self._message_exts
 
+    @override
     def set_message(self, message: retro_message | retro_message_ext | None) -> bool:
         match message:
             case retro_message():
