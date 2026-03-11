@@ -5,7 +5,6 @@ from .driver import LedDriver
 
 class DictLedDriver(LedDriver):
     def __init__(self):
-        super().__init__()
         self._leds: dict[int, int] = {}
 
     @override
