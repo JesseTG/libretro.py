@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
+from warnings import deprecated
 
 from libretro.api.camera import (
     CameraCapabilityFlags,
@@ -14,11 +15,23 @@ from libretro.api.camera import (
 
 @runtime_checkable
 class CameraDriver(Protocol):
+    @property
+    @deprecated(
+        "Set the function pointers in the EnvironmentDriver instead of in the CameraDriver"
+    )
     @abstractmethod
-    def __init__(self):
-        self._as_parameter_: retro_camera_callback = retro_camera_callback()
-        self._as_parameter_.start = retro_camera_start_t(self.start)
-        self._as_parameter_.stop = retro_camera_stop_t(self.stop)
+    def _as_parameter_(self) -> retro_camera_callback:
+        return retro_camera_callback(
+            caps=self.caps,
+            width=self.width,
+            height=self.height,
+            start=retro_camera_start_t(self.start),
+            stop=retro_camera_stop_t(self.stop),
+            frame_raw_framebuffer=self.frame_raw_framebuffer,
+            frame_opengl_texture=self.frame_opengl_texture,
+            initialized=self.initialized,
+            deinitialized=self.deinitialized,
+        )
 
     @property
     @abstractmethod

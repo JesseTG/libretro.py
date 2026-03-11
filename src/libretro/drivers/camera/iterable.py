@@ -16,48 +16,90 @@ class CameraFrame:
 
 
 class IterableCameraDriver(CameraDriver):
-    @override
     def __init__(self):
-        super().__init__()
-
-        # TODO: Accept a generator for camera frames
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def caps(self) -> CameraCapabilityFlags:
-        pass
+        raise NotImplementedError("Will be implemented later")
 
+    @caps.setter
+    @override
+    def caps(self, value: CameraCapabilityFlags) -> None:
+        raise NotImplementedError("Will be implemented later")
+
+    @override
     def start(self) -> bool:
-        pass
+        raise NotImplementedError("Will be implemented later")
 
+    @override
     def stop(self) -> None:
-        pass
+        raise NotImplementedError("Will be implemented later")
 
+    @override
     def poll(self) -> None:
-        pass
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def width(self) -> int:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @width.setter
+    @override
+    def width(self, value: int) -> None:
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def height(self) -> int:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @height.setter
+    @override
+    def height(self, value: int) -> None:
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def frame_raw_framebuffer(self) -> retro_camera_frame_raw_framebuffer_t | None:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @frame_raw_framebuffer.setter
+    @override
+    def frame_raw_framebuffer(self, value: retro_camera_frame_raw_framebuffer_t) -> None:
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def frame_opengl_texture(self) -> retro_camera_frame_opengl_texture_t | None:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @frame_opengl_texture.setter
+    @override
+    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t) -> None:
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def initialized(self) -> retro_camera_lifetime_status_t | None:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @initialized.setter
+    @override
+    def initialized(self, value: retro_camera_lifetime_status_t) -> None:
+        raise NotImplementedError("Will be implemented later")
 
     @property
+    @override
     def deinitialized(self) -> retro_camera_lifetime_status_t | None:
-        pass
+        raise NotImplementedError("Will be implemented later")
+
+    @deinitialized.setter
+    @override
+    def deinitialized(self, value: retro_camera_lifetime_status_t) -> None:
+        raise NotImplementedError("Will be implemented later")
 
 
 __all__ = [
