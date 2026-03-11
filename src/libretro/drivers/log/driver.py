@@ -1,17 +1,20 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
+from warnings import deprecated
 
 from libretro.api.log import LogLevel, retro_log_callback, retro_log_printf_t
 
 
 @runtime_checkable
 class LogDriver(Protocol):
-    @abstractmethod
-    def __init__(self):
-        self._as_parameter_ = retro_log_callback(retro_log_printf_t(self.log))
+
+    @property
+    @deprecated("Set the function pointer in the EnvironmentDriver instead of in the LogDriver")
+    def _as_parameter_(self) -> retro_log_callback:
+        return retro_log_callback(retro_log_printf_t(self.log))
 
     @abstractmethod
-    def log(self, message: LogLevel, fmt: bytes, *args) -> None: ...
+    def log(self, level: LogLevel, fmt: bytes) -> None: ...
 
 
 __all__ = ["LogDriver"]
