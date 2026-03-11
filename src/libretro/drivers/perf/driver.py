@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from warnings import deprecated
 
 from libretro.api.perf import (
     CpuFeatures,
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class PerfDriver(Protocol):
+    @deprecated("Set the function pointers in the EnvironmentDriver instead of the PerfDriver")
     @property
     def _as_parameter_(self) -> retro_perf_callback:
         return retro_perf_callback(

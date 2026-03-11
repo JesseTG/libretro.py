@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from time import process_time_ns, time_ns
+from typing import override
 
 from libretro.api.perf import CpuFeatures, retro_perf_counter
 
@@ -21,16 +22,20 @@ class DefaultPerfDriver(PerfDriver):
     def perf_counters(self) -> Mapping[bytes, retro_perf_counter]:
         return self._perf_counters
 
+    @override
     def get_time_usec(self) -> int:
         return time_ns() // 1000
 
+    @override
     def get_perf_counter(self) -> int:
         return process_time_ns()
 
+    @override
     def get_cpu_features(self) -> CpuFeatures:
         # TODO: Use Cython to wrap libretro-common's get_cpu_features
         raise NotImplementedError("get_cpu_features is not implemented")
 
+    @override
     def perf_register(self, counter: retro_perf_counter) -> None:
         if not counter.ident:
             raise ValueError("counter.ident must not be NULL")
@@ -62,17 +67,20 @@ class DefaultPerfDriver(PerfDriver):
         counter.registered = True
         self._perf_counters[ident] = counter
 
+    @override
     def perf_start(self, counter: retro_perf_counter) -> None:
         assert counter.ident in self._perf_counters
 
         counter.call_cnt += 1
         counter.start = self.get_perf_counter()
 
+    @override
     def perf_stop(self, counter: retro_perf_counter) -> None:
         assert counter.ident in self._perf_counters
 
         counter.total += self.get_perf_counter() - counter.start
 
+    @override
     def perf_log(self) -> None:
         for counter in self._perf_counters.values():
             if counter.call_cnt:
