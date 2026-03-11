@@ -43,7 +43,7 @@ class ArrayAudioDriver(AudioDriver):
 
     @buffer_status.setter
     @override
-    def buffer_status(self, callback: retro_audio_buffer_status_callback):
+    def buffer_status(self, callback: retro_audio_buffer_status_callback | None):
         raise UnsupportedEnvCall(
             "ArrayAudioDriver does not support setting buffer status callback"
         )
