@@ -1,6 +1,6 @@
 from collections import deque
 from collections.abc import Callable, Iterator, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from .driver import MidiDriver
 
@@ -24,8 +24,9 @@ class GeneratorMidiDriver(MidiDriver):
         self._output_enabled = True
 
     @property
+    @override
     def input_enabled(self) -> bool:
-        return (
+        return bool(
             self._generator
             and self._input_enabled
             and not isinstance(self._last_poll_result, StopIteration)
@@ -36,6 +37,7 @@ class GeneratorMidiDriver(MidiDriver):
         self._input_enabled = bool(value)
 
     @property
+    @override
     def output_enabled(self) -> bool:
         return self._output_enabled
 
@@ -47,7 +49,11 @@ class GeneratorMidiDriver(MidiDriver):
     def output(self) -> Sequence[MidiWrite]:
         return self._output
 
+    @override
     def read(self) -> int | None:
+        if not self._generator:
+            return None
+
         try:
             if self._generator_state is None:
                 self._generator_state = self._generator()
@@ -64,10 +70,12 @@ class GeneratorMidiDriver(MidiDriver):
             self._last_poll_result = e
             return None
 
+    @override
     def write(self, byte: int, delta_time: int) -> bool:
         self._output.append(MidiWrite(byte, delta_time))
         return True
 
+    @override
     def flush(self) -> bool:
         self._output.clear()
         return True

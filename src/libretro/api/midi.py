@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from libretro.typing import FrontendFunctionPointer, Pointer
 
-    type retro_midi_input_enabled_t = FrontendFunctionPointer[c_bool, []]
-    type retro_midi_output_enabled_t = FrontendFunctionPointer[c_bool, []]
-    type retro_midi_read_t = FrontendFunctionPointer[c_bool, [Pointer[c_uint8]]]
-    type retro_midi_write_t = FrontendFunctionPointer[c_bool, [c_uint8, c_uint32]]
-    type retro_midi_flush_t = FrontendFunctionPointer[c_bool, []]
+    retro_midi_input_enabled_t = FrontendFunctionPointer[c_bool, []]
+    retro_midi_output_enabled_t = FrontendFunctionPointer[c_bool, []]
+    retro_midi_read_t = FrontendFunctionPointer[c_bool, [Pointer[c_uint8]]]
+    retro_midi_write_t = FrontendFunctionPointer[c_bool, [c_uint8, c_uint32]]
+    retro_midi_flush_t = FrontendFunctionPointer[c_bool, []]
 else:
     retro_midi_input_enabled_t = CFUNCTYPE(c_bool)
     retro_midi_output_enabled_t = CFUNCTYPE(c_bool)

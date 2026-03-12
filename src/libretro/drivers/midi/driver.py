@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from ctypes import POINTER, c_uint8
-from typing import Protocol, runtime_checkable
+from ctypes import c_uint8
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from warnings import deprecated
 
 from libretro.api.midi import (
     retro_midi_flush_t,
@@ -11,16 +12,22 @@ from libretro.api.midi import (
     retro_midi_write_t,
 )
 
+if TYPE_CHECKING:
+    from libretro.typing import IntPointer
+
 
 @runtime_checkable
 class MidiDriver(Protocol):
-    def __init__(self):
-        self._as_parameter_ = retro_midi_interface()
-        self._as_parameter_.input_enabled = retro_midi_input_enabled_t(self.__input_enabled)
-        self._as_parameter_.output_enabled = retro_midi_output_enabled_t(self.__output_enabled)
-        self._as_parameter_.read = retro_midi_read_t(self.__read)
-        self._as_parameter_.write = retro_midi_write_t(self.__write)
-        self._as_parameter_.flush = retro_midi_flush_t(self.__flush)
+    @property
+    @deprecated("Set the function pointers in the EnvironmentDriver instead of the MidiDriver")
+    def _as_parameter_(self) -> retro_midi_interface:
+        return retro_midi_interface(
+            input_enabled=retro_midi_input_enabled_t(self.__input_enabled),
+            output_enabled=retro_midi_output_enabled_t(self.__output_enabled),
+            read=retro_midi_read_t(self.__read),
+            write=retro_midi_write_t(self.__write),
+            flush=retro_midi_flush_t(self.__flush),
+        )
 
     @property
     @abstractmethod
@@ -45,7 +52,7 @@ class MidiDriver(Protocol):
     def __output_enabled(self) -> bool:
         return self.output_enabled
 
-    def __read(self, byte: POINTER(c_uint8)) -> bool:
+    def __read(self, byte: IntPointer[c_uint8]) -> bool:
         if not byte:
             return False
 
