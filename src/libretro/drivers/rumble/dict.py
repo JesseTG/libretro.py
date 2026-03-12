@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import override
 
 from libretro.api.rumble import RumbleEffect
 
@@ -20,8 +21,8 @@ class RumbleState:
                 return self.strong
             case RumbleEffect.WEAK:
                 return self.weak
-            case int(i):
-                raise IndexError(f"Expected a valid RumbleEffect, got {i}")
+            case int():
+                raise IndexError(f"Expected a valid RumbleEffect, got {item}")
             case e:
                 raise TypeError(f"Expected a valid RumbleEffect, got: {type(e).__name__}")
 
@@ -33,8 +34,8 @@ class RumbleState:
                 self.weak = value
             case RumbleEffect(), v:
                 raise TypeError(f"Expected an int value, got: {type(v).__name__}")
-            case int(k), _:
-                raise IndexError(f"Expected a RumbleEffect key, got: {k}")
+            case int(), _:
+                raise IndexError(f"Expected a RumbleEffect key, got: {key}")
             case _, v:
                 raise TypeError(f"Expected an int value, got: {type(v).__name__}")
 
@@ -52,6 +53,7 @@ class DictRumbleDriver(RumbleDriver):
         super().__init__()
         self._rumble_state: dict[int, RumbleState] = {}
 
+    @override
     def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
         self._rumble_state[port] = RumbleState(effect, strength)
         return True
