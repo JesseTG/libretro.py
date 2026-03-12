@@ -8,7 +8,7 @@ from .driver import ClientID, NetpacketDriver
 
 class SocketNetpacketDriver(NetpacketDriver):
     def __init__(
-        self, client_id: ClientID, family: AddressFamily, kind: SocketKind, proto=0
+        self, client_id: ClientID, family: AddressFamily, kind: SocketKind, proto: int = 0
     ) -> None:
         self._socket = socket(family, kind)
 
@@ -40,29 +40,37 @@ class SocketNetpacketDriver(NetpacketDriver):
     @override
     def version(self) -> None: ...
 
+    @override
     def start(self, client_id: ClientID) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def receive(self, buf: memoryview, client_id: ClientID) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def stop(self, client_id: ClientID) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def poll(self) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def connected(self, client_id: ClientID) -> bool:
-        pass
+        raise NotImplementedError()
 
+    @override
     def disconnected(self, client_id: ClientID) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def _send(self, flags: NetpacketFlags, buf: memoryview, client_id: ClientID) -> None:
-        pass
+        raise NotImplementedError()
 
+    @override
     def _poll_receive(self) -> None:
-        pass
+        raise NotImplementedError()
 
 
 __all__ = ["SocketNetpacketDriver"]
