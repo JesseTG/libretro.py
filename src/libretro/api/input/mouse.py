@@ -71,7 +71,10 @@ class MouseState(InputDeviceState):
     @overload
     def __getitem__(self, item: DeviceIdMouseButton | DeviceIdMouseWheel) -> bool: ...
 
-    def __getitem__(self, item: DeviceIdMouse) -> bool | int:
+    @overload
+    def __getitem__(self, item: int) -> bool | int: ...
+
+    def __getitem__(self, item: DeviceIdMouse | int) -> bool | int:
         match item:
             case DeviceIdMouse.X:
                 return self.x

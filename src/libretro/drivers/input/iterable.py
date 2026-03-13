@@ -1,6 +1,7 @@
-from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Literal, overload
 
 from libretro._typing import override
 from libretro.api.input import (
@@ -22,7 +23,6 @@ from libretro.api.input import (
     Pointer,
     PointerState,
     retro_controller_description,
-    retro_controller_info,
     retro_input_descriptor,
     retro_keyboard_callback,
 )
@@ -79,7 +79,23 @@ class PortState:
     analog: AnalogState | None = None
     pointer: PointerState | None = None
 
-    def __getitem__(self, item) -> DeviceState | None:
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.NONE]) -> None: ...
+
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.JOYPAD]) -> JoypadState | None: ...
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.MOUSE]) -> MouseState | None: ...
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.KEYBOARD]) -> KeyboardState | None: ...
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.LIGHTGUN]) -> LightGunState | None: ...
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.ANALOG]) -> AnalogState | None: ...
+    @overload
+    def __getitem__(self, item: Literal[InputDevice.POINTER]) -> PointerState | None: ...
+
+    def __getitem__(self, item: InputDevice | int) -> DeviceState | None:
         match item:
             case InputDevice.NONE:
                 return None
@@ -198,6 +214,7 @@ class IterableInputDriver(InputDriver):
     def max_users(self) -> None:
         self._max_users = None
 
+    @override
     def poll(self) -> None:
         # TODO: handle cases where the core calls this method multiple times in a frame
         if self._input_generator:
@@ -217,6 +234,7 @@ class IterableInputDriver(InputDriver):
         if isinstance(self._rumble, Pollable):
             self._rumble.poll()
 
+    @override
     def state(self, port: int, device: int, index: int, id: int) -> int:
         if not self._input_generator:
             # If there's no input generator, all states will default to 0
@@ -224,7 +242,7 @@ class IterableInputDriver(InputDriver):
 
         match self._input_poll_result, port, InputDevice(device):
             case ([], _, _):
-                # An empty result list will default to 0
+                # An empty result list will default to 0 (no input)
                 return 0
             case (_, port, _) if self._max_users is not None and not (0 <= port < self._max_users):
                 # If we limit the number of ports, any out-of-bounds port will default to 0
@@ -276,14 +294,14 @@ class IterableInputDriver(InputDriver):
             case JoypadState() as joypad, InputDevice.JOYPAD, _, id if id in DeviceIdJoypad:
                 # When asking for a specific joypad button,
                 # return 1 (True) if its pressed and 0 (False) if not
-                # NOTE: id in DeviceInJoypad is perfectly valid
+                # NOTE: id in DeviceIdJoypad is perfectly valid
                 return joypad[id]
             case JoypadState(), _, _, _:
                 # When asking for something that joypads don't offer, return 0
                 return 0
             case DeviceIdJoypad(DeviceIdJoypad.MASK), _, _, _:
                 # Yielding a DeviceIdJoypad value will expose it as a button press on the joypad device.
-                # Unless the yielded value is DeviceIdJoypad.MASK, as there's no mask button;
+                # Unless the yielded value is DeviceIdJoypad.MASK, as there's no "mask" button;
                 # so we return the flag value instead.
                 return 0
             case (
@@ -426,21 +444,21 @@ class IterableInputDriver(InputDriver):
                 return 0
 
             case (
-                Pointer(x=x, y=_, pressed=_),
+                Pointer(x=x),
                 InputDevice.POINTER,
                 0,
                 DeviceIdPointer.X,
             ):
                 return x
             case (
-                Pointer(x=_, y=y, pressed=_),
+                Pointer(y=y),
                 InputDevice.POINTER,
                 0,
                 DeviceIdPointer.Y,
             ):
                 return y
             case (
-                Pointer(x=_, y=_, pressed=pressed),
+                Pointer(pressed=pressed),
                 InputDevice.POINTER,
                 0,
                 DeviceIdPointer.PRESSED,
@@ -525,6 +543,7 @@ class IterableInputDriver(InputDriver):
         self._keyboard_callback = callback
 
     @property
+    @override
     def rumble(self) -> RumbleDriver | None:
         return self._rumble
 

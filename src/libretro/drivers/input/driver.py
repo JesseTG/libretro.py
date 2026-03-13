@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
+from warnings import deprecated
 
 from libretro.api import (
     InputDevice,
@@ -48,6 +49,7 @@ class InputDriver(Protocol):
 
     # TODO: Separate the rumble interface
     @property
+    @deprecated("InputDriver shouldn't have a reference to RumbleDriver")
     @abstractmethod
     def rumble(self) -> RumbleDriver | None: ...
 

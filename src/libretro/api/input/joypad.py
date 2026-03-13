@@ -86,7 +86,9 @@ class JoypadState(InputDeviceState):
     def __getitem__(self, item: Literal[DeviceIdJoypad.MASK]) -> int: ...
     @overload
     def __getitem__(self, item: DeviceIdJoypadButton) -> bool: ...
-    def __getitem__(self, item: DeviceIdJoypad) -> bool | int:
+    @overload
+    def __getitem__(self, item: int) -> bool | int: ...
+    def __getitem__(self, item: DeviceIdJoypad | int) -> bool | int:
         match item:
             case DeviceIdJoypad.B:
                 return self.b

@@ -120,8 +120,10 @@ class LightGunState(InputDeviceState):
     def __getitem__(self, item: DeviceIdLightGunAxis) -> int: ...
     @overload
     def __getitem__(self, item: DeviceIdLightGunButton) -> bool: ...
+    @overload
+    def __getitem__(self, item: int) -> int | bool: ...
 
-    def __getitem__(self, item: DeviceIdLightgun) -> int | bool:
+    def __getitem__(self, item: DeviceIdLightgun | int) -> int | bool:
         match item:
             case DeviceIdLightgun.SCREEN_X:
                 return self.screen_x
