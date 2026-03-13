@@ -2,11 +2,11 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from ctypes import Array
-from typing import NamedTuple, Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 from libretro.api import (
     Content,
-    ContentInfoOverrides,
     SubsystemContent,
     Subsystems,
     retro_game_info,
@@ -17,7 +17,8 @@ from libretro.api import (
 )
 
 
-class ContentAttributes(NamedTuple):
+@dataclass(frozen=True)
+class ContentAttributes:
     block_extract: bool
     persistent_data: bool
     need_fullpath: bool

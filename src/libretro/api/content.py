@@ -1,9 +1,8 @@
 import os
-from collections.abc import Generator, Iterator, Mapping, Sequence
+from collections.abc import Buffer, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from ctypes import (
     POINTER,
-    Array,
     Structure,
     addressof,
     c_bool,
@@ -16,16 +15,14 @@ from ctypes import (
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, overload, override
+from typing import TYPE_CHECKING, NamedTuple, overload, override
 from zipfile import Path as ZipPath
 
-from libretro._typing import Buffer
 from libretro.api._utils import (
     MemoDict,
     as_bytes,
     deepcopy_array,
     deepcopy_buffer,
-    memoryview_at,
     mmap_file,
 )
 
@@ -105,7 +102,7 @@ class retro_game_info(Structure):
 
 ContentPath = str | PathLike[str] | PathLike[bytes] | ZipPath
 ContentData = bytes | bytearray | memoryview[int] | Buffer
-Content: TypeAlias = ContentPath | ContentData | retro_game_info
+Content = ContentPath | ContentData | retro_game_info
 
 
 class SubsystemContent(NamedTuple):
@@ -485,10 +482,18 @@ class retro_game_info_ext(Structure):
         )
 
 
+@overload
+def map_content(content: None) -> Iterator[None]: ...
+
+
+@overload
+def map_content(content: Content) -> Iterator[retro_game_info]: ...
+
+
 @contextmanager
 def map_content(
     content: Content | None,
-) -> Generator[retro_game_info | None, Any, None]:
+) -> Iterator[retro_game_info | None]:
     """
     Context manager for mapping a content file into memory.
     The content is mapped on entering, and unmapped on exiting.
@@ -538,7 +543,6 @@ def map_content(
 def get_extension(content: Content | retro_game_info_ext) -> bytes | None:
     match content:
         case ZipPath() as zippath:
-            zippath: ZipPath
             return zippath.suffix.encode().removeprefix(b".")
         case str() | PathLike() as path:
             _, e = os.path.splitext(os.fsencode(path))
