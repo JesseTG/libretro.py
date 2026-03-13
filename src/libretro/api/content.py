@@ -85,6 +85,15 @@ class retro_game_info(Structure):
             ("meta", c_char_p),
         ]
 
+    @property
+    def ext(self) -> bytes | None:
+        path = self.path
+        if path is None:
+            return None
+
+        _, ext = os.path.splitext(path)
+        return ext.removeprefix(b".")
+
     def __deepcopy__(self, _):
         return retro_game_info(
             path=self.path,
