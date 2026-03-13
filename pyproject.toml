@@ -93,6 +93,20 @@ skips = ["B101"]
 profile = "black"
 
 [tool.pyright]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    ".git",
+    ".venv",
+    "venv-windows",
+    "docs",
+    "build",
+]
+include = [
+    "src/libretro/**",
+    "docs/*.py",
+]
 typeCheckingMode = "strict"
 deprecateTypingAliases = true
 reportImportCycles = true
