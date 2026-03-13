@@ -23,7 +23,7 @@ from ctypes import (
     sizeof,
 )
 from os import PathLike
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType
@@ -140,7 +140,9 @@ def deepcopy_buffer(ptr: c_void_p | int | None, size: int) -> Array[c_uint8] | N
 
 
 @contextmanager
-def mmap_file(path: str | bytes | PathLike[str] | PathLike[bytes], mode: str = "rb"):
+def mmap_file(
+    path: str | bytes | PathLike[str] | PathLike[bytes], mode: str = "rb"
+) -> Iterator[memoryview[int]]:
     with open(path, mode, buffering=0) as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
             view = memoryview(m)
@@ -153,7 +155,7 @@ def mmap_file(path: str | bytes | PathLike[str] | PathLike[bytes], mode: str = "
         f.close()
 
 
-class SizedBuffer(Sized, Buffer):
+class SizedBuffer(Sized, Buffer, Protocol):
     pass
 
 
