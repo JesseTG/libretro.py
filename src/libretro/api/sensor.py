@@ -49,8 +49,8 @@ class retro_sensor_interface(Structure):
 
 class SensorType(IntEnum):
     ACCELEROMETER = 0
-    GYROSCOPE = 1
-    ILLUMINANCE = 2
+    GYROSCOPE = 3
+    ILLUMINANCE = 6
 
 
 class SensorAction(IntEnum):
