@@ -1,5 +1,5 @@
 import re
-from collections.abc import Collection, Mapping, MutableMapping
+from collections.abc import Collection, Iterator, Mapping, MutableMapping
 from copy import deepcopy
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -343,6 +343,7 @@ class DictOptionDriver(OptionDriver):
 
             return option.value if option else default
 
+        @override
         def __setitem__(self, key: str | bytes, value: str | bytes):
             """
             Set the value of an option variable by key.
@@ -375,6 +376,7 @@ class DictOptionDriver(OptionDriver):
 
                 self._options._variables_dirty = True
 
+        @override
         def __delitem__(self, key: str | bytes):
             """
             Delete an option variable by key;
@@ -390,7 +392,7 @@ class DictOptionDriver(OptionDriver):
             return len(self._options._options_us)
 
         @override
-        def __iter__(self):
+        def __iter__(self) -> Iterator[bytes]:
             yield from self._options._options_us.keys()
 
     @property
@@ -402,6 +404,7 @@ class DictOptionDriver(OptionDriver):
         def __init__(self, options: "DictOptionDriver"):
             self._options = options
 
+        @override
         def __getitem__(self, key: str | bytes) -> bool:
             k = as_bytes(key)
             if k not in self._options._options_us:
@@ -411,21 +414,26 @@ class DictOptionDriver(OptionDriver):
 
             return option.visible if option else True
 
-        def __len__(self):
+        @override
+        def __len__(self) -> int:
             return len(self._options._options_us)
 
-        def __iter__(self):
+        @override
+        def __iter__(self) -> Iterator[bytes]:
             yield from self._options._options_us.keys()
 
     @property
+    @override
     def visibility(self) -> VisibilityMapping:
         return DictOptionDriver.VisibilityMapping(self)
 
     @property
+    @override
     def categories(self) -> Mapping[bytes, retro_core_option_v2_category] | None:
         return MappingProxyType(self._categories_us) if self.supports_categories else None
 
     @property
+    @override
     def definitions(self) -> Mapping[bytes, retro_core_option_v2_definition] | None:
         return MappingProxyType(self._options_us)
 
