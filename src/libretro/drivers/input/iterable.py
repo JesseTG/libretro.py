@@ -32,7 +32,7 @@ from libretro.drivers.types import Pollable
 from .driver import InputDriver
 
 
-@dataclass(order=True, slots=True)
+@dataclass(frozen=True, order=True, slots=True)
 class Point:
     x: int = 0
     y: int = 0
