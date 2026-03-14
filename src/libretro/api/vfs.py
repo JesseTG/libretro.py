@@ -96,7 +96,9 @@ if TYPE_CHECKING:
     retro_vfs_rename_t = FrontendFunctionPointer[c_int, [c_char_p, c_char_p]]
     retro_vfs_stat_t = FrontendFunctionPointer[c_int, [c_char_p, Pointer[c_int32]]]
     retro_vfs_mkdir_t = FrontendFunctionPointer[c_int, [c_char_p]]
-    retro_vfs_opendir_t = FrontendFunctionPointer[c_void_p, [c_char_p, c_bool]]
+    retro_vfs_opendir_t = FrontendFunctionPointer[
+        Pointer[retro_vfs_dir_handle], [c_char_p, c_bool]
+    ]
     retro_vfs_readdir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
     retro_vfs_dirent_get_name_t = FrontendFunctionPointer[
         c_char_p, [Pointer[retro_vfs_dir_handle]]
@@ -118,7 +120,7 @@ else:
     retro_vfs_rename_t = CFUNCTYPE(c_int, c_char_p, c_char_p)
     retro_vfs_stat_t = CFUNCTYPE(c_int, c_char_p, POINTER(c_int32))
     retro_vfs_mkdir_t = CFUNCTYPE(c_int, c_char_p)
-    retro_vfs_opendir_t = CFUNCTYPE(c_void_p, c_char_p, c_bool)
+    retro_vfs_opendir_t = CFUNCTYPE(POINTER(retro_vfs_dir_handle), c_char_p, c_bool)
     retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
     retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_dir_handle))
     retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
