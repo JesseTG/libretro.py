@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class PerfDriver(Protocol):
-    @deprecated("Set the function pointers in the EnvironmentDriver instead of the PerfDriver")
     @property
+    @deprecated("Set the function pointers in the EnvironmentDriver instead of the PerfDriver")
     def _as_parameter_(self) -> retro_perf_callback:
         return retro_perf_callback(
             get_time_usec=retro_perf_get_time_usec_t(self.get_time_usec),
