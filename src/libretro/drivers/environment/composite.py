@@ -32,7 +32,6 @@ from libretro.api import (
     Rotation,
     RumbleEffect,
     SavestateContext,
-    Sensor,
     SensorAction,
     SerializationQuirks,
     ThrottleMode,
@@ -126,7 +125,28 @@ if TYPE_CHECKING:
     from libretro.typing import BoolPointer, IntPointer, StringPointer, StructurePointer
 
 
-class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
+class CompositeEnvironmentDriver[
+    Audio: AudioDriver,
+    Input: InputDriver,
+    Video: VideoDriver,
+    Content: ContentDriver | None,
+    Message: MessageInterface | None,
+    Option: OptionDriver | None,
+    Path: PathDriver | None,
+    Rumble: RumbleDriver | None,
+    Sensor: SensorDriver | None,
+    Camera: CameraDriver | None,
+    Log: LogDriver | None,
+    Perf: PerfDriver | None,
+    Location: LocationDriver | None,
+    User: UserDriver | None,
+    Vfs: FileSystemInterface | None,
+    Led: LedDriver | None,
+    Midi: MidiDriver | None,
+    Timing: TimingDriver | None,
+    Mic: MicrophoneDriver | None,
+    Power: PowerDriver | None,
+](DefaultEnvironmentDriver):
     class Args(TypedDict, total=False):
         audio: Required[AudioDriver]
         input: Required[InputDriver]
@@ -156,31 +176,60 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         device_power: PowerDriver | None
 
     @override
-    def __init__(self, kwargs: Args):
+    def __init__(
+        self,
+        /,
+        audio: Audio,
+        input: Input,
+        video: Video,
+        content: Content = None,
+        overscan: bool | None = None,
+        message: Message = None,
+        options: Option = None,
+        path: Path = None,
+        rumble: Rumble = None,
+        sensor: Sensor = None,
+        camera: Camera = None,
+        log: Log = None,
+        perf: Perf = None,
+        location: Location = None,
+        user: User = None,
+        vfs: Vfs = None,
+        led: Led = None,
+        av_enable: AvEnableFlags | None = None,
+        midi: Midi = None,
+        timing: Timing = None,
+        preferred_hw: HardwareContext | None = None,
+        driver_switch_enable: bool | None = None,
+        savestate_context: SavestateContext | None = None,
+        jit_capable: bool | None = None,
+        mic_interface: Mic = None,
+        device_power: Power = None,
+    ):
         super().__init__()
-        self._audio = kwargs["audio"]
+        self._audio = audio
         if not isinstance(self._audio, AudioDriver):
             raise TypeError(f"Expected AudioDriver, got {type(self._audio).__qualname__}")
 
-        self._input = kwargs["input"]
+        self._input = input
         if not isinstance(self._input, InputDriver):
             raise TypeError(f"Expected InputDriver, got {type(self._input).__qualname__}")
 
-        self._video = kwargs["video"]
+        self._video = video
         if not isinstance(self._video, VideoDriver):
             raise TypeError(f"Expected VideoDriver, got {type(self._video).__qualname__}")
 
-        self._content = kwargs.get("content")
+        self._content = content
         if self._content is not None and not isinstance(self._content, ContentDriver):
             raise TypeError(
                 f"Expected ContentDriver or None, got {type(self._content).__qualname__}"
             )
 
-        self._overscan = kwargs.get("overscan")
+        self._overscan = overscan
         if self._overscan is not None and not isinstance(self._overscan, bool):
             raise TypeError(f"Expected bool or None, got {type(self._overscan).__qualname__}")
 
-        self._message = kwargs.get("message")
+        self._message = message
         if self._message is not None and not isinstance(self._message, MessageInterface):
             raise TypeError(
                 f"Expected MessageInterface or None, got {type(self._message).__qualname__}"
@@ -188,43 +237,43 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         self.__shutdown = False
         self._performance_level: int | None = None
-        self._path = kwargs.get("path")
+        self._path = path
         if self._path is not None and not isinstance(self._path, PathDriver):
             raise TypeError(f"Expected PathDriver or None, got {type(self._path).__qualname__}")
 
-        self._options = kwargs.get("options")
+        self._options = options
         if self._options is not None and not isinstance(self._options, OptionDriver):
             raise TypeError(
                 f"Expected OptionDriver or None, got {type(self._options).__qualname__}"
             )
 
-        self._rumble = kwargs.get("rumble")
+        self._rumble = rumble
         if self._rumble is not None and not isinstance(self._rumble, RumbleDriver):
             raise TypeError(
                 f"Expected RumbleDriver or None, got {type(self._rumble).__qualname__}"
             )
 
-        self._sensor = kwargs.get("sensor")
+        self._sensor = sensor
         if self._sensor is not None and not isinstance(self._sensor, SensorDriver):
             raise TypeError(
                 f"Expected SensorDriver or None, got {type(self._sensor).__qualname__}"
             )
 
-        self._camera = kwargs.get("camera")
+        self._camera = camera
         if self._camera is not None and not isinstance(self._camera, CameraDriver):
             raise TypeError(
                 f"Expected CameraDriver or None, got {type(self._camera).__qualname__}"
             )
 
-        self._log = kwargs.get("log")
+        self._log = log
         if self._log is not None and not isinstance(self._log, LogDriver):
             raise TypeError(f"Expected LogDriver or None, got {type(self._log).__qualname__}")
 
-        self._perf = kwargs.get("perf")
+        self._perf = perf
         if self._perf is not None and not isinstance(self._perf, PerfDriver):
             raise TypeError(f"Expected PerfDriver or None, got {type(self._perf).__qualname__}")
 
-        self._location = kwargs.get("location")
+        self._location = location
         if self._location is not None and not isinstance(self._location, LocationDriver):
             raise TypeError(
                 f"Expected LocationDriver or None, got {type(self._location).__qualname__}"
@@ -232,45 +281,45 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._memory_maps: retro_memory_map | None = None
-        self._user = kwargs.get("user")
+        self._user = user
         if self._user is not None and not isinstance(self._user, UserDriver):
             raise TypeError(f"Expected UserDriver or None, got {type(self._user).__qualname__}")
 
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
-        self._vfs = kwargs.get("vfs")
+        self._vfs = vfs
         if self._vfs is not None and not isinstance(self._vfs, FileSystemInterface):
             raise TypeError(
                 f"Expected FileSystemInterface or None, got {type(self._vfs).__qualname__}"
             )
 
-        self._led = kwargs.get("led")
+        self._led = led
         if self._led is not None and not isinstance(self._led, LedDriver):
             raise TypeError(f"Expected LedDriver or None, got {type(self._led).__qualname__}")
 
-        self._av_enable = kwargs.get("av_enable")
+        self._av_enable = av_enable
         if self._av_enable is not None and not isinstance(self._av_enable, AvEnableFlags):
             raise TypeError(
                 f"Expected AvEnableFlags or None, got {type(self._av_enable).__qualname__}"
             )
 
-        self._midi = kwargs.get("midi")
+        self._midi = midi
         if self._midi is not None and not isinstance(self._midi, MidiDriver):
             raise TypeError(f"Expected MidiDriver or None, got {type(self._midi).__qualname__}")
 
-        self._timing = kwargs.get("timing")
+        self._timing = timing
         if self._timing is not None and not isinstance(self._timing, TimingDriver):
             raise TypeError(
                 f"Expected TimingDriver or None, got {type(self._timing).__qualname__}"
             )
 
-        self._preferred_hw = kwargs.get("preferred_hw")
+        self._preferred_hw = preferred_hw
         if self._preferred_hw is not None and not isinstance(self._preferred_hw, HardwareContext):
             raise TypeError(
                 f"Expected HardwareContext or None, got {type(self._preferred_hw).__qualname__}"
             )
 
-        self._driver_switch_enable = kwargs.get("driver_switch_enable")
+        self._driver_switch_enable = driver_switch_enable
         if self._driver_switch_enable is not None and not isinstance(
             self._driver_switch_enable, bool
         ):
@@ -278,7 +327,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 f"Expected bool or None, got {type(self._driver_switch_enable).__qualname__}"
             )
 
-        self._savestate_context = kwargs.get("savestate_context")
+        self._savestate_context = savestate_context
         if self._savestate_context is not None and not isinstance(
             self._savestate_context, SavestateContext
         ):
@@ -286,11 +335,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 f"Expected SavestateContext or None, got {type(self._savestate_context).__qualname__}"
             )
 
-        self._jit_capable = kwargs.get("jit_capable")
+        self._jit_capable = jit_capable
         if self._jit_capable is not None and not isinstance(self._jit_capable, bool):
             raise TypeError(f"Expected bool or None, got {type(self._jit_capable).__qualname__}")
 
-        self._mic_interface = kwargs.get("mic_interface")
+        self._mic_interface = mic_interface
         if self._mic_interface is not None and not isinstance(
             self._mic_interface, MicrophoneDriver
         ):
@@ -298,7 +347,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 f"Expected MicrophoneDriver or None, got {type(self._mic_interface).__qualname__}"
             )
 
-        self._device_power = kwargs.get("device_power")
+        self._device_power = device_power
         if self._device_power is not None and not isinstance(self._device_power, PowerDriver):
             raise TypeError(
                 f"Expected PowerDriver or None, got {type(self._device_power).__qualname__}"
@@ -310,39 +359,39 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._led_cb: retro_led_interface | None = None
 
     @property
-    def audio(self) -> AudioDriver:
+    def audio(self) -> Audio:
         return self._audio
 
     @property
-    def input(self) -> InputDriver:
+    def input(self) -> Input:
         return self._input
 
     @property
-    def video(self) -> VideoDriver:
+    def video(self) -> Video:
         return self._video
 
     @property
-    def content(self) -> ContentDriver | None:
+    def content(self) -> Content:
         return self._content
 
     @property
-    def sensor(self) -> SensorDriver | None:
+    def sensor(self) -> Sensor:
         return self._sensor
 
     @property
-    def camera(self) -> CameraDriver | None:
+    def camera(self) -> Camera:
         return self._camera
 
     @property
-    def user(self) -> UserDriver | None:
+    def user(self) -> User:
         return self._user
 
     @property
-    def path(self) -> PathDriver | None:
+    def path(self) -> Path:
         return self._path
 
     @property
-    def timing(self) -> TimingDriver | None:
+    def timing(self) -> Timing:
         return self._timing
 
     @override
@@ -381,7 +430,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         # TODO: Ensure this isn't called more than once per frame
         self._input.poll()
 
-        if self._sensor:
+        if self._sensor is not None:
             self._sensor.poll()
 
     @override
@@ -439,12 +488,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def message(self) -> MessageInterface | None:
+    def message(self) -> Message:
         return self._message
 
     @override
     def _set_message(self, message: StructurePointer[retro_message]) -> bool:
-        if not self._message:
+        if self._message is None:
             return False
 
         if not message:
@@ -551,12 +600,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def options(self) -> OptionDriver | None:
+    def options(self) -> Option:
         return self._options
 
     @override
     def _get_variable(self, variable: StructurePointer[retro_variable]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if variable:
@@ -570,7 +619,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_variables(self, variables: StructurePointer[retro_variable]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if variables:
@@ -584,7 +633,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_variable_update(self, updated: BoolPointer) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if not updated:
@@ -595,14 +644,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def support_no_game(self) -> bool | None:
-        if not self._content:
+        if self._content is None:
             return None
 
         return self._content.support_no_game
 
     @override
     def _set_support_no_game(self, support: BoolPointer) -> bool:
-        if not self._content:
+        if self._content is None:
             return False
 
         if not support:
@@ -613,7 +662,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_libretro_path(self, path: StringPointer) -> bool:
-        if not self._path or not self._path.libretro_path:
+        if self._path is None or not self._path.libretro_path:
             return False
 
         if not path:
@@ -626,7 +675,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_frame_time_callback(
         self, callback: StructurePointer[retro_frame_time_callback]
     ) -> bool:
-        if not self._timing:
+        if self._timing is None:
             return False
 
         if not callback:
@@ -661,7 +710,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
-        if not self._rumble:
+        if self._rumble is None:
             return False
 
         return self._rumble.set_rumble_state(port, RumbleEffect(effect), strength)
@@ -698,7 +747,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
-        if not self._sensor:
+        if self._sensor is None:
             return False
 
         max_users = self._input.max_users
@@ -709,7 +758,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return self._sensor.set_sensor_state(port, SensorAction(action), rate)
 
     def __get_sensor_input(self, port: int, id: int) -> float:
-        if not self._sensor:
+        if self._sensor is None:
             return 0.0
 
         max_users = self._input.max_users
@@ -717,11 +766,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             # If we have a max-user limit set, and the port number exceeds it...
             return 0.0
 
-        return self._sensor.get_sensor_input(port, Sensor(id))
+        return self._sensor.get_sensor_input(port, id)
 
     @override
     def _get_camera_interface(self, interface: StructurePointer[retro_camera_callback]) -> bool:
-        if not self._camera:
+        if self._camera is None:
             return False
 
         if not interface:
@@ -736,12 +785,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True  # TODO: Implement
 
     @property
-    def log(self) -> LogDriver | None:
+    def log(self) -> Log:
         return self._log
 
     @override
     def _get_log_interface(self, interface: StructurePointer[retro_log_callback]) -> bool:
-        if not self._log:
+        if self._log is None:
             return False
 
         if not interface:
@@ -754,16 +803,16 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     def __log(self, level: int, message: bytes):
-        if self._log:
+        if self._log is not None:
             self._log.log(LogLevel(level), message)
 
     @property
-    def perf(self) -> PerfDriver | None:
+    def perf(self) -> Perf:
         return self._perf
 
     @override
     def _get_perf_interface(self, interface: StructurePointer[retro_perf_callback]) -> bool:
-        if not self._perf:
+        if self._perf is None:
             return False
 
         if not interface:
@@ -773,14 +822,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def location(self) -> LocationDriver | None:
+    def location(self) -> Location:
         return self._location
 
     @override
     def _get_location_interface(
         self, interface: StructurePointer[retro_location_callback]
     ) -> bool:
-        if not self._location:
+        if self._location is None:
             return False
 
         if not interface:
@@ -867,14 +916,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def subsystems(self) -> Sequence[retro_subsystem_info] | None:
-        if not self._content:
+        if self._content is None:
             return None
 
         return self._content.subsystem_info
 
     @override
     def _set_subsystem_info(self, info: StructurePointer[retro_subsystem_info]) -> bool:
-        if not self._content:
+        if self._content is None:
             return False
 
         if not info:
@@ -1027,12 +1076,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def vfs(self) -> FileSystemInterface | None:
+    def vfs(self) -> Vfs:
         return self._vfs
 
     @override
     def _get_vfs_interface(self, vfs: StructurePointer[retro_vfs_interface_info]) -> bool:
-        if not self._vfs:
+        if self._vfs is None:
             return False
 
         if not vfs:
@@ -1049,12 +1098,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def led(self) -> LedDriver | None:
+    def led(self) -> Led:
         return self._led
 
     @override
     def _get_led_interface(self, led: StructurePointer[retro_led_interface]) -> bool:
-        if not self._led:
+        if self._led is None:
             return False
 
         if not led:
@@ -1070,7 +1119,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     def __set_led_state(self, led: int, state: int) -> None:
-        if self._led:
+        if self._led is not None:
             self._led.set_led_state(led, state)
 
     @property
@@ -1152,11 +1201,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @property
     def core_options_version(self) -> int | None:
-        return self._options.version if self._options else None
+        if self._options is None:
+            return None
+
+        return self._options.version
 
     @override
     def _get_core_options_version(self, version: IntPointer[c_uint]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if not version:
@@ -1167,7 +1219,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_core_options(self, options: StructurePointer[retro_core_option_definition]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if options:
@@ -1183,7 +1235,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_core_options_intl(self, options: StructurePointer[retro_core_options_intl]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if options:
@@ -1201,7 +1253,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_core_options_display(
         self, options: StructurePointer[retro_core_option_display]
     ) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if options:
@@ -1255,7 +1307,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_message_interface_version(self, version: IntPointer[c_uint]) -> bool:
-        if not self._message:
+        if self._message is None:
             return False
 
         if not version:
@@ -1266,7 +1318,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_message_ext(self, message_ext: StructurePointer[retro_message_ext]) -> bool:
-        if not self._message:
+        if self._message is None:
             return False
 
         if not message_ext:
@@ -1308,7 +1360,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_fastforwarding_override(
         self, override: StructurePointer[retro_fastforwarding_override]
     ) -> bool:
-        if not self._timing:
+        if self._timing is None:
             return False
 
         if override:
@@ -1321,7 +1373,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_content_info_override(
         self, override: StructurePointer[retro_system_content_info_override]
     ) -> bool:
-        if not self._content:
+        if self._content is None:
             return False
 
         if not override:
@@ -1333,7 +1385,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_game_info_ext(self, info: StructurePointer[retro_game_info_ext]) -> bool:
-        if not self._content:
+        if self._content is None:
             return False
 
         if not info:
@@ -1348,7 +1400,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_core_options_v2(self, options: StructurePointer[retro_core_options_v2]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if self._options.version < 2:
@@ -1365,7 +1417,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_core_options_v2_intl(
         self, options: StructurePointer[retro_core_options_v2_intl]
     ) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if self._options.version < 2:
@@ -1382,7 +1434,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_core_options_update_display_callback(
         self, callback: StructurePointer[retro_core_options_update_display_callback]
     ) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if callback:
@@ -1392,7 +1444,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _set_variable(self, variable: StructurePointer[retro_variable]) -> bool:
-        if not self._options:
+        if self._options is None:
             return False
 
         if variable:
@@ -1404,7 +1456,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_throttle_state(self, throttle: StructurePointer[retro_throttle_state]) -> bool:
-        if not self._timing or not self._timing.throttle_state:
+        if self._timing is None or not self._timing.throttle_state:
             return False
 
         if not throttle:
@@ -1467,14 +1519,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def microphones(self) -> MicrophoneDriver | None:
+    def microphones(self) -> Mic:
         return self._mic_interface
 
     @override
     def _get_microphone_interface(
         self, interface: StructurePointer[retro_microphone_interface]
     ) -> bool:
-        if not self._mic_interface:
+        if self._mic_interface is None:
             return False
 
         if interface:
@@ -1489,12 +1541,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def power(self) -> PowerDriver | None:
+    def power(self) -> Power:
         return self._device_power
 
     @override
     def _get_device_power(self, power: StructurePointer[retro_device_power]) -> bool:
-        if not self._device_power:
+        if self._device_power is None:
             return False
 
         if power:
