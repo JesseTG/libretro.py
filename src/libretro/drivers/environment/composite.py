@@ -32,6 +32,9 @@ from libretro.api import (
     Rotation,
     RumbleEffect,
     SavestateContext,
+)
+from libretro.api import Sensor as SensorAxis
+from libretro.api import (
     SensorAction,
     SerializationQuirks,
     ThrottleMode,
@@ -766,7 +769,7 @@ class CompositeEnvironmentDriver[
             # If we have a max-user limit set, and the port number exceeds it...
             return 0.0
 
-        return self._sensor.get_sensor_input(port, id)
+        return self._sensor.get_sensor_input(port, SensorAxis(id))
 
     @override
     def _get_camera_interface(self, interface: StructurePointer[retro_camera_callback]) -> bool:
