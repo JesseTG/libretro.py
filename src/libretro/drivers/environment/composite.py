@@ -1081,6 +1081,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
     @override
     def _get_audio_video_enable(self, enable: IntPointer[retro_av_enable_flags]) -> bool:
+        if self._av_enable is None:
+            return False
+
         if enable:
             enable[0] = self._av_enable
 
