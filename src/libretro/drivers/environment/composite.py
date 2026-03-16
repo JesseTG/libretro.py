@@ -112,6 +112,7 @@ from libretro.drivers.options import OptionDriver
 from libretro.drivers.path import PathDriver
 from libretro.drivers.perf import PerfDriver
 from libretro.drivers.power import PowerDriver
+from libretro.drivers.rumble import RumbleDriver
 from libretro.drivers.sensor import SensorDriver
 from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
@@ -135,6 +136,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         message: MessageInterface | None
         options: OptionDriver | None
         path: PathDriver | None
+        rumble: RumbleDriver | None
         sensor: SensorDriver | None
         camera: CameraDriver | None
         log: LogDriver | None
@@ -194,6 +196,12 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._options is not None and not isinstance(self._options, OptionDriver):
             raise TypeError(
                 f"Expected OptionDriver or None, got {type(self._options).__qualname__}"
+            )
+
+        self._rumble = kwargs.get("rumble")
+        if self._rumble is not None and not isinstance(self._rumble, RumbleDriver):
+            raise TypeError(
+                f"Expected RumbleDriver or None, got {type(self._rumble).__qualname__}"
             )
 
         self._sensor = kwargs.get("sensor")
@@ -296,7 +304,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 f"Expected PowerDriver or None, got {type(self._device_power).__qualname__}"
             )
 
-        self._rumble: retro_rumble_interface | None = None
+        self._rumble_interface: retro_rumble_interface | None = None
         self._sensor_interface: retro_sensor_interface | None = None
         self._log_cb: retro_log_callback | None = None
         self._led_cb: retro_led_interface | None = None
@@ -639,24 +647,24 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not rumble:
             raise ValueError("RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE doesn't accept NULL")
 
-        if not self._input.rumble:
+        if not self._rumble:
             return False
 
-        if not self._rumble:
-            self._rumble = retro_rumble_interface(
+        if not self._rumble_interface:
+            self._rumble_interface = retro_rumble_interface(
                 retro_set_rumble_state_t(self.__set_rumble_state)
             )
             # So that even if the rumble/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
 
-        rumble[0] = self._rumble
+        rumble[0] = self._rumble_interface
         return True
 
     def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
-        if not self._input.rumble:
+        if not self._rumble:
             return False
 
-        return self._input.rumble.set_rumble_state(port, RumbleEffect(effect), strength)
+        return self._rumble.set_rumble_state(port, RumbleEffect(effect), strength)
 
     @override
     def _get_input_device_capabilities(self, capabilities: IntPointer[c_uint64]) -> bool:

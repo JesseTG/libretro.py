@@ -26,8 +26,6 @@ from libretro.api.input import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
-from libretro.drivers.rumble import RumbleDriver
-from libretro.drivers.types import Pollable
 
 from .driver import InputDriver
 
@@ -134,7 +132,6 @@ class IterableInputDriver(InputDriver):
     _bitmasks_supported: bool | None
     _max_users: int | None
     _keyboard_callback: retro_keyboard_callback | None
-    _rumble: RumbleDriver | None
 
     def __init__(
         self,
@@ -142,7 +139,6 @@ class IterableInputDriver(InputDriver):
         device_capabilities: InputDeviceFlag | None = InputDeviceFlag.ALL,
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
-        rumble: RumbleDriver | None = None,
     ):
         self._input_generator = input_generator
         self._input_generator_state = None
@@ -154,8 +150,6 @@ class IterableInputDriver(InputDriver):
         self._bitmasks_supported = bitmasks_supported
         self._max_users = max_users
         self._keyboard_callback = None
-
-        self._rumble = rumble
 
     @property
     @override
@@ -230,9 +224,6 @@ class IterableInputDriver(InputDriver):
             self._input_poll_result = next(self._input_generator_state, None)
 
             # TODO: Send keyboard callback events
-
-        if isinstance(self._rumble, Pollable):
-            self._rumble.poll()
 
     @override
     def state(self, port: int, device: int, index: int, id: int) -> int:
@@ -541,22 +532,6 @@ class IterableInputDriver(InputDriver):
             raise TypeError(f"Expected None or a retro_keyboard_callback, got {callback!r}")
 
         self._keyboard_callback = callback
-
-    @property
-    @override
-    def rumble(self) -> RumbleDriver | None:
-        return self._rumble
-
-    @rumble.setter
-    def rumble(self, value: RumbleDriver | None) -> None:
-        if value is not None and not isinstance(value, RumbleDriver):
-            raise TypeError(f"Expected None or a RumbleDriver, got {value!r}")
-
-        self._rumble = value
-
-    @rumble.deleter
-    def rumble(self) -> None:
-        self._rumble = None
 
 
 __all__ = [

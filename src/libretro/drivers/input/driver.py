@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
-from warnings import deprecated
 
 from libretro.api import (
     InputDevice,
@@ -13,7 +12,6 @@ from libretro.api import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
-from libretro.drivers.rumble import RumbleDriver
 
 
 @runtime_checkable
@@ -46,12 +44,6 @@ class InputDriver(Protocol):
         callback = self.keyboard_callback
         if callback:
             callback(down, keycode, character, modifiers)
-
-    # TODO: Separate the rumble interface
-    @property
-    @deprecated("InputDriver shouldn't have a reference to RumbleDriver")
-    @abstractmethod
-    def rumble(self) -> RumbleDriver | None: ...
 
     @property
     @abstractmethod
