@@ -125,7 +125,13 @@ from .default import DefaultEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
-    from libretro.typing import BoolPointer, IntPointer, StringPointer, StructurePointer
+    from libretro.typing import (
+        BoolPointer,
+        FloatPointer,
+        IntPointer,
+        StringPointer,
+        StructurePointer,
+    )
 
 
 class CompositeEnvironmentDriver[
@@ -894,6 +900,9 @@ class CompositeEnvironmentDriver[
         if not self._proc_address_callback or not sym:
             return None
 
+        if not self._proc_address_callback.get_proc_address:
+            return None
+
         name = as_bytes(sym)
 
         proc = self._proc_address_callback.get_proc_address(name)
@@ -1172,14 +1181,17 @@ class CompositeEnvironmentDriver[
 
     @override
     def _get_fastforwarding(self, is_fastforwarding: BoolPointer) -> bool:
-        if self._timing is None or self._timing.throttle_state is None:
+        if self._timing is None:
+            return False
+
+        if self._timing.throttle_state is None:
             return False
 
         if not is_fastforwarding:
             raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
 
         is_fastforwarding[0] = (
-            ThrottleMode(self.timing.throttle_state.mode) == ThrottleMode.FAST_FORWARD
+            ThrottleMode(self._timing.throttle_state.mode) == ThrottleMode.FAST_FORWARD
         )
         return True
 
@@ -1200,7 +1212,7 @@ class CompositeEnvironmentDriver[
 
     @override
     def _get_input_bitmasks(self) -> bool:
-        return self._input.bitmasks_supported
+        return bool(self._input.bitmasks_supported)
 
     @property
     def core_options_version(self) -> int | None:
@@ -1295,7 +1307,7 @@ class CompositeEnvironmentDriver[
 
         # This envcall returns True if the frontend supports the call
         # *and* the frontend can switch video drivers
-        return self._driver_switch_enable
+        return bool(self._driver_switch_enable)
         # TODO: Move RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER to the VideoDriver and _driver_switch_enable to the VideoDriver
 
     @override
@@ -1458,14 +1470,14 @@ class CompositeEnvironmentDriver[
         return True
 
     @override
-    def _get_throttle_state(self, throttle: StructurePointer[retro_throttle_state]) -> bool:
+    def _get_throttle_state(self, state: StructurePointer[retro_throttle_state]) -> bool:
         if self._timing is None or not self._timing.throttle_state:
             return False
 
-        if not throttle:
+        if not state:
             raise ValueError("RETRO_ENVIRONMENT_GET_THROTTLE_STATE doesn't accept NULL")
 
-        throttle[0] = deepcopy(self._timing.throttle_state)
+        state[0] = deepcopy(self._timing.throttle_state)
 
         return True
 
@@ -1486,6 +1498,9 @@ class CompositeEnvironmentDriver[
 
     @override
     def _get_savestate_context(self, context: IntPointer[retro_savestate_context]) -> bool:
+        if self._savestate_context is None:
+            return False
+
         if context:
             context[0] = self._savestate_context
 

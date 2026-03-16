@@ -273,7 +273,7 @@ class EnvironmentDriver(Protocol):
     def _get_message_interface_version(self, version: IntPointer[c_uint]) -> bool:
         return False
 
-    def _set_message_ext(self, interface: StructurePointer[retro_message_ext]) -> bool:
+    def _set_message_ext(self, message_ext: StructurePointer[retro_message_ext]) -> bool:
         return False
 
     def _get_input_max_users(self, max_users: IntPointer[c_uint]) -> bool:
