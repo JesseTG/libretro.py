@@ -424,7 +424,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def can_dupe(self) -> bool:
+    def can_dupe(self) -> bool | None:
         return self._video.can_dupe
 
     @override
@@ -916,7 +916,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return True
 
     @property
-    def geometry(self) -> retro_game_geometry:
+    def geometry(self) -> retro_game_geometry | None:
         return self._video.geometry
 
     @override
@@ -1006,7 +1006,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         return False  # TODO: Implement
 
     @property
-    def serialization_quirks(self) -> SerializationQuirks:
+    def serialization_quirks(self) -> SerializationQuirks | None:
         return self._serialization_quirks
 
     @override
