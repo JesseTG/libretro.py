@@ -17,7 +17,7 @@ from ctypes import (
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from os import PathLike
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ._utils import MemoDict
 
@@ -38,12 +38,20 @@ RETRO_VFS_STAT_IS_DIRECTORY = 1 << 1
 RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 
+@dataclass(init=False, slots=True)
 class retro_vfs_file_handle(Structure):
-    pass
+    if TYPE_CHECKING:
+        id: int
+    else:
+        _fields_ = [("id", c_uint64)]
 
 
+@dataclass(init=False, slots=True)
 class retro_vfs_dir_handle(Structure):
-    pass
+    if TYPE_CHECKING:
+        id: int
+    else:
+        _fields_ = [("id", c_uint64)]
 
 
 class VfsFileAccess(IntFlag):
@@ -55,7 +63,7 @@ class VfsFileAccess(IntFlag):
     READ_WRITE_EXISTING = READ_WRITE | UPDATE_EXISTING
 
     @property
-    def open_flag(self) -> str:
+    def open_flag(self) -> Literal["rb", "wb", "w+b", "r+b"]:
         match self:
             case VfsFileAccess.READ:
                 return "rb"

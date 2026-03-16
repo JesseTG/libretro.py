@@ -1,7 +1,7 @@
-from collections.abc import MutableSequence, Sequence
-from enum import Enum, auto
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import override
 
+from libretro import retro_vfs_dir_handle, retro_vfs_file_handle
 from libretro.api.vfs import (
     VfsFileAccess,
     VfsFileAccessHint,
@@ -10,165 +10,157 @@ from libretro.api.vfs import (
     VfsStat,
 )
 
-from .interface import DirectoryHandle, DirEntry, FileHandle, FileSystemInterface
+from .interface import FileSystemInterface
 
 
-class VfsOperationType(Enum):
-    GET_PATH = (auto(),)
-    OPEN = (auto(),)
-    CLOSE = (auto(),)
-    SIZE = (auto(),)
-    TELL = (auto(),)
-    SEEK = (auto(),)
-    READ = (auto(),)
-    WRITE = (auto(),)
-    FLUSH = (auto(),)
-    REMOVE = (auto(),)
-    RENAME = (auto(),)
-    TRUNCATE = (auto(),)
-    STAT = (auto(),)
-    MKDIR = (auto(),)
-    OPENDIR = (auto(),)
-    READDIR = (auto(),)
-    DIRENT_GET_NAME = (auto(),)
-    DIRENT_IS_DIR = (auto(),)
-    CLOSEDIR = (auto(),)
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GetPath:
+    stream: retro_vfs_file_handle
+    result: bytes | None
 
 
-class VfsOperation(NamedTuple):
-    operation: VfsOperationType
-    args: tuple
-    result: Any
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Open:
+    path: bytes
+    mode: VfsFileAccess
+    hints: VfsFileAccessHint
+    result: retro_vfs_file_handle | None
 
 
-class HistoryFileHandle(FileHandle):
-    def __init__(self, handle: FileHandle, history: MutableSequence[VfsOperation]):
-        if not isinstance(handle, FileHandle):
-            raise TypeError(f"Expected a FileHandle, got {type(handle).__name__}")
-
-        if not isinstance(history, MutableSequence):
-            raise TypeError(f"Expected a MutableSequence, got {type(history).__name__}")
-
-        self._handle = handle
-        self._history = history
-
-    def close(self) -> bool:
-        try:
-            result = self._handle.close()
-            self._history.append(VfsOperation(VfsOperationType.CLOSE, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.CLOSE, (), False))
-            raise
-
-    @property
-    def path(self) -> bytes:
-        try:
-            result = self._handle.path
-            self._history.append(VfsOperation(VfsOperationType.GET_PATH, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.GET_PATH, (), None))
-            raise
-
-    @property
-    def size(self) -> int:
-        try:
-            result = self._handle.size
-            self._history.append(VfsOperation(VfsOperationType.SIZE, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.SIZE, (), -1))
-            raise
-
-    def tell(self) -> int:
-        try:
-            result = self._handle.tell()
-            self._history.append(VfsOperation(VfsOperationType.TELL, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.TELL, (), -1))
-            raise
-
-    def seek(self, offset: int, whence: VfsSeekPosition) -> int:
-        try:
-            result = self._handle.seek(offset, whence)
-            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.SEEK, (offset, whence), -1))
-            raise
-
-    def read(self, buffer: bytearray | memoryview) -> int:
-        try:
-            result = self._handle.read(buffer)
-            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.READ, (bytes(buffer),), -1))
-            raise
-
-    def write(self, buffer: bytes | bytearray | memoryview) -> int:
-        try:
-            result = self._handle.write(buffer)
-            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.WRITE, (bytes(buffer),), -1))
-            raise
-
-    def flush(self) -> bool:
-        try:
-            result = self._handle.flush()
-            self._history.append(VfsOperation(VfsOperationType.FLUSH, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.FLUSH, (), False))
-            raise
-
-    def truncate(self, length: int) -> int:
-        try:
-            result = self._handle.truncate(length)
-            self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.TRUNCATE, (length,), -1))
-            raise
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Close:
+    stream: retro_vfs_file_handle
+    result: int
 
 
-class HistoryDirectoryHandle(DirectoryHandle):
-    def __init__(self, handle: DirectoryHandle, history: MutableSequence[VfsOperation]):
-        if not isinstance(handle, DirectoryHandle):
-            raise TypeError(f"Expected a DirectoryHandle, got {type(handle).__name__}")
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Size:
+    stream: retro_vfs_file_handle
+    result: int
 
-        if not isinstance(history, MutableSequence):
-            raise TypeError(f"Expected a MutableSequence, got {type(history).__name__}")
 
-        self._handle = handle
-        self._history = history
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Truncate:
+    stream: retro_vfs_file_handle
+    length: int
+    result: int
 
-    def close(self) -> bool:
-        try:
-            result = self._handle.close()
-            self._history.append(VfsOperation(VfsOperationType.CLOSEDIR, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.CLOSEDIR, (), False))
-            raise
 
-    def readdir(self) -> DirEntry | None:
-        try:
-            result = self._handle.readdir()
-            self._history.append(VfsOperation(VfsOperationType.READDIR, (), result))
-            return result
-        except:
-            self._history.append(VfsOperation(VfsOperationType.READDIR, (), None))
-            raise
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Tell:
+    stream: retro_vfs_file_handle
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Seek:
+    stream: retro_vfs_file_handle
+    offset: int
+    whence: VfsSeekPosition
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Read:
+    stream: retro_vfs_file_handle
+    buffer: bytes
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Write:
+    stream: retro_vfs_file_handle
+    buffer: bytes
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Flush:
+    stream: retro_vfs_file_handle
+    result: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Remove:
+    path: bytes
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Rename:
+    old_path: bytes
+    new_path: bytes
+    result: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Stat:
+    path: bytes
+    result: tuple[VfsStat, int] | None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Mkdir:
+    path: bytes
+    result: VfsMkdirResult
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OpenDir:
+    path: bytes
+    include_hidden: bool
+    result: retro_vfs_dir_handle | None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReadDir:
+    dir: retro_vfs_dir_handle
+    result: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DirentGetName:
+    dir: retro_vfs_dir_handle
+    result: bytes | None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DirentIsDir:
+    dir: retro_vfs_dir_handle
+    result: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CloseDir:
+    dir: retro_vfs_dir_handle
+    result: int
+
+
+VfsOperation = (
+    GetPath
+    | Open
+    | Close
+    | Size
+    | Truncate
+    | Tell
+    | Seek
+    | Read
+    | Write
+    | Flush
+    | Remove
+    | Rename
+    | Stat
+    | Mkdir
+    | OpenDir
+    | ReadDir
+    | DirentGetName
+    | DirentIsDir
+    | CloseDir
+)
 
 
 class HistoryFileSystemInterface(FileSystemInterface):
     def __init__(self, interface: FileSystemInterface):
-        super().__init__(None)
         if not isinstance(interface, FileSystemInterface):
             raise TypeError(f"Expected a FileSystemInterface, got {type(interface).__name__}")
 
@@ -176,93 +168,208 @@ class HistoryFileSystemInterface(FileSystemInterface):
         self._history: list[VfsOperation] = []
 
     @property
+    @override
     def version(self) -> int:
         return self._interface.version
 
-    def open(
-        self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
-    ) -> FileHandle | None:
+    @override
+    def get_path(self, stream: retro_vfs_file_handle) -> bytes | None:
         try:
-            wrapped_handle = self._interface.open(path, mode, hints)
-            if not wrapped_handle:
-                self._history.append(
-                    VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None)
-                )
-                return None
-
-            handle = HistoryFileHandle(wrapped_handle, self._history)
-            self._history.append(
-                VfsOperation(VfsOperationType.OPEN, (path, mode, hints), wrapped_handle)
-            )
-            return handle
+            path = self._interface.get_path(stream)
+            self._history.append(GetPath(stream=stream, result=path))
+            return path
         except:
-            self._history.append(VfsOperation(VfsOperationType.OPEN, (path, mode, hints), None))
+            self._history.append(GetPath(stream=stream, result=None))
             raise
 
+    @override
+    def open(
+        self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
+    ) -> retro_vfs_file_handle | None:
+        try:
+            handle = self._interface.open(path, mode, hints)
+            self._history.append(Open(path=path, mode=mode, hints=hints, result=handle))
+            return handle
+        except:
+            self._history.append(Open(path=path, mode=mode, hints=hints, result=None))
+            raise
+
+    @override
+    def close(self, stream: retro_vfs_file_handle) -> int:
+        try:
+            result = self._interface.close(stream)
+            self._history.append(Close(stream=stream, result=result))
+            return result
+        except:
+            self._history.append(Close(stream=stream, result=-1))
+            raise
+
+    @override
+    def size(self, stream: retro_vfs_file_handle) -> int:
+        try:
+            result = self._interface.size(stream)
+            self._history.append(Size(stream=stream, result=result))
+            return result
+        except:
+            self._history.append(Size(stream=stream, result=-1))
+            raise
+
+    @override
+    def truncate(self, stream: retro_vfs_file_handle, length: int) -> int:
+        try:
+            result = self._interface.truncate(stream, length)
+            self._history.append(Truncate(stream=stream, length=length, result=result))
+            return result
+        except:
+            self._history.append(Truncate(stream=stream, length=length, result=-1))
+            raise
+
+    @override
+    def tell(self, stream: retro_vfs_file_handle) -> int:
+        try:
+            result = self._interface.tell(stream)
+            self._history.append(Tell(stream=stream, result=result))
+            return result
+        except:
+            self._history.append(Tell(stream=stream, result=-1))
+            raise
+
+    @override
+    def seek(self, stream: retro_vfs_file_handle, offset: int, whence: VfsSeekPosition) -> int:
+        try:
+            result = self._interface.seek(stream, offset, whence)
+            self._history.append(Seek(stream=stream, offset=offset, whence=whence, result=result))
+            return result
+        except:
+            self._history.append(Seek(stream=stream, offset=offset, whence=whence, result=-1))
+            raise
+
+    @override
+    def read(self, stream: retro_vfs_file_handle, buffer: memoryview[int]) -> int:
+        try:
+            result = self._interface.read(stream, buffer)
+            self._history.append(Read(stream=stream, buffer=bytes(buffer), result=result))
+            return result
+        except:
+            self._history.append(Read(stream=stream, buffer=bytes(buffer), result=-1))
+            raise
+
+    @override
+    def write(self, stream: retro_vfs_file_handle, buffer: memoryview[int]) -> int:
+        try:
+            result = self._interface.write(stream, buffer)
+            self._history.append(Write(stream=stream, buffer=bytes(buffer), result=result))
+            return result
+        except:
+            self._history.append(Write(stream=stream, buffer=bytes(buffer), result=-1))
+            raise
+
+    @override
+    def flush(self, stream: retro_vfs_file_handle) -> bool:
+        try:
+            result = self._interface.flush(stream)
+            self._history.append(Flush(stream=stream, result=result))
+            return result
+        except:
+            self._history.append(Flush(stream=stream, result=False))
+            raise
+
+    @override
     def remove(self, path: bytes) -> bool:
         try:
             result = self._interface.remove(path)
-            self._history.append(VfsOperation(VfsOperationType.REMOVE, (path,), result))
+            self._history.append(Remove(path=path, result=result))
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.REMOVE, (path,), False))
+            self._history.append(Remove(path=path, result=False))
             raise
 
+    @override
     def rename(self, old_path: bytes, new_path: bytes) -> bool:
         try:
             result = self._interface.rename(old_path, new_path)
-            self._history.append(
-                VfsOperation(VfsOperationType.RENAME, (old_path, new_path), result)
-            )
+            self._history.append(Rename(old_path=old_path, new_path=new_path, result=result))
             return result
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.RENAME, (old_path, new_path), False)
-            )
+            self._history.append(Rename(old_path=old_path, new_path=new_path, result=False))
             raise
 
+    @override
     def stat(self, path: bytes) -> tuple[VfsStat, int] | None:
         try:
             result = self._interface.stat(path)
-            self._history.append(VfsOperation(VfsOperationType.STAT, (path,), result))
+            self._history.append(Stat(path=path, result=result))
             return result
         except:
-            self._history.append(VfsOperation(VfsOperationType.STAT, (path,), None))
+            self._history.append(Stat(path=path, result=None))
             raise
 
+    @override
     def mkdir(self, path: bytes) -> VfsMkdirResult:
         try:
             result = self._interface.mkdir(path)
-            self._history.append(VfsOperation(VfsOperationType.MKDIR, (path,), result))
+            self._history.append(Mkdir(path=path, result=result))
             return result
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.MKDIR, (path,), VfsMkdirResult.ERROR)
-            )
+            self._history.append(Mkdir(path=path, result=VfsMkdirResult.ERROR))
             raise
 
-    def opendir(self, path: bytes, include_hidden: bool) -> DirectoryHandle | None:
+    @override
+    def opendir(self, path: bytes, include_hidden: bool) -> retro_vfs_dir_handle | None:
         try:
             handle = self._interface.opendir(path, include_hidden)
-            self._history.append(
-                VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), handle)
-            )
+            self._history.append(OpenDir(path=path, include_hidden=include_hidden, result=handle))
             return handle
         except:
-            self._history.append(
-                VfsOperation(VfsOperationType.OPENDIR, (path, include_hidden), None)
-            )
+            self._history.append(OpenDir(path=path, include_hidden=include_hidden, result=None))
+            raise
+
+    @override
+    def readdir(self, dir: retro_vfs_dir_handle) -> bool:
+        try:
+            result = self._interface.readdir(dir)
+            self._history.append(ReadDir(dir=dir, result=result))
+            return result
+        except:
+            self._history.append(ReadDir(dir=dir, result=False))
+            raise
+
+    @override
+    def dirent_get_name(self, dir: retro_vfs_dir_handle) -> bytes | None:
+        try:
+            result = self._interface.dirent_get_name(dir)
+            self._history.append(DirentGetName(dir=dir, result=result))
+            return result
+        except:
+            self._history.append(DirentGetName(dir=dir, result=None))
+            raise
+
+    @override
+    def dirent_is_dir(self, dir: retro_vfs_dir_handle) -> bool:
+        try:
+            result = self._interface.dirent_is_dir(dir)
+            self._history.append(DirentIsDir(dir=dir, result=result))
+            return result
+        except:
+            self._history.append(DirentIsDir(dir=dir, result=False))
+            raise
+
+    @override
+    def closedir(self, dir: retro_vfs_dir_handle) -> bool:
+        try:
+            result = self._interface.closedir(dir)
+            self._history.append(CloseDir(dir=dir, result=result))
+            return result
+        except:
+            self._history.append(CloseDir(dir=dir, result=False))
             raise
 
     @property
-    def history(self) -> Sequence[VfsOperation]:
+    def history(self) -> tuple[VfsOperation, ...]:
         return tuple(self._history)
 
 
 __all__ = [
-    "HistoryFileHandle",
-    "HistoryDirectoryHandle",
     "HistoryFileSystemInterface",
-    "VfsOperationType",
     "VfsOperation",
 ]
