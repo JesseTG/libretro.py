@@ -1126,7 +1126,7 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if not is_fastforwarding:
             raise ValueError("RETRO_ENVIRONMENT_GET_FASTFORWARDING doesn't accept NULL")
 
-        fastforwarding_ptr[0] = (
+        is_fastforwarding[0] = (
             ThrottleMode(self.timing.throttle_state.mode) == ThrottleMode.FAST_FORWARD
         )
         return True
