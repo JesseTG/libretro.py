@@ -30,7 +30,7 @@ class Open:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Close:
     stream: retro_vfs_file_handle
-    result: int
+    result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -43,7 +43,7 @@ class Size:
 class Truncate:
     stream: retro_vfs_file_handle
     length: int
-    result: int
+    result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -83,14 +83,14 @@ class Flush:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Remove:
     path: bytes
-    result: int
+    result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Rename:
     old_path: bytes
     new_path: bytes
-    result: int
+    result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -195,13 +195,13 @@ class HistoryFileSystemInterface(FileSystemInterface):
             raise
 
     @override
-    def close(self, stream: retro_vfs_file_handle) -> int:
+    def close(self, stream: retro_vfs_file_handle) -> bool:
         try:
             result = self._interface.close(stream)
             self._history.append(Close(stream=stream, result=result))
             return result
         except:
-            self._history.append(Close(stream=stream, result=-1))
+            self._history.append(Close(stream=stream, result=False))
             raise
 
     @override
@@ -215,13 +215,13 @@ class HistoryFileSystemInterface(FileSystemInterface):
             raise
 
     @override
-    def truncate(self, stream: retro_vfs_file_handle, length: int) -> int:
+    def truncate(self, stream: retro_vfs_file_handle, length: int) -> bool:
         try:
             result = self._interface.truncate(stream, length)
             self._history.append(Truncate(stream=stream, length=length, result=result))
             return result
         except:
-            self._history.append(Truncate(stream=stream, length=length, result=-1))
+            self._history.append(Truncate(stream=stream, length=length, result=False))
             raise
 
     @override

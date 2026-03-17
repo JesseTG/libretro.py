@@ -93,18 +93,12 @@ class StandardFileHandle(FileHandle):
         return True
 
     @override
-    def truncate(self, length: int) -> int:
+    def truncate(self, length: int) -> bool:
         if not self._file:
             raise IOError("File is closed")
 
-        return self._file.truncate(length)
-
-    @property
-    def _as_parameter_(self):
-        if not self._file:
-            raise IOError("File is closed")
-
-        return self._file.fileno()
+        self._file.truncate(length)
+        return True
 
 
 class StandardDirectoryHandle(DirectoryHandle):
@@ -158,13 +152,6 @@ class StandardDirectoryHandle(DirectoryHandle):
 
         return True
 
-    @property
-    def _as_parameter_(self):
-        if not self._scandir:
-            raise IOError("Directory is closed")
-
-        return id(self._scandir)
-
 
 class StandardFileSystemInterface(FileSystemInterface):
     _file_handles: dict[int, StandardFileHandle]
@@ -194,14 +181,13 @@ class StandardFileSystemInterface(FileSystemInterface):
         return retro_vfs_file_handle(handle)
 
     @override
-    def close(self, stream: retro_vfs_file_handle) -> int:
+    def close(self, stream: retro_vfs_file_handle) -> bool:
         handle = stream.id
         file = self._file_handles.pop(handle, None)
         if not file:
-            return -1
+            return False
 
-        file.close()
-        return 0
+        return file.close()
 
     @override
     def size(self, stream: retro_vfs_file_handle) -> int:
@@ -213,11 +199,11 @@ class StandardFileSystemInterface(FileSystemInterface):
         return file.size
 
     @override
-    def truncate(self, stream: retro_vfs_file_handle, length: int) -> int:
+    def truncate(self, stream: retro_vfs_file_handle, length: int) -> bool:
         handle = stream.id
         file = self._file_handles.get(handle)
         if not file:
-            return -1
+            return False
 
         return file.truncate(length)
 
@@ -293,7 +279,7 @@ class StandardFileSystemInterface(FileSystemInterface):
 
             return flags, filestat.st_size
         except FileNotFoundError:
-            return VfsStat(0), 0
+            return None
 
     @override
     def mkdir(self, path: bytes) -> VfsMkdirResult:
