@@ -7,6 +7,7 @@ from ctypes import (
     c_int16,
     c_size_t,
     c_uint,
+    c_uint64,
 )
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -15,8 +16,14 @@ RETRO_MICROPHONE_INTERFACE_VERSION = 1
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
 
 
+@dataclass(init=False, slots=True)
 class retro_microphone(Structure):
-    pass
+    if TYPE_CHECKING:
+        id: int
+    else:
+        _fields_ = [
+            ("id", c_uint64),
+        ]
 
 
 @dataclass(init=False)
