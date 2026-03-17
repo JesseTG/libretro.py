@@ -295,11 +295,11 @@ class MultiVideoDriver(VideoDriver):
 
     @rotation.setter
     @override
-    def rotation(self, value: Rotation) -> None:
-        self._rotation = value
+    def rotation(self, rotation: Rotation) -> None:
+        self._rotation = rotation
 
         if self._current:
-            self._current.rotation = value
+            self._current.rotation = rotation
 
     @property
     @override
@@ -332,14 +332,14 @@ class MultiVideoDriver(VideoDriver):
 
     @pixel_format.setter
     @override
-    def pixel_format(self, value: PixelFormat) -> None:
-        if not isinstance(value, PixelFormat):
-            raise TypeError(f"Expected a PixelFormat, got {type(value).__name__}")
+    def pixel_format(self, format: PixelFormat) -> None:
+        if not isinstance(format, PixelFormat):
+            raise TypeError(f"Expected a PixelFormat, got {type(format).__name__}")
 
-        self._pixel_format = value
+        self._pixel_format = format
 
         if self._current is not None:
-            self._current.pixel_format = value
+            self._current.pixel_format = format
 
     @property
     @override
@@ -365,17 +365,17 @@ class MultiVideoDriver(VideoDriver):
 
     @geometry.setter
     @override
-    def geometry(self, value: retro_game_geometry) -> None:
-        if not isinstance(value, retro_game_geometry):
-            raise TypeError(f"Expected retro_game_geometry, got {type(value).__name__}")
+    def geometry(self, geometry: retro_game_geometry) -> None:
+        if not isinstance(geometry, retro_game_geometry):
+            raise TypeError(f"Expected retro_game_geometry, got {type(geometry).__name__}")
 
         if self._system_av_info:  # In case this gets called before the initial AV info get
-            self._system_av_info.geometry.base_width = value.base_width
-            self._system_av_info.geometry.base_height = value.base_height
-            self._system_av_info.geometry.aspect_ratio = value.aspect_ratio
+            self._system_av_info.geometry.base_width = geometry.base_width
+            self._system_av_info.geometry.base_height = geometry.base_height
+            self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio
 
         if self._current is not None:
-            self._current.geometry = value
+            self._current.geometry = geometry
 
     @override
     def get_software_framebuffer(

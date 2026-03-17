@@ -101,6 +101,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
         raise RuntimeError("Software-rendered drivers always support frame duplication")
 
     @property
+    @override
     @final
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         return None
