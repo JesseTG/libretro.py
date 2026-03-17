@@ -1,24 +1,19 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import (
-    POINTER,
-    Array,
-    byref,
-    c_bool,
-    c_char_p,
+    _CFunctionType,
+    c_double,
     c_float,
     c_int16,
+    c_int32,
     c_uint,
+    c_uint8,
     c_uint64,
     c_void_p,
-    memmove,
     pointer,
     sizeof,
-    string_at,
 )
-from typing import TYPE_CHECKING, AnyStr, Required, TypedDict
-
-from _ctypes import CFuncPtr
+from typing import TYPE_CHECKING, Literal, Required, TypedDict, overload
 
 from libretro._typing import override
 from libretro.api import (
@@ -38,6 +33,9 @@ from libretro.api import (
     SensorAction,
     SerializationQuirks,
     ThrottleMode,
+    VfsFileAccess,
+    VfsFileAccessHint,
+    VfsSeekPosition,
     retro_audio_buffer_status_callback,
     retro_audio_callback,
     retro_av_enable_flags,
@@ -77,6 +75,7 @@ from libretro.api import (
     retro_midi_interface,
     retro_netpacket_callback,
     retro_perf_callback,
+    retro_perf_counter,
     retro_pixel_format,
     retro_proc_address_t,
     retro_rumble_interface,
@@ -91,15 +90,24 @@ from libretro.api import (
     retro_system_content_info_override,
     retro_throttle_state,
     retro_variable,
+    retro_vfs_dir_handle,
+    retro_vfs_get_path_t,
     retro_vfs_interface,
     retro_vfs_interface_info,
+    retro_vfs_open_t,
 )
 from libretro.api._utils import (
     as_bytes,
+    c_buffer,
     deepcopy_array,
     from_zero_terminated,
     memoryview_at,
 )
+from libretro.api.location import *
+from libretro.api.microphone import *
+from libretro.api.midi import *
+from libretro.api.vfs import *
+from libretro.api.vfs import retro_vfs_close_t, retro_vfs_file_handle
 from libretro.drivers.audio import AudioDriver
 from libretro.drivers.camera import CameraDriver
 from libretro.drivers.content import ContentDriver
@@ -212,7 +220,7 @@ class CompositeEnvironmentDriver[
         driver_switch_enable: bool | None = None,
         savestate_context: SavestateContext | None = None,
         jit_capable: bool | None = None,
-        mic_interface: Mic = None,
+        mic: Mic = None,
         device_power: Power = None,
     ):
         super().__init__()
@@ -274,9 +282,11 @@ class CompositeEnvironmentDriver[
                 f"Expected CameraDriver or None, got {type(self._camera).__qualname__}"
             )
 
-        self._log = log
-        if self._log is not None and not isinstance(self._log, LogDriver):
-            raise TypeError(f"Expected LogDriver or None, got {type(self._log).__qualname__}")
+        self._log_driver = log
+        if self._log_driver is not None and not isinstance(self._log_driver, LogDriver):
+            raise TypeError(
+                f"Expected LogDriver or None, got {type(self._log_driver).__qualname__}"
+            )
 
         self._perf = perf
         if self._perf is not None and not isinstance(self._perf, PerfDriver):
@@ -348,12 +358,10 @@ class CompositeEnvironmentDriver[
         if self._jit_capable is not None and not isinstance(self._jit_capable, bool):
             raise TypeError(f"Expected bool or None, got {type(self._jit_capable).__qualname__}")
 
-        self._mic_interface = mic_interface
-        if self._mic_interface is not None and not isinstance(
-            self._mic_interface, MicrophoneDriver
-        ):
+        self._mic = mic
+        if self._mic is not None and not isinstance(self._mic, MicrophoneDriver):
             raise TypeError(
-                f"Expected MicrophoneDriver or None, got {type(self._mic_interface).__qualname__}"
+                f"Expected MicrophoneDriver or None, got {type(self._mic).__qualname__}"
             )
 
         self._device_power = device_power
@@ -364,8 +372,13 @@ class CompositeEnvironmentDriver[
 
         self._rumble_interface: retro_rumble_interface | None = None
         self._sensor_interface: retro_sensor_interface | None = None
-        self._log_cb: retro_log_callback | None = None
-        self._led_cb: retro_led_interface | None = None
+        self._log_callback: retro_log_callback | None = None
+        self._perf_callback: retro_perf_callback | None = None
+        self._location_callback: retro_location_callback | None = None
+        self._vfs_interface: retro_vfs_interface | None = None
+        self._led_interface: retro_led_interface | None = None
+        self._midi_interface: retro_midi_interface | None = None
+        self._mic_interface: retro_microphone_interface | None = None
 
     @property
     def audio(self) -> Audio:
@@ -710,7 +723,7 @@ class CompositeEnvironmentDriver[
 
         if not self._rumble_interface:
             self._rumble_interface = retro_rumble_interface(
-                retro_set_rumble_state_t(self.__set_rumble_state)
+                retro_set_rumble_state_t(self._set_rumble_state)
             )
             # So that even if the rumble/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
@@ -718,7 +731,7 @@ class CompositeEnvironmentDriver[
         rumble[0] = self._rumble_interface
         return True
 
-    def __set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
+    def _set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
         if self._rumble is None:
             return False
 
@@ -746,8 +759,8 @@ class CompositeEnvironmentDriver[
 
         if not self._sensor_interface:
             self._sensor_interface = retro_sensor_interface(
-                set_sensor_state=retro_set_sensor_state_t(self.__set_sensor_state),
-                get_sensor_input=retro_sensor_get_input_t(self.__get_sensor_input),
+                set_sensor_state=retro_set_sensor_state_t(self._set_sensor_state),
+                get_sensor_input=retro_sensor_get_input_t(self._get_sensor_input),
             )
             # So that even if the sensor/input drivers are swapped out,
             # the core still has valid function pointers tied to non-GC'd callable objects
@@ -755,27 +768,33 @@ class CompositeEnvironmentDriver[
         interface[0] = self._sensor_interface
         return True
 
-    def __set_sensor_state(self, port: int, action: int, rate: int) -> bool:
+    def _set_sensor_state(self, port: int, action: int, rate: int) -> bool:
         if self._sensor is None:
             return False
 
-        max_users = self._input.max_users
-        if isinstance(max_users, int) and port >= max_users:
+        if self._input.max_users is not None and port >= self._input.max_users:
             # If we have a max-user limit set, and the port number exceeds it...
+            return False
+
+        if action not in SensorAction:
+            # If the action isn't a valid SensorAction, then we shouldn't pass it to the driver
             return False
 
         return self._sensor.set_sensor_state(port, SensorAction(action), rate)
 
-    def __get_sensor_input(self, port: int, id: int) -> float:
+    def _get_sensor_input(self, port: int, sensor: int) -> float:
         if self._sensor is None:
             return 0.0
 
-        max_users = self._input.max_users
-        if isinstance(max_users, int) and port >= max_users:
+        if self._input.max_users is not None and port >= self._input.max_users:
             # If we have a max-user limit set, and the port number exceeds it...
-            return 0.0
+            return False
 
-        return self._sensor.get_sensor_input(port, SensorAxis(id))
+        if sensor not in SensorAxis:
+            # If the sensor isn't a valid SensorAxis, then we shouldn't pass it to the driver
+            return False
+
+        return self._sensor.get_sensor_input(port, SensorAxis(sensor))
 
     @override
     def _get_camera_interface(self, interface: StructurePointer[retro_camera_callback]) -> bool:
@@ -795,25 +814,25 @@ class CompositeEnvironmentDriver[
 
     @property
     def log(self) -> Log:
-        return self._log
+        return self._log_driver
 
     @override
     def _get_log_interface(self, interface: StructurePointer[retro_log_callback]) -> bool:
-        if self._log is None:
+        if self._log_driver is None:
             return False
 
         if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_LOG_INTERFACE doesn't accept NULL")
 
-        if not self._log_cb:
-            self._log_cb = retro_log_callback(log=retro_log_printf_t(self.__log))
+        if not self._log_callback:
+            self._log_callback = retro_log_callback(log=retro_log_printf_t(self._log))
 
-        interface[0] = self._log_cb
+        interface[0] = self._log_callback
         return True
 
-    def __log(self, level: int, message: bytes):
-        if self._log is not None:
-            self._log.log(LogLevel(level), message)
+    def _log(self, level: int, message: bytes):
+        if self._log_driver is not None and level in LogLevel:
+            self._log_driver.log(LogLevel(level), message)
 
     @property
     def perf(self) -> Perf:
@@ -827,8 +846,53 @@ class CompositeEnvironmentDriver[
         if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_PERF_INTERFACE doesn't accept NULL")
 
-        interface[0] = retro_perf_callback.from_param(self._perf)
+        if not self._perf_callback:
+            self._perf_callback = retro_perf_callback(
+                get_time_usec=self._perf.get_time_usec,
+                get_cpu_features=self._perf.get_cpu_features,
+                get_perf_counter=self._perf.get_perf_counter,
+                perf_register=self._perf.perf_register,
+                perf_start=self._perf.perf_start,
+                perf_stop=self._perf.perf_stop,
+                perf_log=self._perf.perf_log,
+            )
+
+        interface[0] = self._perf_callback
         return True
+
+    def _get_time_usec(self) -> int:
+        if self._perf is None:
+            return 0
+
+        return self._perf.get_time_usec()
+
+    def _get_cpu_features(self) -> int:
+        if self._perf is None:
+            return 0
+
+        return self._perf.get_cpu_features()
+
+    def _get_perf_counter(self) -> int:
+        if self._perf is None:
+            return 0
+
+        return self._perf.get_perf_counter()
+
+    def _perf_register(self, counter: StructurePointer[retro_perf_counter]):
+        if self._perf is not None and counter:
+            self._perf.perf_register(counter[0])
+
+    def _perf_start(self, counter: StructurePointer[retro_perf_counter]):
+        if self._perf is not None and counter:
+            self._perf.perf_start(counter[0])
+
+    def _perf_stop(self, counter: StructurePointer[retro_perf_counter]):
+        if self._perf is not None and counter:
+            self._perf.perf_stop(counter[0])
+
+    def _perf_log(self):
+        if self._perf is not None:
+            self._perf.perf_log()
 
     @property
     def location(self) -> Location:
@@ -844,17 +908,62 @@ class CompositeEnvironmentDriver[
         if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE doesn't accept NULL")
 
+        if not self._location_callback:
+            self._location_callback = retro_location_callback(
+                start=retro_location_start_t(self._location_start),
+                stop=retro_location_stop_t(self._location_stop),
+                get_position=retro_location_get_position_t(self._location_get_position),
+                set_interval=retro_location_set_interval_t(self._location_set_interval),
+            )
+
         location = interface[0]
 
         self._location.initialized = location.initialized
         self._location.deinitialized = location.deinitialized
 
-        memmove(
-            interface,
-            byref(retro_location_callback.from_param(self._location)),
-            sizeof(retro_location_callback),
-        )
+        location.start = self._location_callback.start
+        location.stop = self._location_callback.stop
+        location.get_position = self._location_callback.get_position
+        location.set_interval = self._location_callback.set_interval
+
         return True
+
+    def _location_start(self) -> bool:
+        if self._location is None:
+            return False
+
+        return self._location.start()
+
+    def _location_stop(self) -> None:
+        if self._location is not None:
+            self._location.stop()
+
+    def _location_get_position(
+        self,
+        lat: FloatPointer[c_double],
+        lon: FloatPointer[c_double],
+        horiz_accuracy: FloatPointer[c_double],
+        vert_accuracy: FloatPointer[c_double],
+    ) -> bool:
+        if self._location is None:
+            return False
+
+        if not lat or not lon or not horiz_accuracy or not vert_accuracy:
+            raise ValueError("retro_location_get_position_t doesn't accept NULL")
+
+        position = self._location.get_position()
+        if position is None:
+            return False
+
+        lat[0] = position.latitude or 0.0
+        lon[0] = position.longitude or 0.0
+        horiz_accuracy[0] = position.horizontal_accuracy or 0.0
+        vert_accuracy[0] = position.vertical_accuracy or 0.0
+        return True
+
+    def _location_set_interval(self, ms: int, distance: int) -> None:
+        if self._location is not None:
+            self._location.set_interval(ms, distance)
 
     @override
     def _get_core_assets_directory(self, dir: StringPointer) -> bool:
@@ -894,9 +1003,22 @@ class CompositeEnvironmentDriver[
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
         return self._proc_address_callback
 
+    @overload
+    def get_proc_address[
+        T: _CFunctionType
+    ](self, sym: str | bytes, funtype: type[T]) -> T | None: ...
+    @overload
     def get_proc_address(
-        self, sym: AnyStr, funtype: type[CFuncPtr] | None
-    ) -> retro_proc_address_t | Callable[[], None] | None:
+        self, sym: str | bytes, funtype: None = None
+    ) -> retro_proc_address_t | None: ...
+    @overload
+    def get_proc_address[
+        T: _CFunctionType
+    ](self, sym: Literal[b"", ""], funtype: type[T] | None = None) -> None: ...
+
+    def get_proc_address[
+        T: _CFunctionType
+    ](self, sym: str | bytes, funtype: type[T] | None = None) -> retro_proc_address_t | T | None:
         if not self._proc_address_callback or not sym:
             return None
 
@@ -1105,9 +1227,177 @@ class CompositeEnvironmentDriver[
             # If the core wants a higher version than what we offer...
             return False
 
+        if self._vfs_interface is None:
+            self._vfs_interface = retro_vfs_interface()
+
+            if self._vfs.version >= 1:
+                self._vfs_interface.get_path = retro_vfs_get_path_t(self._vfs_get_path)
+                self._vfs_interface.open = retro_vfs_open_t(self._vfs_open)
+                self._vfs_interface.close = retro_vfs_close_t(self._vfs_close)
+                self._vfs_interface.size = retro_vfs_size_t(self._vfs_size)
+                self._vfs_interface.tell = retro_vfs_tell_t(self._vfs_tell)
+                self._vfs_interface.seek = retro_vfs_seek_t(self._vfs_seek)
+                self._vfs_interface.read = retro_vfs_read_t(self._vfs_read)
+                self._vfs_interface.write = retro_vfs_write_t(self._vfs_write)
+                self._vfs_interface.flush = retro_vfs_flush_t(self._vfs_flush)
+                self._vfs_interface.remove = retro_vfs_remove_t(self._vfs_remove)
+                self._vfs_interface.rename = retro_vfs_rename_t(self._vfs_rename)
+
+            if self._vfs.version >= 2:
+                self._vfs_interface.truncate = retro_vfs_truncate_t(self._vfs_truncate)
+
+            if self._vfs.version >= 3:
+                self._vfs_interface.stat = retro_vfs_stat_t(self._vfs_stat)
+                self._vfs_interface.mkdir = retro_vfs_mkdir_t(self._vfs_mkdir)
+                self._vfs_interface.opendir = retro_vfs_opendir_t(self._vfs_opendir)
+                self._vfs_interface.readdir = retro_vfs_readdir_t(self._vfs_readdir)
+                self._vfs_interface.dirent_get_name = retro_vfs_dirent_get_name_t(
+                    self._vfs_dirent_get_name
+                )
+                self._vfs_interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(
+                    self._vfs_dirent_is_dir
+                )
+                self._vfs_interface.closedir = retro_vfs_closedir_t(self._vfs_closedir)
+
         vfs_info.required_interface_version = self._vfs.version
-        vfs_info.iface = pointer(retro_vfs_interface.from_param(self._vfs))
+        vfs_info.iface = pointer(self._vfs_interface)
         return True
+
+    def _vfs_get_path(self, file: StructurePointer[retro_vfs_file_handle]) -> bytes | None:
+        if self._vfs is None or not file:
+            return None
+
+        return self._vfs.get_path(file[0])
+
+    def _vfs_open(self, path: bytes, mode: int, hints: int):
+        if self._vfs is None or mode not in VfsFileAccess:
+            return None
+
+        file = self._vfs.open(path, VfsFileAccess(mode), VfsFileAccessHint(hints))
+        if not file:
+            return None
+
+        return pointer(file)
+
+    def _vfs_close(self, file: StructurePointer[retro_vfs_file_handle]):
+        if self._vfs is None or not file:
+            return -1
+
+        return 0 if self._vfs.close(file[0]) else -1
+
+    def _vfs_size(self, file: StructurePointer[retro_vfs_file_handle]) -> int:
+        if self._vfs is None or not file:
+            return -1
+
+        return self._vfs.size(file[0])
+
+    def _vfs_truncate(self, file: StructurePointer[retro_vfs_file_handle], length: int) -> int:
+        if self._vfs is None or not file or length < 0:
+            return -1
+
+        return 0 if self._vfs.truncate(file[0], length) else -1
+
+    def _vfs_tell(self, file: StructurePointer[retro_vfs_file_handle]) -> int:
+        if self._vfs is None or not file:
+            return -1
+
+        return self._vfs.tell(file[0])
+
+    def _vfs_seek(
+        self, file: StructurePointer[retro_vfs_file_handle], offset: int, whence: int
+    ) -> int:
+        if self._vfs is None or not file or whence not in VfsSeekPosition:
+            return -1
+
+        return self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
+
+    def _vfs_read(
+        self, file: StructurePointer[retro_vfs_file_handle], data: c_buffer, size: int
+    ) -> int:
+        if self._vfs is None or not file or not data or size < 0:
+            return -1
+
+        return self._vfs.read(file[0], data.memoryview_at(size, readonly=False))
+
+    def _vfs_write(
+        self, file: StructurePointer[retro_vfs_file_handle], data: c_buffer, size: int
+    ) -> int:
+        if self._vfs is None or not file or not data or size < 0:
+            return -1
+
+        return self._vfs.write(file[0], data.memoryview_at(size, readonly=True))
+
+    def _vfs_flush(self, file: StructurePointer[retro_vfs_file_handle]) -> int:
+        if self._vfs is None or not file:
+            return -1
+
+        return 0 if self._vfs.flush(file[0]) else -1
+
+    def _vfs_remove(self, path: bytes) -> int:
+        if self._vfs is None or not path:
+            return -1
+
+        return 0 if self._vfs.remove(path) else -1
+
+    def _vfs_rename(self, old_path: bytes, new_path: bytes) -> int:
+        if self._vfs is None or not old_path or not new_path:
+            return -1
+
+        return 0 if self._vfs.rename(old_path, new_path) else -1
+
+    def _vfs_stat(self, path: bytes, size: IntPointer[c_int32]) -> int:
+        if self._vfs is None or not path:
+            return 0
+
+        stat = self._vfs.stat(path)
+        if not stat:
+            return 0
+
+        vfs_stat, stat_size = stat
+        if size:
+            size[0] = stat_size
+
+        return vfs_stat
+
+    def _vfs_mkdir(self, path: bytes) -> int:
+        if self._vfs is None or not path:
+            return -1
+
+        return self._vfs.mkdir(path)
+
+    def _vfs_opendir(self, path: bytes, include_hidden: bool):
+        if self._vfs is None or not path:
+            return None
+
+        dir = self._vfs.opendir(path, include_hidden)
+        if not dir:
+            return None
+
+        return pointer(dir)
+
+    def _vfs_readdir(self, dir: StructurePointer[retro_vfs_dir_handle]) -> bool:
+        if self._vfs is None or not dir:
+            return False
+
+        return self._vfs.readdir(dir[0])
+
+    def _vfs_dirent_get_name(self, dir: StructurePointer[retro_vfs_dir_handle]) -> bytes | None:
+        if self._vfs is None or not dir:
+            return None
+
+        return self._vfs.dirent_get_name(dir[0])
+
+    def _vfs_dirent_is_dir(self, dir: StructurePointer[retro_vfs_dir_handle]) -> bool:
+        if self._vfs is None or not dir:
+            return False
+
+        return self._vfs.dirent_is_dir(dir[0])
+
+    def _vfs_closedir(self, dir: StructurePointer[retro_vfs_dir_handle]) -> bool:
+        if self._vfs is None or not dir:
+            return False
+
+        return self._vfs.closedir(dir[0])
 
     @property
     def led(self) -> Led:
@@ -1122,15 +1412,15 @@ class CompositeEnvironmentDriver[
             # This envcall supports passing NULL to query for support
             return True
 
-        if not self._led_cb:
-            self._led_cb = retro_led_interface(
-                set_led_state=retro_set_led_state_t(self.__set_led_state)
+        if not self._led_interface:
+            self._led_interface = retro_led_interface(
+                set_led_state=retro_set_led_state_t(self._set_led_state)
             )
 
-        led[0] = self._led_cb
+        led[0] = self._led_interface
         return True
 
-    def __set_led_state(self, led: int, state: int) -> None:
+    def _set_led_state(self, led: int, state: int) -> None:
         if self._led is not None:
             self._led.set_led_state(led, state)
 
@@ -1169,15 +1459,57 @@ class CompositeEnvironmentDriver[
         if not self._midi:
             return False
 
-        if midi:
-            memmove(
-                midi,
-                byref(retro_midi_interface.from_param(self._midi)),
-                sizeof(retro_midi_interface),
+        if not midi:
+            # This envcall supports passing NULL to query for support
+            return True
+
+        if not self._midi_interface:
+            self._midi_interface = retro_midi_interface(
+                input_enabled=retro_midi_input_enabled_t(self._midi_input_enabled),
+                output_enabled=retro_midi_output_enabled_t(self._midi_output_enabled),
+                read=retro_midi_read_t(self._midi_read),
+                write=retro_midi_write_t(self._midi_write),
+                flush=retro_midi_flush_t(self._midi_flush),
             )
 
-        # This envcall supports passing NULL to query for support
+        midi[0] = self._midi_interface
+
         return True
+
+    def _midi_input_enabled(self) -> bool:
+        if self._midi is None:
+            return False
+
+        return self._midi.input_enabled
+
+    def _midi_output_enabled(self) -> bool:
+        if self._midi is None:
+            return False
+
+        return self._midi.output_enabled
+
+    def _midi_read(self, byte: IntPointer[c_uint8]) -> bool:
+        if self._midi is None or not byte:
+            return False
+
+        result = self._midi.read()
+        if result is None:
+            return False
+
+        byte[0] = result
+        return True
+
+    def _midi_write(self, byte: int, delta_time: int) -> bool:
+        if self._midi is None:
+            return False
+
+        return self._midi.write(byte, delta_time)
+
+    def _midi_flush(self) -> bool:
+        if self._midi is None:
+            return False
+
+        return self._midi.flush()
 
     @override
     def _get_fastforwarding(self, is_fastforwarding: BoolPointer) -> bool:
@@ -1538,22 +1870,22 @@ class CompositeEnvironmentDriver[
 
     @property
     def microphones(self) -> Mic:
-        return self._mic_interface
+        return self._mic
 
     @override
     def _get_microphone_interface(
         self, interface: StructurePointer[retro_microphone_interface]
     ) -> bool:
-        if self._mic_interface is None:
+        if self._mic is None:
             return False
 
         if interface:
             mic_interface: retro_microphone_interface = interface[0]
 
-            if mic_interface.interface_version != self._mic_interface.version:
+            if mic_interface.interface_version != self._mic.version:
                 return False
 
-            interface[0] = retro_microphone_interface.from_param(self._mic_interface)
+            interface[0] = retro_microphone_interface.from_param(self._mic)
 
         # This envcall supports passing NULL to query for support
         return True
