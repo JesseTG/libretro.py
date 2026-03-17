@@ -15,7 +15,7 @@ class SensorDriver(Protocol):
     """
 
     @abstractmethod
-    def set_sensor_state(self, port: int, action: SensorAction | int, rate: int) -> bool:
+    def set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool:
         """
         Configures a sensor on a port,
         possibly with a specific query rate.
