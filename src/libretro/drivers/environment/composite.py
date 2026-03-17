@@ -1317,7 +1317,7 @@ class CompositeEnvironmentDriver[
         if self._vfs is None or not file or not data or size < 0:
             return -1
 
-        return self._vfs.read(file[0], data.memoryview_at(size, readonly=False))
+        return self._vfs.read(file[0], memoryview_at(data, size, readonly=False))
 
     def _vfs_write(
         self, file: StructurePointer[retro_vfs_file_handle], data: c_buffer, size: int
@@ -1325,7 +1325,7 @@ class CompositeEnvironmentDriver[
         if self._vfs is None or not file or not data or size < 0:
             return -1
 
-        return self._vfs.write(file[0], data.memoryview_at(size, readonly=True))
+        return self._vfs.write(file[0], memoryview_at(data, size, readonly=True))
 
     def _vfs_flush(self, file: StructurePointer[retro_vfs_file_handle]) -> int:
         if self._vfs is None or not file:
