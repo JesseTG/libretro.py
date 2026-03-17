@@ -1,20 +1,9 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
-from warnings import deprecated
-
-from libretro.api import retro_led_interface, retro_set_led_state_t
 
 
 @runtime_checkable
 class LedDriver(Protocol):
-    @property
-    @deprecated("Set the function pointers in the EnvironmentDriver instead of the LedDriver")
-    def _as_parameter_(self) -> retro_led_interface:
-        return retro_led_interface(set_led_state=retro_set_led_state_t(self.__set_led_state))
-
-    def __set_led_state(self, led: int, state: int) -> None:
-        self.set_led_state(led, state)
-
     @abstractmethod
     def set_led_state(self, led: int, state: int) -> None: ...
 
