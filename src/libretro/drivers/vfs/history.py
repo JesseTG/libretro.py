@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from typing import override
 
-from libretro import retro_vfs_dir_handle, retro_vfs_file_handle
 from libretro.api.vfs import (
     VfsFileAccess,
     VfsFileAccessHint,
     VfsMkdirResult,
     VfsSeekPosition,
     VfsStat,
+    retro_vfs_dir_handle,
+    retro_vfs_file_handle,
 )
 
 from .interface import FileSystemInterface
