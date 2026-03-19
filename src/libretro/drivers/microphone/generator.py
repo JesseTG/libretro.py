@@ -1,26 +1,41 @@
 from array import array
-from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from itertools import repeat
 
 from libretro._typing import override
-from libretro.api.microphone import INTERFACE_VERSION, retro_microphone_params
+from libretro.api.microphone import (
+    INTERFACE_VERSION,
+    retro_microphone,
+    retro_microphone_params,
+)
 
 from .driver import Microphone, MicrophoneDriver
 
 MicrophoneInput = int | Sequence[int] | None
 MicrophoneInputIterator = Iterator[MicrophoneInput]
+MicrophoneInputIterable = Iterable[MicrophoneInput]
 MicrophoneInputGenerator = Callable[[], MicrophoneInputIterator]
-MicrophoneSource = MicrophoneInput | MicrophoneInputIterator | MicrophoneInputGenerator
+MicrophoneSource = MicrophoneInputIterable | MicrophoneInputGenerator
 
 
 class GeneratorMicrophone(Microphone):
+    _generator_state: MicrophoneInputIterator
+
     def __init__(self, generator: MicrophoneSource | None, params: retro_microphone_params | None):
-        super().__init__(params)
         self._params = params or retro_microphone_params(44100)
         self._enabled = False
-        self._generator = generator
-        self._generator_state: MicrophoneInputIterator | None = None
         self._closed = False
+        self._overflow = array("h")
 
+        match generator:
+            case None:
+                self._generator_state = repeat(0)
+            case Callable():
+                self._generator_state = generator()
+            case Iterable() as it:
+                self._generator_state = iter(it)
+
+    @override
     def close(self) -> None:
         self._closed = True
 
@@ -48,56 +63,97 @@ class GeneratorMicrophone(Microphone):
 
         self._enabled = bool(state)
 
-    def read(self, frames: int) -> Sequence[int]:
+    @override
+    def read(self, frames: int) -> array[int] | None:
         if self._closed or not self._enabled or not frames:
             # If this mic is closed, off, or asked to provide zero samples...
-            return ()
+            return None
 
-        if self._generator_state is None and self._generator:
-            match self._generator:
-                case Callable() as func:
-                    self._generator_state = func()
-                case Iterable() | Iterator() | Generator() as it:
-                    self._generator_state = it
+        buffer = array("h", self._overflow)
+        self._overflow.clear()
 
-        buffer = array("h")
-        try:
-            while len(buffer) < frames:
-                match next(self._generator_state, None):
-                    case None:
-                        break
-                    case int(frame):
-                        buffer.append(frame)
-                    case array() as samples if samples.typecode == "h":
-                        buffer.extend(samples)
-                    case f if isinstance(f, Sequence):
-                        buffer.extend(f)
-                    case f:
-                        raise TypeError(
-                            f"MicrophoneInputGenerator must yield a signed 16-bit integer, an array of them, or None; got {type(f).__name__}"
-                        )
+        while len(buffer) < frames:
+            # Until we have the requested number of frames in the buffer,
+            # keep asking the generator for more input and filling the buffer with it.
+            match next(self._generator_state, None):
+                case None:
+                    buffer.append(0)
+                case int(frame):
+                    buffer.append(frame)
+                case array() as samples if samples.typecode == "h":
+                    buffer.extend(samples)
+                case f if isinstance(f, Sequence):
+                    buffer.extend(f)
+                case f:
+                    raise TypeError(
+                        f"MicrophoneInputGenerator must yield a signed 16-bit integer, an array of them, or None; got {type(f).__name__}"
+                    )
 
-        except StopIteration:
-            # Not actually an error, just means the generator is done
-            return buffer
-        except Exception as e:
-            # TODO: Log error
-            return ()
+        if len(buffer) > frames:
+            # If we got more frames than requested, save the excess in the overflow buffer for next time.
+            self._overflow.extend(buffer[frames:])
+            del buffer[frames:]
+            assert len(buffer) <= frames
 
         return buffer
 
 
 class GeneratorMicrophoneDriver(MicrophoneDriver):
-    def __init__(self, generator: MicrophoneInputGenerator | None = None):
-        super().__init__()
+    def __init__(
+        self, generator: MicrophoneInputGenerator | MicrophoneInputIterable | None = None
+    ):
+        self._microphones: dict[int, GeneratorMicrophone] = {}
         self._generator = generator
 
     @property
+    @override
     def version(self) -> int:
         return INTERFACE_VERSION
 
-    def open_mic(self, params: retro_microphone_params | None) -> Microphone:
-        return GeneratorMicrophone(self._generator, params)
+    @override
+    def open_mic(self, params: retro_microphone_params | None) -> retro_microphone | None:
+        mic = GeneratorMicrophone(self._generator, params)
+        mic_id = id(mic)
+        handle = retro_microphone(mic_id)
+        self._microphones[mic_id] = mic
+        return handle
+
+    @override
+    def close_mic(self, mic: retro_microphone) -> None:
+        mic_id = mic.id
+        if m := self._microphones.get(mic_id):
+            m.close()
+            del self._microphones[mic_id]
+
+    @override
+    def get_mic_params(self, mic: retro_microphone) -> retro_microphone_params | None:
+        mic_id = mic.id
+        if (m := self._microphones.get(mic_id)) is not None:
+            return m.params
+
+        return None
+
+    @override
+    def get_mic_state(self, mic: retro_microphone) -> bool:
+        mic_id = mic.id
+        if (m := self._microphones.get(mic_id)) is not None:
+            return m.state
+
+        return False
+
+    @override
+    def set_mic_state(self, mic: retro_microphone, state: bool) -> None:
+        mic_id = mic.id
+        if (m := self._microphones.get(mic_id)) is not None:
+            m.state = state
+
+    @override
+    def read_mic(self, mic: retro_microphone, frames: int) -> array[int] | None:
+        mic_id = mic.id
+        if (m := self._microphones.get(mic_id)) is not None:
+            return m.read(frames)
+
+        return None
 
 
 __all__ = [

@@ -10,6 +10,7 @@ from ctypes import (
     c_uint8,
     c_uint64,
     c_void_p,
+    memmove,
     pointer,
     sizeof,
 )
@@ -1879,16 +1880,89 @@ class CompositeEnvironmentDriver[
         if self._mic is None:
             return False
 
-        if interface:
-            mic_interface: retro_microphone_interface = interface[0]
+        if self._mic_interface is None:
+            self._mic_interface = retro_microphone_interface(
+                version=self._mic.version,
+                open_mic=retro_open_mic_t(self._open_mic),
+                close_mic=retro_close_mic_t(self._close_mic),
+                get_params=retro_get_mic_params_t(self._get_mic_params),
+                set_mic_state=retro_set_mic_state_t(self._set_mic_state),
+                get_mic_state=retro_get_mic_state_t(self._get_mic_state),
+                read_mic=retro_read_mic_t(self._read_mic),
+            )
 
-            if mic_interface.interface_version != self._mic.version:
+        if interface:
+            target = interface[0]
+
+            if target.interface_version != self._mic.version:
                 return False
 
-            interface[0] = retro_microphone_interface.from_param(self._mic)
+            target.open_mic = self._mic_interface.open_mic
+            target.close_mic = self._mic_interface.close_mic
+            target.get_params = self._mic_interface.get_params
+            target.set_mic_state = self._mic_interface.set_mic_state
+            target.get_mic_state = self._mic_interface.get_mic_state
+            target.read_mic = self._mic_interface.read_mic
 
         # This envcall supports passing NULL to query for support
         return True
+
+    def _open_mic(self, params: StructurePointer[retro_microphone_params]):
+        if self._mic is None:
+            return None
+
+        mic = self._mic.open_mic(params[0] if params else None)
+        if not mic:
+            return None
+
+        return pointer(mic)
+
+    def _close_mic(self, mic: StructurePointer[retro_microphone]) -> None:
+        if self._mic is not None and mic:
+            self._mic.close_mic(mic[0])
+
+    def _get_mic_params(
+        self,
+        mic: StructurePointer[retro_microphone],
+        params: StructurePointer[retro_microphone_params],
+    ) -> bool:
+        if self._mic is None or not mic or not params:
+            return False
+
+        returned_params = self._mic.get_mic_params(mic[0])
+        if not returned_params:
+            return False
+
+        params[0] = returned_params
+        return True
+
+    def _set_mic_state(self, mic: StructurePointer[retro_microphone], state: bool) -> bool:
+        if self._mic is None or not mic:
+            return False
+
+        self._mic.set_mic_state(mic[0], state)
+        return True
+
+    def _get_mic_state(self, mic: StructurePointer[retro_microphone]) -> bool:
+        if self._mic is None or not mic:
+            return False
+
+        return self._mic.get_mic_state(mic[0])
+
+    def _read_mic(
+        self, mic: StructurePointer[retro_microphone], buffer: IntPointer[c_int16], frames: int
+    ) -> int:
+        if self._mic is None or not mic or not buffer or frames < 0:
+            return -1
+
+        returned_frames = self._mic.read_mic(mic[0], frames)
+        if returned_frames is None:
+            return -1
+
+        returned_buffer, _ = returned_frames.buffer_info()
+        memmove(buffer, returned_buffer, len(returned_frames) * returned_frames.itemsize)
+
+        return len(returned_frames)
 
     @property
     def power(self) -> Power:
