@@ -1,38 +1,16 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
-from warnings import deprecated
 
 from libretro.api.camera import (
     CameraCapabilityFlags,
-    retro_camera_callback,
     retro_camera_frame_opengl_texture_t,
     retro_camera_frame_raw_framebuffer_t,
     retro_camera_lifetime_status_t,
-    retro_camera_start_t,
-    retro_camera_stop_t,
 )
 
 
 @runtime_checkable
 class CameraDriver(Protocol):
-    @property
-    @deprecated(
-        "Set the function pointers in the EnvironmentDriver instead of in the CameraDriver"
-    )
-    @abstractmethod
-    def _as_parameter_(self) -> retro_camera_callback:
-        return retro_camera_callback(
-            caps=self.caps,
-            width=self.width,
-            height=self.height,
-            start=retro_camera_start_t(self.start),
-            stop=retro_camera_stop_t(self.stop),
-            frame_raw_framebuffer=self.frame_raw_framebuffer,
-            frame_opengl_texture=self.frame_opengl_texture,
-            initialized=self.initialized,
-            deinitialized=self.deinitialized,
-        )
-
     @property
     @abstractmethod
     def caps(self) -> CameraCapabilityFlags: ...
@@ -72,7 +50,9 @@ class CameraDriver(Protocol):
 
     @frame_raw_framebuffer.setter
     @abstractmethod
-    def frame_raw_framebuffer(self, value: retro_camera_frame_raw_framebuffer_t) -> None: ...
+    def frame_raw_framebuffer(
+        self, value: retro_camera_frame_raw_framebuffer_t | None
+    ) -> None: ...
 
     @property
     @abstractmethod
@@ -80,7 +60,7 @@ class CameraDriver(Protocol):
 
     @frame_opengl_texture.setter
     @abstractmethod
-    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t) -> None: ...
+    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t | None) -> None: ...
 
     @property
     @abstractmethod
@@ -88,7 +68,7 @@ class CameraDriver(Protocol):
 
     @initialized.setter
     @abstractmethod
-    def initialized(self, value: retro_camera_lifetime_status_t) -> None: ...
+    def initialized(self, value: retro_camera_lifetime_status_t | None) -> None: ...
 
     @property
     @abstractmethod
@@ -96,7 +76,7 @@ class CameraDriver(Protocol):
 
     @deinitialized.setter
     @abstractmethod
-    def deinitialized(self, value: retro_camera_lifetime_status_t) -> None: ...
+    def deinitialized(self, value: retro_camera_lifetime_status_t | None) -> None: ...
 
 
 __all__ = ["CameraDriver"]
