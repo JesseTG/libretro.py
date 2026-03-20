@@ -5,7 +5,6 @@ from typing import final
 from libretro._typing import override
 from libretro.api.video.context import HardwareContext, retro_hw_render_callback
 from libretro.api.video.render import retro_hw_render_interface
-from libretro.error import UnsupportedEnvCall
 
 from ..driver import VideoDriver
 
