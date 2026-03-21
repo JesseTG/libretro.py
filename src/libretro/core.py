@@ -9,6 +9,7 @@ from ctypes import (
     c_bool,
     c_char,
     c_char_p,
+    c_int16,
     c_size_t,
     c_ubyte,
     c_uint,
@@ -17,7 +18,7 @@ from ctypes import (
     cdll,
 )
 from os import PathLike
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol, override
 
 from libretro._typing import Buffer
 from libretro.api import (
@@ -35,10 +36,11 @@ from libretro.api import (
 )
 from libretro.api._utils import memoryview_at
 
+if TYPE_CHECKING:
+    from libretro.typing import IntPointer
+
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
-
-_REGION_MEMBERS = Region.__members__.values()
 
 
 class CoreInterface(Protocol):
@@ -53,16 +55,20 @@ class CoreInterface(Protocol):
     def set_video_refresh(self, video: retro_video_refresh_t) -> None: ...
 
     @abstractmethod
-    def set_audio_sample(self, audio: retro_audio_sample_t) -> None: ...
+    def set_audio_sample(
+        self, audio: retro_audio_sample_t | Callable[[int, int], None]
+    ) -> None: ...
 
     @abstractmethod
     def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None: ...
 
     @abstractmethod
-    def set_input_poll(self, poll: retro_input_poll_t) -> None: ...
+    def set_input_poll(self, poll: retro_input_poll_t | Callable[[], None]) -> None: ...
 
     @abstractmethod
-    def set_input_state(self, state: retro_input_state_t) -> None: ...
+    def set_input_state(
+        self, state: retro_input_state_t | Callable[[int, int, int, int], int]
+    ) -> None: ...
 
     @abstractmethod
     def init(self) -> None: ...
@@ -92,10 +98,10 @@ class CoreInterface(Protocol):
     def serialize_size(self) -> int: ...
 
     @abstractmethod
-    def serialize(self, data: bytearray | memoryview) -> bool: ...
+    def serialize(self, data: bytearray | memoryview[int]) -> bool: ...
 
     @abstractmethod
-    def unserialize(self, data: bytes | bytearray | memoryview) -> bool: ...
+    def unserialize(self, data: bytes | bytearray | memoryview[int]) -> bool: ...
 
     @abstractmethod
     def cheat_reset(self) -> None: ...
@@ -250,8 +256,8 @@ class Core(CoreInterface):
 
             self._core.retro_get_memory_data.argtypes = [c_uint]
             self._core.retro_get_memory_data.restype = POINTER(c_ubyte)
-            self._core.retro_get_memory_data.errcheck = lambda v, *a: (
-                cast(v, c_void_p) if v else c_void_p()
+            self._core.retro_get_memory_data.errcheck = lambda result, _func, _args: (
+                cast(result, c_void_p) if result else c_void_p()
             )
 
             self._core.retro_get_memory_size.argtypes = [c_uint]
@@ -270,7 +276,8 @@ class Core(CoreInterface):
         self._input_poll: retro_input_poll_t | None = None
         self._input_state: retro_input_state_t | None = None
 
-    def set_environment(self, env: retro_environment_t) -> None:
+    @override
+    def set_environment(self, env: retro_environment_t | Callable[[int, c_void_p], bool]) -> None:
         """
         Calls the core's ``retro_set_environment`` function with the given callback.
 
@@ -280,7 +287,10 @@ class Core(CoreInterface):
         self._environment = retro_environment_t(env)
         self._core.retro_set_environment(self._environment)
 
-    def set_video_refresh(self, video: retro_video_refresh_t) -> None:
+    @override
+    def set_video_refresh(
+        self, video: retro_video_refresh_t | Callable[[int, int, int, int], None]
+    ) -> None:
         """
         Calls the core's ``retro_set_video_refresh`` function with the given callback.
 
@@ -290,7 +300,8 @@ class Core(CoreInterface):
         self._video_refresh = retro_video_refresh_t(video)
         self._core.retro_set_video_refresh(self._video_refresh)
 
-    def set_audio_sample(self, audio: retro_audio_sample_t) -> None:
+    @override
+    def set_audio_sample(self, audio: retro_audio_sample_t | Callable[[int, int], None]) -> None:
         """
         Calls the core's ``retro_set_audio_sample`` function with the given callback.
 
@@ -300,7 +311,10 @@ class Core(CoreInterface):
         self._audio_sample = retro_audio_sample_t(audio)
         self._core.retro_set_audio_sample(self._audio_sample)
 
-    def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None:
+    @override
+    def set_audio_sample_batch(
+        self, audio: retro_audio_sample_batch_t | Callable[[IntPointer[c_int16], int], int]
+    ) -> None:
         """
         Calls the core's ``retro_set_audio_sample_batch`` function with the given callback.
 
@@ -310,7 +324,8 @@ class Core(CoreInterface):
         self._audio_sample_batch = retro_audio_sample_batch_t(audio)
         self._core.retro_set_audio_sample_batch(self._audio_sample_batch)
 
-    def set_input_poll(self, poll: retro_input_poll_t) -> None:
+    @override
+    def set_input_poll(self, poll: retro_input_poll_t | Callable[[], None]) -> None:
         """
         Calls the core's ``retro_set_input_poll`` function with the given callback.
 
@@ -320,7 +335,10 @@ class Core(CoreInterface):
         self._input_poll = retro_input_poll_t(poll)
         self._core.retro_set_input_poll(self._input_poll)
 
-    def set_input_state(self, state: retro_input_state_t) -> None:
+    @override
+    def set_input_state(
+        self, state: retro_input_state_t | Callable[[int, int, int, int], int]
+    ) -> None:
         """
         Calls the core's ``retro_set_input_state`` function with the given callback.
 
@@ -330,6 +348,7 @@ class Core(CoreInterface):
         self._input_state = retro_input_state_t(state)
         self._core.retro_set_input_state(self._input_state)
 
+    @override
     def init(self):
         """
         Calls the core's ``retro_init`` function.
@@ -339,6 +358,7 @@ class Core(CoreInterface):
         """
         self._core.retro_init()
 
+    @override
     def deinit(self):
         """
         Calls the core's ``retro_deinit`` function.
@@ -348,6 +368,7 @@ class Core(CoreInterface):
         """
         self._core.retro_deinit()
 
+    @override
     def api_version(self) -> int:
         """
         Calls the core's ``retro_api_version`` function.
@@ -358,6 +379,7 @@ class Core(CoreInterface):
         """
         return self._core.retro_api_version()
 
+    @override
     def get_system_info(self) -> retro_system_info:
         """
         Calls the core's ``retro_get_system_info`` function.
@@ -370,6 +392,7 @@ class Core(CoreInterface):
 
         return deepcopy(system_info)
 
+    @override
     def get_system_av_info(self) -> retro_system_av_info:
         """
         Calls the core's ``retro_get_system_av_info`` function.
@@ -382,6 +405,7 @@ class Core(CoreInterface):
         self._core.retro_get_system_av_info(byref(system_av_info))
         return system_av_info
 
+    @override
     def set_controller_port_device(self, port: int, device: int):
         """
         Calls the core's ``retro_set_controller_port_device`` function with the given arguments.
@@ -393,6 +417,7 @@ class Core(CoreInterface):
         """
         self._core.retro_set_controller_port_device(port, device)
 
+    @override
     def reset(self):
         """
         Calls the core's ``retro_reset`` function.
@@ -401,6 +426,7 @@ class Core(CoreInterface):
         """
         self._core.retro_reset()
 
+    @override
     def run(self):
         """
         Calls the core's ``retro_run`` function.
@@ -409,6 +435,7 @@ class Core(CoreInterface):
         """
         self._core.retro_run()
 
+    @override
     def serialize_size(self) -> int:
         """
         Calls the core's ``retro_serialize_size`` function.
@@ -418,7 +445,8 @@ class Core(CoreInterface):
         """
         return self._core.retro_serialize_size()
 
-    def serialize(self, data: bytearray | memoryview | Buffer) -> bool:
+    @override
+    def serialize(self, data: bytearray | memoryview[int] | Buffer) -> bool:
         """
         Calls the core's ``retro_serialize`` function with the given mutable buffer and its length,
         filling it with whatever data the core returns.
@@ -432,12 +460,11 @@ class Core(CoreInterface):
         :note: The buffer must be at least as large as the last value returned by ``serialize_size``,
             or else the serialized data will be incomplete.
         """
-        buf: memoryview
         match data:
-            case memoryview() as mem if mem.readonly:
+            case memoryview() if data.readonly:
                 raise ValueError("data must not be readonly")
             case memoryview():
-                buf = data
+                buf = data.cast("B")
             case bytearray() | Buffer():
                 buf = memoryview(data)
             case _:
@@ -450,7 +477,8 @@ class Core(CoreInterface):
 
         return self._core.retro_serialize(byref(arraytype.from_buffer(buf)), buflength)
 
-    def unserialize(self, data: bytes | bytearray | memoryview | Buffer) -> bool:
+    @override
+    def unserialize(self, data: bytes | bytearray | memoryview[int] | Buffer) -> bool:
         """
         Calls the core's ``retro_unserialize`` function with the given buffer and its length,
         restoring the core's state from the serialized data.
@@ -459,7 +487,6 @@ class Core(CoreInterface):
         :raises TypeError: If ``data`` is not one of the aforementioned types.
         :return: ``True`` if the core successfully loaded a state from ``data``, ``False`` if not.
         """
-        buf: memoryview
         match data:
             case bytes():
                 buf = memoryview_at(data, len(data), readonly=False)
@@ -467,10 +494,10 @@ class Core(CoreInterface):
                 # but bytes objects are read-only.
                 # retro_unserialize isn't supposed to modify the buffer,
                 # so we can blame undefined behavior if the core tries to write to it anyway.
+            case memoryview():
+                buf = data.cast("B")
             case bytearray() | Buffer():
                 buf = memoryview(data)
-            case memoryview():
-                buf = data
             case _:
                 raise TypeError(
                     f"Expected bytes, bytearray, memoryview, or Buffer; got {type(data).__name__}"
@@ -482,12 +509,14 @@ class Core(CoreInterface):
         # TODO: Validate that the buffer wasn't written to, and raise a warning if it was. (Use zlib.crc32)
         return self._core.retro_unserialize(byref(arraytype.from_buffer(buf)), buflen)
 
+    @override
     def cheat_reset(self):
         """
         Calls the core's ``retro_cheat_reset`` function.
         """
         self._core.retro_cheat_reset()
 
+    @override
     def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str):
         """
         Calls the core's ``retro_cheat_set`` function with the given arguments.
@@ -517,6 +546,7 @@ class Core(CoreInterface):
 
         self._core.retro_cheat_set(index, enabled, buf)
 
+    @override
     def load_game(self, game: retro_game_info | None) -> bool:
         """
         Calls the core's ``retro_load_game`` function with the given game info.
@@ -535,6 +565,7 @@ class Core(CoreInterface):
             case _:
                 raise TypeError(f"Expected retro_game_info or None, got {type(game).__name__}")
 
+    @override
     def load_game_special(
         self,
         game_type: int | retro_subsystem_info,
@@ -551,7 +582,6 @@ class Core(CoreInterface):
         :warning: This method does not validate any preconditions documented in libretro.h,
             e.g. it's possible to use this method even if the core doesn't define subsystems.
         """
-        _type: int
         match game_type:
             case int():
                 _type = game_type
@@ -562,23 +592,20 @@ class Core(CoreInterface):
                     f"Expected int or retro_subsystem_info, got {type(game_type).__name__}"
                 )
 
-        _array: Array[retro_game_info]
+        match info:
+            case Array():
+                info_array = info
+            case Sequence():
+                GameInfoArray = retro_game_info * len(info)
+                info_array = GameInfoArray(*info)
+            case _:
+                raise TypeError(
+                    f"Expected a Sequence or ctypes Array of retro_game_info, got {type(info).__name__}"
+                )
 
-        if isinstance(info, Array):
-            _array = info
-        elif isinstance(info, Sequence):
-            GameInfoArray: type[Array] = retro_game_info * len(info)
-            _array = GameInfoArray(*info)
-        else:
-            raise TypeError(
-                f"Expected a Sequence or ctypes Array of retro_game_info, got {type(info).__name__}"
-            )
+        return self._core.retro_load_game_special(_type, info_array, len(info_array))
 
-        if not all(isinstance(i, retro_game_info) for i in info):
-            raise TypeError("All elements of info must be retro_game_info instances")
-
-        return self._core.retro_load_game_special(_type, _array, len(_array))
-
+    @override
     def unload_game(self):
         """
         Calls the core's ``retro_unload_game`` function.
@@ -588,6 +615,7 @@ class Core(CoreInterface):
         """
         self._core.retro_unload_game()
 
+    @override
     def get_region(self) -> Region | int:
         """
         Calls the core's ``retro_get_region`` function.
@@ -596,8 +624,9 @@ class Core(CoreInterface):
             or as a plain ``int`` if not.
         """
         region: int = self._core.retro_get_region()
-        return Region(region) if region in _REGION_MEMBERS else region
+        return Region(region) if region in Region else region
 
+    @override
     def get_memory_data(self, id: int) -> c_void_p | None:
         """
         Calls the core's ``retro_get_memory_data`` function for the given memory region.
@@ -613,6 +642,7 @@ class Core(CoreInterface):
 
         return self._core.retro_get_memory_data(id)
 
+    @override
     def get_memory_size(self, id: int) -> int:
         """
         Calls the core's ``retro_get_memory_size`` function for the given memory region.
