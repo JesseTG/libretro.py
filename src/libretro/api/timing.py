@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, Structure, c_bool, c_float, c_int64, c_uint
+from ctypes import Structure, c_bool, c_float, c_int64, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
@@ -14,12 +14,9 @@ RETRO_THROTTLE_UNBLOCKED = 6
 
 retro_usec_t = c_int64
 
-if TYPE_CHECKING:
-    from libretro.typing import ConvertibleToInteger, CoreFunctionPointer
+from libretro.typing import ConvertibleToInteger, CoreFunctionPointer
 
-    retro_frame_time_callback_t = CoreFunctionPointer[None, [ConvertibleToInteger[retro_usec_t]]]
-else:
-    retro_frame_time_callback_t = CFUNCTYPE(None, retro_usec_t)
+retro_frame_time_callback_t = CoreFunctionPointer[None, [ConvertibleToInteger[retro_usec_t]]]
 
 
 @dataclass(init=False)
@@ -27,11 +24,11 @@ class retro_frame_time_callback(Structure):
     if TYPE_CHECKING:
         callback: retro_frame_time_callback_t | None
         reference: int
-    else:
-        _fields_ = [
-            ("callback", retro_frame_time_callback_t),
-            ("reference", c_uint),
-        ]
+
+    _fields_ = [
+        ("callback", retro_frame_time_callback_t),
+        ("reference", c_uint),
+    ]
 
     def __call__(self, time: ConvertibleToInteger[retro_usec_t] | None = None):
         """
@@ -66,13 +63,13 @@ class retro_fastforwarding_override(Structure):
         fastforward: bool
         notification: bool
         inhibit_toggle: bool
-    else:
-        _fields_ = [
-            ("ratio", c_float),
-            ("fastforward", c_bool),
-            ("notification", c_bool),
-            ("inhibit_toggle", c_bool),
-        ]
+
+    _fields_ = [
+        ("ratio", c_float),
+        ("fastforward", c_bool),
+        ("notification", c_bool),
+        ("inhibit_toggle", c_bool),
+    ]
 
     def __deepcopy__(self, _):
         return retro_fastforwarding_override(
@@ -85,11 +82,11 @@ class retro_throttle_state(Structure):
     if TYPE_CHECKING:
         mode: ThrottleMode
         rate: float
-    else:
-        _fields_ = [
-            ("mode", c_uint),
-            ("rate", c_float),
-        ]
+
+    _fields_ = [
+        ("mode", c_uint),
+        ("rate", c_float),
+    ]
 
     def __deepcopy__(self, _):
         return retro_throttle_state(self.mode, self.rate)

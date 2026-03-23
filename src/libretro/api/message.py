@@ -37,11 +37,11 @@ class retro_message(Structure):
     if TYPE_CHECKING:
         msg: bytes | None
         frames: int
-    else:
-        _fields_ = [
-            ("msg", c_char_p),
-            ("frames", c_uint),
-        ]
+
+    _fields_ = [
+        ("msg", c_char_p),
+        ("frames", c_uint),
+    ]
 
     def __deepcopy__(self, memodict: MemoDict = None):
         return retro_message(msg=self.msg, frames=self.frames)
@@ -57,16 +57,16 @@ class retro_message_ext(Structure):
         target: MessageTarget
         type: MessageType
         progress: int
-    else:
-        _fields_ = [
-            ("msg", c_char_p),
-            ("duration", c_uint),
-            ("priority", c_uint),
-            ("level", retro_log_level),
-            ("target", retro_message_target),
-            ("type", retro_message_type),
-            ("progress", c_int8),
-        ]
+
+    _fields_ = [
+        ("msg", c_char_p),
+        ("duration", c_uint),
+        ("priority", c_uint),
+        ("level", retro_log_level),
+        ("target", retro_message_target),
+        ("type", retro_message_type),
+        ("progress", c_int8),
+    ]
 
     def __deepcopy__(self, memodict: MemoDict = None):
         return retro_message_ext(

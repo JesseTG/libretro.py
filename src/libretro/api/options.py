@@ -1,18 +1,15 @@
 from copy import deepcopy
-from ctypes import CFUNCTYPE, POINTER, Array, Structure, c_bool, c_char_p, pointer
+from ctypes import POINTER, Array, Structure, c_bool, c_char_p, pointer
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from libretro.api._utils import MemoDict, deepcopy_array
+from libretro.typing import CoreFunctionPointer, Pointer, StructureArray
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
-if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, Pointer, StructureArray
 
-    retro_core_options_update_display_callback_t = CoreFunctionPointer[c_bool, []]
-else:
-    retro_core_options_update_display_callback_t = CFUNCTYPE(c_bool)
+retro_core_options_update_display_callback_t = CoreFunctionPointer[c_bool, []]
 
 
 @dataclass(init=False)
@@ -20,11 +17,11 @@ class retro_variable(Structure):
     if TYPE_CHECKING:
         key: bytes | None
         value: bytes | None
-    else:
-        _fields_ = [
-            ("key", c_char_p),
-            ("value", c_char_p),
-        ]
+
+    _fields_ = [
+        ("key", c_char_p),
+        ("value", c_char_p),
+    ]
 
     def __deepcopy__(self, _):
         return retro_variable(self.key, self.value)
@@ -35,11 +32,11 @@ class retro_core_option_display(Structure):
     if TYPE_CHECKING:
         key: bytes | None
         visible: bool
-    else:
-        _fields_ = [
-            ("key", c_char_p),
-            ("visible", c_bool),
-        ]
+
+    _fields_ = [
+        ("key", c_char_p),
+        ("visible", c_bool),
+    ]
 
     def __deepcopy__(self, _):
         return retro_core_option_display(self.key, self.visible)
@@ -50,11 +47,11 @@ class retro_core_option_value(Structure):
     if TYPE_CHECKING:
         value: bytes | None
         label: bytes | None
-    else:
-        _fields_ = [
-            ("value", c_char_p),
-            ("label", c_char_p),
-        ]
+
+    _fields_ = [
+        ("value", c_char_p),
+        ("label", c_char_p),
+    ]
 
     def __deepcopy__(self, _):
         return retro_core_option_value(self.value, self.label)
@@ -72,14 +69,14 @@ class retro_core_option_definition(Structure):
         info: bytes | None
         values: Array[retro_core_option_value]
         default_value: bytes | None
-    else:
-        _fields_ = [
-            ("key", c_char_p),
-            ("desc", c_char_p),
-            ("info", c_char_p),
-            ("values", CoreOptionArray),
-            ("default_value", c_char_p),
-        ]
+
+    _fields_ = [
+        ("key", c_char_p),
+        ("desc", c_char_p),
+        ("info", c_char_p),
+        ("values", CoreOptionArray),
+        ("default_value", c_char_p),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_option_definition(
@@ -96,11 +93,11 @@ class retro_core_options_intl(Structure):
     if TYPE_CHECKING:
         us: Pointer[retro_core_option_definition] | None
         local: Pointer[retro_core_option_definition] | None
-    else:
-        _fields_ = [
-            ("us", POINTER(retro_core_option_definition)),
-            ("local", POINTER(retro_core_option_definition)),
-        ]
+
+    _fields_ = [
+        ("us", POINTER(retro_core_option_definition)),
+        ("local", POINTER(retro_core_option_definition)),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_intl(
@@ -115,12 +112,12 @@ class retro_core_option_v2_category(Structure):
         key: bytes | None
         desc: bytes | None
         info: bytes | None
-    else:
-        _fields_ = [
-            ("key", c_char_p),
-            ("desc", c_char_p),
-            ("info", c_char_p),
-        ]
+
+    _fields_ = [
+        ("key", c_char_p),
+        ("desc", c_char_p),
+        ("info", c_char_p),
+    ]
 
     def __deepcopy__(self, _):
         return retro_core_option_v2_category(self.key, self.desc, self.info)
@@ -137,17 +134,17 @@ class retro_core_option_v2_definition(Structure):
         category_key: bytes | None
         values: StructureArray[retro_core_option_value]
         default_value: bytes | None
-    else:
-        _fields_ = [
-            ("key", c_char_p),
-            ("desc", c_char_p),
-            ("desc_categorized", c_char_p),
-            ("info", c_char_p),
-            ("info_categorized", c_char_p),
-            ("category_key", c_char_p),
-            ("values", CoreOptionArray),
-            ("default_value", c_char_p),
-        ]
+
+    _fields_ = [
+        ("key", c_char_p),
+        ("desc", c_char_p),
+        ("desc_categorized", c_char_p),
+        ("info", c_char_p),
+        ("info_categorized", c_char_p),
+        ("category_key", c_char_p),
+        ("values", CoreOptionArray),
+        ("default_value", c_char_p),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_option_v2_definition(
@@ -167,11 +164,11 @@ class retro_core_options_v2(Structure):
     if TYPE_CHECKING:
         categories: Pointer[retro_core_option_v2_category] | None
         definitions: Pointer[retro_core_option_v2_definition] | None
-    else:
-        _fields_ = [
-            ("categories", POINTER(retro_core_option_v2_category)),
-            ("definitions", POINTER(retro_core_option_v2_definition)),
-        ]
+
+    _fields_ = [
+        ("categories", POINTER(retro_core_option_v2_category)),
+        ("definitions", POINTER(retro_core_option_v2_definition)),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_v2(
@@ -185,11 +182,11 @@ class retro_core_options_v2_intl(Structure):
     if TYPE_CHECKING:
         us: Pointer[retro_core_options_v2] | None
         local: Pointer[retro_core_options_v2] | None
-    else:
-        _fields_ = [
-            ("us", POINTER(retro_core_options_v2)),
-            ("local", POINTER(retro_core_options_v2)),
-        ]
+
+    _fields_ = [
+        ("us", POINTER(retro_core_options_v2)),
+        ("local", POINTER(retro_core_options_v2)),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_core_options_v2_intl(
@@ -202,8 +199,8 @@ class retro_core_options_v2_intl(Structure):
 class retro_core_options_update_display_callback(Structure):
     if TYPE_CHECKING:
         callback: retro_core_options_update_display_callback_t | None
-    else:
-        _fields_ = [("callback", retro_core_options_update_display_callback_t)]
+
+    _fields_ = [("callback", retro_core_options_update_display_callback_t)]
 
     def __call__(self) -> bool:
         if not self.callback:

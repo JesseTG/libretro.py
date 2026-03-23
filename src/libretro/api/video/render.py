@@ -34,11 +34,11 @@ class retro_hw_render_interface(Structure):
     if TYPE_CHECKING:
         interface_type: HardwareRenderInterfaceType
         interface_version: int
-    else:
-        _fields_ = [
-            ("interface_type", retro_hw_render_interface_type),
-            ("interface_version", c_uint),
-        ]
+
+    _fields_ = [
+        ("interface_type", retro_hw_render_interface_type),
+        ("interface_version", c_uint),
+    ]
 
 
 __all__ = [

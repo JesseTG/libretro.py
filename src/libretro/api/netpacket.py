@@ -1,16 +1,9 @@
-from ctypes import (
-    CFUNCTYPE,
-    Structure,
-    c_bool,
-    c_char_p,
-    c_int,
-    c_size_t,
-    c_uint16,
-    c_void_p,
-)
+from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16, c_void_p
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
+
+from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
 
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = 1 << 0
@@ -18,32 +11,19 @@ RETRO_NETPACKET_UNSEQUENCED = 1 << 1
 RETRO_NETPACKET_FLUSH_HINT = 1 << 2
 RETRO_NETPACKET_BROADCAST = 0xFFFF
 
-if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
 
-    retro_netpacket_send_t = FrontendFunctionPointer[
-        None, [c_int, c_void_p, c_size_t, c_uint16, c_bool]
-    ]
-    retro_netpacket_receive_t = CoreFunctionPointer[None, [c_void_p, c_size_t, c_uint16]]
-    retro_netpacket_stop_t = CoreFunctionPointer[None, []]
-    retro_netpacket_poll_t = CoreFunctionPointer[None, []]
-    retro_netpacket_poll_receive_t = FrontendFunctionPointer[None, []]
-    retro_netpacket_connected_t = CoreFunctionPointer[c_bool, [c_uint16]]
-    retro_netpacket_disconnected_t = CoreFunctionPointer[None, [c_uint16]]
-    retro_netpacket_start_t = CoreFunctionPointer[
-        None, [c_uint16, retro_netpacket_send_t, retro_netpacket_poll_receive_t]
-    ]
-else:
-    retro_netpacket_send_t = CFUNCTYPE(None, c_int, c_void_p, c_size_t, c_uint16, c_bool)
-    retro_netpacket_receive_t = CFUNCTYPE(None, c_void_p, c_size_t, c_uint16)
-    retro_netpacket_stop_t = CFUNCTYPE(None)
-    retro_netpacket_poll_t = CFUNCTYPE(None)
-    retro_netpacket_poll_receive_t = CFUNCTYPE(None)
-    retro_netpacket_connected_t = CFUNCTYPE(c_bool, c_uint16)
-    retro_netpacket_disconnected_t = CFUNCTYPE(None, c_uint16)
-    retro_netpacket_start_t = CFUNCTYPE(
-        None, c_uint16, retro_netpacket_send_t, retro_netpacket_poll_receive_t
-    )
+retro_netpacket_send_t = FrontendFunctionPointer[
+    None, [c_int, c_void_p, c_size_t, c_uint16, c_bool]
+]
+retro_netpacket_receive_t = CoreFunctionPointer[None, [c_void_p, c_size_t, c_uint16]]
+retro_netpacket_stop_t = CoreFunctionPointer[None, []]
+retro_netpacket_poll_t = CoreFunctionPointer[None, []]
+retro_netpacket_poll_receive_t = FrontendFunctionPointer[None, []]
+retro_netpacket_connected_t = CoreFunctionPointer[c_bool, [c_uint16]]
+retro_netpacket_disconnected_t = CoreFunctionPointer[None, [c_uint16]]
+retro_netpacket_start_t = CoreFunctionPointer[
+    None, [c_uint16, retro_netpacket_send_t, retro_netpacket_poll_receive_t]
+]
 
 
 class NetpacketFlags(IntFlag):
@@ -66,16 +46,16 @@ class retro_netpacket_callback(Structure):
         connected: retro_netpacket_connected_t | None
         disconnected: retro_netpacket_disconnected_t | None
         protocol_version: bytes | None
-    else:
-        _fields_ = [
-            ("start", retro_netpacket_start_t),
-            ("receive", retro_netpacket_receive_t),
-            ("stop", retro_netpacket_stop_t),
-            ("poll", retro_netpacket_poll_t),
-            ("connected", retro_netpacket_connected_t),
-            ("disconnected", retro_netpacket_disconnected_t),
-            ("protocol_version", c_char_p),
-        ]
+
+    _fields_ = [
+        ("start", retro_netpacket_start_t),
+        ("receive", retro_netpacket_receive_t),
+        ("stop", retro_netpacket_stop_t),
+        ("poll", retro_netpacket_poll_t),
+        ("connected", retro_netpacket_connected_t),
+        ("disconnected", retro_netpacket_disconnected_t),
+        ("protocol_version", c_char_p),
+    ]
 
     def __deepcopy__(self, _):
         return retro_netpacket_callback(

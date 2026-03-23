@@ -1,35 +1,22 @@
-from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_char_p, c_size_t, c_uint
+from ctypes import Structure, c_bool, c_char_p, c_size_t, c_uint
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from libretro.api.content import retro_game_info
+from libretro.typing import CoreFunctionPointer, StructurePointer
 
-if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, CPointerArg
-
-    retro_set_eject_state_t = CoreFunctionPointer[c_bool, [c_bool]]
-    retro_get_eject_state_t = CoreFunctionPointer[c_bool, []]
-    retro_get_image_index_t = CoreFunctionPointer[c_uint, []]
-    retro_set_image_index_t = CoreFunctionPointer[c_bool, [c_uint]]
-    retro_get_num_images_t = CoreFunctionPointer[c_uint, []]
-    retro_replace_image_index_t = CoreFunctionPointer[
-        c_bool, [c_uint, CPointerArg[retro_game_info]]
-    ]
-    retro_add_image_index_t = CoreFunctionPointer[c_bool, []]
-    retro_set_initial_image_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p]]
-    retro_get_image_path_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
-    retro_get_image_label_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
-else:
-    retro_set_eject_state_t = CFUNCTYPE(c_bool, c_bool)
-    retro_get_eject_state_t = CFUNCTYPE(c_bool)
-    retro_get_image_index_t = CFUNCTYPE(c_uint)
-    retro_set_image_index_t = CFUNCTYPE(c_bool, c_uint)
-    retro_get_num_images_t = CFUNCTYPE(c_uint)
-    retro_replace_image_index_t = CFUNCTYPE(c_bool, c_uint, POINTER(retro_game_info))
-    retro_add_image_index_t = CFUNCTYPE(c_bool)
-    retro_set_initial_image_t = CFUNCTYPE(c_bool, c_uint, c_char_p)
-    retro_get_image_path_t = CFUNCTYPE(c_bool, c_uint, c_char_p, c_size_t)
-    retro_get_image_label_t = CFUNCTYPE(c_bool, c_uint, c_char_p, c_size_t)
+retro_set_eject_state_t = CoreFunctionPointer[c_bool, [c_bool]]
+retro_get_eject_state_t = CoreFunctionPointer[c_bool, []]
+retro_get_image_index_t = CoreFunctionPointer[c_uint, []]
+retro_set_image_index_t = CoreFunctionPointer[c_bool, [c_uint]]
+retro_get_num_images_t = CoreFunctionPointer[c_uint, []]
+retro_replace_image_index_t = CoreFunctionPointer[
+    c_bool, [c_uint, StructurePointer[retro_game_info]]
+]
+retro_add_image_index_t = CoreFunctionPointer[c_bool, []]
+retro_set_initial_image_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p]]
+retro_get_image_path_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
+retro_get_image_label_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
 
 
 @dataclass(init=False)
@@ -42,16 +29,16 @@ class retro_disk_control_callback(Structure):
         get_num_images: retro_get_num_images_t | None
         replace_image_index: retro_replace_image_index_t | None
         add_image_index: retro_add_image_index_t | None
-    else:
-        _fields_ = [
-            ("set_eject_state", retro_set_eject_state_t),
-            ("get_eject_state", retro_get_eject_state_t),
-            ("get_image_index", retro_get_image_index_t),
-            ("set_image_index", retro_set_image_index_t),
-            ("get_num_images", retro_get_num_images_t),
-            ("replace_image_index", retro_replace_image_index_t),
-            ("add_image_index", retro_add_image_index_t),
-        ]
+
+    _fields_ = [
+        ("set_eject_state", retro_set_eject_state_t),
+        ("get_eject_state", retro_get_eject_state_t),
+        ("get_image_index", retro_get_image_index_t),
+        ("set_image_index", retro_set_image_index_t),
+        ("get_num_images", retro_get_num_images_t),
+        ("replace_image_index", retro_replace_image_index_t),
+        ("add_image_index", retro_add_image_index_t),
+    ]
 
     def __deepcopy__(self, _):
         return retro_disk_control_callback(
@@ -71,12 +58,12 @@ class retro_disk_control_ext_callback(retro_disk_control_callback):
         set_initial_image: retro_set_initial_image_t | None
         get_image_path: retro_get_image_path_t | None
         get_image_label: retro_get_image_label_t | None
-    else:
-        _fields_ = [
-            ("set_initial_image", retro_set_initial_image_t),
-            ("get_image_path", retro_get_image_path_t),
-            ("get_image_label", retro_get_image_label_t),
-        ]
+
+    _fields_ = [
+        ("set_initial_image", retro_set_initial_image_t),
+        ("get_image_path", retro_get_image_path_t),
+        ("get_image_label", retro_get_image_label_t),
+    ]
 
     @override
     def __deepcopy__(self, _):

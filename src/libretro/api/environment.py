@@ -1,6 +1,5 @@
-from ctypes import CFUNCTYPE, c_bool, c_uint, c_void_p
+from ctypes import c_bool, c_uint, c_void_p
 from enum import IntEnum, unique
-from typing import TYPE_CHECKING
 
 RETRO_ENVIRONMENT_EXPERIMENTAL = 0x10000
 RETRO_ENVIRONMENT_PRIVATE = 0x20000
@@ -177,12 +176,9 @@ class EnvironmentCall(IntEnum):
     GET_FILE_BROWSER_START_DIRECTORY = RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
 
 
-if TYPE_CHECKING:
-    from libretro.typing import FrontendFunctionPointer, c_void_p
+from libretro.typing import FrontendFunctionPointer, c_void_p
 
-    retro_environment_t = FrontendFunctionPointer[c_bool, [c_uint, c_void_p]]
-else:
-    retro_environment_t = CFUNCTYPE(c_bool, c_uint, c_void_p)
+retro_environment_t = FrontendFunctionPointer[c_bool, [c_uint, c_void_p]]
 
 
 __all__ = [

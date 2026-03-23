@@ -1,6 +1,5 @@
 from copy import deepcopy
 from ctypes import (
-    CFUNCTYPE,
     POINTER,
     Structure,
     c_bool,
@@ -11,7 +10,6 @@ from ctypes import (
     c_uint,
     c_uint32,
     c_uint64,
-    c_void_p,
     pointer,
 )
 from dataclasses import dataclass
@@ -19,7 +17,9 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import TYPE_CHECKING, Literal
 
-from ._utils import MemoDict
+from libretro.typing import FrontendFunctionPointer, Pointer
+
+from ._utils import MemoDict, c_buffer
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
@@ -77,62 +77,33 @@ class VfsFileAccess(IntFlag):
                 raise ValueError(f"Invalid VfsFileAccess: {self}")
 
 
-if TYPE_CHECKING:
-    from libretro.typing import FrontendFunctionPointer, Pointer
-
-    retro_vfs_get_path_t = FrontendFunctionPointer[c_char_p, [Pointer[retro_vfs_file_handle]]]
-    retro_vfs_open_t = FrontendFunctionPointer[
-        Pointer[retro_vfs_file_handle], [c_char_p, c_uint, c_uint]
-    ]
-    retro_vfs_close_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
-    retro_vfs_size_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
-    retro_vfs_truncate_t = FrontendFunctionPointer[
-        c_int64, [Pointer[retro_vfs_file_handle], c_int64]
-    ]
-    retro_vfs_tell_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
-    retro_vfs_seek_t = FrontendFunctionPointer[
-        c_int64, [Pointer[retro_vfs_file_handle], c_int64, c_int]
-    ]
-    retro_vfs_read_t = FrontendFunctionPointer[
-        c_int64, [Pointer[retro_vfs_file_handle], c_void_p, c_uint64]
-    ]
-    retro_vfs_write_t = FrontendFunctionPointer[
-        c_int64, [Pointer[retro_vfs_file_handle], c_void_p, c_uint64]
-    ]
-    retro_vfs_flush_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
-    retro_vfs_remove_t = FrontendFunctionPointer[c_int, [c_char_p]]
-    retro_vfs_rename_t = FrontendFunctionPointer[c_int, [c_char_p, c_char_p]]
-    retro_vfs_stat_t = FrontendFunctionPointer[c_int, [c_char_p, Pointer[c_int32]]]
-    retro_vfs_mkdir_t = FrontendFunctionPointer[c_int, [c_char_p]]
-    retro_vfs_opendir_t = FrontendFunctionPointer[
-        Pointer[retro_vfs_dir_handle], [c_char_p, c_bool]
-    ]
-    retro_vfs_readdir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
-    retro_vfs_dirent_get_name_t = FrontendFunctionPointer[
-        c_char_p, [Pointer[retro_vfs_dir_handle]]
-    ]
-    retro_vfs_dirent_is_dir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
-    retro_vfs_closedir_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_dir_handle]]]
-else:
-    retro_vfs_get_path_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_file_handle))
-    retro_vfs_open_t = CFUNCTYPE(POINTER(retro_vfs_file_handle), c_char_p, c_uint, c_uint)
-    retro_vfs_close_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
-    retro_vfs_size_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
-    retro_vfs_truncate_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64)
-    retro_vfs_tell_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle))
-    retro_vfs_seek_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_int64, c_int)
-    retro_vfs_read_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
-    retro_vfs_write_t = CFUNCTYPE(c_int64, POINTER(retro_vfs_file_handle), c_void_p, c_uint64)
-    retro_vfs_flush_t = CFUNCTYPE(c_int, POINTER(retro_vfs_file_handle))
-    retro_vfs_remove_t = CFUNCTYPE(c_int, c_char_p)
-    retro_vfs_rename_t = CFUNCTYPE(c_int, c_char_p, c_char_p)
-    retro_vfs_stat_t = CFUNCTYPE(c_int, c_char_p, POINTER(c_int32))
-    retro_vfs_mkdir_t = CFUNCTYPE(c_int, c_char_p)
-    retro_vfs_opendir_t = CFUNCTYPE(POINTER(retro_vfs_dir_handle), c_char_p, c_bool)
-    retro_vfs_readdir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
-    retro_vfs_dirent_get_name_t = CFUNCTYPE(c_char_p, POINTER(retro_vfs_dir_handle))
-    retro_vfs_dirent_is_dir_t = CFUNCTYPE(c_bool, POINTER(retro_vfs_dir_handle))
-    retro_vfs_closedir_t = CFUNCTYPE(c_int, POINTER(retro_vfs_dir_handle))
+retro_vfs_get_path_t = FrontendFunctionPointer[c_char_p, [Pointer[retro_vfs_file_handle]]]
+retro_vfs_open_t = FrontendFunctionPointer[
+    Pointer[retro_vfs_file_handle], [c_char_p, c_uint, c_uint]
+]
+retro_vfs_close_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
+retro_vfs_size_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
+retro_vfs_truncate_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle], c_int64]]
+retro_vfs_tell_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
+retro_vfs_seek_t = FrontendFunctionPointer[
+    c_int64, [Pointer[retro_vfs_file_handle], c_int64, c_int]
+]
+retro_vfs_read_t = FrontendFunctionPointer[
+    c_int64, [Pointer[retro_vfs_file_handle], c_buffer, c_uint64]
+]
+retro_vfs_write_t = FrontendFunctionPointer[
+    c_int64, [Pointer[retro_vfs_file_handle], c_buffer, c_uint64]
+]
+retro_vfs_flush_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
+retro_vfs_remove_t = FrontendFunctionPointer[c_int, [c_char_p]]
+retro_vfs_rename_t = FrontendFunctionPointer[c_int, [c_char_p, c_char_p]]
+retro_vfs_stat_t = FrontendFunctionPointer[c_int, [c_char_p, Pointer[c_int32]]]
+retro_vfs_mkdir_t = FrontendFunctionPointer[c_int, [c_char_p]]
+retro_vfs_opendir_t = FrontendFunctionPointer[Pointer[retro_vfs_dir_handle], [c_char_p, c_bool]]
+retro_vfs_readdir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
+retro_vfs_dirent_get_name_t = FrontendFunctionPointer[c_char_p, [Pointer[retro_vfs_dir_handle]]]
+retro_vfs_dirent_is_dir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
+retro_vfs_closedir_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_dir_handle]]]
 
 
 @dataclass(init=False, slots=True)
@@ -157,28 +128,28 @@ class retro_vfs_interface(Structure):
         dirent_get_name: retro_vfs_dirent_get_name_t | None
         dirent_is_dir: retro_vfs_dirent_is_dir_t | None
         closedir: retro_vfs_closedir_t | None
-    else:
-        _fields_ = [
-            ("get_path", retro_vfs_get_path_t),
-            ("open", retro_vfs_open_t),
-            ("close", retro_vfs_close_t),
-            ("size", retro_vfs_size_t),
-            ("tell", retro_vfs_tell_t),
-            ("seek", retro_vfs_seek_t),
-            ("read", retro_vfs_read_t),
-            ("write", retro_vfs_write_t),
-            ("flush", retro_vfs_flush_t),
-            ("remove", retro_vfs_remove_t),
-            ("rename", retro_vfs_rename_t),
-            ("truncate", retro_vfs_truncate_t),
-            ("stat", retro_vfs_stat_t),
-            ("mkdir", retro_vfs_mkdir_t),
-            ("opendir", retro_vfs_opendir_t),
-            ("readdir", retro_vfs_readdir_t),
-            ("dirent_get_name", retro_vfs_dirent_get_name_t),
-            ("dirent_is_dir", retro_vfs_dirent_is_dir_t),
-            ("closedir", retro_vfs_closedir_t),
-        ]
+
+    _fields_ = [
+        ("get_path", retro_vfs_get_path_t),
+        ("open", retro_vfs_open_t),
+        ("close", retro_vfs_close_t),
+        ("size", retro_vfs_size_t),
+        ("tell", retro_vfs_tell_t),
+        ("seek", retro_vfs_seek_t),
+        ("read", retro_vfs_read_t),
+        ("write", retro_vfs_write_t),
+        ("flush", retro_vfs_flush_t),
+        ("remove", retro_vfs_remove_t),
+        ("rename", retro_vfs_rename_t),
+        ("truncate", retro_vfs_truncate_t),
+        ("stat", retro_vfs_stat_t),
+        ("mkdir", retro_vfs_mkdir_t),
+        ("opendir", retro_vfs_opendir_t),
+        ("readdir", retro_vfs_readdir_t),
+        ("dirent_get_name", retro_vfs_dirent_get_name_t),
+        ("dirent_is_dir", retro_vfs_dirent_is_dir_t),
+        ("closedir", retro_vfs_closedir_t),
+    ]
 
     def __deepcopy__(self, _):
         return retro_vfs_interface(
@@ -209,11 +180,11 @@ class retro_vfs_interface_info(Structure):
     if TYPE_CHECKING:
         required_interface_version: int
         iface: Pointer[retro_vfs_interface] | None
-    else:
-        _fields_ = [
-            ("required_interface_version", c_uint32),
-            ("iface", POINTER(retro_vfs_interface)),
-        ]
+
+    _fields_ = [
+        ("required_interface_version", c_uint32),
+        ("iface", POINTER(retro_vfs_interface)),
+    ]
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_vfs_interface_info(

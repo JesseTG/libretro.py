@@ -39,14 +39,14 @@ class retro_game_geometry(Structure):
         max_width: int
         max_height: int
         aspect_ratio: float
-    else:
-        _fields_ = [
-            ("base_width", c_uint),
-            ("base_height", c_uint),
-            ("max_width", c_uint),
-            ("max_height", c_uint),
-            ("aspect_ratio", c_float),
-        ]
+
+    _fields_ = [
+        ("base_width", c_uint),
+        ("base_height", c_uint),
+        ("max_width", c_uint),
+        ("max_height", c_uint),
+        ("aspect_ratio", c_float),
+    ]
 
     def __deepcopy__(self, _):
         return retro_game_geometry(
@@ -71,11 +71,11 @@ class retro_system_timing(Structure):
     if TYPE_CHECKING:
         fps: float
         sample_rate: float
-    else:
-        _fields_ = [
-            ("fps", c_double),
-            ("sample_rate", c_double),
-        ]
+
+    _fields_ = [
+        ("fps", c_double),
+        ("sample_rate", c_double),
+    ]
 
     def __deepcopy__(self, _):
         return retro_system_timing(self.fps, self.sample_rate)
@@ -86,11 +86,11 @@ class retro_system_av_info(Structure):
     if TYPE_CHECKING:
         geometry: retro_game_geometry
         timing: retro_system_timing
-    else:
-        _fields_ = [
-            ("geometry", retro_game_geometry),
-            ("timing", retro_system_timing),
-        ]
+
+    _fields_ = [
+        ("geometry", retro_game_geometry),
+        ("timing", retro_system_timing),
+    ]
 
     def __deepcopy__(self, _):
         return retro_system_av_info(self.geometry, self.timing)

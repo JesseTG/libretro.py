@@ -17,11 +17,11 @@ class retro_hw_render_context_negotiation_interface(Structure):
     if TYPE_CHECKING:
         interface_type: ContextNegotiationInterfaceType
         interface_version: int
-    else:
-        _fields_ = [
-            ("interface_type", retro_hw_render_context_negotiation_interface_type),
-            ("interface_version", c_uint),
-        ]
+
+    _fields_ = [
+        ("interface_type", retro_hw_render_context_negotiation_interface_type),
+        ("interface_version", c_uint),
+    ]
 
 
 __all__ = [

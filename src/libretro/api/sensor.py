@@ -1,7 +1,9 @@
-from ctypes import CFUNCTYPE, Structure, c_bool, c_float, c_int, c_uint
+from ctypes import Structure, c_bool, c_float, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
+
+from libretro.typing import FrontendFunctionPointer
 
 retro_sensor_action = c_int
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0
@@ -20,16 +22,9 @@ RETRO_SENSOR_GYROSCOPE_Y = 4
 RETRO_SENSOR_GYROSCOPE_Z = 5
 RETRO_SENSOR_ILLUMINANCE = 6
 
-if TYPE_CHECKING:
-    from libretro.typing import FrontendFunctionPointer
 
-    retro_set_sensor_state_t = FrontendFunctionPointer[
-        c_bool, [c_uint, retro_sensor_action, c_uint]
-    ]
-    retro_sensor_get_input_t = FrontendFunctionPointer[c_float, [c_uint, c_uint]]
-else:
-    retro_set_sensor_state_t = CFUNCTYPE(c_bool, c_uint, retro_sensor_action, c_uint)
-    retro_sensor_get_input_t = CFUNCTYPE(c_float, c_uint, c_uint)
+retro_set_sensor_state_t = FrontendFunctionPointer[c_bool, [c_uint, retro_sensor_action, c_uint]]
+retro_sensor_get_input_t = FrontendFunctionPointer[c_float, [c_uint, c_uint]]
 
 
 @dataclass(init=False)
@@ -37,11 +32,11 @@ class retro_sensor_interface(Structure):
     if TYPE_CHECKING:
         set_sensor_state: retro_set_sensor_state_t | None
         get_sensor_input: retro_sensor_get_input_t | None
-    else:
-        _fields_ = [
-            ("set_sensor_state", retro_set_sensor_state_t),
-            ("get_sensor_input", retro_sensor_get_input_t),
-        ]
+
+    _fields_ = [
+        ("set_sensor_state", retro_set_sensor_state_t),
+        ("get_sensor_input", retro_sensor_get_input_t),
+    ]
 
     def __deepcopy__(self, _):
         return retro_sensor_interface(self.set_sensor_state, self.get_sensor_input)

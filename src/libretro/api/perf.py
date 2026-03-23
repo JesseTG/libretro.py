@@ -1,7 +1,9 @@
-from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_char_p, c_int64, c_uint64
+from ctypes import Structure, c_bool, c_char_p, c_int64, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
+
+from libretro.typing import FrontendFunctionPointer, Pointer
 
 RETRO_SIMD_SSE = 1 << 0
 RETRO_SIMD_SSE2 = 1 << 1
@@ -64,14 +66,14 @@ class retro_perf_counter(Structure):
         total: int
         call_cnt: int
         registered: bool
-    else:
-        _fields_ = [
-            ("ident", c_char_p),
-            ("start", retro_perf_tick_t),
-            ("total", retro_perf_tick_t),
-            ("call_cnt", retro_perf_tick_t),
-            ("registered", c_bool),
-        ]
+
+    _fields_ = [
+        ("ident", c_char_p),
+        ("start", retro_perf_tick_t),
+        ("total", retro_perf_tick_t),
+        ("call_cnt", retro_perf_tick_t),
+        ("registered", c_bool),
+    ]
 
     def __deepcopy__(self, _):
         return retro_perf_counter(
@@ -83,24 +85,13 @@ class retro_perf_counter(Structure):
         )
 
 
-if TYPE_CHECKING:
-    from libretro.typing import FrontendFunctionPointer, Pointer
-
-    retro_perf_get_time_usec_t = FrontendFunctionPointer[retro_time_t, []]
-    retro_perf_get_counter_t = FrontendFunctionPointer[retro_perf_tick_t, []]
-    retro_get_cpu_features_t = FrontendFunctionPointer[c_uint64, []]
-    retro_perf_log_t = FrontendFunctionPointer[None, []]
-    retro_perf_register_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
-    retro_perf_start_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
-    retro_perf_stop_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
-else:
-    retro_perf_get_time_usec_t = CFUNCTYPE(retro_time_t)
-    retro_perf_get_counter_t = CFUNCTYPE(retro_perf_tick_t)
-    retro_get_cpu_features_t = CFUNCTYPE(c_uint64)
-    retro_perf_log_t = CFUNCTYPE(None)
-    retro_perf_register_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
-    retro_perf_start_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
-    retro_perf_stop_t = CFUNCTYPE(None, POINTER(retro_perf_counter))
+retro_perf_get_time_usec_t = FrontendFunctionPointer[retro_time_t, []]
+retro_perf_get_counter_t = FrontendFunctionPointer[retro_perf_tick_t, []]
+retro_get_cpu_features_t = FrontendFunctionPointer[c_uint64, []]
+retro_perf_log_t = FrontendFunctionPointer[None, []]
+retro_perf_register_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
+retro_perf_start_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
+retro_perf_stop_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
 
 
 @dataclass(init=False, slots=True)
@@ -113,16 +104,16 @@ class retro_perf_callback(Structure):
         perf_start: retro_perf_start_t | None
         perf_stop: retro_perf_stop_t | None
         perf_log: retro_perf_log_t | None
-    else:
-        _fields_ = [
-            ("get_time_usec", retro_perf_get_time_usec_t),
-            ("get_cpu_features", retro_get_cpu_features_t),
-            ("get_perf_counter", retro_perf_get_counter_t),
-            ("perf_register", retro_perf_register_t),
-            ("perf_start", retro_perf_start_t),
-            ("perf_stop", retro_perf_stop_t),
-            ("perf_log", retro_perf_log_t),
-        ]
+
+    _fields_ = [
+        ("get_time_usec", retro_perf_get_time_usec_t),
+        ("get_cpu_features", retro_get_cpu_features_t),
+        ("get_perf_counter", retro_perf_get_counter_t),
+        ("perf_register", retro_perf_register_t),
+        ("perf_start", retro_perf_start_t),
+        ("perf_stop", retro_perf_stop_t),
+        ("perf_log", retro_perf_log_t),
+    ]
 
     def __deepcopy__(self, _):
         return retro_perf_callback(

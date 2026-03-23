@@ -1,6 +1,4 @@
 from ctypes import (
-    CFUNCTYPE,
-    POINTER,
     Structure,
     c_bool,
     c_float,
@@ -14,31 +12,21 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING
 
+from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, Pointer
+
 retro_camera_buffer = c_int
 RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0
 RETRO_CAMERA_BUFFER_RAW_FRAMEBUFFER = RETRO_CAMERA_BUFFER_OPENGL_TEXTURE + 1
 RETRO_CAMERA_BUFFER_DUMMY = 0x7FFFFFFF
 
-if TYPE_CHECKING:
-    from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, Pointer
 
-    retro_camera_start_t = FrontendFunctionPointer[c_bool, []]
-    retro_camera_stop_t = FrontendFunctionPointer[None, []]
-    retro_camera_lifetime_status_t = CoreFunctionPointer[None, []]
-    retro_camera_frame_raw_framebuffer_t = CoreFunctionPointer[
-        None, [Pointer[c_uint32], c_uint, c_uint, c_size_t]
-    ]
-    retro_camera_frame_opengl_texture_t = CoreFunctionPointer[
-        None, [c_uint, c_uint, Pointer[c_float]]
-    ]
-else:
-    retro_camera_start_t = CFUNCTYPE(c_bool)
-    retro_camera_stop_t = CFUNCTYPE(None)
-    retro_camera_lifetime_status_t = CFUNCTYPE(None)
-    retro_camera_frame_raw_framebuffer_t = CFUNCTYPE(
-        None, POINTER(c_uint32), c_uint, c_uint, c_size_t
-    )
-    retro_camera_frame_opengl_texture_t = CFUNCTYPE(None, c_uint, c_uint, POINTER(c_float))
+retro_camera_start_t = FrontendFunctionPointer[c_bool, []]
+retro_camera_stop_t = FrontendFunctionPointer[None, []]
+retro_camera_lifetime_status_t = CoreFunctionPointer[None, []]
+retro_camera_frame_raw_framebuffer_t = CoreFunctionPointer[
+    None, [Pointer[c_uint32], c_uint, c_uint, c_size_t]
+]
+retro_camera_frame_opengl_texture_t = CoreFunctionPointer[None, [c_uint, c_uint, Pointer[c_float]]]
 
 
 class CameraCapabilities(IntEnum):
@@ -66,18 +54,18 @@ class retro_camera_callback(Structure):
         frame_opengl_texture: retro_camera_frame_opengl_texture_t | None
         initialized: retro_camera_lifetime_status_t | None
         deinitialized: retro_camera_lifetime_status_t | None
-    else:
-        _fields_ = [
-            ("caps", c_uint64),
-            ("width", c_uint),
-            ("height", c_uint),
-            ("start", retro_camera_start_t),
-            ("stop", retro_camera_stop_t),
-            ("frame_raw_framebuffer", retro_camera_frame_raw_framebuffer_t),
-            ("frame_opengl_texture", retro_camera_frame_opengl_texture_t),
-            ("initialized", retro_camera_lifetime_status_t),
-            ("deinitialized", retro_camera_lifetime_status_t),
-        ]
+
+    _fields_ = [
+        ("caps", c_uint64),
+        ("width", c_uint),
+        ("height", c_uint),
+        ("start", retro_camera_start_t),
+        ("stop", retro_camera_stop_t),
+        ("frame_raw_framebuffer", retro_camera_frame_raw_framebuffer_t),
+        ("frame_opengl_texture", retro_camera_frame_opengl_texture_t),
+        ("initialized", retro_camera_lifetime_status_t),
+        ("deinitialized", retro_camera_lifetime_status_t),
+    ]
 
     def __deepcopy__(self, _):
         return retro_camera_callback(

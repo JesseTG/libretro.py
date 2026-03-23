@@ -28,12 +28,12 @@ class retro_device_power(Structure):
         state: PowerState
         seconds: int
         percent: int
-    else:
-        _fields_ = [
-            ("state", retro_power_state),
-            ("seconds", c_int),
-            ("percent", c_int8),
-        ]
+
+    _fields_ = [
+        ("state", retro_power_state),
+        ("seconds", c_int),
+        ("percent", c_int8),
+    ]
 
     def __deepcopy__(self, _):
         return retro_device_power(state=self.state, seconds=self.seconds, percent=self.percent)

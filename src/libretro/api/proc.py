@@ -1,23 +1,19 @@
-from ctypes import CFUNCTYPE, Structure, c_char_p
+from ctypes import Structure
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from libretro.typing import ConvertibleToString, CoreFunctionPointer
+from libretro.typing import ConvertibleToString, CoreFunctionPointer
 
-    retro_proc_address_t = CoreFunctionPointer[None, []]
-    retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [ConvertibleToString]]
-else:
-    retro_proc_address_t = CFUNCTYPE(None)
-    retro_get_proc_address_t = CFUNCTYPE(retro_proc_address_t, c_char_p)
+retro_proc_address_t = CoreFunctionPointer[None, []]
+retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [ConvertibleToString]]
 
 
 @dataclass(init=False, slots=True)
 class retro_get_proc_address_interface(Structure):
     if TYPE_CHECKING:
         get_proc_address: retro_get_proc_address_t | None
-    else:
-        _fields_ = [("get_proc_address", retro_get_proc_address_t)]
+
+    _fields_ = [("get_proc_address", retro_get_proc_address_t)]
 
     def __call__(self, sym: str | bytes) -> retro_proc_address_t:
         if not self.get_proc_address:

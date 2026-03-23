@@ -1,41 +1,35 @@
-from ctypes import CFUNCTYPE, POINTER, Structure, c_bool, c_int16, c_size_t, c_uint
+from ctypes import Structure, c_int16, c_size_t, c_uint
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from libretro.typing import (
-        CoreFunctionPointer,
-        FrontendFunctionPointer,
-        Pointer,
-        to_c_bool,
-        to_c_uint,
-    )
+from libretro.typing import (
+    ConvertibleToBool,
+    ConvertibleToInteger,
+    CoreFunctionPointer,
+    FrontendFunctionPointer,
+    Pointer,
+)
 
-    retro_audio_sample_t = FrontendFunctionPointer[None, [c_int16, c_int16]]
-    retro_audio_sample_batch_t = FrontendFunctionPointer[int, [Pointer[c_int16], c_size_t]]
-    retro_audio_callback_t = CoreFunctionPointer[None, []]
-    retro_audio_set_state_callback_t = CoreFunctionPointer[None, [to_c_bool]]
-    retro_audio_buffer_status_callback_t = CoreFunctionPointer[
-        None, [to_c_bool, to_c_uint, to_c_bool]
-    ]
-else:
-    retro_audio_sample_t = CFUNCTYPE(None, c_int16, c_int16)
-    retro_audio_sample_batch_t = CFUNCTYPE(c_size_t, POINTER(c_int16), c_size_t)
-    retro_audio_callback_t = CFUNCTYPE(None)
-    retro_audio_set_state_callback_t = CFUNCTYPE(None, c_bool)
-    retro_audio_buffer_status_callback_t = CFUNCTYPE(None, c_bool, c_uint, c_bool)
+retro_audio_sample_t = FrontendFunctionPointer[None, [c_int16, c_int16]]
+retro_audio_sample_batch_t = FrontendFunctionPointer[int, [Pointer[c_int16], c_size_t]]
+retro_audio_callback_t = CoreFunctionPointer[None, []]
+retro_audio_set_state_callback_t = CoreFunctionPointer[None, [ConvertibleToBool]]
+retro_audio_buffer_status_callback_t = CoreFunctionPointer[
+    None, [ConvertibleToBool, ConvertibleToInteger[c_uint], ConvertibleToBool]
+]
 
 
 @dataclass(init=False)
 class retro_audio_callback(Structure):
+
     if TYPE_CHECKING:
         callback: retro_audio_callback_t | None
         set_state: retro_audio_set_state_callback_t | None
-    else:
-        _fields_ = [
-            ("callback", retro_audio_callback_t),
-            ("set_state", retro_audio_set_state_callback_t),
-        ]
+
+    _fields_ = [
+        ("callback", retro_audio_callback_t),
+        ("set_state", retro_audio_set_state_callback_t),
+    ]
 
     def __deepcopy__(self, _):
         """
@@ -49,8 +43,8 @@ class retro_audio_callback(Structure):
 class retro_audio_buffer_status_callback(Structure):
     if TYPE_CHECKING:
         callback: retro_audio_buffer_status_callback_t | None
-    else:
-        _fields_ = [("callback", retro_audio_buffer_status_callback_t)]
+
+    _fields_ = [("callback", retro_audio_buffer_status_callback_t)]
 
     def __call__(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         """

@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING, overload
 
-if TYPE_CHECKING:
-    from libretro.typing import StructurePointer
+from libretro.typing import StructurePointer
 
 from ._utils import MemoDict, deepcopy_array
 
@@ -46,17 +45,17 @@ class retro_memory_descriptor(Structure):
         disconnect: int
         len: int
         addrspace: bytes | None
-    else:
-        _fields_ = [
-            ("flags", c_uint64),
-            ("ptr", c_void_p),
-            ("offset", c_size_t),
-            ("start", c_size_t),
-            ("select", c_size_t),
-            ("disconnect", c_size_t),
-            ("len", c_size_t),
-            ("addrspace", c_char_p),
-        ]
+
+    _fields_ = [
+        ("flags", c_uint64),
+        ("ptr", c_void_p),
+        ("offset", c_size_t),
+        ("start", c_size_t),
+        ("select", c_size_t),
+        ("disconnect", c_size_t),
+        ("len", c_size_t),
+        ("addrspace", c_char_p),
+    ]
 
     def __deepcopy__(self, _):
         return retro_memory_descriptor(
@@ -79,11 +78,11 @@ class retro_memory_map(Structure):
     if TYPE_CHECKING:
         descriptors: StructurePointer[retro_memory_descriptor] | None
         num_descriptors: int
-    else:
-        _fields_ = [
-            ("descriptors", POINTER(retro_memory_descriptor)),
-            ("num_descriptors", c_uint),
-        ]
+
+    _fields_ = [
+        ("descriptors", POINTER(retro_memory_descriptor)),
+        ("num_descriptors", c_uint),
+    ]
 
     def __len__(self):
         return self.num_descriptors
