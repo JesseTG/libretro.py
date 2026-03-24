@@ -8,6 +8,7 @@ from enum import Enum
 from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
+from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
     HardwareContext,
     MemoryAccess,
@@ -238,7 +239,7 @@ class VideoDriver(Protocol):
         ...
 
     @abstractmethod
-    def get_proc_address(self, sym: bytes) -> int | None:
+    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         """
         Returns the address of the graphics API function with the given name.
 

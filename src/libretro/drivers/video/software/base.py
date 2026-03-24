@@ -3,6 +3,7 @@ from collections.abc import Set
 from typing import final
 
 from libretro._typing import override
+from libretro.api import retro_proc_address_t
 from libretro.api.video.context import HardwareContext, retro_hw_render_callback
 from libretro.api.video.render import retro_hw_render_interface
 
@@ -75,7 +76,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
 
     @override
     @final
-    def get_proc_address(self, sym: bytes) -> int | None:
+    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         """
         :return: ``None``, as software-rendered drivers don't have any hardware functions to call.
         """
