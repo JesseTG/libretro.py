@@ -1,6 +1,6 @@
 from collections.abc import Callable, Iterable, Iterator
 from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]
-from typing import TYPE_CHECKING, Any, Protocol, Self, overload, override
+from typing import TYPE_CHECKING, Protocol, Self, overload, override
 
 if TYPE_CHECKING:
     from _ctypes import _CDataType
@@ -33,33 +33,6 @@ type CUint = (
 )
 CReal = c_float | c_double | c_longdouble
 CNumber = CInt | CUint | CReal
-to_c_bool = c_bool | bool | Any
-"""
-Type for a boolean argument to a function intended to be called from the frontend.
-"""
-
-to_c_int16 = c_int16 | int
-to_c_int64 = c_int64 | int
-to_c_uint = c_uint | int
-from_c_bool = bool
-from_c_size_t = int
-c_int_arg = c_int | int
-c_int16_arg = c_int16 | int
-c_int64_arg = c_int64 | int
-c_size_t_arg = c_size_t | int
-c_uint_arg = c_uint | int
-c_uint8_arg = c_uint8 | int
-c_uint32_arg = c_uint32 | int
-c_uint64_arg = c_uint64 | int
-c_str_arg = c_char_p | bytes
-type CIntArg[I: CInt | CUint] = I | int
-type CSignedIntArg[I: CInt] = I | int
-type CUnsignedIntArg[I: CUint] = I | int
-type CRealArg[R: CReal] = R | float
-type CBoolArg = bool | c_bool | Any
-type CBufferArg[T: _CDataType] = _Pointer[T] | memoryview | bytes
-type CPointerArg[T: _CDataType] = _Pointer[T] | None
-type CNullableBufferArg[T: _CDataType] = CBufferArg[T] | None
 
 
 class AsParameter[T: _CDataType](Protocol):
@@ -116,12 +89,6 @@ if TYPE_CHECKING:
 
         @overload
         def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
-
-        def __new__(cls, func: Callable[P, R]) -> Self:
-            """
-            Create a new CoreFunctionPointer from a Python callable.
-            """
-            return super().__new__(cls, func)
 
     class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
         """
