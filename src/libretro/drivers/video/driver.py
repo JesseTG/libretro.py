@@ -185,14 +185,6 @@ class VideoDriver(Protocol):
         """
         ...
 
-    @preferred_context.setter
-    @abstractmethod
-    def preferred_context(self, context: HardwareContext) -> None: ...
-
-    @preferred_context.deleter
-    @abstractmethod
-    def preferred_context(self) -> None: ...
-
     @abstractmethod
     def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
         """
