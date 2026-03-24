@@ -68,7 +68,7 @@ class IterableCameraDriver(CameraDriver):
 
     @frame_raw_framebuffer.setter
     @override
-    def frame_raw_framebuffer(self, value: retro_camera_frame_raw_framebuffer_t) -> None:
+    def frame_raw_framebuffer(self, value: retro_camera_frame_raw_framebuffer_t | None) -> None:
         raise NotImplementedError("Will be implemented later")
 
     @property
@@ -78,7 +78,7 @@ class IterableCameraDriver(CameraDriver):
 
     @frame_opengl_texture.setter
     @override
-    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t) -> None:
+    def frame_opengl_texture(self, value: retro_camera_frame_opengl_texture_t | None) -> None:
         raise NotImplementedError("Will be implemented later")
 
     @property
@@ -88,7 +88,7 @@ class IterableCameraDriver(CameraDriver):
 
     @initialized.setter
     @override
-    def initialized(self, value: retro_camera_lifetime_status_t) -> None:
+    def initialized(self, value: retro_camera_lifetime_status_t | None) -> None:
         raise NotImplementedError("Will be implemented later")
 
     @property
@@ -98,7 +98,7 @@ class IterableCameraDriver(CameraDriver):
 
     @deinitialized.setter
     @override
-    def deinitialized(self, value: retro_camera_lifetime_status_t) -> None:
+    def deinitialized(self, value: retro_camera_lifetime_status_t | None) -> None:
         raise NotImplementedError("Will be implemented later")
 
 
