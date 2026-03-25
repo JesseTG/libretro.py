@@ -5,31 +5,35 @@ from collections.abc import Iterator, Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
-from typing import final
+from typing import TYPE_CHECKING, NamedTuple, cast, final
 
 import moderngl
 from OpenGL import GL
 from OpenGL.error import GLError
 
-try:
+from libretro.api.proc import retro_proc_address_t
+
+if TYPE_CHECKING:
     import moderngl_window
     from moderngl_window.context.base import BaseWindow
+else:
+    try:
+        import moderngl_window
+        from moderngl_window.context.base import BaseWindow
 
-    # These features require moderngl_window,
-    # but I don't want to require that it be installed
-except ImportError:
-    moderngl_window = None
-    BaseWindow = None
+        # These features require moderngl_window,
+        # but I don't want to require that it be installed
+    except ImportError:
+        moderngl_window = None
+        BaseWindow = None
 
 from moderngl import (
     Buffer,
     Context,
     Framebuffer,
-    Program,
-    Query,
     Renderbuffer,
-    Sampler,
     Texture,
+    Uniform,
     VertexArray,
     create_context,
 )
@@ -42,13 +46,16 @@ from libretro.api.video import (
     PixelFormat,
     Rotation,
     retro_framebuffer,
-    retro_hw_get_current_framebuffer_t,
-    retro_hw_get_proc_address_t,
     retro_hw_render_callback,
     retro_hw_render_interface,
 )
 
-from ..driver import FrameBufferSpecial, Screenshot, VideoDriver
+from ..driver import (
+    FrameBufferSpecial,
+    Screenshot,
+    UnsupportedContextError,
+    VideoDriver,
+)
 
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.OPENGL_CORE, HardwareContext.OPENGL))
 
@@ -76,19 +83,16 @@ _DEFAULT_WINDOW_IMPL = "pyglet"
 _IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
 
 GL_RGBA = 0x1908
-ModernGlResource = (
-    Buffer | Program | VertexArray | Query | Sampler | Texture | Renderbuffer | Framebuffer
-)
 
 
 def _create_orthogonal_projection(
-    left,
-    right,
-    bottom,
-    top,
-    near,
-    far,
-) -> array:
+    left: float,
+    right: float,
+    bottom: float,
+    top: float,
+    near: float,
+    far: float,
+) -> array[float]:
     rml = right - left
     tmb = top - bottom
     fmn = far - near
@@ -125,9 +129,9 @@ def _create_orthogonal_projection(
 
 def _get_gl_error() -> int:
     try:
-        return GL.glGetError()
+        return cast(int, GL.glGetError())
     except GLError as e:
-        return e.err
+        return cast(int, e.err)
 
 
 def _extract_gl_errors() -> Iterator[int]:
@@ -170,11 +174,6 @@ def _warn_unhandled_gl_errors():
     if unhandled_errors:
         error_string = ", ".join(_gl_error_str(e) for e in unhandled_errors)
         warnings.warn(f"Core did not handle the following OpenGL errors: {error_string}")
-
-
-def _clear_gl_errors():
-    for i in _extract_gl_errors():
-        pass
 
 
 @final
@@ -230,7 +229,6 @@ class ModernGlVideoDriver(VideoDriver):
 
         self._varyings = tuple(varyings)
         self._callback: retro_hw_render_callback | None = None
-        self._prev_callback: retro_hw_render_callback | None = None
         self._pixel_format = PixelFormat.RGB1555
         self._system_av_info: retro_system_av_info | None = None
         self._shared = False
@@ -238,8 +236,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._shader_program: moderngl.Program | None = None
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
-        self._last_width: int | None = None
-        self._last_height: int | None = None
+        self._last_size: tuple[int, int] | None = None
         self._rotation: Rotation = Rotation.NONE
 
         # Framebuffer, color, and depth attachments for the "default" framebuffer
@@ -258,11 +255,7 @@ class ModernGlVideoDriver(VideoDriver):
         # Texture for CPU-rendered output
         self._cpu_color: Texture | None = None
 
-        self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
-        self._get_hw_framebuffer = retro_hw_get_current_framebuffer_t(
-            lambda: self.current_framebuffer
-        )
-
+        # Objects for the window, if requested
         self._window: BaseWindow | None = None
         self._window_class: type[BaseWindow] | None = None
 
@@ -309,7 +302,7 @@ class ModernGlVideoDriver(VideoDriver):
             del self._context
 
     @override
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(self, callback: retro_hw_render_callback) -> None:
         if callback is None:
             return None
 
@@ -318,16 +311,14 @@ class ModernGlVideoDriver(VideoDriver):
 
         context_type = HardwareContext(callback.context_type)
         if context_type not in _CONTEXTS:
-            return None
+            raise UnsupportedContextError(
+                f"Unsupported hardware context: {context_type} (must be one of: {_CONTEXTS})"
+            )
 
-        self._prev_callback = self._callback
-        self._callback = deepcopy(callback)
-        self._callback.get_current_framebuffer = self._get_hw_framebuffer
-        self._callback.get_proc_address = self._get_proc_address
-        return deepcopy(self._callback)
+        self._callback = deepcopy(self._callback)
 
-    @override
     @property
+    @override
     def current_framebuffer(self) -> int | None:
         if self._hw_render_fbo:
             return self._hw_render_fbo.glo
@@ -335,7 +326,7 @@ class ModernGlVideoDriver(VideoDriver):
         return 0
 
     @override
-    def get_proc_address(self, sym: bytes) -> int | None:
+    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         if not sym:
             return None
 
@@ -347,12 +338,15 @@ class ModernGlVideoDriver(VideoDriver):
         if proc is None:
             return None
 
-        return proc
+        return retro_proc_address_t(proc)
 
     @override
     def refresh(
-        self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+        self, data: memoryview[int] | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
+        if not self._context:
+            raise RuntimeError("OpenGL context not initialized")
+
         _warn_unhandled_gl_errors()
 
         with self._context.debug_scope("libretro.ModernGlVideoDriver.refresh"):
@@ -362,17 +356,42 @@ class ModernGlVideoDriver(VideoDriver):
                     # TODO: Re-render whichever framebuffer was most recently used
                     pass
                 case FrameBufferSpecial.HARDWARE:
+                    assert (
+                        self._color is not None
+                    ), "Color buffer should have been initialized in reinit() by now"
+                    assert (
+                        self._hw_render_fbo is not None
+                    ), "Hardware render FBO should have been initialized in reinit() by now"
+                    assert (
+                        self._hw_render_color is not None
+                    ), "Hardware render color buffer should have been initialized in reinit() by now"
                     self._context.copy_framebuffer(self._color, self._hw_render_fbo)
                     self._hw_render_color.use()
                 case memoryview():
                     self.__update_cpu_texture(data, width, height, pitch)
-                    assert self._cpu_color is not None
+                    assert (
+                        self._cpu_color is not None
+                    ), "CPU-rendered color buffer should have been initialized in reinit() by now"
                     self._cpu_color.use()
 
             self._context.viewport = (0, 0, width, height)
             matrix = _create_orthogonal_projection(-1, 1, 1, -1, -1, 1)
-            self._shader_program["mvp"].write(matrix)
+            assert (
+                self._shader_program is not None
+            ), "Shader program should have been initialized in reinit() by now"
+            mvp_uniform = self._shader_program.get("mvp", None)
 
+            assert isinstance(
+                mvp_uniform, Uniform
+            ), "shader should've been verified to have an 'mvp' uniform in reinit() by now"
+
+            mvp_uniform.write(matrix)
+
+            assert self._fbo is not None, "FBO should have been initialized in reinit() by now"
+            assert (
+                self._color is not None
+            ), "Color buffer should have been initialized in reinit() by now"
+            assert self._vao is not None, "VAO should have been initialized in reinit() by now"
             self._fbo.use()
             self._color.use(1)
 
@@ -387,8 +406,7 @@ class ModernGlVideoDriver(VideoDriver):
                     self._window.swap_buffers()
 
             self._context.finish()
-            self._last_width = width
-            self._last_height = height
+            self._last_size = (width, height)
 
     @property
     @override
@@ -407,14 +425,12 @@ class ModernGlVideoDriver(VideoDriver):
             raise RuntimeError("System AV info not set")
 
         print("Reinitializing ModernGL video driver...")
-        context_type = (
-            HardwareContext(self._callback.context_type)
-            if self._callback
-            else HardwareContext.NONE
-        )
-
-        if context_type not in _CONTEXTS:
-            raise RuntimeError(f"Unsupported hardware context: {context_type}")
+        if self._callback:
+            context_type = HardwareContext(self._callback.context_type)
+            if context_type not in _CONTEXTS:
+                raise RuntimeError(f"Unsupported hardware context: {context_type}")
+        else:
+            context_type = HardwareContext.NONE
 
         # TODO: Honor cache_context; try to avoid reinitializing the context
         if self._context:
@@ -473,6 +489,9 @@ class ModernGlVideoDriver(VideoDriver):
                 moderngl_window.activate_context(self._window)
                 self._context = self._window.ctx
             case HardwareContext.OPENGL_CORE, type() as window_class:
+                assert (
+                    self._callback is not None
+                ), "Should've been set by the core, or else this branch wouldn't have been taken"
                 self._window = window_class(
                     title="libretro.py",
                     gl_version=(self._callback.version_major, self._callback.version_minor),
@@ -490,17 +509,20 @@ class ModernGlVideoDriver(VideoDriver):
             case HardwareContext.OPENGL, None:
                 self._context = create_context(require=210, standalone=True, share=self._shared)
             case HardwareContext.OPENGL_CORE, None:
+                assert (
+                    self._callback is not None
+                ), "Should've been set by the core, or else this branch wouldn't have been taken"
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
         print("Created new context")
         self._context.clear_errors()
         if self._context.version_code >= 430:
-            self._context.enable_direct(GL.GL_DEBUG_OUTPUT)
-            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS)
+            self._context.enable_direct(cast(int, GL.GL_DEBUG_OUTPUT))
+            self._context.enable_direct(cast(int, GL.GL_DEBUG_OUTPUT_SYNCHRONOUS))
         elif "GL_KHR_debug" in self._context.extensions and GL.glPushDebugGroupKHR:
-            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_KHR)
-            self._context.enable_direct(GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
+            self._context.enable_direct(cast(int, GL.GL_DEBUG_OUTPUT_KHR))
+            self._context.enable_direct(cast(int, GL.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR))
             # TODO: Contribute this stuff to moderngl
 
         self._context.clear_errors()
@@ -520,7 +542,14 @@ class ModernGlVideoDriver(VideoDriver):
                 # If we're only using software rendering, or if we want the origin at the top-left...
                 mvp[5] = -1  # ...then flip the screen vertically by negating the Y scale
 
-            self._shader_program["mvp"].write(mvp)
+            mvp_uniform = self._shader_program.get("mvp", None)
+            if not isinstance(mvp_uniform, Uniform):
+                raise RuntimeError(
+                    f"Expected shader program to have an 'mvp' uniform, but it was a {type(mvp_uniform).__name__} or not present at all"
+                )
+
+            mvp_uniform.write(mvp)
+
             self._vbo = self._context.buffer(_VERTEXES)
             self._vao = self._context.vertex_array(
                 self._shader_program, self._vbo, "vertexCoord", "texCoord"
@@ -545,17 +574,19 @@ class ModernGlVideoDriver(VideoDriver):
                         self._callback.context_reset()
                         _warn_unhandled_gl_errors()
 
-    @override
     @property
+    @override
     def supported_contexts(self) -> Set[HardwareContext]:
         return _CONTEXTS
 
-    @override
     @property
+    @override
     def preferred_context(self) -> HardwareContext | None:
         return HardwareContext.OPENGL_CORE
 
-    def active_context(self) -> HardwareContext | None:
+    @property
+    @override
+    def active_context(self) -> HardwareContext:
         if self._context and self._callback:
             return HardwareContext(self._callback.context_type)
 
@@ -639,13 +670,21 @@ class ModernGlVideoDriver(VideoDriver):
         if self._system_av_info is None:
             return None
 
+        if not self._context:
+            return None
+
+        if not self._last_size:
+            return None
+
         self._context.clear_errors()
         with self._context.debug_scope("libretro.ModernGlVideoDriver.screenshot"):
-            size = (self._last_width, self._last_height)
             if self._window:
-                frame = self._window.fbo.read(size, 4)
+                frame = self._window.fbo.read(self._last_size, 4)
             else:
-                frame = self._fbo.read(size, 4)
+                if not self._fbo:
+                    return None
+
+                frame = self._fbo.read(self._last_size, 4)
 
             if frame is None:
                 return None
@@ -653,12 +692,12 @@ class ModernGlVideoDriver(VideoDriver):
             self._context.clear_errors()
             if not self._callback or not self._callback.bottom_left_origin:
                 # If we're using software rendering or the origin is at the bottom-left...
-                bytes_per_row = self._last_width * self._pixel_format.bytes_per_pixel
+                bytes_per_row = self._last_size[0] * self._pixel_format.bytes_per_pixel
                 reversed_frame = array("B", frame)
                 reversed_frame_view = memoryview(reversed_frame)
                 frame_view = memoryview(frame)
                 frame_len = len(frame)
-                for i in range(self._last_height):
+                for i in range(self._last_size[1]):
                     # For each row...
                     start = i * bytes_per_row
                     end = start + bytes_per_row
@@ -671,8 +710,8 @@ class ModernGlVideoDriver(VideoDriver):
 
             return Screenshot(
                 memoryview(frame),
-                self._last_width,
-                self._last_height,
+                self._last_size[0],
+                self._last_size[1],
                 self._rotation,
                 self._pixel_format,
             )
@@ -684,25 +723,30 @@ class ModernGlVideoDriver(VideoDriver):
 
     @shared_context.setter
     @override
-    def shared_context(self, shared: bool) -> None:
-        self._shared = bool(shared)
+    def shared_context(self, value: bool) -> None:
+        self._shared = bool(value)
 
     @property
+    @override
     def can_dupe(self) -> bool:
         return True
 
+    @override
     def get_software_framebuffer(
-        self, width: int, size: int, flags: MemoryAccess
+        self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         # TODO: Map the OpenGL texture to a software framebuffer
         pass
 
     @property
+    @override
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         # libretro doesn't define one of these for OpenGL, so no need
         return None
 
     def __get_framebuffer_size(self) -> tuple[int, int]:
+        assert self._context is not None
+        assert self._system_av_info is not None
         # Equivalent to glGetIntegerv
         max_fbo_size = self._context.info["GL_MAX_TEXTURE_SIZE"]
         max_rb_size = self._context.info["GL_MAX_RENDERBUFFER_SIZE"]
@@ -723,8 +767,8 @@ class ModernGlVideoDriver(VideoDriver):
         return width, height
 
     def __init_fbo(self):
+        assert self._context is not None
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_fbo"):
-            assert self._context is not None
             assert self._system_av_info is not None
 
             del self._fbo
@@ -752,8 +796,8 @@ class ModernGlVideoDriver(VideoDriver):
         self._context.clear_errors()
 
     def __init_hw_render(self):
+        assert self._context is not None
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_hw_render"):
-            assert self._context is not None
             assert self._callback is not None
             assert self._system_av_info is not None
 
@@ -787,7 +831,8 @@ class ModernGlVideoDriver(VideoDriver):
             if self._hw_render_depth:
                 self._hw_render_depth.label = "libretro.py Hardware Rendering FBO Depth Attachment"
 
-    def __update_cpu_texture(self, data: memoryview, width: int, height: int, pitch: int):
+    def __update_cpu_texture(self, data: memoryview[int], width: int, height: int, pitch: int):
+        assert self._context is not None
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__update_cpu_texture"):
             if self._cpu_color and self._cpu_color.size == (width, height):
                 # If we have a texture for CPU-rendered output, and it's the right size...

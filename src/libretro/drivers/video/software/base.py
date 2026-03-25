@@ -1,13 +1,11 @@
 from abc import ABC
 from collections.abc import Set
-from typing import final
+from typing import Literal, final, override
 
-from libretro._typing import override
-from libretro.api import retro_proc_address_t
 from libretro.api.video.context import HardwareContext, retro_hw_render_callback
 from libretro.api.video.render import retro_hw_render_interface
 
-from ..driver import VideoDriver
+from ..driver import UnsupportedContextError, VideoDriver
 
 _EMPTY = frozenset((HardwareContext.NONE,))
 
@@ -23,7 +21,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @property
     @override
     @final
-    def supported_contexts(self) -> Set[HardwareContext]:
+    def supported_contexts(self) -> Set[Literal[HardwareContext.NONE]]:
         """
         :return: A set containing only ``HardwareContext.NONE``.
         """
@@ -32,7 +30,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @property
     @override
     @final
-    def active_context(self) -> HardwareContext:
+    def active_context(self) -> Literal[HardwareContext.NONE]:
         """
         :return: ``HardwareContext.NONE``.
         """
@@ -41,34 +39,24 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @property
     @override
     @final
-    def preferred_context(self) -> HardwareContext | None:
+    def preferred_context(self) -> Literal[HardwareContext.NONE]:
         return HardwareContext.NONE
 
-    @preferred_context.setter
     @override
     @final
-    def preferred_context(self, context: HardwareContext) -> None:
-        if context != HardwareContext.NONE:
-            raise RuntimeError("Software-rendered drivers only support HardwareContext.NONE")
-
-    @preferred_context.deleter
-    @override
-    @final
-    def preferred_context(self) -> None:
-        raise RuntimeError("Software-rendered drivers only support HardwareContext.NONE")
-
-    @override
-    @final
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(self, callback: retro_hw_render_callback) -> None:
         """
-        :return: ``None``, as software-rendered drivers don't need any hardware context.
+        No-op if the context type is ``HardwareContext.NONE``; raises a RuntimeError otherwise.
         """
-        return None
+        if callback.context_type != HardwareContext.NONE:
+            raise UnsupportedContextError(
+                "Software-rendered drivers only support HardwareContext.NONE"
+            )
 
     @property
     @override
     @final
-    def current_framebuffer(self) -> int | None:
+    def current_framebuffer(self) -> None:
         """
         :return: ``None``, as software-rendered drivers don't have a hardware framebuffer.
         """
@@ -76,7 +64,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
 
     @override
     @final
-    def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
+    def get_proc_address(self, sym: bytes) -> None:
         """
         :return: ``None``, as software-rendered drivers don't have any hardware functions to call.
         """
@@ -87,18 +75,6 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def can_dupe(self) -> bool | None:
         return True
-
-    @can_dupe.setter
-    @override
-    @final
-    def can_dupe(self, value: bool) -> None:
-        raise RuntimeError("Software-rendered drivers always support frame duplication")
-
-    @can_dupe.deleter
-    @override
-    @final
-    def can_dupe(self) -> None:
-        raise RuntimeError("Software-rendered drivers always support frame duplication")
 
     @property
     @override
@@ -117,7 +93,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def shared_context(self, value: bool) -> None:
         # Software-rendered drivers don't need any hardware context
-        raise NotImplementedError("Shared context is not supported")
+        raise NotImplementedError("Shared context is not supported by software-rendered drivers")
 
 
 __all__ = ["SoftwareVideoDriver"]

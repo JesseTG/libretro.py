@@ -1,6 +1,7 @@
 import itertools
 from array import array
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import final
 from warnings import warn
 
@@ -12,23 +13,36 @@ from ..driver import FrameBufferSpecial, Screenshot
 from .base import SoftwareVideoDriver
 
 
+@dataclass(frozen=True)
+class FramebufferDimensions:
+    width: int
+    height: int
+    pitch: int
+
+    @property
+    def length(self) -> int:
+        return self.height * self.pitch
+
+
 @final
 class ArrayVideoDriver(SoftwareVideoDriver):
     def __init__(self):
-        self._frame: array | None = None
+        self._frame: array[int] | None = None
         self._pixel_format: PixelFormat = PixelFormat.RGB1555
         self._system_av_info: retro_system_av_info | None = None
         self._rotation: Rotation = Rotation.NONE
-        self._last_width: int | None = None
-        self._last_height: int | None = None
-        self._last_pitch: int | None = None
+        self._frame_dims: FramebufferDimensions | None = None
 
     @override
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
+        requested_size = height * pitch
         match data:
-            case memoryview():
+            case memoryview() if self._frame is None:
+                self._frame = array("B", itertools.repeat(0, requested_size))
+
+            case memoryview() if self._frame:
                 if len(data) > len(self._frame):
                     # Reallocate frame buffer
                     self._frame = array("B", itertools.repeat(0, len(data)))
@@ -46,17 +60,18 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                     f"Expected a memoryview or a FrameBufferSpecial, got {type(data).__name__}"
                 )
 
-        self._last_width = width
-        self._last_height = height
-        self._last_pitch = pitch
+        self._frame_dims = FramebufferDimensions(width=width, height=height, pitch=pitch)
 
-    @override
     @property
+    @override
     def needs_reinit(self) -> bool:
         return self._frame is None
 
     @override
     def reinit(self) -> None:
+        if not self._system_av_info:
+            raise RuntimeError("Cannot reinitialize video driver without system AV info from core")
+
         geometry = self._system_av_info.geometry
         bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
         self._frame = array("B", itertools.repeat(0, bufsize))
@@ -99,12 +114,12 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
     @override
     def screenshot(self, prerotate: bool = True) -> Screenshot | None:
-        if not self._frame:
+        if not (self._frame and self._frame_dims):
             return None
 
-        last_frame_length = self._last_pitch * self._last_height
+        last_frame_length = self._frame_dims.length
         screen = self._frame[:last_frame_length]
-        screen_out = bytearray(self._last_width * self._last_height * 4)
+        screen_out = bytearray(self._frame_dims.width * self._frame_dims.height * 4)
         pixel_buf = array("B", (0, 0, 0, 255))
 
         rot = self._rotation if prerotate else Rotation.NONE
@@ -115,41 +130,41 @@ class ArrayVideoDriver(SoftwareVideoDriver):
             case Rotation.NONE:
                 start_y = 0
                 delta_x = 4
-                delta_y = self._last_width * 4
+                delta_y = self._frame_dims.width * 4
                 is_sideways = False
             case Rotation.NINETY:
-                start_y = (self._last_width - 4) * self._last_height * 4
-                delta_x = self._last_height * -4
+                start_y = (self._frame_dims.width - 4) * self._frame_dims.height * 4
+                delta_x = self._frame_dims.height * -4
                 delta_y = 4
                 is_sideways = True
             case Rotation.ONE_EIGHTY:
-                start_y = self._last_width * self._last_height * 4 - 4
+                start_y = self._frame_dims.width * self._frame_dims.height * 4 - 4
                 delta_x = -4
-                delta_y = self._last_width * -4
+                delta_y = self._frame_dims.width * -4
                 is_sideways = False
             case Rotation.TWO_SEVENTY:
-                start_y = self._last_height * 4 - 4
-                delta_x = self._last_height * 4
+                start_y = self._frame_dims.height * 4 - 4
+                delta_x = self._frame_dims.height * 4
                 delta_y = -4
                 is_sideways = True
 
         # Copy from input buffer to output buffer, converting the pixel format
         #   and taking into account rotation (if prerotate is True).
         if self._pixel_format == PixelFormat.XRGB8888:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
+            for y in range(self._frame_dims.height):
+                i = y * self._frame_dims.pitch
                 o = start_y + y * delta_y
-                for x in range(self._last_width):
+                for _ in range(self._frame_dims.width):
                     next_i = i + 3
                     pixel_buf[2::-1] = screen[i:next_i]
                     screen_out[o : o + 4] = pixel_buf
                     i = next_i + 1
                     o += delta_x
         elif self._pixel_format == PixelFormat.RGB565:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
+            for y in range(self._frame_dims.height):
+                i = y * self._frame_dims.pitch
                 o = start_y + y * delta_y
-                for x in range(self._last_width):
+                for _ in range(self._frame_dims.width):
                     next_i = i + 2
                     b, r = screen[i:next_i]
                     g = ((b & 0xE0) >> 3) | ((r & 0x07) << 5)
@@ -161,10 +176,10 @@ class ArrayVideoDriver(SoftwareVideoDriver):
                     i = next_i
                     o += delta_x
         elif self._pixel_format == PixelFormat.RGB1555:
-            for y in range(self._last_height):
-                i = y * self._last_pitch
+            for y in range(self._frame_dims.height):
+                i = y * self._frame_dims.pitch
                 o = start_y + y * delta_y
-                for x in range(self._last_width):
+                for _ in range(self._frame_dims.width):
                     next_i = i + 2
                     b, g = screen[i:next_i]
                     r = (g & 0x7C) << 1
@@ -181,23 +196,24 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         if is_sideways:
             return Screenshot(
                 memoryview(screen_out),
-                self._last_height,
-                self._last_width,
+                self._frame_dims.height,
+                self._frame_dims.width,
                 self._rotation,
                 self._pixel_format,
             )
         return Screenshot(
             memoryview(screen_out),
-            self._last_width,
-            self._last_height,
+            self._frame_dims.width,
+            self._frame_dims.height,
             self._rotation,
             self._pixel_format,
         )
 
+    @override
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
-        pass
+        pass  # TODO: Implement by returning a pointer to the internal frame buffer, and reinitializing it if the size has changed
 
     @property
     @override
@@ -226,6 +242,9 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     def geometry(self, geometry: retro_game_geometry) -> None:
         if not isinstance(geometry, retro_game_geometry):
             raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
+
+        if not self._system_av_info:
+            raise RuntimeError("Cannot set geometry without system AV info from core")
 
         self._system_av_info.geometry.base_width = geometry.base_width
         self._system_av_info.geometry.base_height = geometry.base_height

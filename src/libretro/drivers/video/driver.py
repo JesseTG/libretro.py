@@ -33,6 +33,14 @@ class Screenshot(NamedTuple):
     pixel_format: PixelFormat
 
 
+class UnsupportedContextError(RuntimeError):
+    """
+    Raised when a core requests a graphics context that a :class:`.VideoDriver` doesn't support.
+    """
+
+    pass
+
+
 @runtime_checkable
 class VideoDriver(Protocol):
     """
@@ -45,7 +53,7 @@ class VideoDriver(Protocol):
 
     @abstractmethod
     def refresh(
-        self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
+        self, data: memoryview[int] | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
         """
         Updates the framebuffer with the given video data.
@@ -186,7 +194,7 @@ class VideoDriver(Protocol):
         ...
 
     @abstractmethod
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(self, callback: retro_hw_render_callback) -> None:
         """
         Requests the use of a particular graphics context,
         including :attr:`.HardwareContext.NONE` to revert to software rendering.
@@ -196,16 +204,19 @@ class VideoDriver(Protocol):
             requested by the core,
             plus callbacks to run at certain points in the context's lifecycle.
 
-        :return: If ``callback`` is accepted,
-          a new :class:`.retro_hw_render_callback` with values and pointers
-          that the core can use to interact with the hardware context.
-          Otherwise, :obj:`None`.
-
         :raises TypeError: If ``callback`` is not a :class:`.retro_hw_render_callback`.
+        :raises UnsupportedContextError: If the driver cannot set the requested context
+            with the requested parameters.
 
         .. note::
 
             Corresponds to ``RETRO_ENVIRONMENT_SET_HW_RENDER``.
+
+        .. note::
+
+            There's no need to set the callbacks;
+            this is done by the :class:`.EnvironmentDriver`.
+
         """
         ...
 
@@ -292,14 +303,6 @@ class VideoDriver(Protocol):
             Corresponds to ``RETRO_ENVIRONMENT_GET_CAN_DUPE``.
         """
         ...
-
-    @can_dupe.setter
-    @abstractmethod
-    def can_dupe(self, value: bool) -> None: ...
-
-    @can_dupe.deleter
-    @abstractmethod
-    def can_dupe(self) -> None: ...
 
     @property
     @abstractmethod
