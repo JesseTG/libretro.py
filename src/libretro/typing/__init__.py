@@ -88,6 +88,8 @@ if TYPE_CHECKING:
         """
 
         @overload
+        def __call__(self, func: Callable[P, R]) -> Self: ...
+        @overload
         def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
     class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
