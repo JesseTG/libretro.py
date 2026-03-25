@@ -202,8 +202,8 @@ else:
     PointerPointer = _PointerPointerDeclaration
     IntPointer = _PointerDeclaration
     FloatPointer = _PointerDeclaration
-    BoolPointer = _PointerDeclaration
-    StringPointer = _PointerDeclaration
+    BoolPointer = POINTER(c_bool)
+    StringPointer = POINTER(c_char_p)
 
 __all__ = (
     "ConvertibleTo",
