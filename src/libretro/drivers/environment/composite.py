@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import (
-    _CFunctionType,
     c_double,
     c_float,
     c_int16,
@@ -10,6 +9,7 @@ from ctypes import (
     c_uint8,
     c_uint64,
     c_void_p,
+    cast,
     memmove,
     pointer,
     sizeof,
@@ -59,6 +59,8 @@ from libretro.api import (
     retro_game_info_ext,
     retro_get_proc_address_interface,
     retro_hw_context_type,
+    retro_hw_get_current_framebuffer_t,
+    retro_hw_get_proc_address_t,
     retro_hw_render_callback,
     retro_hw_render_context_negotiation_interface,
     retro_hw_render_interface,
@@ -102,6 +104,7 @@ from libretro.api._utils import (
     c_buffer,
     deepcopy_array,
     from_zero_terminated,
+    is_zeroed,
     memoryview_at,
 )
 from libretro.api.location import *
@@ -129,11 +132,14 @@ from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
+from libretro.typing import StructurePointerPointer
 
 from .default import DefaultEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
+    from ctypes import _CFunctionType  # type: ignore
+
     from libretro.typing import (
         BoolPointer,
         FloatPointer,
@@ -371,7 +377,9 @@ class CompositeEnvironmentDriver[
                 f"Expected PowerDriver or None, got {type(self._device_power).__qualname__}"
             )
 
+        self._hw_render_callback: retro_hw_render_callback | None = None
         self._rumble_interface: retro_rumble_interface | None = None
+        self._camera_callback: retro_camera_callback | None = None
         self._sensor_interface: retro_sensor_interface | None = None
         self._log_callback: retro_log_callback | None = None
         self._perf_callback: retro_perf_callback | None = None
@@ -416,6 +424,10 @@ class CompositeEnvironmentDriver[
     @property
     def timing(self) -> Timing:
         return self._timing
+
+    @property
+    def rumble(self) -> Rumble:
+        return self._rumble
 
     @override
     def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
@@ -613,14 +625,28 @@ class CompositeEnvironmentDriver[
         if not callback:
             raise ValueError("RETRO_ENVIRONMENT_SET_HW_RENDER doesn't accept NULL")
 
-        context = self._video.set_context(callback[0])
-        if context is None:
-            return False
+        core_callback = callback[0]
+        self._video.set_context(core_callback)
 
-        callback[0] = context
+        if not self._hw_render_callback:
+            self._hw_render_callback = retro_hw_render_callback(
+                get_current_framebuffer=retro_hw_get_current_framebuffer_t(
+                    self._get_current_framebuffer
+                ),
+                get_proc_address=retro_hw_get_proc_address_t(self._get_hw_proc_address),
+            )
+
+        core_callback.get_current_framebuffer = self._hw_render_callback.get_current_framebuffer
+        core_callback.get_proc_address = self._hw_render_callback.get_proc_address
         # Give the core the callbacks that the video driver defines
 
         return True
+
+    def _get_current_framebuffer(self) -> int:
+        return self._video.current_framebuffer or 0
+
+    def _get_hw_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
+        return self._video.get_proc_address(sym)
 
     @property
     def options(self) -> Option:
@@ -805,13 +831,34 @@ class CompositeEnvironmentDriver[
         if not interface:
             raise ValueError("RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE doesn't accept NULL")
 
+        if not self._camera_callback:
+            self._camera_callback = retro_camera_callback(
+                start=self._camera_start,
+                stop=self._camera_stop,
+            )
+
         callback = interface[0]
         self._camera.width = callback.width
         self._camera.height = callback.height
+        self._camera.frame_raw_framebuffer = callback.frame_raw_framebuffer
+        self._camera.frame_opengl_texture = callback.frame_opengl_texture
+        self._camera.initialized = callback.initialized
+        self._camera.deinitialized = callback.deinitialized
 
-        interface[0] = retro_camera_callback.from_param(self._camera)
+        callback.start = self._camera_callback.start
+        callback.stop = self._camera_callback.stop
 
-        return True  # TODO: Implement
+        return True
+
+    def _camera_start(self) -> bool:
+        if self._camera is None:
+            return False
+
+        return self._camera.start()
+
+    def _camera_stop(self) -> None:
+        if self._camera is not None:
+            self._camera.stop()
 
     @property
     def log(self) -> Log:
@@ -1732,7 +1779,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @override
-    def _get_game_info_ext(self, info: StructurePointer[retro_game_info_ext]) -> bool:
+    def _get_game_info_ext(self, info: StructurePointerPointer[retro_game_info_ext]) -> bool:
         if self._content is None:
             return False
 
@@ -1743,7 +1790,14 @@ class CompositeEnvironmentDriver[
         if info_ext is None:
             return False
 
-        info[0] = pointer(info_ext)
+        last_element = info_ext[-1]
+        if not is_zeroed(last_element):
+            raise ValueError(
+                "The last element of game_info_ext must be zeroed out, or else the core may read out-of-bounds memory"
+            )
+
+        info_ptr = cast(pointer(info_ext), StructurePointer[retro_game_info_ext])
+        info[0] = info_ptr
         return True
 
     @override
@@ -1795,12 +1849,18 @@ class CompositeEnvironmentDriver[
         if self._options is None:
             return False
 
-        if variable:
-            var = variable[0]
-            return self._options.set_variable(var.key, var.value)
+        if not variable:
+            # This envcall supports passing NULL to query for support
+            return True
 
-        # This envcall supports passing NULL to query for support
-        return True
+        var = variable[0]
+        if not var.key:
+            raise ValueError("Variable key cannot be empty")
+
+        if not var.value:
+            raise ValueError("Variable value cannot be empty")
+
+        return self._options.set_variable(var.key, var.value)
 
     @override
     def _get_throttle_state(self, state: StructurePointer[retro_throttle_state]) -> bool:
@@ -1870,7 +1930,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def microphones(self) -> Mic:
+    def mic(self) -> Mic:
         return self._mic
 
     @override

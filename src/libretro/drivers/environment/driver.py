@@ -51,15 +51,14 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface_info,
 )
-
-if TYPE_CHECKING:
-    from libretro.typing import (
-        BoolPointer,
-        FloatPointer,
-        IntPointer,
-        StringPointer,
-        StructurePointer,
-    )
+from libretro.typing import (
+    BoolPointer,
+    FloatPointer,
+    IntPointer,
+    StringPointer,
+    StructurePointer,
+    StructurePointerPointer,
+)
 
 
 @runtime_checkable
@@ -297,7 +296,7 @@ class EnvironmentDriver(Protocol):
     ) -> bool:
         return False
 
-    def _get_game_info_ext(self, info: StructurePointer[retro_game_info_ext]) -> bool:
+    def _get_game_info_ext(self, info: StructurePointerPointer[retro_game_info_ext]) -> bool:
         return False
 
     def _set_core_options_v2(self, options: StructurePointer[retro_core_options_v2]) -> bool:

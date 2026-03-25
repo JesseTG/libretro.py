@@ -69,6 +69,15 @@ class _PointerDeclaration:
         return POINTER(arg)
 
 
+class _PointerPointerDeclaration:
+    @classmethod
+    def __class_getitem__(cls, arg: type[_CDataType]):
+        """
+        Allow subscripted PointerPointer types to be used as type annotations.
+        """
+        return POINTER(POINTER(arg))
+
+
 class _CTypeDeclaration:
     @classmethod
     def __class_getitem__(cls, ctype: type[_CDataType]):
@@ -130,6 +139,16 @@ if TYPE_CHECKING:
         def __setitem__(self, key: int, value: ConvertibleTo[T], /) -> None: ...
         def __bool__(self) -> bool: ...
 
+    class StructurePointerPointer[T: Structure](_Pointer[StructurePointer[T]]):
+        @override
+        @overload
+        def __getitem__(self, key: int, /) -> StructurePointer[T]: ...
+        @overload
+        def __getitem__(self, key: slice[StructurePointer[T]], /) -> list[StructurePointer[T]]: ...
+        @override
+        def __setitem__(self, key: int, value: ConvertibleTo[StructurePointer[T]], /) -> None: ...
+        def __bool__(self) -> bool: ...
+
     class IntPointer[T: CInt | CUint](_Pointer[_SimpleCData[int]]):
         @override
         @overload
@@ -180,7 +199,26 @@ else:
     FrontendFunctionPointer = _FunctionPointerDeclaration
     StructureArray = Array
     StructurePointer = _PointerDeclaration
+    PointerPointer = _PointerPointerDeclaration
     IntPointer = _PointerDeclaration
     FloatPointer = _PointerDeclaration
     BoolPointer = _PointerDeclaration
     StringPointer = _PointerDeclaration
+
+__all__ = (
+    "ConvertibleTo",
+    "ConvertibleToBool",
+    "ConvertibleToFloat",
+    "ConvertibleToInteger",
+    "ConvertibleToString",
+    "CoreFunctionPointer",
+    "FrontendFunctionPointer",
+    "Pointer",
+    "StructureArray",
+    "StructurePointer",
+    "StructurePointerPointer",
+    "IntPointer",
+    "FloatPointer",
+    "BoolPointer",
+    "StringPointer",
+)
