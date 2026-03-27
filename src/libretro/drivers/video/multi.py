@@ -24,7 +24,7 @@ from libretro.api.video import (
     retro_hw_render_interface,
 )
 
-from .driver import FrameBufferSpecial, Screenshot, VideoDriver
+from .driver import FrameBufferSpecial, Screenshot, UnsupportedContextError, VideoDriver
 from .software import ArrayVideoDriver
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
@@ -129,6 +129,9 @@ class MultiVideoDriver(VideoDriver):
         Delegates to the active video driver's :meth:`.VideoDriver.refresh` method.
         """
 
+        if self._current is None:
+            raise RuntimeError("No active video driver")
+
         self._current.refresh(data, width, height, pitch)
 
     @property
@@ -163,6 +166,10 @@ class MultiVideoDriver(VideoDriver):
 
             Does not use :attr:`~.VideoDriver.preferred_context`.
         """
+        if self._next_hw_context is None or self._callback is None:
+            # no-op if we haven't gotten a request for a new (or reinitialized) hardware context
+            return
+
         if self._current is not None and self._current.active_context == self._next_hw_context:
             # If we're not switching to a whole new video driver...
             self._current.reinit()  # ...then just let the driver reinit itself
@@ -326,7 +333,12 @@ class MultiVideoDriver(VideoDriver):
     @override
     def system_av_info(self) -> retro_system_av_info:
         if self._current is not None:
-            return self._current.system_av_info
+            system_av_info = self._current.system_av_info
+            if system_av_info is not None:
+                return system_av_info
+
+        if self._system_av_info is None:
+            raise RuntimeError("System AV info not set")
 
         return self._system_av_info
 

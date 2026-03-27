@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from ctypes import c_bool, c_char_p, c_float, c_int16, c_uint, c_uint64, c_void_p
+from ctypes import c_bool, c_char_p, c_float, c_int16, c_uint, c_uint64
 from typing import Protocol, runtime_checkable
 
 from libretro.api import (

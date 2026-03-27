@@ -13,7 +13,6 @@ from ctypes import (
     c_size_t,
     c_ubyte,
     c_uint,
-    c_void_p,
     cast,
     cdll,
 )
