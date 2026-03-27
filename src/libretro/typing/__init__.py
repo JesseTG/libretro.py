@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Buffer, Callable, Iterable
 from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]
 from typing import (
     TYPE_CHECKING,
@@ -8,6 +8,7 @@ from typing import (
     SupportsFloat,
     SupportsInt,
     overload,
+    override,
 )
 
 if TYPE_CHECKING:
@@ -111,6 +112,13 @@ if TYPE_CHECKING:
         def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
     class TypedArray[T: _CDataType](Array[T]):
+        @property
+        @override
+        def raw(self: TypedArray[c_char]) -> bytes: ...
+
+        @raw.setter
+        def raw(self: TypedArray[c_char], value: Buffer) -> None: ...
+
         @overload
         def __init__(self, *args: ConvertibleTo[T]) -> None: ...
 
