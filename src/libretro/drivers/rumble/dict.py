@@ -54,7 +54,7 @@ class DictRumbleDriver(RumbleDriver):
         self._rumble_state: dict[int, RumbleState] = {}
 
     @override
-    def _set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
+    def set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
         self._rumble_state[port] = RumbleState(effect, strength)
         return True
 
