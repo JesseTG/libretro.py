@@ -168,6 +168,7 @@ class MultiVideoDriver(VideoDriver):
             self._current.reinit()  # ...then just let the driver reinit itself
         else:
             # If we're switching to another hardware rendering API...
+
             driver = self._drivers[self._next_hw_context]()
             if not driver:
                 raise RuntimeError(f"Video driver for {self._next_hw_context} not initialized")

@@ -1,3 +1,17 @@
+"""
+This module defines type annotations for ``ctype``'s behavior
+that's documented, but not reflected in its type stubs.
+
+Most of these definitions fall back to standard ``ctypes`` types at runtime;
+this allows them to be used as drop-in replacements for the standard types in function signatures.
+"""
+
+# pyright: reportPrivateUsage=false
+# The types are private but the interfaces are documented, so this is a false positive.
+# pyright: reportNoOverloadImplementation=false
+# The overloads are only for type checking, so they don't need implementations.
+
+
 from collections.abc import Buffer, Callable, Iterable
 from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]
 from typing import (

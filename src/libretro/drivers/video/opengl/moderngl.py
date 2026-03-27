@@ -1,3 +1,8 @@
+# pyright: reportUnknownMemberType=false, reportMissingTypeStubs=false
+# ModernGL's typeshed stubs are very incomplete,
+# and PyOpenGL doesn't have any at all.
+# These two warnings silence a lot of noise.
+
 import struct
 import warnings
 from array import array
@@ -5,7 +10,7 @@ from collections.abc import Iterator, Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
-from typing import TYPE_CHECKING, NamedTuple, cast, final
+from typing import TYPE_CHECKING, cast, final
 
 import moderngl
 from OpenGL import GL

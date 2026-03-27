@@ -11,12 +11,10 @@ from collections.abc import Buffer, Iterator, Sized
 from contextlib import contextmanager
 from copy import deepcopy
 from ctypes import (
-    POINTER,
     Array,
     _Pointer,
     addressof,
     c_char_p,
-    c_double,
     c_int,
     c_ssize_t,
     c_ubyte,
