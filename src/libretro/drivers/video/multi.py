@@ -76,7 +76,7 @@ class MultiVideoDriver(VideoDriver):
         Initializes a new multi-video driver with the preferred :class:`.HardwareContext`.
 
         :param drivers: A map of hardware context types to callables;
-          each callable should accept a ``retro_hw_render_callback``
+          each callable should accept no arguments
           and return a new video driver instance.
           Defaults to :data:`DEFAULT_DRIVER_MAP`.
 
