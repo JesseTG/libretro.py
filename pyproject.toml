@@ -119,21 +119,4 @@ reportUnusedImport = "warning"
 reportUnnecessaryComparison = false
 reportUnknownParameterType = true
 reportMissingParameterType = true
-
-[[tool.pyright.executionEnvironments]]
-# Allow libretro.api to import various ctypes declarations
-# that are normally private, but available to type checkers.
-root = "src/libretro/typing"
-reportPrivateUsage = false
-
-[[tool.pyright.executionEnvironments]]
-# Allow libretro.api to import various ctypes declarations
-# that are normally private, but available to type checkers.
-root = "src/libretro/api"
-reportPrivateUsage = false
-
-[[tool.pyright.executionEnvironments]]
-# Allow libretro.api to import various ctypes declarations
-# that are normally private, but available to type checkers.
-root = "src/libretro/drivers/types.py"
-reportPrivateUsage = false
+reportDeprecated = "warning"
