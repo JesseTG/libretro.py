@@ -26,10 +26,10 @@ _EMPTY = []
 def main(
     libretro: CoreArg,
     subsystem: SubsystemOption = None,
-    content_paths: ContentArg = None,
+    content_paths: ContentArg = (),
     frames: FrameCountOption = 60,
     options: CoreOptionsOption = (),
-    software_video: VideoDriverOption = SoftwareVideoDriverType.DEFAULT,
+    software_video: VideoDriverOption = SoftwareVideoDriverType.DEFAULT,  # type: ignore[assignment]
     windowed: WindowOption = False,
 ):
     """
@@ -44,7 +44,7 @@ def main(
         case None, [path]:
             # No subsystem, single content (most common case)
             content = path
-        case None, None:
+        case None, []:
             # No subsystem, no content (ok if core uses RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME)
             content = None
         case str(subsystem), [*paths]:
@@ -83,6 +83,8 @@ def main(
             driver_map[HardwareContext.NONE] = driver_map[HardwareContext.D3D11]
         case SoftwareVideoDriverType.D3D12:
             driver_map[HardwareContext.NONE] = driver_map[HardwareContext.D3D12]
+        case _:
+            pass
 
     # TODO: Allow a window to be created for the session
 
@@ -94,7 +96,7 @@ def main(
     )
 
     with builder.build() as session:
-        for i in range(frames):
+        for _ in range(frames):
             session.run()
 
 

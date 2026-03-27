@@ -42,7 +42,7 @@ CoreArg = Annotated[
 ]
 
 ContentArg = Annotated[
-    list[Path],
+    tuple[Path, ...],
     Argument(
         exists=True,
         resolve_path=True,
@@ -74,7 +74,7 @@ FrameCountOption = Annotated[
 ]
 
 CoreOptionsOption = Annotated[
-    list[str] | None,
+    tuple[str, ...],
     Option(
         "--option",
         "-O",

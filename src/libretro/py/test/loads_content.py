@@ -8,7 +8,7 @@ from ._common import ContentArg, CoreArg, SubsystemOption
 def main(
     libretro: CoreArg,
     subsystem: SubsystemOption = None,
-    content_paths: ContentArg = None,
+    content_paths: ContentArg | None = None,
 ):
     """
     Loads a libretro core with zero or more content files.
