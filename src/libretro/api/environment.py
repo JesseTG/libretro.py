@@ -176,9 +176,9 @@ class EnvironmentCall(IntEnum):
     GET_FILE_BROWSER_START_DIRECTORY = RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
 
 
-from libretro.typing import FrontendFunctionPointer, c_void_p
+from libretro.typing import FrontendFunctionPointer, c_void_ptr
 
-retro_environment_t = FrontendFunctionPointer[c_bool, [c_uint, c_void_p]]
+retro_environment_t = FrontendFunctionPointer[c_bool, [c_uint, c_void_ptr]]
 
 
 __all__ = [

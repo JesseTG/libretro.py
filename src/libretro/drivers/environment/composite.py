@@ -103,7 +103,6 @@ from libretro.api import (
 )
 from libretro.api._utils import (
     as_bytes,
-    c_buffer,
     deepcopy_array,
     from_zero_terminated,
     is_zeroed,
@@ -134,7 +133,7 @@ from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
-from libretro.typing import TypedPointer
+from libretro.typing import TypedPointer, c_void_ptr
 
 from .default import DefaultEnvironmentDriver
 
@@ -424,7 +423,7 @@ class CompositeEnvironmentDriver[
         return self._rumble
 
     @override
-    def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None:
+    def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
         # Handle the constants and their equivalent ints, just to be safe
         match data:
             case FrameBufferSpecial.DUPE | 0 | None:
@@ -1346,7 +1345,7 @@ class CompositeEnvironmentDriver[
         return self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
 
     def _vfs_read(
-        self, file: TypedPointer[retro_vfs_file_handle], data: c_buffer, size: int
+        self, file: TypedPointer[retro_vfs_file_handle], data: c_void_ptr, size: int
     ) -> int:
         if self._vfs is None or not file or not data or size < 0:
             return -1
@@ -1354,7 +1353,7 @@ class CompositeEnvironmentDriver[
         return self._vfs.read(file[0], memoryview_at(data, size, readonly=False))
 
     def _vfs_write(
-        self, file: TypedPointer[retro_vfs_file_handle], data: c_buffer, size: int
+        self, file: TypedPointer[retro_vfs_file_handle], data: c_void_ptr, size: int
     ) -> int:
         if self._vfs is None or not file or not data or size < 0:
             return -1

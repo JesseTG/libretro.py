@@ -84,6 +84,18 @@ class _CTypeDeclaration:
         return ctype
 
 
+class c_void_ptr(c_void_p):
+    """
+    A trivial subclass of ``c_void_p`` that solely exists to
+    prevent ``ctypes`` from implicitly converting
+    ``void*`` parameters or struct fields to an ``int``.
+
+    Use this in function signatures and struct definitions instead of ``c_void_p``.
+    """
+
+    pass
+
+
 if TYPE_CHECKING:
     type ConvertibleToBool = ConvertibleToPrimitive[c_bool, bool]
     type ConvertibleToInteger[T: CUint | CInt] = ConvertibleToPrimitive[T, int] | SupportsInt

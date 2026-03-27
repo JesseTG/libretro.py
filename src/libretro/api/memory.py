@@ -1,9 +1,9 @@
-from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64, c_void_p
+from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING, overload
 
-from libretro.typing import TypedPointer
+from libretro.typing import TypedPointer, c_void_ptr
 
 from ._utils import MemoDict, deepcopy_array
 
@@ -38,7 +38,7 @@ class MemoryDescriptorFlag(IntFlag):
 class retro_memory_descriptor(Structure):
     if TYPE_CHECKING:
         flags: MemoryDescriptorFlag
-        ptr: int | None
+        ptr: c_void_ptr | None
         offset: int
         start: int
         select: int
@@ -48,7 +48,7 @@ class retro_memory_descriptor(Structure):
 
     _fields_ = [
         ("flags", c_uint64),
-        ("ptr", c_void_p),
+        ("ptr", c_void_ptr),
         ("offset", c_size_t),
         ("start", c_size_t),
         ("select", c_size_t),

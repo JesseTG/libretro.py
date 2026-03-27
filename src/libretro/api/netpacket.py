@@ -1,9 +1,9 @@
-from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16, c_void_p
+from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
 
-from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
+from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, c_void_ptr
 
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = 1 << 0
@@ -13,9 +13,9 @@ RETRO_NETPACKET_BROADCAST = 0xFFFF
 
 
 retro_netpacket_send_t = FrontendFunctionPointer[
-    None, [c_int, c_void_p, c_size_t, c_uint16, c_bool]
+    None, [c_int, c_void_ptr, c_size_t, c_uint16, c_bool]
 ]
-retro_netpacket_receive_t = CoreFunctionPointer[None, [c_void_p, c_size_t, c_uint16]]
+retro_netpacket_receive_t = CoreFunctionPointer[None, [c_void_ptr, c_size_t, c_uint16]]
 retro_netpacket_stop_t = CoreFunctionPointer[None, []]
 retro_netpacket_poll_t = CoreFunctionPointer[None, []]
 retro_netpacket_poll_receive_t = FrontendFunctionPointer[None, []]

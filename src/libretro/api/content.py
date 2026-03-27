@@ -10,7 +10,6 @@ from ctypes import (
     c_size_t,
     c_ubyte,
     c_uint,
-    c_void_p,
 )
 from dataclasses import dataclass
 from os import PathLike
@@ -25,7 +24,7 @@ from libretro.api._utils import (
     deepcopy_buffer,
     mmap_file,
 )
-from libretro.typing import Pointer
+from libretro.typing import Pointer, c_void_ptr
 
 
 @dataclass(init=False, slots=True)
@@ -69,13 +68,13 @@ class retro_system_info(Structure):
 class retro_game_info(Structure):
     if TYPE_CHECKING:
         path: bytes | None
-        data: int | None
+        data: c_void_ptr | None
         size: int
         meta: bytes | None
 
     _fields_ = [
         ("path", c_char_p),
-        ("data", c_void_p),
+        ("data", c_void_ptr),
         ("size", c_size_t),
         ("meta", c_char_p),
     ]
@@ -445,7 +444,7 @@ class retro_game_info_ext(Structure):
         name: bytes | None
         ext: bytes | None
         meta: bytes | None
-        data: int | None
+        data: c_void_ptr | None
         size: int
         file_in_archive: bool
         persistent_data: bool
@@ -458,7 +457,7 @@ class retro_game_info_ext(Structure):
         ("name", c_char_p),
         ("ext", c_char_p),
         ("meta", c_char_p),
-        ("data", c_void_p),
+        ("data", c_void_ptr),
         ("size", c_size_t),
         ("file_in_archive", c_bool),
         ("persistent_data", c_bool),

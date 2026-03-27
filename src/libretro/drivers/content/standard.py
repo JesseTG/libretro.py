@@ -33,7 +33,9 @@ from .driver import (
 
 # TODO: Make this a context manager
 class _PersistentBuffer:
-    def __init__(self, ptr: c_void_p, backing: AbstractContextManager[memoryview[int]] | None):
+    def __init__(
+        self, ptr: c_void_p | None, backing: AbstractContextManager[memoryview[int]] | None
+    ):
         self.ptr = ptr
         self.backing = backing
 
@@ -231,7 +233,7 @@ class StandardContentDriver(ContentDriver):
                 loaded_info_ext = _make_game_info_ext(info)
 
                 if persistent_data:
-                    self._persistent_buffers.add(_PersistentBuffer(c_void_p(info.data), None))
+                    self._persistent_buffers.add(_PersistentBuffer(info.data, None))
 
                 # Give the loaded content to the environment
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
@@ -259,9 +261,7 @@ class StandardContentDriver(ContentDriver):
                 loaded_info_ext = _make_game_info_ext(loaded_info)
 
                 if attributes.persistent_data:
-                    self._persistent_buffers.add(
-                        _PersistentBuffer(c_void_p(loaded_info.data), None)
-                    )
+                    self._persistent_buffers.add(_PersistentBuffer(loaded_info.data, None))
 
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
 
@@ -305,9 +305,7 @@ class StandardContentDriver(ContentDriver):
                 loaded_info_ext = _make_game_info_ext(loaded_info)
 
                 if persistent_data:
-                    self._persistent_buffers.add(
-                        _PersistentBuffer(c_void_p(loaded_info.data), None)
-                    )
+                    self._persistent_buffers.add(_PersistentBuffer(loaded_info.data, None))
 
                 yield LoadedContentFile(loaded_info, loaded_info_ext)
 

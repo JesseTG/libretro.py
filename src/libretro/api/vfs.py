@@ -17,9 +17,9 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import TYPE_CHECKING, Literal
 
-from libretro.typing import FrontendFunctionPointer, Pointer
+from libretro.typing import FrontendFunctionPointer, Pointer, c_void_ptr
 
-from ._utils import MemoDict, c_buffer
+from ._utils import MemoDict
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
@@ -89,10 +89,10 @@ retro_vfs_seek_t = FrontendFunctionPointer[
     c_int64, [Pointer[retro_vfs_file_handle], c_int64, c_int]
 ]
 retro_vfs_read_t = FrontendFunctionPointer[
-    c_int64, [Pointer[retro_vfs_file_handle], c_buffer, c_uint64]
+    c_int64, [Pointer[retro_vfs_file_handle], c_void_ptr, c_uint64]
 ]
 retro_vfs_write_t = FrontendFunctionPointer[
-    c_int64, [Pointer[retro_vfs_file_handle], c_buffer, c_uint64]
+    c_int64, [Pointer[retro_vfs_file_handle], c_void_ptr, c_uint64]
 ]
 retro_vfs_flush_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
 retro_vfs_remove_t = FrontendFunctionPointer[c_int, [c_char_p]]

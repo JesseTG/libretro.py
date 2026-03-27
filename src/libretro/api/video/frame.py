@@ -1,9 +1,9 @@
-from ctypes import Structure, c_int, c_size_t, c_uint, c_void_p
+from ctypes import Structure, c_int, c_size_t, c_uint
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Literal
 
-from libretro.typing import FrontendFunctionPointer
+from libretro.typing import FrontendFunctionPointer, c_void_ptr
 
 retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
@@ -15,7 +15,7 @@ RETRO_MEMORY_ACCESS_READ = 1 << 1
 RETRO_MEMORY_TYPE_CACHED = 1 << 0
 
 
-retro_video_refresh_t = FrontendFunctionPointer[None, [c_void_p, c_uint, c_uint, c_size_t]]
+retro_video_refresh_t = FrontendFunctionPointer[None, [c_void_ptr, c_uint, c_uint, c_size_t]]
 
 
 class PixelFormat(IntEnum):
@@ -74,7 +74,7 @@ class MemoryType(IntFlag):
 @dataclass(init=False)
 class retro_framebuffer(Structure):
     if TYPE_CHECKING:
-        data: int | None
+        data: c_void_ptr | None
         width: int
         height: int
         pitch: int
@@ -83,7 +83,7 @@ class retro_framebuffer(Structure):
         memory_flags: MemoryType
 
     _fields_ = [
-        ("data", c_void_p),
+        ("data", c_void_ptr),
         ("width", c_uint),
         ("height", c_uint),
         ("pitch", c_size_t),

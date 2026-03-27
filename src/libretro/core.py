@@ -35,7 +35,7 @@ from libretro.api import (
     retro_video_refresh_t,
 )
 from libretro.api._utils import memoryview_at
-from libretro.typing import TypedPointer
+from libretro.typing import TypedPointer, c_void_ptr
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
@@ -120,7 +120,7 @@ class CoreInterface(Protocol):
     def get_region(self) -> Region | int: ...
 
     @abstractmethod
-    def get_memory_data(self, id: int) -> c_void_p | None: ...
+    def get_memory_data(self, id: int) -> c_void_ptr | None: ...
 
     @abstractmethod
     def get_memory_size(self, id: int) -> int: ...
@@ -224,10 +224,10 @@ class Core(CoreInterface):
             self._core.retro_serialize_size.argtypes = []
             self._core.retro_serialize_size.restype = c_size_t
 
-            self._core.retro_serialize.argtypes = [c_void_p, c_size_t]
+            self._core.retro_serialize.argtypes = [c_void_ptr, c_size_t]
             self._core.retro_serialize.restype = c_bool
 
-            self._core.retro_unserialize.argtypes = [c_void_p, c_size_t]
+            self._core.retro_unserialize.argtypes = [c_void_ptr, c_size_t]
             self._core.retro_unserialize.restype = c_bool
 
             self._core.retro_cheat_reset.argtypes = []
@@ -255,7 +255,7 @@ class Core(CoreInterface):
             self._core.retro_get_memory_data.argtypes = [c_uint]
             self._core.retro_get_memory_data.restype = POINTER(c_ubyte)
             self._core.retro_get_memory_data.errcheck = lambda result, _func, _args: (
-                cast(result, c_void_p) if result else c_void_p()
+                cast(result, c_void_ptr) if result else c_void_ptr()
             )
 
             self._core.retro_get_memory_size.argtypes = [c_uint]
@@ -275,7 +275,9 @@ class Core(CoreInterface):
         self._input_state: retro_input_state_t | None = None
 
     @override
-    def set_environment(self, env: retro_environment_t | Callable[[int, c_void_p], bool]) -> None:
+    def set_environment(
+        self, env: retro_environment_t | Callable[[int, c_void_ptr], bool]
+    ) -> None:
         """
         Calls the core's ``retro_set_environment`` function with the given callback.
 
@@ -287,7 +289,7 @@ class Core(CoreInterface):
 
     @override
     def set_video_refresh(
-        self, video: retro_video_refresh_t | Callable[[int, int, int, int], None]
+        self, video: retro_video_refresh_t | Callable[[c_void_ptr, int, int, int], None]
     ) -> None:
         """
         Calls the core's ``retro_set_video_refresh`` function with the given callback.
@@ -625,7 +627,7 @@ class Core(CoreInterface):
         return Region(region) if region in Region else region
 
     @override
-    def get_memory_data(self, id: int) -> c_void_p | None:
+    def get_memory_data(self, id: int) -> c_void_ptr | None:
         """
         Calls the core's ``retro_get_memory_data`` function for the given memory region.
 

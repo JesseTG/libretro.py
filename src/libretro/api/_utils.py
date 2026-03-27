@@ -1,3 +1,8 @@
+# pyright: reportPrivateUsage=false
+# Some of these functions and type declarations
+# rely on `ctypes` APIs that are technically private.
+# However, their interfaces are documented and they're part of typeshed.
+
 import ctypes
 import mmap
 import struct
@@ -199,17 +204,6 @@ else:
             _type_ = "P"
 
 
-class c_buffer(c_void_p):
-    """
-    Subclass of c_void_p that does _not_ implicitly convert to an `int`
-    when returned from a Structure or passed from C as an argument to a callback."""
-
-    pass
-
-
-c_double_p = POINTER(c_double)
-
-
 __all__ = [
     "as_bytes",
     "is_zeroed",
@@ -220,6 +214,4 @@ __all__ = [
     "addressof_buffer",
     "memoryview_at",
     "c_uintptr",
-    "c_double_p",
-    "c_buffer",
 ]

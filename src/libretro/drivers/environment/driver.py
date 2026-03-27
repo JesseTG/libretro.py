@@ -51,16 +51,16 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface_info,
 )
-from libretro.typing import TypedPointer
+from libretro.typing import TypedPointer, c_void_ptr
 
 
 @runtime_checkable
 class EnvironmentDriver(Protocol):
     @abstractmethod
-    def environment(self, cmd: int, data: c_void_p) -> bool: ...
+    def environment(self, cmd: int, data: c_void_ptr) -> bool: ...
 
     @abstractmethod
-    def video_refresh(self, data: c_void_p, width: int, height: int, pitch: int) -> None: ...
+    def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None: ...
 
     @abstractmethod
     def audio_sample(self, left: int, right: int) -> None: ...
