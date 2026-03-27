@@ -249,7 +249,7 @@ class MultiVideoDriver(VideoDriver):
         self._preferred = None
 
     @override
-    def set_context(self, callback: retro_hw_render_callback) -> retro_hw_render_callback | None:
+    def set_context(self, callback: retro_hw_render_callback) -> None:
         if callback is None:
             return None
 
@@ -258,17 +258,13 @@ class MultiVideoDriver(VideoDriver):
 
         context_type = HardwareContext(callback.context_type)
         if context_type not in self._supported_contexts:
-            return None
+            raise UnsupportedContextError(f"Unsupported hardware context: {context_type}")
 
         self._next_hw_context = context_type
         self._callback = deepcopy(callback)
-        self._callback.get_current_framebuffer = self._get_current_framebuffer
-        self._callback.get_proc_address = self._get_proc_address
         # TODO: If requesting NONE explicitly, check _callback.cache_context;
         # if true, keep using this hardware context for software rendering.
         # If not, switch to whatever driver is registered for NONE.
-
-        return deepcopy(self._callback)
 
     @property
     @override
@@ -309,22 +305,6 @@ class MultiVideoDriver(VideoDriver):
             return self._current.can_dupe
 
         return self._can_dupe
-
-    @can_dupe.setter
-    @override
-    def can_dupe(self, value: bool) -> None:
-        if not isinstance(value, bool):
-            raise TypeError(f"Expected a bool, got {type(value).__name__}")
-
-        self._can_dupe = value
-
-        if self._current is not None:
-            self._current.can_dupe = value
-
-    @can_dupe.deleter
-    @override
-    def can_dupe(self) -> None:
-        self._can_dupe = None
 
     @property
     @override
