@@ -3,8 +3,11 @@ from ctypes import CDLL
 from enum import Enum, auto
 from logging import Logger
 from os import PathLike
-from typing import AnyStr, Literal, Self, TypeAlias, TypedDict, TypeVar
+from typing import Literal, Self, TypedDict
+from warnings import deprecated
 from zipfile import Path as ZipPath
+
+from typing_extensions import Buffer
 
 from libretro.api import (
     AvEnableFlags,
@@ -22,7 +25,7 @@ from libretro.core import Core
 from libretro.drivers import (
     ArrayAudioDriver,
     AudioDriver,
-    CompositeEnvironmentDriver,
+    CameraDriver,
     ConstantPowerDriver,
     ContentDriver,
     DefaultPerfDriver,
@@ -32,7 +35,6 @@ from libretro.drivers import (
     DictOptionDriver,
     DriverMap,
     FileSystemInterface,
-    GeneratorLocationDriver,
     GeneratorMicrophoneDriver,
     GeneratorMidiDriver,
     InputDriver,
@@ -43,7 +45,6 @@ from libretro.drivers import (
     IterableSensorDriver,
     LedDriver,
     LocationDriver,
-    LocationInputGenerator,
     LogDriver,
     LoggerMessageInterface,
     MessageInterface,
@@ -55,6 +56,7 @@ from libretro.drivers import (
     PathDriver,
     PerfDriver,
     PowerDriver,
+    RumbleDriver,
     SensorDriver,
     SensorStateGenerator,
     SensorStateIterable,
@@ -82,56 +84,53 @@ it will use the default driver or argument configuration
 unless otherwise noted.
 """
 
-Default: TypeAlias = Literal[_DefaultType.DEFAULT]
+type Default = Literal[_DefaultType.DEFAULT]
 
+type _RequiredFactory[T] = Callable[[], T]
+type _OptionalFactory[T] = Callable[[], T | None]
 
-T = TypeVar("T")
-
-_RequiredFactory: TypeAlias = Callable[[], T]
-_OptionalFactory: TypeAlias = Callable[[], T | None]
-
-_RequiredArg: TypeAlias = T | _RequiredFactory[T]
-_OptionalArg: TypeAlias = T | _OptionalFactory[T] | Default | None
+type _RequiredArg[T] = T | _RequiredFactory[T]
+type _OptionalArg[T] = T | _OptionalFactory[T] | Default | None
 
 _nothing = lambda: None
 CoreArg = Core | str | PathLike[str] | PathLike[bytes] | CDLL | _RequiredFactory[Core]
-AudioDriverArg: TypeAlias = _RequiredArg[AudioDriver] | Default
-InputDriverArg: TypeAlias = (
+type AudioDriverArg = _RequiredArg[AudioDriver] | Default
+type InputDriverArg = (
     _RequiredArg[InputDriver]
     | InputStateGenerator
     | InputStateIterable
     | InputStateIterator
     | Default
 )
-VideoDriverArg: TypeAlias = _RequiredArg[VideoDriver] | DriverMap | Default
-ContentArg: TypeAlias = (
+type VideoDriverArg = _RequiredArg[VideoDriver] | DriverMap | Default
+type ContentArg = (
     Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
 )
-ContentDriverArg: TypeAlias = _OptionalArg[ContentDriver]
-BoolArg: TypeAlias = _OptionalArg[bool]
-MessageDriverArg: TypeAlias = _OptionalArg[MessageInterface] | Logger
-OptionDriverArg: TypeAlias = (
-    _OptionalArg[OptionDriver] | Mapping[AnyStr, AnyStr] | Literal[0, 1, 2]
+type ContentDriverArg = _OptionalArg[ContentDriver]
+type BoolArg = _OptionalArg[bool]
+type MessageDriverArg = _OptionalArg[MessageInterface] | Logger
+type OptionDriverArg = (
+    _OptionalArg[OptionDriver] | Mapping[str, str] | Mapping[bytes, bytes] | Literal[0, 1, 2]
 )
-PathDriverArg: TypeAlias = PathDriver | Callable[[Core], PathDriver | None] | Default | None
-SensorDriverArg: TypeAlias = (
+type PathDriverArg = PathDriver | Callable[[Core], PathDriver | None] | Default | None
+type SensorDriverArg = (
     _OptionalArg[SensorDriver] | SensorStateGenerator | SensorStateIterable | SensorStateIterator
 )
-LogDriverArg: TypeAlias = _OptionalArg[LogDriver] | Logger
-PerfDriverArg: TypeAlias = _OptionalArg[PerfDriver]
-LocationDriverArg: TypeAlias = _OptionalArg[LocationDriver] | LocationInputGenerator
-UserDriverArg: TypeAlias = _OptionalArg[UserDriver]
-FileSystemArg: TypeAlias = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
-LedDriverArg: TypeAlias = _OptionalArg[LedDriver]
-AvEnableFlagsArg: TypeAlias = _OptionalArg[AvEnableFlags]
-MidiDriverArg: TypeAlias = _OptionalArg[MidiDriver]
-TimingDriverArg: TypeAlias = _OptionalArg[TimingDriver]
-FloatArg: TypeAlias = _OptionalArg[float | int]
-HardwareContextArg: TypeAlias = _OptionalArg[HardwareContext]
-ThrottleStateArg: TypeAlias = _OptionalArg[retro_throttle_state]
-SavestateContextArg: TypeAlias = _OptionalArg[SavestateContext]
-MicDriverArg: TypeAlias = _OptionalArg[MicrophoneDriver] | MicrophoneSource
-PowerDriverArg: TypeAlias = _OptionalArg[PowerDriver] | retro_device_power
+type LogDriverArg = _OptionalArg[LogDriver] | Logger
+type PerfDriverArg = _OptionalArg[PerfDriver]
+type LocationDriverArg = _OptionalArg[LocationDriver]
+type UserDriverArg = _OptionalArg[UserDriver]
+type FileSystemArg = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
+type LedDriverArg = _OptionalArg[LedDriver]
+type AvEnableFlagsArg = _OptionalArg[AvEnableFlags]
+type MidiDriverArg = _OptionalArg[MidiDriver]
+type TimingDriverArg = _OptionalArg[TimingDriver]
+type FloatArg = _OptionalArg[float | int]
+type HardwareContextArg = _OptionalArg[HardwareContext]
+type ThrottleStateArg = _OptionalArg[retro_throttle_state]
+type SavestateContextArg = _OptionalArg[SavestateContext]
+type MicDriverArg = _OptionalArg[MicrophoneDriver] | MicrophoneSource
+type PowerDriverArg = _OptionalArg[PowerDriver] | retro_device_power
 
 
 class RequiredError(RuntimeError):
@@ -173,6 +172,31 @@ class _SessionBuilderArgs(TypedDict):
     power: _OptionalFactory[PowerDriver]
 
 
+type AnySession = Session[
+    AudioDriver,
+    InputDriver,
+    VideoDriver,
+    ContentDriver | None,
+    MessageInterface | None,
+    OptionDriver | None,
+    PathDriver | None,
+    RumbleDriver | None,
+    SensorDriver | None,
+    CameraDriver | None,
+    LogDriver | None,
+    PerfDriver | None,
+    LocationDriver | None,
+    UserDriver | None,
+    FileSystemInterface | None,
+    LedDriver | None,
+    MidiDriver | None,
+    TimingDriver | None,
+    MicrophoneDriver | None,
+    PowerDriver | None,
+]
+
+
+@deprecated("Use Session's constructor with kwargs instead")
 class SessionBuilder:
     """
     A builder class for constructing a :py:class:`.Session`.
@@ -222,7 +246,7 @@ class SessionBuilder:
         )
 
     @classmethod
-    def defaults(cls, core: CoreArg) -> Self:
+    def defaults(cls, core: CoreArg) -> SessionBuilder:
         """
         Alias to :py:func:`defaults`.
         """
@@ -309,6 +333,7 @@ class SessionBuilder:
                 | str()
                 | bytes()
                 | bytearray()
+                | Buffer()
                 | memoryview()
                 | SubsystemContent()
                 | retro_game_info()
@@ -522,15 +547,12 @@ class SessionBuilder:
         :raises ValueError: If ``options`` is a :class:`~collections.abc.Mapping` whose keys and values
             are not all :class:`str` or :class:`bytes`.
         """
-        _types = (str, bytes)
         match options:
             case Callable() as func:
                 self._args["options"] = func
             case OptionDriver() as driver:
-                driver: OptionDriver
                 self._args["options"] = lambda: driver
             case Mapping() as optionvars:
-                optionvars: Mapping[AnyStr, AnyStr]
                 all_str = all(
                     isinstance(k, str) and isinstance(v, str) for k, v in optionvars.items()
                 )
@@ -703,7 +725,7 @@ class SessionBuilder:
             case LocationDriver():
                 self._args["location"] = lambda: location
             case _DefaultType.DEFAULT:
-                self._args["location"] = GeneratorLocationDriver
+                self._args["location"] = _nothing
             case None:
                 self._args["location"] = _nothing
             case _:
@@ -735,7 +757,6 @@ class SessionBuilder:
             case Callable() as func:
                 self._args["vfs"] = func
             case FileSystemInterface() as interface:
-                interface: FileSystemInterface
                 self._args["vfs"] = lambda: interface
             case 1 | 2 | 3 as version:
                 self._args["vfs"] = lambda: StandardFileSystemInterface(version)
@@ -938,7 +959,7 @@ class SessionBuilder:
 
         return self
 
-    def build(self) -> Session:
+    def build(self) -> AnySession:
         """
         Constructs a :py:class:`.Session` with the provided arguments.
 
@@ -948,8 +969,10 @@ class SessionBuilder:
         :return: A :py:class:`.Session` object.
         """
         core = self._args["core"]()
-        content = self._args["content"]()
-        envargs = CompositeEnvironmentDriver.Args(
+
+        return Session(
+            core=core,
+            game=self._args["content"](),
             audio=self._args["audio"](),
             input=self._args["input"](),
             video=self._args["video"](),
@@ -972,12 +995,9 @@ class SessionBuilder:
             driver_switch_enable=self._args["driver_switch_enable"](),
             savestate_context=self._args["savestate_context"](),
             jit_capable=self._args["jit_capable"](),
-            mic_interface=self._args["mic"](),
+            mic=self._args["mic"](),
             device_power=self._args["power"](),
         )
-
-        environment = CompositeEnvironmentDriver(envargs)
-        return Session(core, content, environment)
 
 
 def defaults(core: CoreArg) -> SessionBuilder:
