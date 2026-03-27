@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING, overload
 
-from libretro.typing import StructurePointer
+from libretro.typing import TypedPointer
 
 from ._utils import MemoDict, deepcopy_array
 
@@ -76,7 +76,7 @@ class retro_memory_descriptor(Structure):
 @dataclass(init=False, slots=True)
 class retro_memory_map(Structure):
     if TYPE_CHECKING:
-        descriptors: StructurePointer[retro_memory_descriptor] | None
+        descriptors: TypedPointer[retro_memory_descriptor] | None
         num_descriptors: int
 
     _fields_ = [

@@ -18,7 +18,7 @@ from ctypes import (
     cdll,
 )
 from os import PathLike
-from typing import TYPE_CHECKING, Protocol, override
+from typing import Protocol, override
 
 from libretro._typing import Buffer
 from libretro.api import (
@@ -35,9 +35,7 @@ from libretro.api import (
     retro_video_refresh_t,
 )
 from libretro.api._utils import memoryview_at
-
-if TYPE_CHECKING:
-    from libretro.typing import IntPointer
+from libretro.typing import TypedPointer
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)
@@ -313,7 +311,7 @@ class Core(CoreInterface):
 
     @override
     def set_audio_sample_batch(
-        self, audio: retro_audio_sample_batch_t | Callable[[IntPointer[c_int16], int], int]
+        self, audio: retro_audio_sample_batch_t | Callable[[TypedPointer[c_int16], int], int]
     ) -> None:
         """
         Calls the core's ``retro_set_audio_sample_batch`` function with the given callback.

@@ -4,7 +4,7 @@ from enum import CONFORM, IntEnum, IntFlag
 from typing import TYPE_CHECKING, NewType, overload
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import FrontendFunctionPointer, StructurePointer
+from libretro.typing import FrontendFunctionPointer, TypedPointer
 
 Port = NewType("Port", int)
 
@@ -100,7 +100,7 @@ class retro_controller_description(Structure):
 @dataclass(init=False)
 class retro_controller_info(Structure):
     if TYPE_CHECKING:
-        types: StructurePointer[retro_controller_description] | None
+        types: TypedPointer[retro_controller_description] | None
         num_types: int
 
     _fields_ = [

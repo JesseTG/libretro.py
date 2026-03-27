@@ -3,16 +3,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from libretro.api.content import retro_game_info
-from libretro.typing import CoreFunctionPointer, StructurePointer
+from libretro.typing import CoreFunctionPointer, TypedPointer
 
 retro_set_eject_state_t = CoreFunctionPointer[c_bool, [c_bool]]
 retro_get_eject_state_t = CoreFunctionPointer[c_bool, []]
 retro_get_image_index_t = CoreFunctionPointer[c_uint, []]
 retro_set_image_index_t = CoreFunctionPointer[c_bool, [c_uint]]
 retro_get_num_images_t = CoreFunctionPointer[c_uint, []]
-retro_replace_image_index_t = CoreFunctionPointer[
-    c_bool, [c_uint, StructurePointer[retro_game_info]]
-]
+retro_replace_image_index_t = CoreFunctionPointer[c_bool, [c_uint, TypedPointer[retro_game_info]]]
 retro_add_image_index_t = CoreFunctionPointer[c_bool, []]
 retro_set_initial_image_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p]]
 retro_get_image_path_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import CoreFunctionPointer, Pointer, StructureArray
+from libretro.typing import CoreFunctionPointer, Pointer, TypedArray
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
@@ -132,7 +132,7 @@ class retro_core_option_v2_definition(Structure):
         info: bytes | None
         info_categorized: bytes | None
         category_key: bytes | None
-        values: StructureArray[retro_core_option_value]
+        values: TypedArray[retro_core_option_value]
         default_value: bytes | None
 
     _fields_ = [
