@@ -1,80 +1,166 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import CDLL
 from os import PathLike
 from types import TracebackType
-from typing import AnyStr, Type
 
-from _ctypes import CFuncPtr
-
+from libretro.api import API_VERSION, AvEnableFlags
+from libretro.api import Content as GameContent
 from libretro.api import (
-    API_VERSION,
-    AvEnableFlags,
-    Content,
-    SerializationQuirks,
+    HardwareContext,
+    SavestateContext,
     SubsystemContent,
-    Subsystems,
-    retro_controller_description,
-    retro_fastforwarding_override,
-    retro_get_proc_address_interface,
-    retro_input_descriptor,
-    retro_memory_map,
-    retro_proc_address_t,
     retro_subsystem_info,
     retro_system_av_info,
     retro_system_content_info_override,
-    retro_throttle_state,
 )
-from libretro.api._utils import as_bytes
 from libretro.core import Core, CoreInterface
 from libretro.drivers import (
     AudioDriver,
+    CameraDriver,
     CompositeEnvironmentDriver,
     ContentDriver,
     FileSystemInterface,
     InputDriver,
     LedDriver,
     LoadedContentFile,
+    LocationDriver,
     LogDriver,
     MessageInterface,
     MicrophoneDriver,
     MidiDriver,
     OptionDriver,
+    PathDriver,
+    PerfDriver,
+    PowerDriver,
     RumbleDriver,
     SensorDriver,
+    TimingDriver,
+    UserDriver,
     VideoDriver,
 )
 from libretro.drivers.types import Pollable
 from libretro.error import CoreShutDownException
 
 
-class Session:
+class Session[
+    Audio: AudioDriver,
+    Input: InputDriver,
+    Video: VideoDriver,
+    Content: ContentDriver | None,
+    Message: MessageInterface | None,
+    Option: OptionDriver | None,
+    Path: PathDriver | None,
+    Rumble: RumbleDriver | None,
+    Sensor: SensorDriver | None,
+    Camera: CameraDriver | None,
+    Log: LogDriver | None,
+    Perf: PerfDriver | None,
+    Location: LocationDriver | None,
+    User: UserDriver | None,
+    Vfs: FileSystemInterface | None,
+    Led: LedDriver | None,
+    Midi: MidiDriver | None,
+    Timing: TimingDriver | None,
+    Mic: MicrophoneDriver | None,
+    Power: PowerDriver | None,
+](
+    CompositeEnvironmentDriver[
+        Audio,
+        Input,
+        Video,
+        Content,
+        Message,
+        Option,
+        Path,
+        Rumble,
+        Sensor,
+        Camera,
+        Log,
+        Perf,
+        Location,
+        User,
+        Vfs,
+        Led,
+        Midi,
+        Timing,
+        Mic,
+        Power,
+    ]
+):
     def __init__(
         self,
+        /,
         core: Core | CDLL | str | PathLike[str] | PathLike[bytes],
-        content: Content | SubsystemContent | None,
-        environment: CompositeEnvironmentDriver,
+        game: GameContent | SubsystemContent | None,
+        audio: Audio,
+        input: Input,
+        video: Video,
+        content: Content = None,
+        overscan: bool | None = None,
+        message: Message = None,
+        options: Option = None,
+        path: Path = None,
+        rumble: Rumble = None,
+        sensor: Sensor = None,
+        camera: Camera = None,
+        log: Log = None,
+        perf: Perf = None,
+        location: Location = None,
+        user: User = None,
+        vfs: Vfs = None,
+        led: Led = None,
+        av_enable: AvEnableFlags | None = None,
+        midi: Midi = None,
+        timing: Timing = None,
+        preferred_hw: HardwareContext | None = None,
+        driver_switch_enable: bool | None = None,
+        savestate_context: SavestateContext | None = None,
+        jit_capable: bool | None = None,
+        mic: Mic = None,
+        device_power: Power = None,
     ):
+        super().__init__(
+            audio=audio,
+            input=input,
+            video=video,
+            content=content,
+            overscan=overscan,
+            message=message,
+            options=options,
+            path=path,
+            rumble=rumble,
+            sensor=sensor,
+            camera=camera,
+            log=log,
+            perf=perf,
+            location=location,
+            user=user,
+            vfs=vfs,
+            led=led,
+            av_enable=av_enable,
+            midi=midi,
+            timing=timing,
+            preferred_hw=preferred_hw,
+            driver_switch_enable=driver_switch_enable,
+            savestate_context=savestate_context,
+            jit_capable=jit_capable,
+            mic=mic,
+            device_power=device_power,
+        )
         match core:
             case Core():
                 self._core = core
             case CDLL():
                 self._core = Core(core)
-            case str() | PathLike() as path:
-                self._core = Core(path)
+            case str() | PathLike() as corepath:
+                self._core = Core(corepath)
             case _:
                 raise TypeError(
                     f"Expected core to be a Core, CDLL, or str; got {type(core).__name__}"
                 )
 
-        self._content = content
-
-        if not isinstance(environment, CompositeEnvironmentDriver):
-            raise TypeError(
-                f"Expected environment to be CompositeEnvironmentDriver; got {type(environment).__name__}"
-            )
-
-        self._environment = environment
+        self._game = game
 
         self._content = content
         self._system_av_info: retro_system_av_info | None = None
@@ -89,12 +175,12 @@ class Session:
                 f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}"
             )
 
-        self._core.set_video_refresh(self._environment.video_refresh)
-        self._core.set_audio_sample(self._environment.audio_sample)
-        self._core.set_audio_sample_batch(self._environment.audio_sample_batch)
-        self._core.set_input_poll(self._environment.input_poll)
-        self._core.set_input_state(self._environment.input_state)
-        self._core.set_environment(self._environment.environment)
+        self._core.set_video_refresh(self.video_refresh)
+        self._core.set_audio_sample(self.audio_sample)
+        self._core.set_audio_sample_batch(self.audio_sample_batch)
+        self._core.set_input_poll(self.input_poll)
+        self._core.set_input_state(self.input_state)
+        self._core.set_environment(self.environment)
         system_info = self._core.get_system_info()
 
         if system_info.library_name is None:
@@ -108,16 +194,14 @@ class Session:
 
         self._core.init()
 
-        if not self._environment.content:
+        if self._content is None:
             # Do nothing, we're testing something that doesn't need to load a game
             return self
 
-        self._environment.content.system_info = deepcopy(system_info)
+        self._content.system_info = deepcopy(system_info)
 
-        loaded: bool = False
-        with self._environment.content.load(self._content) as (subsystem, content):
-            subsystem: retro_subsystem_info | None
-            content: Sequence[LoadedContentFile] | None
+        loaded = False
+        with self._content.load(self._game) as (subsystem, content):
             match subsystem, content:
                 case (_, None | []):
                     loaded = self._core.load_game(None)
@@ -139,8 +223,12 @@ class Session:
             raise RuntimeError("Failed to load game")
 
         self._system_av_info = self._core.get_system_av_info()
-        self._environment.video.system_av_info = self._system_av_info
-        self._environment.audio.system_av_info = self._system_av_info
+        self._video.system_av_info = self._system_av_info
+        if self._audio is not self._video:
+            # Handle the case where the audio and video drivers are the same object
+            # (e.g. a driver that implements both interfaces)
+            # to avoid calling side effects twice on the same driver.
+            self._audio.system_av_info = self._system_av_info
 
         return self
 
@@ -160,38 +248,10 @@ class Session:
 
     @property
     def core(self) -> CoreInterface:
-        if self._is_exited or self._environment.is_shutdown:
+        if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
         return self._core
-
-    @property
-    def environment(self) -> CompositeEnvironmentDriver:
-        return self._environment
-
-    @property
-    def audio(self) -> AudioDriver:
-        return self._environment.audio
-
-    @property
-    def input(self) -> InputDriver:
-        return self._environment.input
-
-    @property
-    def video(self) -> VideoDriver:
-        return self._environment.video
-
-    @property
-    def content(self) -> ContentDriver:
-        return self._environment.content
-
-    @property
-    def message(self) -> MessageInterface | None:
-        return self._environment.message
-
-    @property
-    def is_shutdown(self) -> bool:
-        return self._environment.is_shutdown
 
     @property
     def is_exited(self) -> bool:
@@ -199,133 +259,56 @@ class Session:
 
     @property
     def system_directory(self) -> bytes | None:
-        return self._environment.path.system_dir
+        if self._path is None:
+            return None
+
+        return self._path.system_dir
 
     @property
     def system_dir(self) -> bytes | None:
         return self.system_directory
 
     @property
-    def input_descriptors(self) -> Sequence[retro_input_descriptor] | None:
-        return self._environment.input.descriptors
-
-    @property
-    def options(self) -> OptionDriver:
-        return self._environment.options
-
-    @property
-    def support_no_game(self) -> bool | None:
-        return self._environment.content.support_no_game
-
-    @property
-    def rumble(self) -> RumbleDriver | None:
-        return self._environment.input.rumble
-
-    @property
-    def sensor(self) -> SensorDriver | None:
-        return self._environment.sensor
-
-    @property
-    def log(self) -> LogDriver | None:
-        return self._environment.log
-
-    @property
     def save_directory(self) -> bytes | None:
-        return self._environment.path.save_dir
+        if self._path is None:
+            return None
+
+        return self._path.save_dir
 
     @property
     def save_dir(self) -> bytes | None:
         return self.save_directory
 
     @property
-    def proc_address_callback(self) -> retro_get_proc_address_interface | None:
-        return self._environment.proc_address_callback
-
-    def get_proc_address(
-        self, sym: AnyStr, funtype: Type[CFuncPtr] | None = None
-    ) -> retro_proc_address_t | Callable | None:
-        if not self.proc_address_callback or not sym:
-            return None
-
-        name = as_bytes(sym)
-
-        proc = self.proc_address_callback.get_proc_address(name)
-
-        if not proc:
-            return None
-
-        if funtype:
-            return funtype(proc)
-
-        return proc
-
-    @property
-    def subsystems(self) -> Subsystems | None:
-        return self._environment.content.subsystem_info
-
-    @property
-    def controller_info(self) -> Sequence[retro_controller_description] | None:
-        return self._environment.input.controller_info
-
-    @property
-    def memory_maps(self) -> retro_memory_map | None:
-        return self._environment.memory_maps
-
-    @property
-    def support_achievements(self) -> bool | None:
-        return self._environment.support_achievements
-
-    @property
-    def av_enable(self) -> AvEnableFlags:
-        return self._environment.av_enable
-
-    @property
-    def midi(self) -> MidiDriver:
-        return self._environment.midi
-
-    @property
-    def serialization_quirks(self) -> SerializationQuirks | None:
-        return self._environment.serialization_quirks
-
-    @property
-    def vfs(self) -> FileSystemInterface:
-        return self._environment.vfs
-
-    @property
-    def led(self) -> LedDriver:
-        return self._environment.led
-
-    @property
     def max_users(self) -> int | None:
-        return self._environment.input.max_users
+        return self._input.max_users
 
     @property
     def content_info_overrides(
         self,
     ) -> Sequence[retro_system_content_info_override] | None:
-        return self._environment.content.overrides
+        if self._content is None:
+            return None
 
-    @property
-    def mic(self) -> MicrophoneDriver:
-        return self._environment.microphones
+        return self._content.overrides
 
     def run(self) -> None:
-        if self._is_exited or self._environment.is_shutdown:
+        if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
-        if self._environment.video.needs_reinit:
-            self._environment.video.reinit()
+        if self._video.needs_reinit:
+            self._video.reinit()
 
         # TODO: In RetroArch, retro_audio_callback.set_state is called on the main thread,
         # just before starting the audio thread and just after stopping it.
         # TODO: In RetroArch, retro_audio_callback.callback is called on the audio thread.
         # TODO: In RetroArch, an audio thread is started if the core registers an audio callback
 
-        if isinstance(self._environment.microphones, Pollable):
-            self._environment.microphones.poll()
+        if isinstance(self._mic, Pollable):
+            self._mic.poll()
 
-        if self._environment.timing:
-            self._environment.timing.frame_time(None)
+        if self._timing is not None:
+            self._timing.frame_time(None)
             # TODO: Get the time elapsed since the last frame and pass it to frame_time
             # or if throttle_state is set, use that to determine the time elapsed
 
@@ -335,13 +318,13 @@ class Session:
         self._core.run()
 
     def reset(self) -> None:
-        if self._is_exited or self._environment.is_shutdown:
+        if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
         self._core.reset()
 
     def set_controller_port_device(self, port: int, device: int) -> None:
-        if self._is_exited or self._environment.is_shutdown:
+        if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
         self._core.set_controller_port_device(port, device)
