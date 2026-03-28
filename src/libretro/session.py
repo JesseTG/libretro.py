@@ -8,6 +8,7 @@ from libretro.api import API_VERSION, AvEnableFlags
 from libretro.api import Content as GameContent
 from libretro.api import (
     HardwareContext,
+    Port,
     SavestateContext,
     SubsystemContent,
     retro_subsystem_info,
@@ -23,7 +24,6 @@ from libretro.drivers import (
     FileSystemInterface,
     InputDriver,
     LedDriver,
-    LoadedContentFile,
     LocationDriver,
     LogDriver,
     MessageInterface,
@@ -207,14 +207,12 @@ class Session[
                     loaded = self._core.load_game(None)
                 case None, [info]:
                     # Loading exactly one regular content file
-                    info: LoadedContentFile
                     loaded = self._core.load_game(info.info)
                 case None, [*_]:
                     raise RuntimeError(
                         "Content driver returned multiple files, but not a subsystem that uses them all"
                     )
                 case retro_subsystem_info(), [*infos]:
-                    infos: Sequence[LoadedContentFile]
                     game_infos = tuple(i.info for i in infos)
                     loaded = self._core.load_game_special(subsystem.id, game_infos)
                 case _, _:

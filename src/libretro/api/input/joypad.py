@@ -43,7 +43,7 @@ class DeviceIdJoypad(IntEnum):
     MASK = RETRO_DEVICE_ID_JOYPAD_MASK
 
 
-DeviceIdJoypadButton = Literal[
+type DeviceIdJoypadButton = Literal[
     DeviceIdJoypad.B,
     DeviceIdJoypad.Y,
     DeviceIdJoypad.SELECT,

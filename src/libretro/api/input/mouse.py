@@ -31,7 +31,7 @@ class DeviceIdMouse(IntEnum):
     BUTTON_5 = RETRO_DEVICE_ID_MOUSE_BUTTON_5
 
 
-DeviceIdMouseButton = Literal[
+type DeviceIdMouseButton = Literal[
     DeviceIdMouse.LEFT,
     DeviceIdMouse.RIGHT,
     DeviceIdMouse.MIDDLE,
@@ -39,14 +39,14 @@ DeviceIdMouseButton = Literal[
     DeviceIdMouse.BUTTON_5,
 ]
 
-DeviceIdMouseWheel = Literal[
+type DeviceIdMouseWheel = Literal[
     DeviceIdMouse.WHEELUP,
     DeviceIdMouse.WHEELDOWN,
     DeviceIdMouse.HORIZ_WHEELUP,
     DeviceIdMouse.HORIZ_WHEELDOWN,
 ]
 
-DeviceIdMouseAxis = Literal[
+type DeviceIdMouseAxis = Literal[
     DeviceIdMouse.X,
     DeviceIdMouse.Y,
 ]

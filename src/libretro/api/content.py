@@ -97,9 +97,9 @@ class retro_game_info(Structure):
         )
 
 
-ContentPath = str | PathLike[str] | PathLike[bytes] | ZipPath
-ContentData = bytes | bytearray | memoryview[int] | Buffer
-Content = ContentPath | ContentData | retro_game_info
+type ContentPath = str | PathLike[str] | PathLike[bytes] | ZipPath
+type ContentData = bytes | bytearray | memoryview[int] | Buffer
+type Content = ContentPath | ContentData | retro_game_info
 
 
 class SubsystemContent(NamedTuple):
