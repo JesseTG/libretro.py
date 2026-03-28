@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import override
 
-from libretro import Port
+from libretro.api.input import Port
 from libretro.api.sensor import Sensor, SensorAction, SensorType
 
 from .driver import SensorDriver
