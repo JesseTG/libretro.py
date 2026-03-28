@@ -21,5 +21,5 @@ Or, if you have `just` installed...
 ```bash
 git clone https://github.com/JesseTG/libretro.py  # Clone the repository
 cd libretro.py  # Enter the project directory
-just install # Set up a virtual environment, install dependencies, and install the project in editable mode
+just install # Install libretro.py in editable mode and all its dependencies in the current environment
 ```

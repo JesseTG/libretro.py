@@ -51,13 +51,7 @@ python -m venv ./venv
 source ./venv/bin/activate
 
 # Activate the virtual environment (in PowerShell)
-./venv/Scripts/activate.ps1 
-```
-
-Or if you have [`just`][just] installed, let it figure out the details for you:
-
-```bash
-just venv
+./venv/Scripts/activate.ps1
 ```
 
 ## Extras
