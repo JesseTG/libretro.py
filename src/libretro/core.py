@@ -34,6 +34,7 @@ from libretro.api import (
     retro_video_refresh_t,
 )
 from libretro.api._utils import memoryview_at
+from libretro.api.input import Port
 from libretro.typing import TypedPointer, c_void_ptr
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
@@ -83,7 +84,7 @@ class CoreInterface(Protocol):
     def get_system_av_info(self) -> retro_system_av_info: ...
 
     @abstractmethod
-    def set_controller_port_device(self, port: int, device: int) -> None: ...
+    def set_controller_port_device(self, port: Port, device: int) -> None: ...
 
     @abstractmethod
     def reset(self) -> None: ...
@@ -336,7 +337,7 @@ class Core(CoreInterface):
 
     @override
     def set_input_state(
-        self, state: retro_input_state_t | Callable[[int, int, int, int], int]
+        self, state: retro_input_state_t | Callable[[Port, int, int, int], int]
     ) -> None:
         """
         Calls the core's ``retro_set_input_state`` function with the given callback.
@@ -405,7 +406,7 @@ class Core(CoreInterface):
         return system_av_info
 
     @override
-    def set_controller_port_device(self, port: int, device: int):
+    def set_controller_port_device(self, port: Port, device: int):
         """
         Calls the core's ``retro_set_controller_port_device`` function with the given arguments.
 

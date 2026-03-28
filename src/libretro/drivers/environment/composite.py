@@ -462,8 +462,8 @@ class CompositeEnvironmentDriver[
             self._sensor.poll()
 
     @override
-    def input_state(self, port: int, device: int, index: int, id: int) -> int:
-        return self._input.state(Port(port), InputDevice(device), index, id)
+    def input_state(self, port: Port, device: int, index: int, id: int) -> int:
+        return self._input.state(port, InputDevice(device), index, id)
 
     @property
     def rotation(self) -> Rotation:
@@ -747,7 +747,7 @@ class CompositeEnvironmentDriver[
         rumble[0] = self._rumble_interface
         return True
 
-    def _set_rumble_state(self, port: int, effect: int, strength: int) -> bool:
+    def _set_rumble_state(self, port: Port, effect: int, strength: int) -> bool:
         if self._rumble is None:
             return False
 
@@ -784,7 +784,7 @@ class CompositeEnvironmentDriver[
         interface[0] = self._sensor_interface
         return True
 
-    def _set_sensor_state(self, port: int, action: int, rate: int) -> bool:
+    def _set_sensor_state(self, port: Port, action: int, rate: int) -> bool:
         if self._sensor is None:
             return False
 
@@ -798,7 +798,7 @@ class CompositeEnvironmentDriver[
 
         return self._sensor.set_sensor_state(port, SensorAction(action), rate)
 
-    def _get_sensor_input(self, port: int, sensor: int) -> float:
+    def _get_sensor_input(self, port: Port, sensor: int) -> float:
         if self._sensor is None:
             return 0.0
 

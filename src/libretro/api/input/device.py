@@ -7,6 +7,11 @@ from libretro.api._utils import MemoDict, deepcopy_array
 from libretro.typing import FrontendFunctionPointer, TypedPointer
 
 Port = NewType("Port", int)
+"""
+A controller port index.
+
+Intended for type safety when working with controller ports.
+"""
 
 RETRO_DEVICE_NONE = 0
 RETRO_DEVICE_JOYPAD = 1
@@ -58,7 +63,7 @@ class InputDevice(IntEnum):
 @dataclass(init=False)
 class retro_input_descriptor(Structure):
     if TYPE_CHECKING:
-        port: int
+        port: Port
         device: int
         index: int
         id: int

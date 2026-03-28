@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
+from libretro.api.input import Port
 from libretro.api.rumble import RumbleEffect
 
 
@@ -8,7 +9,7 @@ from libretro.api.rumble import RumbleEffect
 class RumbleDriver(Protocol):
 
     @abstractmethod
-    def set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
+    def set_rumble_state(self, port: Port, effect: RumbleEffect, strength: int) -> bool:
         """
         Set the rumble state of a controller port.
         """

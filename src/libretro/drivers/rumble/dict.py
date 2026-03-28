@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import override
 
+from libretro.api.input import Port
 from libretro.api.rumble import RumbleEffect
 
 from .driver import RumbleDriver
@@ -51,14 +52,14 @@ class DictRumbleDriver(RumbleDriver):
 
     def __init__(self):
         super().__init__()
-        self._rumble_state: dict[int, RumbleState] = {}
+        self._rumble_state: dict[Port, RumbleState] = {}
 
     @override
-    def set_rumble_state(self, port: int, effect: RumbleEffect, strength: int) -> bool:
+    def set_rumble_state(self, port: Port, effect: RumbleEffect, strength: int) -> bool:
         self._rumble_state[port] = RumbleState(effect, strength)
         return True
 
-    def __getitem__(self, port: int) -> RumbleState:
+    def __getitem__(self, port: Port) -> RumbleState:
         """
         Gets the state of the virtual rumble motors for a controller port.
 

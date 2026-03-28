@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
+from libretro.api.input.device import Port
 from libretro.api.sensor import Sensor, SensorAction
 
 
@@ -15,7 +16,7 @@ class SensorDriver(Protocol):
     """
 
     @abstractmethod
-    def set_sensor_state(self, port: int, action: SensorAction, rate: int) -> bool:
+    def set_sensor_state(self, port: Port, action: SensorAction, rate: int) -> bool:
         """
         Configures a sensor on a port,
         possibly with a specific query rate.
@@ -36,7 +37,7 @@ class SensorDriver(Protocol):
         """
 
     @abstractmethod
-    def get_sensor_input(self, port: int, sensor: Sensor) -> float:
+    def get_sensor_input(self, port: Port, sensor: Sensor) -> float:
         """
         Corresponds to ``retro_sensor_get_input_t``.
         """

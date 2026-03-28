@@ -26,6 +26,7 @@ from libretro.api.input import (
     retro_input_descriptor,
     retro_keyboard_callback,
 )
+from libretro.api.input.device import Port
 
 from .driver import InputDriver
 
@@ -226,7 +227,7 @@ class IterableInputDriver(InputDriver):
             # TODO: Send keyboard callback events
 
     @override
-    def state(self, port: int, device: int, index: int, id: int) -> int:
+    def state(self, port: Port, device: int, index: int, id: int) -> int:
         if not self._input_generator:
             # If there's no input generator, all states will default to 0
             return 0

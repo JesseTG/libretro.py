@@ -51,6 +51,7 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface_info,
 )
+from libretro.api.input import Port
 from libretro.typing import TypedPointer, c_void_ptr
 
 
@@ -72,7 +73,7 @@ class EnvironmentDriver(Protocol):
     def input_poll(self) -> None: ...
 
     @abstractmethod
-    def input_state(self, port: int, device: int, index: int, id: int) -> int: ...
+    def input_state(self, port: Port, device: int, index: int, id: int) -> int: ...
 
     def _set_rotation(self, rotation: TypedPointer[c_uint]) -> bool:
         return False

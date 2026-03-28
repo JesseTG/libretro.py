@@ -3,6 +3,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import override
 
+from libretro import Port
 from libretro.api.sensor import Sensor, SensorAction, SensorType
 
 from .driver import SensorDriver
@@ -119,10 +120,10 @@ class IterableSensorDriver(SensorDriver):
         self._generator = source
         self._generator_state: SensorStateIterator | None = None
         self._poll_result: SensorPollResult | Sequence[SensorPollResult] | None = None
-        self._ports: defaultdict[int, PortState] = defaultdict(PortState)
+        self._ports: defaultdict[Port, PortState] = defaultdict(PortState)
 
     @property
-    def sensor_state(self) -> Mapping[int, PortState]:
+    def sensor_state(self) -> Mapping[Port, PortState]:
         return self._ports
 
     @override
@@ -141,7 +142,7 @@ class IterableSensorDriver(SensorDriver):
         self._poll_result = next(self._generator_state, None)
 
     @override
-    def set_sensor_state(self, port: int, action: SensorAction | int, rate: int) -> bool:
+    def set_sensor_state(self, port: Port, action: SensorAction | int, rate: int) -> bool:
         # It's fine if port is out of bounds,
         # the defaultdict will create a new PortState for it
         match action:
@@ -169,7 +170,7 @@ class IterableSensorDriver(SensorDriver):
         return True
 
     @override
-    def get_sensor_input(self, port: int, sensor: Sensor) -> float:
+    def get_sensor_input(self, port: Port, sensor: Sensor) -> float:
         if not self._generator:
             # An unassigned generator will default to 0
             return 0.0
