@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from ctypes import Array
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from libretro.api import (
     Content,
@@ -25,24 +25,9 @@ class ContentAttributes:
     required: bool
 
 
-class LoadedContentFile:
-    def __init__(self, info: retro_game_info, info_ext: retro_game_info_ext | None = None):
-        if not isinstance(info, retro_game_info):
-            raise TypeError(f"Expected retro_game_info, got {type(info).__name__}")
-
-        if info_ext is not None and not isinstance(info_ext, retro_game_info_ext):
-            raise TypeError(f"Expected retro_game_info_ext or None, got {type(info_ext).__name__}")
-
-        self._info = info
-        self._info_ext = info_ext
-
-    @property
-    def info(self) -> retro_game_info:
-        return self._info
-
-    @property
-    def info_ext(self) -> retro_game_info_ext | None:
-        return self._info_ext
+class LoadedContentFile(NamedTuple):
+    info: retro_game_info
+    info_ext: retro_game_info_ext | None
 
 
 LoadedContent = tuple[retro_subsystem_info | None, Sequence[LoadedContentFile] | None]
