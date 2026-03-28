@@ -45,7 +45,7 @@ dev = [
     'black == 24.*',
     'flake8 == 6.*',
     'isort == 5.*',
-    'mypy == 1.20.*',
+    'pyright == 1.1.*',
     "libretro.py[build]"
 ]
 docs = [

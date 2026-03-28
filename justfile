@@ -47,7 +47,7 @@ flake8: _validate_venv
     {{_venv_bin}}/flake8 src
 
 # Lints the project
-lint: black-check isort-check flake8 mypy bandit
+lint: black-check isort-check flake8 pyright bandit
 
 # Runs all formatting tools against the project
 lint-fix: black isort
@@ -66,9 +66,9 @@ isort: _validate_venv
 isort-check: _validate_venv
     {{_venv_bin}}/isort src --check-only
 
-# Run mypy type checking on the project
-mypy: _validate_venv
-    {{_venv_bin}}/mypy src
+# Run pyright type checking on the project
+pyright: _validate_venv
+    {{_venv_bin}}/pyright --project .
 
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs: _validate_venv
