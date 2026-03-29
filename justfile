@@ -79,6 +79,7 @@ isort-check:
 # Type-check libretro.py
 [group('Linting')]
 pyright:
+    pyright --version
     pyright --project .
 
 # Generate the documentation and serve it locally. View it in a web browser.
