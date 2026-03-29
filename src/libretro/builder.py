@@ -1,13 +1,12 @@
+from __future__ import annotations
+
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from ctypes import CDLL
 from enum import Enum, auto
 from logging import Logger
 from os import PathLike
 from typing import Literal, Self, TypedDict
-from warnings import deprecated
 from zipfile import Path as ZipPath
-
-from typing_extensions import Buffer
 
 from libretro.api import (
     AvEnableFlags,
@@ -21,6 +20,7 @@ from libretro.api import (
     retro_game_info,
     retro_throttle_state,
 )
+from libretro.compat import Buffer, deprecated
 from libretro.core import Core
 from libretro.drivers import (
     ArrayAudioDriver,

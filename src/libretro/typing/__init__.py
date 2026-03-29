@@ -11,6 +11,7 @@ this allows them to be used as drop-in replacements for the standard types in fu
 # pyright: reportNoOverloadImplementation=false
 # The overloads are only for type checking, so they don't need implementations.
 
+from __future__ import annotations
 
 from collections.abc import Buffer, Callable, Iterable
 from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]

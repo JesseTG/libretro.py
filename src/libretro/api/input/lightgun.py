@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Literal, overload
-from warnings import deprecated
+
+from libretro.compat import deprecated
 
 from .device import InputDeviceState
 
