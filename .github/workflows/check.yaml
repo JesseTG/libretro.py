@@ -15,6 +15,7 @@ jobs:
     name: Run Checks
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # Test against multiple Python versions to ensure compatibility
         python-version: ["3.12", "3.13", "3.14"]
