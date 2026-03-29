@@ -47,14 +47,9 @@ black-check:
 clean:
     git clean -xdf
 
-# Run flake8 checks against the project
-[group('Linting')]
-flake8:
-    flake8 src
-
 # Runs all other checks in this section
 [group('Linting')]
-lint: black-check isort-check flake8 pyright bandit
+lint: black-check isort-check pyright bandit
 
 # Runs all formatting tools against the project
 [group('Linting')]

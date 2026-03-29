@@ -43,7 +43,6 @@ cli = [
 dev = [
     'bandit == 1.9.*',
     'black == 24.*',
-    'flake8 == 6.*',
     'isort == 5.*',
     'pyright == 1.1.*',
     "libretro.py[build]"
