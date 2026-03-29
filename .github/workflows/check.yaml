@@ -27,6 +27,9 @@ jobs:
       - name: Install Just
         uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
 
+      - name: Install Build Requirements
+        run: sudo apt-get install libx11-dev
+
       - name: Install Python and Dependencies
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
