@@ -20,13 +20,14 @@ from ctypes import (
     c_ubyte,
     c_uint8,
     c_void_p,
-    cast,
     py_object,
     pythonapi,
     sizeof,
 )
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
+
+from libretro.typing import TypedPointer
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType
@@ -178,11 +179,15 @@ else:
     pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
     pythonapi.PyMemoryView_FromMemory.restype = py_object
 
-    def memoryview_at(
-        address: c_char_p | c_void_p | int | bytes, size: c_ssize_t | int, readonly=False
-    ) -> memoryview:
-        flags = c_int(0x100 if readonly else 0x200)
-        return pythonapi.PyMemoryView_FromMemory(cast(address, c_char_p), c_ssize_t(size), flags)
+    def memoryview_at[
+        T: _CDataType
+    ](
+        address: c_char_p | c_void_p | int | bytes | TypedPointer[T],
+        size: int,
+        readonly: bool = False,
+    ) -> memoryview[int]:
+        flags = 0x100 if readonly else 0x200
+        return pythonapi.PyMemoryView_FromMemory(address, size, flags)
 
 
 if TYPE_CHECKING:
