@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
-from warnings import deprecated
 
 from libretro.api.vfs import (
     VfsFileAccess,
@@ -8,28 +7,8 @@ from libretro.api.vfs import (
     VfsMkdirResult,
     VfsSeekPosition,
     VfsStat,
-    retro_vfs_close_t,
-    retro_vfs_closedir_t,
     retro_vfs_dir_handle,
-    retro_vfs_dirent_get_name_t,
-    retro_vfs_dirent_is_dir_t,
     retro_vfs_file_handle,
-    retro_vfs_flush_t,
-    retro_vfs_get_path_t,
-    retro_vfs_interface,
-    retro_vfs_mkdir_t,
-    retro_vfs_open_t,
-    retro_vfs_opendir_t,
-    retro_vfs_read_t,
-    retro_vfs_readdir_t,
-    retro_vfs_remove_t,
-    retro_vfs_rename_t,
-    retro_vfs_seek_t,
-    retro_vfs_size_t,
-    retro_vfs_stat_t,
-    retro_vfs_tell_t,
-    retro_vfs_truncate_t,
-    retro_vfs_write_t,
 )
 
 
@@ -158,38 +137,6 @@ class FileSystemInterface(Protocol):
 
     @abstractmethod
     def closedir(self, dir: retro_vfs_dir_handle) -> bool: ...
-
-    @property
-    @deprecated("Create the retro_vfs_interface in EnvironmentDriver instead of here")
-    def _as_parameter_(self) -> retro_vfs_interface:
-        interface = retro_vfs_interface()
-
-        if self.version >= 1:
-            interface.get_path = retro_vfs_get_path_t(self.get_path)
-            interface.open = retro_vfs_open_t(self.open)
-            interface.close = retro_vfs_close_t(self.close)
-            interface.size = retro_vfs_size_t(self.size)
-            interface.tell = retro_vfs_tell_t(self.tell)
-            interface.seek = retro_vfs_seek_t(self.seek)
-            interface.read = retro_vfs_read_t(self.read)
-            interface.write = retro_vfs_write_t(self.write)
-            interface.flush = retro_vfs_flush_t(self.flush)
-            interface.remove = retro_vfs_remove_t(self.remove)
-            interface.rename = retro_vfs_rename_t(self.rename)
-
-        if self.version >= 2:
-            interface.truncate = retro_vfs_truncate_t(self.truncate)
-
-        if self.version >= 3:
-            interface.stat = retro_vfs_stat_t(self.stat)
-            interface.mkdir = retro_vfs_mkdir_t(self.mkdir)
-            interface.opendir = retro_vfs_opendir_t(self.opendir)
-            interface.readdir = retro_vfs_readdir_t(self.readdir)
-            interface.dirent_get_name = retro_vfs_dirent_get_name_t(self.dirent_get_name)
-            interface.dirent_is_dir = retro_vfs_dirent_is_dir_t(self.dirent_is_dir)
-            interface.closedir = retro_vfs_closedir_t(self.closedir)
-
-        return interface
 
 
 __all__ = ["FileSystemInterface", "FileHandle", "DirectoryHandle"]
