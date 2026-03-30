@@ -14,13 +14,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add annotations to all public-facing types and functions in libretro.py.
+- Add type checking with Pyright to the CI pipeline.
 - Added some symbols to `libretro.api` to account for additions to `libretro.h`.
 - Added `PathDriver.file_browser_start_dir`,
   and implement it in `ExplicitPathDriver` and `TempDirPathDriver`.
+- Added `libretro.typing`, which contains types that enforce `ctypes`'s
+  documented rules statically while falling back to it at runtme.
+- Added linting pipelines to GitHub Actions for Python 3.12, 3.13, and 3.14.
+- Added types for each VFS operation in `libretro.drivers.vfs.history`
+
+### Fixed
+
+- Fix compatibility with Python 3.14 due to `FieldsFromTypeHints`
+  relying on behavior that was changed since Python 3.12.
 
 ### Changed
 
-- **BREAKING:** Raise minimum required Python version to 3.12
+- **BREAKING:** Raise minimum required Python version to 3.12.
+- Make `justfile` recipes operate in the current environment
+  instead of forcibly creating a virtual environment.
+- Separate `RumbleDriver` from `InputDriver`.
+- Deprecate `SessionBuilder` in favor of just creating `Session` directly.
+- Add type parameters to `CompositeEnvironmentDriver` for each driver
+  so that test script authors don't have to check classes
+  before accessing installed drivers.
+- **BREAKING:** Make `Session` a subclass of `CompositeEnvironmentDriver`.
+- Change all uses of `c_void_p` to `c_void_ptr`,
+  to avoid implicit conversions to `int`.
+
+### Removed
+
+- Removed `flake8` from the repo's linters.
+- Removed the `_type_` field from all `IntEnum` subclasses.
+- **BREAKING:** Drivers no longer create their own libretro callback structs,
+  this work has all moved into the environment driver.
+- **BREAKING:** Remove `GeneratorLocationDriver`.
 
 ## [0.6.0] - 2025-01-27
 
