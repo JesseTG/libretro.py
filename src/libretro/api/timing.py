@@ -14,9 +14,9 @@ RETRO_THROTTLE_UNBLOCKED = 6
 
 retro_usec_t = c_int64
 
-from libretro.typing import ConvertibleToInteger, CoreFunctionPointer
+from libretro.typing import CIntArg, TypedFunctionPointer
 
-retro_frame_time_callback_t = CoreFunctionPointer[None, [ConvertibleToInteger[retro_usec_t]]]
+retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]]
 
 
 @dataclass(init=False)
@@ -30,7 +30,7 @@ class retro_frame_time_callback(Structure):
         ("reference", c_uint),
     ]
 
-    def __call__(self, time: ConvertibleToInteger[retro_usec_t] | None = None):
+    def __call__(self, time: CIntArg[retro_usec_t] | None = None):
         """
         Calls the callback with the given time, or with the reference if time is None.
         Does nothing if the callback is unset.

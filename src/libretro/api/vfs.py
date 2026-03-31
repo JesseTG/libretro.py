@@ -17,7 +17,15 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import TYPE_CHECKING, Literal
 
-from libretro.typing import FrontendFunctionPointer, Pointer, c_void_ptr
+from libretro.typing import (
+    CBoolArg,
+    CIntArg,
+    CStringArg,
+    Pointer,
+    TypedFunctionPointer,
+    TypedPointer,
+    c_void_ptr,
+)
 
 from ._utils import MemoDict
 
@@ -77,33 +85,37 @@ class VfsFileAccess(IntFlag):
                 raise ValueError(f"Invalid VfsFileAccess: {self}")
 
 
-retro_vfs_get_path_t = FrontendFunctionPointer[c_char_p, [Pointer[retro_vfs_file_handle]]]
-retro_vfs_open_t = FrontendFunctionPointer[
-    Pointer[retro_vfs_file_handle], [c_char_p, c_uint, c_uint]
+retro_vfs_get_path_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_file_handle]]]
+retro_vfs_open_t = TypedFunctionPointer[
+    TypedPointer[retro_vfs_file_handle], [CStringArg, CIntArg[c_uint], CIntArg[c_uint]]
 ]
-retro_vfs_close_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
-retro_vfs_size_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
-retro_vfs_truncate_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle], c_int64]]
-retro_vfs_tell_t = FrontendFunctionPointer[c_int64, [Pointer[retro_vfs_file_handle]]]
-retro_vfs_seek_t = FrontendFunctionPointer[
-    c_int64, [Pointer[retro_vfs_file_handle], c_int64, c_int]
+retro_vfs_close_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
+retro_vfs_size_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
+retro_vfs_truncate_t = TypedFunctionPointer[
+    c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64]]
 ]
-retro_vfs_read_t = FrontendFunctionPointer[
-    c_int64, [Pointer[retro_vfs_file_handle], c_void_ptr, c_uint64]
+retro_vfs_tell_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
+retro_vfs_seek_t = TypedFunctionPointer[
+    c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64], CIntArg[c_int]]
 ]
-retro_vfs_write_t = FrontendFunctionPointer[
-    c_int64, [Pointer[retro_vfs_file_handle], c_void_ptr, c_uint64]
+retro_vfs_read_t = TypedFunctionPointer[
+    c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
 ]
-retro_vfs_flush_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_file_handle]]]
-retro_vfs_remove_t = FrontendFunctionPointer[c_int, [c_char_p]]
-retro_vfs_rename_t = FrontendFunctionPointer[c_int, [c_char_p, c_char_p]]
-retro_vfs_stat_t = FrontendFunctionPointer[c_int, [c_char_p, Pointer[c_int32]]]
-retro_vfs_mkdir_t = FrontendFunctionPointer[c_int, [c_char_p]]
-retro_vfs_opendir_t = FrontendFunctionPointer[Pointer[retro_vfs_dir_handle], [c_char_p, c_bool]]
-retro_vfs_readdir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
-retro_vfs_dirent_get_name_t = FrontendFunctionPointer[c_char_p, [Pointer[retro_vfs_dir_handle]]]
-retro_vfs_dirent_is_dir_t = FrontendFunctionPointer[c_bool, [Pointer[retro_vfs_dir_handle]]]
-retro_vfs_closedir_t = FrontendFunctionPointer[c_int, [Pointer[retro_vfs_dir_handle]]]
+retro_vfs_write_t = TypedFunctionPointer[
+    c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
+]
+retro_vfs_flush_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
+retro_vfs_remove_t = TypedFunctionPointer[c_int, [CStringArg]]
+retro_vfs_rename_t = TypedFunctionPointer[c_int, [CStringArg, CStringArg]]
+retro_vfs_stat_t = TypedFunctionPointer[c_int, [CStringArg, TypedPointer[c_int32]]]
+retro_vfs_mkdir_t = TypedFunctionPointer[c_int, [CStringArg]]
+retro_vfs_opendir_t = TypedFunctionPointer[
+    TypedPointer[retro_vfs_dir_handle], [CStringArg, CBoolArg]
+]
+retro_vfs_readdir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
+retro_vfs_dirent_get_name_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_dir_handle]]]
+retro_vfs_dirent_is_dir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
+retro_vfs_closedir_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_dir_handle]]]
 
 
 @dataclass(init=False, slots=True)
@@ -179,7 +191,7 @@ class retro_vfs_interface(Structure):
 class retro_vfs_interface_info(Structure):
     if TYPE_CHECKING:
         required_interface_version: int
-        iface: Pointer[retro_vfs_interface] | None
+        iface: TypedPointer[retro_vfs_interface] | Pointer[retro_vfs_interface] | None
 
     _fields_ = [
         ("required_interface_version", c_uint32),

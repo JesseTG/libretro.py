@@ -2,13 +2,13 @@ from ctypes import Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer, Pointer
+from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
-retro_midi_input_enabled_t = FrontendFunctionPointer[c_bool, []]
-retro_midi_output_enabled_t = FrontendFunctionPointer[c_bool, []]
-retro_midi_read_t = FrontendFunctionPointer[c_bool, [Pointer[c_uint8]]]
-retro_midi_write_t = FrontendFunctionPointer[c_bool, [c_uint8, c_uint32]]
-retro_midi_flush_t = FrontendFunctionPointer[c_bool, []]
+retro_midi_input_enabled_t = TypedFunctionPointer[c_bool, []]
+retro_midi_output_enabled_t = TypedFunctionPointer[c_bool, []]
+retro_midi_read_t = TypedFunctionPointer[c_bool, [TypedPointer[c_uint8]]]
+retro_midi_write_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint8], CIntArg[c_uint32]]]
+retro_midi_flush_t = TypedFunctionPointer[c_bool, []]
 
 
 @dataclass(init=False)

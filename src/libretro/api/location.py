@@ -2,21 +2,21 @@ from ctypes import Structure, c_bool, c_double, c_uint
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, Pointer
+from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
-retro_location_set_interval_t = FrontendFunctionPointer[None, [c_uint, c_uint]]
-retro_location_start_t = FrontendFunctionPointer[c_bool, []]
-retro_location_stop_t = FrontendFunctionPointer[None, []]
-retro_location_get_position_t = FrontendFunctionPointer[
+retro_location_set_interval_t = TypedFunctionPointer[None, [CIntArg[c_uint], CIntArg[c_uint]]]
+retro_location_start_t = TypedFunctionPointer[c_bool, []]
+retro_location_stop_t = TypedFunctionPointer[None, []]
+retro_location_get_position_t = TypedFunctionPointer[
     c_bool,
     [
-        Pointer[c_double],
-        Pointer[c_double],
-        Pointer[c_double],
-        Pointer[c_double],
+        TypedPointer[c_double],
+        TypedPointer[c_double],
+        TypedPointer[c_double],
+        TypedPointer[c_double],
     ],
 ]
-retro_location_lifetime_status_t = CoreFunctionPointer[None, []]
+retro_location_lifetime_status_t = TypedFunctionPointer[None, []]
 
 
 @dataclass(init=False)

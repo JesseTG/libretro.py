@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import CoreFunctionPointer, Pointer, TypedArray
+from libretro.typing import TypedArray, TypedFunctionPointer, TypedPointer
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
 
-retro_core_options_update_display_callback_t = CoreFunctionPointer[c_bool, []]
+retro_core_options_update_display_callback_t = TypedFunctionPointer[c_bool, []]
 
 
 @dataclass(init=False)
@@ -91,8 +91,8 @@ class retro_core_option_definition(Structure):
 @dataclass(init=False)
 class retro_core_options_intl(Structure):
     if TYPE_CHECKING:
-        us: Pointer[retro_core_option_definition] | None
-        local: Pointer[retro_core_option_definition] | None
+        us: TypedPointer[retro_core_option_definition] | None
+        local: TypedPointer[retro_core_option_definition] | None
 
     _fields_ = [
         ("us", POINTER(retro_core_option_definition)),
@@ -162,8 +162,8 @@ class retro_core_option_v2_definition(Structure):
 @dataclass(init=False)
 class retro_core_options_v2(Structure):
     if TYPE_CHECKING:
-        categories: Pointer[retro_core_option_v2_category] | None
-        definitions: Pointer[retro_core_option_v2_definition] | None
+        categories: TypedPointer[retro_core_option_v2_category] | None
+        definitions: TypedPointer[retro_core_option_v2_definition] | None
 
     _fields_ = [
         ("categories", POINTER(retro_core_option_v2_category)),
@@ -180,8 +180,8 @@ class retro_core_options_v2(Structure):
 @dataclass(init=False)
 class retro_core_options_v2_intl(Structure):
     if TYPE_CHECKING:
-        us: Pointer[retro_core_options_v2] | None
-        local: Pointer[retro_core_options_v2] | None
+        us: TypedPointer[retro_core_options_v2] | None
+        local: TypedPointer[retro_core_options_v2] | None
 
     _fields_ = [
         ("us", POINTER(retro_core_options_v2)),

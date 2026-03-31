@@ -4,7 +4,7 @@ from enum import CONFORM, IntEnum, IntFlag
 from typing import TYPE_CHECKING, NewType, overload
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import FrontendFunctionPointer, TypedPointer
+from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
 Port = NewType("Port", int)
 """
@@ -22,8 +22,10 @@ RETRO_DEVICE_ANALOG = 5
 RETRO_DEVICE_POINTER = 6
 
 
-retro_input_poll_t = FrontendFunctionPointer[None, []]
-retro_input_state_t = FrontendFunctionPointer[c_int16, [c_uint, c_uint, c_uint, c_uint]]
+retro_input_poll_t = TypedFunctionPointer[None, []]
+retro_input_state_t = TypedFunctionPointer[
+    c_int16, [CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint]]
+]
 
 
 RETRO_DEVICE_TYPE_SHIFT = 8

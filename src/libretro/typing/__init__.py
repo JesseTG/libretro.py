@@ -112,29 +112,32 @@ class c_void_ptr(c_void_p):
 
 
 if TYPE_CHECKING:
-    type ConvertibleToBool = ConvertibleToPrimitive[c_bool, bool]
-    type ConvertibleToInteger[T: CUint | CInt] = ConvertibleToPrimitive[T, int] | SupportsInt
-    type ConvertibleToFloat[T: CReal] = ConvertibleToPrimitive[T, float] | SupportsFloat
-    type ConvertibleToString = ConvertibleToPrimitive[c_char_p, bytes] | SupportsBytes
+    type CBoolArg = ConvertibleToPrimitive[c_bool, bool]
+    type CIntArg[T: CUint | CInt] = ConvertibleToPrimitive[T, int] | SupportsInt
+    type CFloatArg[T: CReal] = ConvertibleToPrimitive[T, float] | SupportsFloat
+    type CStringArg = ConvertibleToPrimitive[c_char_p, bytes] | SupportsBytes
     type Pointer[T: _CDataType] = _Pointer[T]
 
-    class CoreFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
-        """
-        Type for a function defined in the core to be called in the frontend
-        """
-
+    class TypedFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
         @overload
         def __call__(self, func: Callable[P, R]) -> Self: ...
         @overload
-        def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
-
-    class FrontendFunctionPointer[R: _CDataType | None | int, **P](CFuncPtr):
-        """
-        Type for a function defined in the frontend to be called in the core
-        """
-
+        def __call__(
+            self: TypedFunctionPointer[c_bool, P], *args: P.args, **kwargs: P.kwargs
+        ) -> bool: ...
         @overload
-        def __call__(self, func: Callable[P, R]) -> Self: ...
+        def __call__[
+            I: CInt | CUint
+        ](self: TypedFunctionPointer[I, P], *args: P.args, **kwargs: P.kwargs) -> int: ...
+        @overload
+        def __call__[
+            F: CReal
+        ](self: TypedFunctionPointer[F, P], *args: P.args, **kwargs: P.kwargs) -> float: ...
+        @overload
+        def __call__(
+            self: TypedFunctionPointer[c_char_p, P], *args: P.args, **kwargs: P.kwargs
+        ) -> bytes | None: ...
+
         @overload
         def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
@@ -300,24 +303,20 @@ if TYPE_CHECKING:
         ]: ...
 
         @overload
-        def __setitem__(
-            self: TypedPointer[c_bool], key: int, value: ConvertibleToBool, /
-        ) -> None: ...
+        def __setitem__(self: TypedPointer[c_bool], key: int, value: CBoolArg, /) -> None: ...
 
         @overload
         def __setitem__[
             I: CInt | CUint
-        ](self: TypedPointer[I], key: int, value: ConvertibleToInteger[I], /) -> None: ...
+        ](self: TypedPointer[I], key: int, value: CIntArg[I], /) -> None: ...
 
         @overload
         def __setitem__[
             F: CReal
-        ](self: TypedPointer[F], key: int, value: ConvertibleToFloat[F], /) -> None: ...
+        ](self: TypedPointer[F], key: int, value: CFloatArg[F], /) -> None: ...
 
         @overload
-        def __setitem__(
-            self: TypedPointer[c_char_p], key: int, value: ConvertibleToString, /
-        ) -> None: ...
+        def __setitem__(self: TypedPointer[c_char_p], key: int, value: CStringArg, /) -> None: ...
 
         @overload
         def __setitem__[
@@ -337,24 +336,22 @@ if TYPE_CHECKING:
         def __bool__(self) -> bool: ...
 
 else:
-    ConvertibleToBool = c_bool
-    ConvertibleToInteger = _CTypeDeclaration
-    ConvertibleToFloat = _CTypeDeclaration
-    ConvertibleToString = c_char_p
+    CBoolArg = c_bool
+    CIntArg = _CTypeDeclaration
+    CFloatArg = _CTypeDeclaration
+    CStringArg = c_char_p
     Pointer = _PointerDeclaration
-    CoreFunctionPointer = _FunctionPointerDeclaration
-    FrontendFunctionPointer = _FunctionPointerDeclaration
+    TypedFunctionPointer = _FunctionPointerDeclaration
     TypedPointer = _PointerDeclaration
     TypedArray = Array
 
 __all__ = (
     "ConvertibleTo",
-    "ConvertibleToBool",
-    "ConvertibleToFloat",
-    "ConvertibleToInteger",
-    "ConvertibleToString",
-    "CoreFunctionPointer",
-    "FrontendFunctionPointer",
+    "CBoolArg",
+    "CFloatArg",
+    "CIntArg",
+    "CStringArg",
+    "TypedFunctionPointer",
     "Pointer",
     "TypedPointer",
     "TypedArray",

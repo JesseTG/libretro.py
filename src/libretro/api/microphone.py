@@ -2,7 +2,7 @@ from ctypes import Structure, c_bool, c_int, c_int16, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer, Pointer
+from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
@@ -31,17 +31,17 @@ class retro_microphone_params(Structure):
         return retro_microphone_params(self.rate)
 
 
-retro_open_mic_t = FrontendFunctionPointer[
-    Pointer[retro_microphone], [Pointer[retro_microphone_params]]
+retro_open_mic_t = TypedFunctionPointer[
+    TypedPointer[retro_microphone], [TypedPointer[retro_microphone_params]]
 ]
-retro_close_mic_t = FrontendFunctionPointer[None, [Pointer[retro_microphone]]]
-retro_get_mic_params_t = FrontendFunctionPointer[
-    c_bool, [Pointer[retro_microphone], Pointer[retro_microphone_params]]
+retro_close_mic_t = TypedFunctionPointer[None, [TypedPointer[retro_microphone]]]
+retro_get_mic_params_t = TypedFunctionPointer[
+    c_bool, [TypedPointer[retro_microphone], TypedPointer[retro_microphone_params]]
 ]
-retro_set_mic_state_t = FrontendFunctionPointer[c_bool, [Pointer[retro_microphone], c_bool]]
-retro_get_mic_state_t = FrontendFunctionPointer[c_bool, [Pointer[retro_microphone]]]
-retro_read_mic_t = FrontendFunctionPointer[
-    c_int, [Pointer[retro_microphone], Pointer[c_int16], c_size_t]
+retro_set_mic_state_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_microphone], CBoolArg]]
+retro_get_mic_state_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_microphone]]]
+retro_read_mic_t = TypedFunctionPointer[
+    c_int, [TypedPointer[retro_microphone], TypedPointer[c_int16], CIntArg[c_size_t]]
 ]
 
 

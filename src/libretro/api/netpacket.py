@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
 
-from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, c_void_ptr
+from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = 1 << 0
@@ -12,17 +12,19 @@ RETRO_NETPACKET_FLUSH_HINT = 1 << 2
 RETRO_NETPACKET_BROADCAST = 0xFFFF
 
 
-retro_netpacket_send_t = FrontendFunctionPointer[
-    None, [c_int, c_void_ptr, c_size_t, c_uint16, c_bool]
+retro_netpacket_send_t = TypedFunctionPointer[
+    None, [CIntArg[c_int], c_void_ptr, CIntArg[c_size_t], CIntArg[c_uint16], CBoolArg]
 ]
-retro_netpacket_receive_t = CoreFunctionPointer[None, [c_void_ptr, c_size_t, c_uint16]]
-retro_netpacket_stop_t = CoreFunctionPointer[None, []]
-retro_netpacket_poll_t = CoreFunctionPointer[None, []]
-retro_netpacket_poll_receive_t = FrontendFunctionPointer[None, []]
-retro_netpacket_connected_t = CoreFunctionPointer[c_bool, [c_uint16]]
-retro_netpacket_disconnected_t = CoreFunctionPointer[None, [c_uint16]]
-retro_netpacket_start_t = CoreFunctionPointer[
-    None, [c_uint16, retro_netpacket_send_t, retro_netpacket_poll_receive_t]
+retro_netpacket_receive_t = TypedFunctionPointer[
+    None, [c_void_ptr, CIntArg[c_size_t], CIntArg[c_uint16]]
+]
+retro_netpacket_stop_t = TypedFunctionPointer[None, []]
+retro_netpacket_poll_t = TypedFunctionPointer[None, []]
+retro_netpacket_poll_receive_t = TypedFunctionPointer[None, []]
+retro_netpacket_connected_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint16]]]
+retro_netpacket_disconnected_t = TypedFunctionPointer[None, [CIntArg[c_uint16]]]
+retro_netpacket_start_t = TypedFunctionPointer[
+    None, [CIntArg[c_uint16], retro_netpacket_send_t, retro_netpacket_poll_receive_t]
 ]
 
 

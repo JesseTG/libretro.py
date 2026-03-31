@@ -1,20 +1,32 @@
-from ctypes import Structure, c_bool, c_char_p, c_size_t, c_uint
+from ctypes import Structure, c_bool, c_size_t, c_uint
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from libretro.api.content import retro_game_info
-from libretro.typing import CoreFunctionPointer, TypedPointer
+from libretro.typing import (
+    CBoolArg,
+    CIntArg,
+    CStringArg,
+    TypedFunctionPointer,
+    TypedPointer,
+)
 
-retro_set_eject_state_t = CoreFunctionPointer[c_bool, [c_bool]]
-retro_get_eject_state_t = CoreFunctionPointer[c_bool, []]
-retro_get_image_index_t = CoreFunctionPointer[c_uint, []]
-retro_set_image_index_t = CoreFunctionPointer[c_bool, [c_uint]]
-retro_get_num_images_t = CoreFunctionPointer[c_uint, []]
-retro_replace_image_index_t = CoreFunctionPointer[c_bool, [c_uint, TypedPointer[retro_game_info]]]
-retro_add_image_index_t = CoreFunctionPointer[c_bool, []]
-retro_set_initial_image_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p]]
-retro_get_image_path_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
-retro_get_image_label_t = CoreFunctionPointer[c_bool, [c_uint, c_char_p, c_size_t]]
+retro_set_eject_state_t = TypedFunctionPointer[c_bool, [CBoolArg]]
+retro_get_eject_state_t = TypedFunctionPointer[c_bool, []]
+retro_get_image_index_t = TypedFunctionPointer[c_uint, []]
+retro_set_image_index_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint]]]
+retro_get_num_images_t = TypedFunctionPointer[c_uint, []]
+retro_replace_image_index_t = TypedFunctionPointer[
+    c_bool, [CIntArg[c_uint], TypedPointer[retro_game_info]]
+]
+retro_add_image_index_t = TypedFunctionPointer[c_bool, []]
+retro_set_initial_image_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint], CStringArg]]
+retro_get_image_path_t = TypedFunctionPointer[
+    c_bool, [CIntArg[c_uint], CStringArg, CIntArg[c_size_t]]
+]
+retro_get_image_label_t = TypedFunctionPointer[
+    c_bool, [CIntArg[c_uint], CStringArg, CIntArg[c_size_t]]
+]
 
 
 @dataclass(init=False)

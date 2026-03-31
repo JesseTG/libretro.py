@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
 from typing import TYPE_CHECKING
 
-from libretro.typing import ConvertibleToBool, ConvertibleToInteger, CoreFunctionPointer
+from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer
 
 from .device import InputDeviceState
 
@@ -559,13 +559,13 @@ class KeyboardState(InputDeviceState):
                 raise KeyError(f"Invalid key: {item}")
 
 
-retro_keyboard_event_t = CoreFunctionPointer[
+retro_keyboard_event_t = TypedFunctionPointer[
     None,
     [
-        ConvertibleToBool,
-        ConvertibleToInteger[c_uint],
-        ConvertibleToInteger[c_uint32],
-        ConvertibleToInteger[c_uint16],
+        CBoolArg,
+        CIntArg[c_uint],
+        CIntArg[c_uint32],
+        CIntArg[c_uint16],
     ],
 ]
 

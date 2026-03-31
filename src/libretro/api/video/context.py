@@ -1,11 +1,11 @@
-from ctypes import Structure, c_bool, c_char_p, c_int, c_uint, c_void_p, cast
+from ctypes import Structure, c_bool, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
 from libretro.api._utils import c_uintptr
 from libretro.api.proc import retro_proc_address_t
-from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer
+from libretro.typing import CStringArg, TypedFunctionPointer
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 
@@ -41,9 +41,9 @@ class HardwareContext(IntEnum):
     D3D9 = RETRO_HW_CONTEXT_D3D9
 
 
-retro_hw_context_reset_t = CoreFunctionPointer[None, []]
-retro_hw_get_current_framebuffer_t = FrontendFunctionPointer[c_uintptr, []]
-retro_hw_get_proc_address_t = FrontendFunctionPointer[retro_proc_address_t, [c_char_p]]
+retro_hw_context_reset_t = TypedFunctionPointer[None, []]
+retro_hw_get_current_framebuffer_t = TypedFunctionPointer[c_uintptr, []]
+retro_hw_get_proc_address_t = TypedFunctionPointer[retro_proc_address_t, [CStringArg]]
 
 
 @dataclass(init=False)

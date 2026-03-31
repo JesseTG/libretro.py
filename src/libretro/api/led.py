@@ -2,9 +2,9 @@ from ctypes import Structure, c_int
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer
+from libretro.typing import CIntArg, TypedFunctionPointer
 
-retro_set_led_state_t = FrontendFunctionPointer[None, [c_int, c_int]]
+retro_set_led_state_t = TypedFunctionPointer[None, [CIntArg[c_int], CIntArg[c_int]]]
 
 
 @dataclass(init=False)

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer
+from libretro.typing import CIntArg, TypedFunctionPointer
 
 retro_rumble_effect = c_int
 RETRO_RUMBLE_STRONG = 0
@@ -11,7 +11,9 @@ RETRO_RUMBLE_WEAK = 1
 RETRO_RUMBLE_DUMMY = 0x7FFFFFFF
 
 
-retro_set_rumble_state_t = FrontendFunctionPointer[c_bool, [c_uint, retro_rumble_effect, c_uint16]]
+retro_set_rumble_state_t = TypedFunctionPointer[
+    c_bool, [CIntArg[c_uint], CIntArg[retro_rumble_effect], CIntArg[c_uint16]]
+]
 
 
 class RumbleEffect(IntEnum):

@@ -2,10 +2,10 @@ from ctypes import Structure
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import ConvertibleToString, CoreFunctionPointer
+from libretro.typing import CStringArg, TypedFunctionPointer
 
-retro_proc_address_t = CoreFunctionPointer[None, []]
-retro_get_proc_address_t = CoreFunctionPointer[retro_proc_address_t, [ConvertibleToString]]
+retro_proc_address_t = TypedFunctionPointer[None, []]
+retro_get_proc_address_t = TypedFunctionPointer[retro_proc_address_t, [CStringArg]]
 
 
 @dataclass(init=False, slots=True)

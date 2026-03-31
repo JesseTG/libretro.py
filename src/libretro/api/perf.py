@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer, Pointer
+from libretro.typing import TypedFunctionPointer, TypedPointer
 
 RETRO_SIMD_SSE = 1 << 0
 RETRO_SIMD_SSE2 = 1 << 1
@@ -85,13 +85,13 @@ class retro_perf_counter(Structure):
         )
 
 
-retro_perf_get_time_usec_t = FrontendFunctionPointer[retro_time_t, []]
-retro_perf_get_counter_t = FrontendFunctionPointer[retro_perf_tick_t, []]
-retro_get_cpu_features_t = FrontendFunctionPointer[c_uint64, []]
-retro_perf_log_t = FrontendFunctionPointer[None, []]
-retro_perf_register_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
-retro_perf_start_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
-retro_perf_stop_t = FrontendFunctionPointer[None, [Pointer[retro_perf_counter]]]
+retro_perf_get_time_usec_t = TypedFunctionPointer[retro_time_t, []]
+retro_perf_get_counter_t = TypedFunctionPointer[retro_perf_tick_t, []]
+retro_get_cpu_features_t = TypedFunctionPointer[c_uint64, []]
+retro_perf_log_t = TypedFunctionPointer[None, []]
+retro_perf_register_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
+retro_perf_start_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
+retro_perf_stop_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
 
 
 @dataclass(init=False, slots=True)

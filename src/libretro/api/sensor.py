@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer
+from libretro.typing import CIntArg, TypedFunctionPointer
 
 retro_sensor_action = c_int
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0
@@ -23,8 +23,10 @@ RETRO_SENSOR_GYROSCOPE_Z = 5
 RETRO_SENSOR_ILLUMINANCE = 6
 
 
-retro_set_sensor_state_t = FrontendFunctionPointer[c_bool, [c_uint, retro_sensor_action, c_uint]]
-retro_sensor_get_input_t = FrontendFunctionPointer[c_float, [c_uint, c_uint]]
+retro_set_sensor_state_t = TypedFunctionPointer[
+    c_bool, [CIntArg[c_uint], CIntArg[retro_sensor_action], CIntArg[c_uint]]
+]
+retro_sensor_get_input_t = TypedFunctionPointer[c_float, [CIntArg[c_uint], CIntArg[c_uint]]]
 
 
 @dataclass(init=False)

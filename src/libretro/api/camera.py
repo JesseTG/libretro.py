@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING
 
-from libretro.typing import CoreFunctionPointer, FrontendFunctionPointer, Pointer
+from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_camera_buffer = c_int
 RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0
@@ -20,13 +20,15 @@ RETRO_CAMERA_BUFFER_RAW_FRAMEBUFFER = RETRO_CAMERA_BUFFER_OPENGL_TEXTURE + 1
 RETRO_CAMERA_BUFFER_DUMMY = 0x7FFFFFFF
 
 
-retro_camera_start_t = FrontendFunctionPointer[c_bool, []]
-retro_camera_stop_t = FrontendFunctionPointer[None, []]
-retro_camera_lifetime_status_t = CoreFunctionPointer[None, []]
-retro_camera_frame_raw_framebuffer_t = CoreFunctionPointer[
-    None, [Pointer[c_uint32], c_uint, c_uint, c_size_t]
+retro_camera_start_t = TypedFunctionPointer[c_bool, []]
+retro_camera_stop_t = TypedFunctionPointer[None, []]
+retro_camera_lifetime_status_t = TypedFunctionPointer[None, []]
+retro_camera_frame_raw_framebuffer_t = TypedFunctionPointer[
+    None, [TypedPointer[c_uint32], CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_size_t]]
 ]
-retro_camera_frame_opengl_texture_t = CoreFunctionPointer[None, [c_uint, c_uint, Pointer[c_float]]]
+retro_camera_frame_opengl_texture_t = TypedFunctionPointer[
+    None, [CIntArg[c_uint], CIntArg[c_uint], TypedPointer[c_float]]
+]
 
 
 class CameraCapabilities(IntEnum):

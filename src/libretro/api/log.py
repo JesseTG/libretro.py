@@ -1,10 +1,10 @@
 import logging
-from ctypes import Structure, c_char_p, c_int
+from ctypes import Structure, c_int
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from libretro.typing import FrontendFunctionPointer
+from libretro.typing import CIntArg, CStringArg, TypedFunctionPointer
 
 RETRO_LOG_DEBUG = 0
 RETRO_LOG_INFO = RETRO_LOG_DEBUG + 1
@@ -15,7 +15,7 @@ RETRO_LOG_DUMMY = 0x7FFFFFFF
 retro_log_level = c_int
 
 
-retro_log_printf_t = FrontendFunctionPointer[None, [retro_log_level, c_char_p]]
+retro_log_printf_t = TypedFunctionPointer[None, [CIntArg[retro_log_level], CStringArg]]
 
 
 class LogLevel(IntEnum):

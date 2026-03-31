@@ -2,20 +2,16 @@ from ctypes import Structure, c_int16, c_size_t, c_uint
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from libretro.typing import (
-    ConvertibleToBool,
-    ConvertibleToInteger,
-    CoreFunctionPointer,
-    FrontendFunctionPointer,
-    Pointer,
-)
+from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
-retro_audio_sample_t = FrontendFunctionPointer[None, [c_int16, c_int16]]
-retro_audio_sample_batch_t = FrontendFunctionPointer[int, [Pointer[c_int16], c_size_t]]
-retro_audio_callback_t = CoreFunctionPointer[None, []]
-retro_audio_set_state_callback_t = CoreFunctionPointer[None, [ConvertibleToBool]]
-retro_audio_buffer_status_callback_t = CoreFunctionPointer[
-    None, [ConvertibleToBool, ConvertibleToInteger[c_uint], ConvertibleToBool]
+retro_audio_sample_t = TypedFunctionPointer[None, [CIntArg[c_int16], CIntArg[c_int16]]]
+retro_audio_sample_batch_t = TypedFunctionPointer[
+    c_size_t, [TypedPointer[c_int16], CIntArg[c_size_t]]
+]
+retro_audio_callback_t = TypedFunctionPointer[None, []]
+retro_audio_set_state_callback_t = TypedFunctionPointer[None, [CBoolArg]]
+retro_audio_buffer_status_callback_t = TypedFunctionPointer[
+    None, [CBoolArg, CIntArg[c_uint], CBoolArg]
 ]
 
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Literal
 
-from libretro.typing import FrontendFunctionPointer, c_void_ptr
+from libretro.typing import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
@@ -15,7 +15,9 @@ RETRO_MEMORY_ACCESS_READ = 1 << 1
 RETRO_MEMORY_TYPE_CACHED = 1 << 0
 
 
-retro_video_refresh_t = FrontendFunctionPointer[None, [c_void_ptr, c_uint, c_uint, c_size_t]]
+retro_video_refresh_t = TypedFunctionPointer[
+    None, [c_void_ptr, CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_size_t]]
+]
 
 
 class PixelFormat(IntEnum):
