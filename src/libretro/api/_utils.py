@@ -38,7 +38,9 @@ if TYPE_CHECKING:
 _MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 
-def address(ptr: c_void_p | c_char_p | int | _Pointer[_CData] | CFuncPtr | None) -> int | None:
+def address[
+    T: _CDataType
+](ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None) -> int | None:
     """
     Returns the address of the given pointer as an integer or None.
     If the input is already an integer, it is returned as-is.
