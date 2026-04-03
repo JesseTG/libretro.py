@@ -1923,7 +1923,7 @@ class CompositeEnvironmentDriver[
 
         if self._mic_interface is None:
             self._mic_interface = retro_microphone_interface(
-                version=self._mic.version,
+                interface_version=self._mic.version,
                 open_mic=retro_open_mic_t(self._open_mic),
                 close_mic=retro_close_mic_t(self._close_mic),
                 get_params=retro_get_mic_params_t(self._get_mic_params),
