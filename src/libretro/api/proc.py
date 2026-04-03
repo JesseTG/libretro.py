@@ -1,7 +1,8 @@
-from ctypes import Structure
+from ctypes import Structure, cast
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
+from libretro.api._utils import address
 from libretro.typing import CStringArg, TypedFunctionPointer
 
 retro_proc_address_t = TypedFunctionPointer[None, []]
@@ -15,7 +16,7 @@ class retro_get_proc_address_interface(Structure):
 
     _fields_ = [("get_proc_address", retro_get_proc_address_t)]
 
-    def __call__(self, sym: str | bytes) -> retro_proc_address_t:
+    def __call__(self, sym: str | bytes) -> retro_proc_address_t | None:
         if not self.get_proc_address:
             raise ValueError("get_proc_address is NULL")
 

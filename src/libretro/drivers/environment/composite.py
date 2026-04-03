@@ -1068,7 +1068,7 @@ class CompositeEnvironmentDriver[
             return None
 
         if funtype:
-            return funtype(proc)
+            return cast(proc, funtype)
 
         return proc
 

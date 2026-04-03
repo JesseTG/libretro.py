@@ -152,8 +152,12 @@ if TYPE_CHECKING:
             **kwargs: P.kwargs,
         ) -> c_void_ptr: ...
         @overload
+        def __call__(
+            self: TypedFunctionPointer[None, []], *args: P.args, **kwargs: P.kwargs
+        ) -> TypedFunctionPointer[None, []]: ...
+        @overload
         def __call__[
-            T: _CDataType | None, **Q
+            T: _CDataType, **Q
         ](
             self: TypedFunctionPointer[TypedFunctionPointer[T, Q], P],
             *args: P.args,
