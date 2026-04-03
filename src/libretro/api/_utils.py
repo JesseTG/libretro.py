@@ -20,6 +20,7 @@ from ctypes import (
     c_ubyte,
     c_uint8,
     c_void_p,
+    cast,
     py_object,
     pythonapi,
     sizeof,
@@ -27,10 +28,32 @@ from ctypes import (
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 
+from _ctypes import CFuncPtr
+
 from libretro.typing import TypedPointer
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType
+
+_MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
+
+
+def address(ptr: c_void_p | c_char_p | int | _Pointer[_CData] | CFuncPtr | None) -> int | None:
+    """
+    Returns the address of the given pointer as an integer or None.
+    If the input is already an integer, it is returned as-is.
+    """
+    match ptr:
+        case 0 | None:
+            return None
+        case int() if 0 < ptr <= _MAX_POINTER_VALUE:
+            return ptr
+        case int():
+            raise ValueError(f"Expected an int between 0 and {_MAX_POINTER_VALUE}, got {ptr}")
+        case c_void_p():
+            return ptr.value
+        case c_char_p() | _Pointer() | CFuncPtr():
+            return cast(ptr, c_void_p).value
 
 
 @overload
@@ -208,6 +231,7 @@ else:
 
 
 __all__ = [
+    "address",
     "as_bytes",
     "is_zeroed",
     "from_zero_terminated",
