@@ -108,7 +108,9 @@ class c_void_ptr(c_void_p):
     Use this in function signatures and struct definitions instead of ``c_void_p``.
     """
 
-    pass
+    @override
+    def __repr__(self) -> str:
+        return f"c_void_ptr({self.value:#x})"
 
 
 if TYPE_CHECKING:
