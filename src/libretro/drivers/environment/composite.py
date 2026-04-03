@@ -1310,7 +1310,7 @@ class CompositeEnvironmentDriver[
         if not file:
             return None
 
-        return pointer(file)
+        return cast(pointer(file), c_void_p).value
 
     def _vfs_close(self, file: TypedPointer[retro_vfs_file_handle]):
         if self._vfs is None or not file:
@@ -1406,7 +1406,7 @@ class CompositeEnvironmentDriver[
         if not dir:
             return None
 
-        return pointer(dir)
+        return cast(pointer(dir), c_void_p).value
 
     def _vfs_readdir(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bool:
         if self._vfs is None or not dir:
@@ -1956,7 +1956,7 @@ class CompositeEnvironmentDriver[
         if not mic:
             return None
 
-        return pointer(mic)
+        return cast(pointer(mic), c_void_p).value
 
     def _close_mic(self, mic: TypedPointer[retro_microphone]) -> None:
         if self._mic is not None and mic:
