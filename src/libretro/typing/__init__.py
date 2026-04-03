@@ -81,7 +81,15 @@ class _FunctionPointerDeclaration:
         """
         Allow subscripted CoreFunctionPointer types to be used as type annotations.
         """
-        return CFUNCTYPE(args[0], *args[1])
+        # CFUNCTYPE doesn't support returning pointers to structs,
+        # so function pointers will have to return c_void_p instead
+        # and be cast back to the correct type in the implementation.
+        # https://github.com/python/cpython/issues/49960
+        restype = args[0]
+        if restype and issubclass(restype, _Pointer) and issubclass(restype._type_, (Structure, CFuncPtr)):  # type: ignore
+            return CFUNCTYPE(c_void_ptr, *args[1])
+        else:
+            return CFUNCTYPE(restype, *args[1])
 
 
 class _PointerDeclaration:
@@ -135,6 +143,24 @@ if TYPE_CHECKING:
         def __call__[
             F: CReal
         ](self: TypedFunctionPointer[F, P], *args: P.args, **kwargs: P.kwargs) -> float: ...
+        @overload
+        def __call__[
+            S: Structure
+        ](
+            self: TypedFunctionPointer[TypedPointer[S] | Pointer[S], P],
+            *args: P.args,
+            **kwargs: P.kwargs,
+        ) -> c_void_ptr: ...
+        @overload
+        def __call__[
+            T: _CDataType | None, **Q
+        ](
+            self: TypedFunctionPointer[TypedFunctionPointer[T, Q], P],
+            *args: P.args,
+            **kwargs: P.kwargs,
+        ) -> c_void_ptr: ...
+
+        # See https://github.com/python/cpython/issues/49960
         @overload
         def __call__(
             self: TypedFunctionPointer[c_char_p, P], *args: P.args, **kwargs: P.kwargs
