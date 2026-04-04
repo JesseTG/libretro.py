@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16
 from dataclasses import dataclass
 from enum import IntFlag
-from typing import TYPE_CHECKING
 
 from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, c_void_ptr
 
@@ -38,18 +37,17 @@ class NetpacketFlags(IntFlag):
 BROADCAST = RETRO_NETPACKET_BROADCAST
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_netpacket_callback(Structure):
-    if TYPE_CHECKING:
-        start: retro_netpacket_start_t | None
-        receive: retro_netpacket_receive_t | None
-        stop: retro_netpacket_stop_t | None
-        poll: retro_netpacket_poll_t | None
-        connected: retro_netpacket_connected_t | None
-        disconnected: retro_netpacket_disconnected_t | None
-        protocol_version: bytes | None
+    start: retro_netpacket_start_t | None
+    receive: retro_netpacket_receive_t | None
+    stop: retro_netpacket_stop_t | None
+    poll: retro_netpacket_poll_t | None
+    connected: retro_netpacket_connected_t | None
+    disconnected: retro_netpacket_disconnected_t | None
+    protocol_version: bytes | None
 
-    _fields_ = [
+    _fields_ = (
         ("start", retro_netpacket_start_t),
         ("receive", retro_netpacket_receive_t),
         ("stop", retro_netpacket_stop_t),
@@ -57,7 +55,7 @@ class retro_netpacket_callback(Structure):
         ("connected", retro_netpacket_connected_t),
         ("disconnected", retro_netpacket_disconnected_t),
         ("protocol_version", c_char_p),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_netpacket_callback(

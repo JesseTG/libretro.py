@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_char_p, c_int64, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
-from typing import TYPE_CHECKING
 
 from libretro.typing import TypedFunctionPointer, TypedPointer
 
@@ -58,22 +57,21 @@ class CpuFeatures(IntFlag):
     ASIMD = RETRO_SIMD_ASIMD
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_perf_counter(Structure):
-    if TYPE_CHECKING:
-        ident: bytes | None
-        start: int
-        total: int
-        call_cnt: int
-        registered: bool
+    ident: bytes | None
+    start: int
+    total: int
+    call_cnt: int
+    registered: bool
 
-    _fields_ = [
+    _fields_ = (
         ("ident", c_char_p),
         ("start", retro_perf_tick_t),
         ("total", retro_perf_tick_t),
         ("call_cnt", retro_perf_tick_t),
         ("registered", c_bool),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_perf_counter(
@@ -96,16 +94,15 @@ retro_perf_stop_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]
 
 @dataclass(init=False, slots=True)
 class retro_perf_callback(Structure):
-    if TYPE_CHECKING:
-        get_time_usec: retro_perf_get_time_usec_t | None
-        get_cpu_features: retro_get_cpu_features_t | None
-        get_perf_counter: retro_perf_get_counter_t | None
-        perf_register: retro_perf_register_t | None
-        perf_start: retro_perf_start_t | None
-        perf_stop: retro_perf_stop_t | None
-        perf_log: retro_perf_log_t | None
+    get_time_usec: retro_perf_get_time_usec_t | None
+    get_cpu_features: retro_get_cpu_features_t | None
+    get_perf_counter: retro_perf_get_counter_t | None
+    perf_register: retro_perf_register_t | None
+    perf_start: retro_perf_start_t | None
+    perf_stop: retro_perf_stop_t | None
+    perf_log: retro_perf_log_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("get_time_usec", retro_perf_get_time_usec_t),
         ("get_cpu_features", retro_get_cpu_features_t),
         ("get_perf_counter", retro_perf_get_counter_t),
@@ -113,7 +110,7 @@ class retro_perf_callback(Structure):
         ("perf_start", retro_perf_start_t),
         ("perf_stop", retro_perf_stop_t),
         ("perf_log", retro_perf_log_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_perf_callback(

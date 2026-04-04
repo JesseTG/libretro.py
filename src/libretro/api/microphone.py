@@ -1,6 +1,5 @@
 from ctypes import Structure, c_bool, c_int, c_int16, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
@@ -10,22 +9,16 @@ INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
 
 @dataclass(init=False, slots=True)
 class retro_microphone(Structure):
-    if TYPE_CHECKING:
-        id: int
+    id: int
 
-    _fields_ = [
-        ("id", c_uint64),
-    ]
+    _fields_ = (("id", c_uint64),)
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_microphone_params(Structure):
-    if TYPE_CHECKING:
-        rate: int
+    rate: int
 
-    _fields_ = [
-        ("rate", c_uint),
-    ]
+    _fields_ = (("rate", c_uint),)
 
     def __deepcopy__(self, _):
         return retro_microphone_params(self.rate)
@@ -47,16 +40,15 @@ retro_read_mic_t = TypedFunctionPointer[
 
 @dataclass(init=False, slots=True)
 class retro_microphone_interface(Structure):
-    if TYPE_CHECKING:
-        interface_version: int
-        open_mic: retro_open_mic_t | None
-        close_mic: retro_close_mic_t | None
-        get_params: retro_get_mic_params_t | None
-        set_mic_state: retro_set_mic_state_t | None
-        get_mic_state: retro_get_mic_state_t | None
-        read_mic: retro_read_mic_t | None
+    interface_version: int
+    open_mic: retro_open_mic_t | None
+    close_mic: retro_close_mic_t | None
+    get_params: retro_get_mic_params_t | None
+    set_mic_state: retro_set_mic_state_t | None
+    get_mic_state: retro_get_mic_state_t | None
+    read_mic: retro_read_mic_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("interface_version", c_uint),
         ("open_mic", retro_open_mic_t),
         ("close_mic", retro_close_mic_t),
@@ -64,7 +56,27 @@ class retro_microphone_interface(Structure):
         ("set_mic_state", retro_set_mic_state_t),
         ("get_mic_state", retro_get_mic_state_t),
         ("read_mic", retro_read_mic_t),
-    ]
+    )
+
+    def __init__(
+        self,
+        interface_version: int,
+        open_mic: retro_open_mic_t | None = None,
+        close_mic: retro_close_mic_t | None = None,
+        get_params: retro_get_mic_params_t | None = None,
+        set_mic_state: retro_set_mic_state_t | None = None,
+        get_mic_state: retro_get_mic_state_t | None = None,
+        read_mic: retro_read_mic_t | None = None,
+    ):
+        super().__init__(
+            interface_version,
+            open_mic,
+            close_mic,
+            get_params,
+            set_mic_state,
+            get_mic_state,
+            read_mic,
+        )
 
     def __deepcopy__(self, _):
         return retro_microphone_interface(

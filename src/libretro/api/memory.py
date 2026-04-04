@@ -1,7 +1,7 @@
 from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
-from typing import TYPE_CHECKING, overload
+from typing import overload
 
 from libretro.typing import TypedPointer, c_void_ptr
 
@@ -36,17 +36,16 @@ class MemoryDescriptorFlag(IntFlag):
 
 @dataclass(init=False, slots=True)
 class retro_memory_descriptor(Structure):
-    if TYPE_CHECKING:
-        flags: MemoryDescriptorFlag
-        ptr: c_void_ptr | None
-        offset: int
-        start: int
-        select: int
-        disconnect: int
-        len: int
-        addrspace: bytes | None
+    flags: MemoryDescriptorFlag
+    ptr: c_void_ptr | None
+    offset: int
+    start: int
+    select: int
+    disconnect: int
+    len: int
+    addrspace: bytes | None
 
-    _fields_ = [
+    _fields_ = (
         ("flags", c_uint64),
         ("ptr", c_void_ptr),
         ("offset", c_size_t),
@@ -55,7 +54,7 @@ class retro_memory_descriptor(Structure):
         ("disconnect", c_size_t),
         ("len", c_size_t),
         ("addrspace", c_char_p),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_memory_descriptor(
@@ -75,14 +74,13 @@ class retro_memory_descriptor(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_memory_map(Structure):
-    if TYPE_CHECKING:
-        descriptors: TypedPointer[retro_memory_descriptor] | None
-        num_descriptors: int
+    descriptors: TypedPointer[retro_memory_descriptor] | None
+    num_descriptors: int
 
-    _fields_ = [
+    _fields_ = (
         ("descriptors", POINTER(retro_memory_descriptor)),
         ("num_descriptors", c_uint),
-    ]
+    )
 
     def __len__(self):
         return self.num_descriptors

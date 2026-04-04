@@ -1,7 +1,6 @@
 from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
-from typing import TYPE_CHECKING
 
 from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer
 
@@ -570,14 +569,11 @@ retro_keyboard_event_t = TypedFunctionPointer[
 ]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_keyboard_callback(Structure):
-    if TYPE_CHECKING:
-        callback: retro_keyboard_event_t | None
+    callback: retro_keyboard_event_t | None
 
-    _fields_ = [
-        ("callback", retro_keyboard_event_t),
-    ]
+    _fields_ = (("callback", retro_keyboard_event_t),)
 
     def __deepcopy__(self, _):
         return retro_keyboard_callback(callback=self.callback)

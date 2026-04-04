@@ -1,7 +1,7 @@
 from ctypes import Structure, c_int, c_size_t, c_uint
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from libretro.typing import CIntArg, TypedFunctionPointer, c_void_ptr
 
@@ -73,18 +73,17 @@ class MemoryType(IntFlag):
     CACHED = RETRO_MEMORY_TYPE_CACHED
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_framebuffer(Structure):
-    if TYPE_CHECKING:
-        data: c_void_ptr | None
-        width: int
-        height: int
-        pitch: int
-        format: PixelFormat
-        access_flags: MemoryAccess
-        memory_flags: MemoryType
+    data: c_void_ptr | None
+    width: int
+    height: int
+    pitch: int
+    format: PixelFormat
+    access_flags: MemoryAccess
+    memory_flags: MemoryType
 
-    _fields_ = [
+    _fields_ = (
         ("data", c_void_ptr),
         ("width", c_uint),
         ("height", c_uint),
@@ -92,9 +91,9 @@ class retro_framebuffer(Structure):
         ("format", retro_pixel_format),
         ("access_flags", c_uint),
         ("memory_flags", c_uint),
-    ]
+    )
 
-    # TODO: Should I copy framebuffer?
+    # TODO: Copy the framebuffer, but also implement plain copy()
     def __deepcopy__(self, _):
         return retro_framebuffer(
             self.data,

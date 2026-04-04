@@ -2,7 +2,6 @@ import logging
 from ctypes import Structure, c_int
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 from libretro.typing import CIntArg, CStringArg, TypedFunctionPointer
 
@@ -43,10 +42,9 @@ class LogLevel(IntEnum):
 
 @dataclass(init=False, slots=True)
 class retro_log_callback(Structure):
-    if TYPE_CHECKING:
-        log: retro_log_printf_t | None
+    log: retro_log_printf_t | None
 
-    _fields_ = [("log", retro_log_printf_t)]
+    _fields_ = (("log", retro_log_printf_t),)
 
     def __deepcopy__(self, _):
         return retro_log_callback(self.log)

@@ -1,7 +1,6 @@
 from ctypes import Structure, c_int, c_int8
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 retro_power_state = c_int
 RETRO_POWERSTATE_UNKNOWN = 0
@@ -22,18 +21,17 @@ class PowerState(IntEnum):
     PLUGGED_IN = RETRO_POWERSTATE_PLUGGED_IN
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_device_power(Structure):
-    if TYPE_CHECKING:
-        state: PowerState
-        seconds: int
-        percent: int
+    state: PowerState
+    seconds: int
+    percent: int
 
-    _fields_ = [
+    _fields_ = (
         ("state", retro_power_state),
         ("seconds", c_int),
         ("percent", c_int8),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_device_power(state=self.state, seconds=self.seconds, percent=self.percent)

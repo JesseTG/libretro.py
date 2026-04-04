@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_int, c_uint, c_uint16
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 from libretro.typing import CIntArg, TypedFunctionPointer
 
@@ -21,12 +20,11 @@ class RumbleEffect(IntEnum):
     WEAK = RETRO_RUMBLE_WEAK
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_rumble_interface(Structure):
-    if TYPE_CHECKING:
-        set_rumble_state: retro_set_rumble_state_t | None
+    set_rumble_state: retro_set_rumble_state_t | None
 
-    _fields_ = [("set_rumble_state", retro_set_rumble_state_t)]
+    _fields_ = (("set_rumble_state", retro_set_rumble_state_t),)
 
     def __deepcopy__(self, _):
         return retro_rumble_interface(self.set_rumble_state)

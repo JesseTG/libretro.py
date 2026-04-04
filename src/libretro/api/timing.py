@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_float, c_int64, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 RETRO_THROTTLE_NONE = 0
 RETRO_THROTTLE_FRAME_STEPPING = 1
@@ -19,16 +18,15 @@ from libretro.typing import CIntArg, TypedFunctionPointer
 retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_frame_time_callback(Structure):
-    if TYPE_CHECKING:
-        callback: retro_frame_time_callback_t | None
-        reference: int
+    callback: retro_frame_time_callback_t | None
+    reference: int
 
-    _fields_ = [
+    _fields_ = (
         ("callback", retro_frame_time_callback_t),
         ("reference", c_uint),
-    ]
+    )
 
     def __call__(self, time: CIntArg[retro_usec_t] | None = None):
         """
@@ -56,20 +54,19 @@ class ThrottleMode(IntEnum):
     UNBLOCKED = RETRO_THROTTLE_UNBLOCKED
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_fastforwarding_override(Structure):
-    if TYPE_CHECKING:
-        ratio: float
-        fastforward: bool
-        notification: bool
-        inhibit_toggle: bool
+    ratio: float
+    fastforward: bool
+    notification: bool
+    inhibit_toggle: bool
 
-    _fields_ = [
+    _fields_ = (
         ("ratio", c_float),
         ("fastforward", c_bool),
         ("notification", c_bool),
         ("inhibit_toggle", c_bool),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_fastforwarding_override(
@@ -77,16 +74,15 @@ class retro_fastforwarding_override(Structure):
         )
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_throttle_state(Structure):
-    if TYPE_CHECKING:
-        mode: ThrottleMode
-        rate: float
+    mode: ThrottleMode
+    rate: float
 
-    _fields_ = [
+    _fields_ = (
         ("mode", c_uint),
         ("rate", c_float),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_throttle_state(self.mode, self.rate)

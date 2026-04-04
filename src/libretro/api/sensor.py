@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_float, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 from libretro.typing import CIntArg, TypedFunctionPointer
 
@@ -29,16 +28,15 @@ retro_set_sensor_state_t = TypedFunctionPointer[
 retro_sensor_get_input_t = TypedFunctionPointer[c_float, [CIntArg[c_uint], CIntArg[c_uint]]]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_sensor_interface(Structure):
-    if TYPE_CHECKING:
-        set_sensor_state: retro_set_sensor_state_t | None
-        get_sensor_input: retro_sensor_get_input_t | None
+    set_sensor_state: retro_set_sensor_state_t | None
+    get_sensor_input: retro_sensor_get_input_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("set_sensor_state", retro_set_sensor_state_t),
         ("get_sensor_input", retro_sensor_get_input_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_sensor_interface(self.set_sensor_state, self.get_sensor_input)

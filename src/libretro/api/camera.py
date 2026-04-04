@@ -10,7 +10,6 @@ from ctypes import (
 )
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
-from typing import TYPE_CHECKING
 
 from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
@@ -44,20 +43,19 @@ class CameraCapabilityFlags(IntFlag):
     RAW_FRAMEBUFFER = 1 << CameraCapabilities.RAW_FRAMEBUFFER
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_camera_callback(Structure):
-    if TYPE_CHECKING:
-        caps: int
-        width: int
-        height: int
-        start: retro_camera_start_t | None
-        stop: retro_camera_stop_t | None
-        frame_raw_framebuffer: retro_camera_frame_raw_framebuffer_t | None
-        frame_opengl_texture: retro_camera_frame_opengl_texture_t | None
-        initialized: retro_camera_lifetime_status_t | None
-        deinitialized: retro_camera_lifetime_status_t | None
+    caps: int
+    width: int
+    height: int
+    start: retro_camera_start_t | None
+    stop: retro_camera_stop_t | None
+    frame_raw_framebuffer: retro_camera_frame_raw_framebuffer_t | None
+    frame_opengl_texture: retro_camera_frame_opengl_texture_t | None
+    initialized: retro_camera_lifetime_status_t | None
+    deinitialized: retro_camera_lifetime_status_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("caps", c_uint64),
         ("width", c_uint),
         ("height", c_uint),
@@ -67,7 +65,7 @@ class retro_camera_callback(Structure):
         ("frame_opengl_texture", retro_camera_frame_opengl_texture_t),
         ("initialized", retro_camera_lifetime_status_t),
         ("deinitialized", retro_camera_lifetime_status_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_camera_callback(

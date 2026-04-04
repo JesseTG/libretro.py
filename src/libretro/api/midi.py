@@ -1,6 +1,5 @@
 from ctypes import Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
 
@@ -11,22 +10,21 @@ retro_midi_write_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint8], CIntArg[c_u
 retro_midi_flush_t = TypedFunctionPointer[c_bool, []]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_midi_interface(Structure):
-    if TYPE_CHECKING:
-        input_enabled: retro_midi_input_enabled_t | None
-        output_enabled: retro_midi_output_enabled_t | None
-        read: retro_midi_read_t | None
-        write: retro_midi_write_t | None
-        flush: retro_midi_flush_t | None
+    input_enabled: retro_midi_input_enabled_t | None
+    output_enabled: retro_midi_output_enabled_t | None
+    read: retro_midi_read_t | None
+    write: retro_midi_write_t | None
+    flush: retro_midi_flush_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("input_enabled", retro_midi_input_enabled_t),
         ("output_enabled", retro_midi_output_enabled_t),
         ("read", retro_midi_read_t),
         ("write", retro_midi_write_t),
         ("flush", retro_midi_flush_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_midi_interface(

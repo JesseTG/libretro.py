@@ -1,7 +1,7 @@
 from ctypes import POINTER, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
-from typing import TYPE_CHECKING, NewType, overload
+from typing import NewType, overload
 
 from libretro.api._utils import MemoDict, deepcopy_array
 from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
@@ -62,22 +62,21 @@ class InputDevice(IntEnum):
         return InputDeviceFlag(1 << self.value)
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_input_descriptor(Structure):
-    if TYPE_CHECKING:
-        port: Port
-        device: int
-        index: int
-        id: int
-        description: bytes | None
+    port: Port
+    device: int
+    index: int
+    id: int
+    description: bytes | None
 
-    _fields_ = [
+    _fields_ = (
         ("port", c_uint),
         ("device", c_uint),
         ("index", c_uint),
         ("id", c_uint),
         ("description", c_char_p),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_input_descriptor(
@@ -89,31 +88,29 @@ class retro_input_descriptor(Structure):
         )
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_controller_description(Structure):
-    if TYPE_CHECKING:
-        desc: bytes | None
-        id: int
+    desc: bytes | None
+    id: int
 
-    _fields_ = [
+    _fields_ = (
         ("desc", c_char_p),
         ("id", c_uint),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_controller_description(self.desc, self.id)
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_controller_info(Structure):
-    if TYPE_CHECKING:
-        types: TypedPointer[retro_controller_description] | None
-        num_types: int
+    types: TypedPointer[retro_controller_description] | None
+    num_types: int
 
-    _fields_ = [
+    _fields_ = (
         ("types", POINTER(retro_controller_description)),
         ("num_types", c_uint),
-    ]
+    )
 
     def __deepcopy__(self, memo: MemoDict):
         return retro_controller_info(

@@ -14,7 +14,7 @@ from ctypes import (
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
-from typing import TYPE_CHECKING, NamedTuple, overload, override
+from typing import NamedTuple, overload, override
 from zipfile import Path as ZipPath
 
 from libretro.api._utils import (
@@ -29,20 +29,19 @@ from libretro.typing import Pointer, c_void_ptr
 
 @dataclass(init=False, slots=True)
 class retro_system_info(Structure):
-    if TYPE_CHECKING:
-        library_name: bytes | None
-        library_version: bytes | None
-        valid_extensions: bytes | None
-        need_fullpath: bool
-        block_extract: bool
+    library_name: bytes | None
+    library_version: bytes | None
+    valid_extensions: bytes | None
+    need_fullpath: bool
+    block_extract: bool
 
-    _fields_ = [
+    _fields_ = (
         ("library_name", c_char_p),
         ("library_version", c_char_p),
         ("valid_extensions", c_char_p),
         ("need_fullpath", c_bool),
         ("block_extract", c_bool),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_system_info(
@@ -64,20 +63,19 @@ class retro_system_info(Structure):
             yield from self.valid_extensions.split(b"|")
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_game_info(Structure):
-    if TYPE_CHECKING:
-        path: bytes | None
-        data: c_void_ptr | None
-        size: int
-        meta: bytes | None
+    path: bytes | None
+    data: c_void_ptr | None
+    size: int
+    meta: bytes | None
 
-    _fields_ = [
+    _fields_ = (
         ("path", c_char_p),
         ("data", c_void_ptr),
         ("size", c_size_t),
         ("meta", c_char_p),
-    ]
+    )
 
     @property
     def ext(self) -> bytes | None:
@@ -107,33 +105,31 @@ class SubsystemContent(NamedTuple):
     info: Sequence[Content]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_subsystem_memory_info(Structure):
-    if TYPE_CHECKING:
-        extension: bytes | None
-        type: int
+    extension: bytes | None
+    type: int
 
-    _fields_ = [
+    _fields_ = (
         ("extension", c_char_p),
         ("type", c_uint),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_subsystem_memory_info(self.extension, self.type)
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_subsystem_rom_info(Structure):
-    if TYPE_CHECKING:
-        desc: bytes | None
-        valid_extensions: bytes | None
-        need_fullpath: bool
-        block_extract: bool
-        required: bool
-        memory: Pointer[retro_subsystem_memory_info] | None
-        num_memory: int
+    desc: bytes | None
+    valid_extensions: bytes | None
+    need_fullpath: bool
+    block_extract: bool
+    required: bool
+    memory: Pointer[retro_subsystem_memory_info] | None
+    num_memory: int
 
-    _fields_ = [
+    _fields_ = (
         ("desc", c_char_p),
         ("valid_extensions", c_char_p),
         ("need_fullpath", c_bool),
@@ -141,7 +137,7 @@ class retro_subsystem_rom_info(Structure):
         ("required", c_bool),
         ("memory", POINTER(retro_subsystem_memory_info)),
         ("num_memory", c_uint),
-    ]
+    )
 
     def __len__(self):
         return int(self.num_memory)
@@ -189,20 +185,19 @@ class retro_subsystem_rom_info(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_subsystem_info(Structure):
-    if TYPE_CHECKING:
-        desc: bytes | None
-        ident: bytes | None
-        roms: Pointer[retro_subsystem_rom_info] | None
-        num_roms: int
-        id: int
+    desc: bytes | None
+    ident: bytes | None
+    roms: Pointer[retro_subsystem_rom_info] | None
+    num_roms: int
+    id: int
 
-    _fields_ = [
+    _fields_ = (
         ("desc", c_char_p),
         ("ident", c_char_p),
         ("roms", POINTER(retro_subsystem_rom_info)),
         ("num_roms", c_uint),
         ("id", c_uint),
-    ]
+    )
 
     def __len__(self):
         return int(self.num_roms)
@@ -323,16 +318,15 @@ class Subsystems(Sequence[retro_subsystem_info]):
 
 @dataclass(init=False, slots=True)
 class retro_system_content_info_override(Structure):
-    if TYPE_CHECKING:
-        extensions: bytes | None
-        need_fullpath: bool
-        persistent_data: bool
+    extensions: bytes | None
+    need_fullpath: bool
+    persistent_data: bool
 
-    _fields_ = [
+    _fields_ = (
         ("extensions", c_char_p),
         ("need_fullpath", c_bool),
         ("persistent_data", c_bool),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_system_content_info_override(
@@ -436,20 +430,19 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
 @dataclass(init=False, slots=True)
 class retro_game_info_ext(Structure):
-    if TYPE_CHECKING:
-        full_path: bytes | None
-        archive_path: bytes | None
-        archive_file: bytes | None
-        dir: bytes | None
-        name: bytes | None
-        ext: bytes | None
-        meta: bytes | None
-        data: c_void_ptr | None
-        size: int
-        file_in_archive: bool
-        persistent_data: bool
+    full_path: bytes | None
+    archive_path: bytes | None
+    archive_file: bytes | None
+    dir: bytes | None
+    name: bytes | None
+    ext: bytes | None
+    meta: bytes | None
+    data: c_void_ptr | None
+    size: int
+    file_in_archive: bool
+    persistent_data: bool
 
-    _fields_ = [
+    _fields_ = (
         ("full_path", c_char_p),
         ("archive_path", c_char_p),
         ("archive_file", c_char_p),
@@ -461,7 +454,7 @@ class retro_game_info_ext(Structure):
         ("size", c_size_t),
         ("file_in_archive", c_bool),
         ("persistent_data", c_bool),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_game_info_ext(

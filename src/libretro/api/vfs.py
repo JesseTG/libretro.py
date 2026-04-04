@@ -15,7 +15,7 @@ from ctypes import (
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from os import PathLike
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from libretro.typing import (
     CBoolArg,
@@ -48,18 +48,30 @@ RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 @dataclass(init=False, slots=True)
 class retro_vfs_file_handle(Structure):
-    if TYPE_CHECKING:
-        id: int
-    else:
-        _fields_ = [("id", c_uint64)]
+    id: int
+    path: bytes | None
+    mode: int
+    hints: int
+
+    _fields_ = (
+        ("id", c_uint64),
+        ("path", c_char_p),
+        ("mode", c_uint),
+        ("hints", c_uint),
+    )
 
 
 @dataclass(init=False, slots=True)
 class retro_vfs_dir_handle(Structure):
-    if TYPE_CHECKING:
-        id: int
-    else:
-        _fields_ = [("id", c_uint64)]
+    id: int
+    dir: bytes | None
+    include_hidden: bool
+
+    _fields_ = (
+        ("id", c_uint64),
+        ("dir", c_char_p),
+        ("include_hidden", c_bool),
+    )
 
 
 class VfsFileAccess(IntFlag):
@@ -120,28 +132,27 @@ retro_vfs_closedir_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_dir_h
 
 @dataclass(init=False, slots=True)
 class retro_vfs_interface(Structure):
-    if TYPE_CHECKING:
-        get_path: retro_vfs_get_path_t | None
-        open: retro_vfs_open_t | None
-        close: retro_vfs_close_t | None
-        size: retro_vfs_size_t | None
-        tell: retro_vfs_tell_t | None
-        seek: retro_vfs_seek_t | None
-        read: retro_vfs_read_t | None
-        write: retro_vfs_write_t | None
-        flush: retro_vfs_flush_t | None
-        remove: retro_vfs_remove_t | None
-        rename: retro_vfs_rename_t | None
-        truncate: retro_vfs_truncate_t | None
-        stat: retro_vfs_stat_t | None
-        mkdir: retro_vfs_mkdir_t | None
-        opendir: retro_vfs_opendir_t | None
-        readdir: retro_vfs_readdir_t | None
-        dirent_get_name: retro_vfs_dirent_get_name_t | None
-        dirent_is_dir: retro_vfs_dirent_is_dir_t | None
-        closedir: retro_vfs_closedir_t | None
+    get_path: retro_vfs_get_path_t | None
+    open: retro_vfs_open_t | None
+    close: retro_vfs_close_t | None
+    size: retro_vfs_size_t | None
+    tell: retro_vfs_tell_t | None
+    seek: retro_vfs_seek_t | None
+    read: retro_vfs_read_t | None
+    write: retro_vfs_write_t | None
+    flush: retro_vfs_flush_t | None
+    remove: retro_vfs_remove_t | None
+    rename: retro_vfs_rename_t | None
+    truncate: retro_vfs_truncate_t | None
+    stat: retro_vfs_stat_t | None
+    mkdir: retro_vfs_mkdir_t | None
+    opendir: retro_vfs_opendir_t | None
+    readdir: retro_vfs_readdir_t | None
+    dirent_get_name: retro_vfs_dirent_get_name_t | None
+    dirent_is_dir: retro_vfs_dirent_is_dir_t | None
+    closedir: retro_vfs_closedir_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("get_path", retro_vfs_get_path_t),
         ("open", retro_vfs_open_t),
         ("close", retro_vfs_close_t),
@@ -161,7 +172,7 @@ class retro_vfs_interface(Structure):
         ("dirent_get_name", retro_vfs_dirent_get_name_t),
         ("dirent_is_dir", retro_vfs_dirent_is_dir_t),
         ("closedir", retro_vfs_closedir_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_vfs_interface(
@@ -187,16 +198,15 @@ class retro_vfs_interface(Structure):
         )
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_vfs_interface_info(Structure):
-    if TYPE_CHECKING:
-        required_interface_version: int
-        iface: TypedPointer[retro_vfs_interface] | Pointer[retro_vfs_interface] | None
+    required_interface_version: int
+    iface: TypedPointer[retro_vfs_interface] | Pointer[retro_vfs_interface] | None
 
-    _fields_ = [
+    _fields_ = (
         ("required_interface_version", c_uint32),
         ("iface", POINTER(retro_vfs_interface)),
-    ]
+    )
 
     def __deepcopy__(self, memo: MemoDict = None):
         return retro_vfs_interface_info(

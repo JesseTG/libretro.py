@@ -1,7 +1,6 @@
 from ctypes import Structure, c_bool, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
 from libretro.api._utils import c_uintptr
 from libretro.api.proc import retro_proc_address_t
@@ -46,23 +45,22 @@ retro_hw_get_current_framebuffer_t = TypedFunctionPointer[c_uintptr, []]
 retro_hw_get_proc_address_t = TypedFunctionPointer[retro_proc_address_t, [CStringArg]]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_hw_render_callback(Structure):
-    if TYPE_CHECKING:
-        context_type: HardwareContext
-        context_reset: retro_hw_context_reset_t | None
-        get_current_framebuffer: retro_hw_get_current_framebuffer_t | None
-        get_proc_address: retro_hw_get_proc_address_t | None
-        depth: bool
-        stencil: bool
-        bottom_left_origin: bool
-        version_major: int
-        version_minor: int
-        cache_context: bool
-        context_destroy: retro_hw_context_reset_t | None
-        debug_context: bool
+    context_type: HardwareContext
+    context_reset: retro_hw_context_reset_t | None
+    get_current_framebuffer: retro_hw_get_current_framebuffer_t | None
+    get_proc_address: retro_hw_get_proc_address_t | None
+    depth: bool
+    stencil: bool
+    bottom_left_origin: bool
+    version_major: int
+    version_minor: int
+    cache_context: bool
+    context_destroy: retro_hw_context_reset_t | None
+    debug_context: bool
 
-    _fields_ = [
+    _fields_ = (
         ("context_type", retro_hw_context_type),
         ("context_reset", retro_hw_context_reset_t),
         ("get_current_framebuffer", retro_hw_get_current_framebuffer_t),
@@ -75,7 +73,38 @@ class retro_hw_render_callback(Structure):
         ("cache_context", c_bool),
         ("context_destroy", retro_hw_context_reset_t),
         ("debug_context", c_bool),
-    ]
+    )
+
+    def __init__(
+        self,
+        context_type: HardwareContext = HardwareContext.NONE,
+        context_reset: retro_hw_context_reset_t | None = None,
+        get_current_framebuffer: retro_hw_get_current_framebuffer_t | None = None,
+        get_proc_address: retro_hw_get_proc_address_t | None = None,
+        depth: bool = False,
+        stencil: bool = False,
+        bottom_left_origin: bool = False,
+        version_major: int = 0,
+        version_minor: int = 0,
+        cache_context: bool = False,
+        context_destroy: retro_hw_context_reset_t | None = None,
+        debug_context: bool = False,
+    ):
+        super().__init__(
+            context_type=context_type,
+            context_reset=context_reset or retro_hw_context_reset_t(),
+            get_current_framebuffer=get_current_framebuffer
+            or retro_hw_get_current_framebuffer_t(),
+            get_proc_address=get_proc_address or retro_hw_get_proc_address_t(),
+            depth=depth,
+            stencil=stencil,
+            bottom_left_origin=bottom_left_origin,
+            version_major=version_major,
+            version_minor=version_minor,
+            cache_context=cache_context,
+            context_destroy=context_destroy or retro_hw_context_reset_t(),
+            debug_context=debug_context,
+        )
 
     def __deepcopy__(self, _):
         return retro_hw_render_callback(

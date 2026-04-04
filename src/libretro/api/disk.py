@@ -1,6 +1,6 @@
 from ctypes import Structure, c_bool, c_size_t, c_uint
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from libretro.api.content import retro_game_info
 from libretro.typing import (
@@ -29,18 +29,17 @@ retro_get_image_label_t = TypedFunctionPointer[
 ]
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_disk_control_callback(Structure):
-    if TYPE_CHECKING:
-        set_eject_state: retro_set_eject_state_t | None
-        get_eject_state: retro_get_eject_state_t | None
-        get_image_index: retro_get_image_index_t | None
-        set_image_index: retro_set_image_index_t | None
-        get_num_images: retro_get_num_images_t | None
-        replace_image_index: retro_replace_image_index_t | None
-        add_image_index: retro_add_image_index_t | None
+    set_eject_state: retro_set_eject_state_t | None
+    get_eject_state: retro_get_eject_state_t | None
+    get_image_index: retro_get_image_index_t | None
+    set_image_index: retro_set_image_index_t | None
+    get_num_images: retro_get_num_images_t | None
+    replace_image_index: retro_replace_image_index_t | None
+    add_image_index: retro_add_image_index_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("set_eject_state", retro_set_eject_state_t),
         ("get_eject_state", retro_get_eject_state_t),
         ("get_image_index", retro_get_image_index_t),
@@ -48,7 +47,7 @@ class retro_disk_control_callback(Structure):
         ("get_num_images", retro_get_num_images_t),
         ("replace_image_index", retro_replace_image_index_t),
         ("add_image_index", retro_add_image_index_t),
-    ]
+    )
 
     def __deepcopy__(self, _):
         return retro_disk_control_callback(
@@ -62,18 +61,17 @@ class retro_disk_control_callback(Structure):
         )
 
 
-@dataclass(init=False)
+@dataclass(init=False, slots=True)
 class retro_disk_control_ext_callback(retro_disk_control_callback):
-    if TYPE_CHECKING:
-        set_initial_image: retro_set_initial_image_t | None
-        get_image_path: retro_get_image_path_t | None
-        get_image_label: retro_get_image_label_t | None
+    set_initial_image: retro_set_initial_image_t | None
+    get_image_path: retro_get_image_path_t | None
+    get_image_label: retro_get_image_label_t | None
 
-    _fields_ = [
+    _fields_ = (
         ("set_initial_image", retro_set_initial_image_t),
         ("get_image_path", retro_get_image_path_t),
         ("get_image_label", retro_get_image_label_t),
-    ]
+    )
 
     @override
     def __deepcopy__(self, _):
