@@ -100,7 +100,7 @@ class TempDirPathDriver(PathDriver):
 
     @property
     @override
-    def system_dir(self) -> bytes | None:
+    def system_dir(self) -> bytes:
         return self._system_path
 
     @property
@@ -110,22 +110,22 @@ class TempDirPathDriver(PathDriver):
 
     @property
     @override
-    def core_assets_dir(self) -> bytes | None:
+    def core_assets_dir(self) -> bytes:
         return self._assets_path
 
     @property
     @override
-    def save_dir(self) -> bytes | None:
+    def save_dir(self) -> bytes:
         return self._save_path
 
     @property
     @override
-    def playlist_dir(self) -> bytes | None:
+    def playlist_dir(self) -> bytes:
         return self._playlist_path
 
     @property
     @override
-    def file_browser_start_dir(self) -> bytes | None:
+    def file_browser_start_dir(self) -> bytes:
         return self._root_path
 
 
