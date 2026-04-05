@@ -33,6 +33,7 @@ from libretro.drivers import (
     DefaultUserDriver,
     DictLedDriver,
     DictOptionDriver,
+    DictRumbleDriver,
     DriverMap,
     FileSystemInterface,
     GeneratorMicrophoneDriver,
@@ -113,6 +114,7 @@ type OptionDriverArg = (
     _OptionalArg[OptionDriver] | Mapping[str, str] | Mapping[bytes, bytes] | Literal[0, 1, 2]
 )
 type PathDriverArg = PathDriver | Callable[[Core], PathDriver | None] | Default | None
+type RumbleDriverArg = _OptionalArg[RumbleDriver]
 type SensorDriverArg = (
     _OptionalArg[SensorDriver] | SensorStateGenerator | SensorStateIterable | SensorStateIterator
 )
@@ -152,6 +154,7 @@ class _SessionBuilderArgs(TypedDict):
     message: _OptionalFactory[MessageInterface]
     options: _OptionalFactory[OptionDriver]
     path: Callable[[Core], PathDriver | None]
+    rumble: _OptionalFactory[RumbleDriver]
     sensor: _OptionalFactory[SensorDriver]
     log: _OptionalFactory[LogDriver]
     perf: _OptionalFactory[PerfDriver]
@@ -203,6 +206,7 @@ class SessionBuilder:
             message=_nothing,
             options=_nothing,
             path=lambda _: None,
+            rumble=_nothing,
             log=_nothing,
             sensor=_nothing,
             perf=_nothing,
@@ -372,6 +376,44 @@ class SessionBuilder:
             case _:
                 raise TypeError(
                     f"Expected InputDriver or a callable that returns one, a callable or iterator that yields InputState, or DEFAULT; got {type(input).__name__}"
+                )
+
+        return self
+
+    def with_rumble(self, rumble: RumbleDriverArg) -> Self:
+        """
+        Configures the rumble driver for this session's input driver.
+
+        :param rumble: The rumble driver to use for this session. May be one of the following:
+
+            :class:`.RumbleDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :obj:`None`
+                No rumble driver will be used, and any rumble interfaces
+                that the core exposes will not function.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DictRumbleDriver` with no initial state.
+
+            :class:`~collections.abc.Callable` () -> :class:`.RumbleDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.RumbleDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+        :return: This :class:`.SessionBuilder` object.
+        :raises TypeError: If ``rumble`` is not one of the aforementioned types.
+        """
+        match rumble:
+            case Callable() as func:
+                self._args["rumble"] = func
+            case RumbleDriver():
+                self._args["rumble"] = lambda: rumble
+            case _DefaultType.DEFAULT:
+                self._args["rumble"] = DictRumbleDriver
+            case None:
+                self._args["rumble"] = _nothing
+            case _:
+                raise TypeError(
+                    f"Expected RumbleDriver, a callable that returns one, DEFAULT, or None; got {type(rumble).__name__}"
                 )
 
         return self
@@ -957,6 +999,7 @@ class SessionBuilder:
             message=self._args["message"](),
             options=self._args["options"](),
             path=self._args["path"](core),
+            rumble=self._args["rumble"](),
             sensor=self._args["sensor"](),
             log=self._args["log"](),
             perf=self._args["perf"](),
@@ -1002,6 +1045,7 @@ def defaults(core: CoreArg) -> SessionBuilder:
         .with_options(DEFAULT)
         .with_sensor(DEFAULT)
         .with_paths(DEFAULT)
+        .with_rumble(DEFAULT)
         .with_log(DEFAULT)
         .with_perf(DEFAULT)
         .with_location(DEFAULT)
