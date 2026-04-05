@@ -7,6 +7,13 @@ from libretro.typing import TypedPointer, c_void_ptr
 
 from ._utils import MemoDict, deepcopy_array
 
+RETRO_MEMORY_MASK = 0xFF
+RETRO_MEMORY_SAVE_RAM = 0
+RETRO_MEMORY_RTC = 1
+RETRO_MEMORY_SYSTEM_RAM = 2
+RETRO_MEMORY_VIDEO_RAM = 3
+
+
 RETRO_MEMDESC_CONST = 1 << 0
 RETRO_MEMDESC_BIGENDIAN = 1 << 1
 RETRO_MEMDESC_SYSTEM_RAM = 1 << 2
