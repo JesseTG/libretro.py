@@ -40,22 +40,22 @@ _MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 def address[
     T: _CDataType
-](ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None) -> int | None:
+](ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None) -> int:
     """
-    Returns the address of the given pointer as an integer or None.
+    Returns the address of the given pointer as an integer.
     If the input is already an integer, it is returned as-is.
     """
     match ptr:
-        case 0 | None:
-            return None
-        case int() if 0 < ptr <= _MAX_POINTER_VALUE:
+        case None:
+            return 0
+        case int() if 0 <= ptr <= _MAX_POINTER_VALUE:
             return ptr
         case int():
             raise ValueError(f"Expected an int between 0 and {_MAX_POINTER_VALUE}, got {ptr}")
         case c_void_p():
-            return ptr.value
+            return ptr.value or 0
         case c_char_p() | _Pointer() | CFuncPtr():
-            return cast(ptr, c_void_p).value
+            return cast(ptr, c_void_p).value or 0
 
 
 @overload
