@@ -133,13 +133,13 @@ from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
-from libretro.typing import TypedPointer, c_void_ptr
+from libretro.typing import TypedFunctionPointer, TypedPointer, c_void_ptr
 
 from .default import DefaultEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
-    from ctypes import _CFunctionType  # type: ignore
+    from ctypes import _CDataType, _CFunctionType  # type: ignore
 
 
 class CompositeEnvironmentDriver[
@@ -1047,30 +1047,37 @@ class CompositeEnvironmentDriver[
         self, sym: str | bytes, funtype: None = None
     ) -> retro_proc_address_t | None: ...
     @overload
+    def get_proc_address(
+        self, sym: Literal[b"", ""], funtype: type[_CFunctionType] | None = None
+    ) -> None: ...
+    @overload
     def get_proc_address[
-        T: _CFunctionType
-    ](self, sym: Literal[b"", ""], funtype: type[T] | None = None) -> None: ...
+        R: _CDataType | None, **P
+    ](self, sym: str | bytes, funtype: type[TypedFunctionPointer[R, P]]) -> (
+        TypedFunctionPointer[R, P] | None
+    ): ...
 
     def get_proc_address[
-        T: _CFunctionType
-    ](self, sym: str | bytes, funtype: type[T] | None = None) -> retro_proc_address_t | T | None:
-        if not self._proc_address_callback or not sym:
+        T: _CFunctionType, R: _CDataType | None, **P
+    ](
+        self, sym: str | bytes, funtype: type[T] | type[TypedFunctionPointer[R, P]] | None = None
+    ) -> (retro_proc_address_t | T | TypedFunctionPointer[R, P] | None):
+        if not sym:
+            return None
+
+        if not self._proc_address_callback:
             return None
 
         if not self._proc_address_callback.get_proc_address:
             return None
 
-        name = as_bytes(sym)
-
-        proc = self._proc_address_callback.get_proc_address(name)
-
-        if not proc:
+        if not (proc := self._proc_address_callback(sym)):
             return None
 
-        if funtype:
-            return cast(proc, funtype)
+        if not funtype:
+            return proc
 
-        return proc
+        return cast(proc, funtype)
 
     @override
     def _set_proc_address_callback(
