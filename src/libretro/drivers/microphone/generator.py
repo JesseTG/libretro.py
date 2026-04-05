@@ -1,5 +1,5 @@
 from array import array
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from itertools import repeat
 
 from libretro._typing import override
@@ -154,6 +154,11 @@ class GeneratorMicrophoneDriver(MicrophoneDriver):
             return m.read(frames)
 
         return None
+
+    @property
+    @override
+    def microphones(self) -> Collection[GeneratorMicrophone]:
+        return self._microphones.values()
 
 
 __all__ = [
