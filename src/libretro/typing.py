@@ -13,7 +13,7 @@ this allows them to be used as drop-in replacements for the standard types in fu
 
 from __future__ import annotations
 
-from collections.abc import Buffer, Callable, Iterable
+from collections.abc import Buffer, Callable, Iterable, Iterator
 from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]
 from typing import (
     TYPE_CHECKING,
@@ -150,11 +150,11 @@ if TYPE_CHECKING:
             self: TypedFunctionPointer[TypedPointer[S] | Pointer[S], P],
             *args: P.args,
             **kwargs: P.kwargs,
-        ) -> c_void_ptr: ...
+        ) -> (c_void_ptr | None): ...
         @overload
         def __call__(
             self: TypedFunctionPointer[None, []], *args: P.args, **kwargs: P.kwargs
-        ) -> TypedFunctionPointer[None, []]: ...
+        ) -> TypedFunctionPointer[None, []] | None: ...
         @overload
         def __call__[
             T: _CDataType, **Q
@@ -162,7 +162,7 @@ if TYPE_CHECKING:
             self: TypedFunctionPointer[TypedFunctionPointer[T, Q], P],
             *args: P.args,
             **kwargs: P.kwargs,
-        ) -> c_void_ptr: ...
+        ) -> (c_void_ptr | None): ...
 
         # See https://github.com/python/cpython/issues/49960
         @overload
@@ -288,6 +288,18 @@ if TYPE_CHECKING:
             value: Iterable[ConvertibleTo[TypedArray[P]] | ConvertibleTo[_Pointer[P]]],
             /,
         ) -> None: ...
+
+        @overload
+        def __iter__[I: CInt | CUint](self: TypedArray[I]) -> Iterator[int]: ...
+
+        @overload
+        def __iter__[F: CReal](self: TypedArray[F]) -> Iterator[float]: ...
+
+        @overload
+        def __iter__[S: Structure](self: TypedArray[S]) -> Iterator[S]: ...
+
+        @overload
+        def __iter__(self: TypedArray[T]) -> Iterator[T]: ...
 
     class TypedPointer[T: _CDataType](_Pointer[T]):
         @overload
