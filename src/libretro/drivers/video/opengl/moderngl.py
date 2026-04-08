@@ -429,7 +429,6 @@ class ModernGlVideoDriver(VideoDriver):
         if not self._system_av_info:
             raise RuntimeError("System AV info not set")
 
-        print("Reinitializing ModernGL video driver...")
         if self._callback:
             context_type = HardwareContext(self._callback.context_type)
             if context_type not in _CONTEXTS:
@@ -439,10 +438,8 @@ class ModernGlVideoDriver(VideoDriver):
 
         # TODO: Honor cache_context; try to avoid reinitializing the context
         if self._context:
-            print("Tearing down existing context...")
             self._context.clear_errors()
             if self._callback and self._callback.context_destroy:
-                print("Cleaning up core resources...")
                 # If the core wants to clean up before the context is destroyed...
                 with self._context.debug_scope(
                     "libretro.ModernGlVideoDriver.reinit.context_destroy"
@@ -451,7 +448,6 @@ class ModernGlVideoDriver(VideoDriver):
                     _warn_unhandled_gl_errors()
 
             if self._window:
-                print("Destroying window...")
                 self._window.destroy()
                 del self._window
 
@@ -470,7 +466,6 @@ class ModernGlVideoDriver(VideoDriver):
 
         geometry = self._system_av_info.geometry
 
-        print("Creating new context...")
         match context_type, self._window_class:
             case HardwareContext.NONE, type() as window_class:
                 self._window = window_class(
@@ -520,7 +515,6 @@ class ModernGlVideoDriver(VideoDriver):
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 
-        print("Created new context")
         self._context.clear_errors()
         if self._context.version_code >= 430:
             self._context.enable_direct(cast(int, GL.GL_DEBUG_OUTPUT))
