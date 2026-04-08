@@ -320,7 +320,7 @@ class ModernGlVideoDriver(VideoDriver):
                 f"Unsupported hardware context: {context_type} (must be one of: {_CONTEXTS})"
             )
 
-        self._callback = deepcopy(self._callback)
+        self._callback = deepcopy(callback)
 
     @property
     @override
