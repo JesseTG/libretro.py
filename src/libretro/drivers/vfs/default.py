@@ -20,11 +20,14 @@ from .interface import DirectoryHandle, FileHandle, FileSystemInterface
 class StandardFileHandle(FileHandle):
     @override
     def __init__(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint):
+        self._file: FileIO | None = None
+
         if not path:
             raise ValueError("Expected a non-empty path")
 
         self._path = path
         self._file = FileIO(path, mode.open_flag)
+        self._handle = retro_vfs_file_handle(self._file.fileno(), path, mode, hints)
 
     def __del__(self):
         self.close()
@@ -33,7 +36,6 @@ class StandardFileHandle(FileHandle):
     def close(self) -> bool:
         if self._file is not None:
             self._file.close()
-            del self._file
             self._file = None
 
         return True
@@ -100,6 +102,17 @@ class StandardFileHandle(FileHandle):
         self._file.truncate(length)
         return True
 
+    @property
+    def fileno(self) -> int:
+        if not self._file:
+            raise IOError("File is closed")
+
+        return self._file.fileno()
+
+    @property
+    def vfs_handle(self) -> retro_vfs_file_handle:
+        return self._handle
+
 
 class StandardDirectoryHandle(DirectoryHandle):
     @override
@@ -164,8 +177,8 @@ class StandardFileSystemInterface(FileSystemInterface):
 
     @override
     def get_path(self, stream: retro_vfs_file_handle) -> bytes | None:
-        handle = stream.id
-        file = self._file_handles.get(handle)
+        fileno = stream.id
+        file = self._file_handles.get(fileno, None)
         if not file:
             return None
 
@@ -175,15 +188,17 @@ class StandardFileSystemInterface(FileSystemInterface):
     def open(
         self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint
     ) -> retro_vfs_file_handle | None:
-        file = StandardFileHandle(path, mode, hints)
-        handle = id(file)
-        self._file_handles[handle] = file
-        return retro_vfs_file_handle(handle)
+        try:
+            file = StandardFileHandle(path, mode, hints)
+            self._file_handles[file.fileno] = file
+            return file.vfs_handle
+        except FileNotFoundError:
+            return None
 
     @override
     def close(self, stream: retro_vfs_file_handle) -> bool:
-        handle = stream.id
-        file = self._file_handles.pop(handle, None)
+        fileno = stream.id
+        file = self._file_handles.pop(fileno, None)
         if not file:
             return False
 
@@ -191,8 +206,8 @@ class StandardFileSystemInterface(FileSystemInterface):
 
     @override
     def size(self, stream: retro_vfs_file_handle) -> int:
-        handle = stream.id
-        file = self._file_handles.get(handle)
+        fileno = stream.id
+        file = self._file_handles.get(fileno, None)
         if not file:
             return -1
 
@@ -296,7 +311,7 @@ class StandardFileSystemInterface(FileSystemInterface):
         dir_handle = StandardDirectoryHandle(path, include_hidden)
         handle = id(dir_handle)
         self._dir_handles[handle] = dir_handle
-        return retro_vfs_dir_handle(handle)
+        return retro_vfs_dir_handle(handle, path, include_hidden)
 
     @override
     def readdir(self, dir: retro_vfs_dir_handle) -> bool:
