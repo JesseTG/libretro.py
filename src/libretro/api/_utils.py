@@ -3,6 +3,8 @@
 # rely on `ctypes` APIs that are technically private.
 # However, their interfaces are documented and they're part of typeshed.
 
+from __future__ import annotations
+
 import ctypes
 import mmap
 import struct

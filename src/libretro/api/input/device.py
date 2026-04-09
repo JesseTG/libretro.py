@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ctypes import POINTER, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag

@@ -2,6 +2,8 @@
 Types and classes for defining how a core renders graphics.
 """
 
+from __future__ import annotations
+
 from abc import abstractmethod
 from collections.abc import Set
 from enum import Enum

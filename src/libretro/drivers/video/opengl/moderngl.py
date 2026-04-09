@@ -3,6 +3,8 @@
 # and PyOpenGL doesn't have any at all.
 # These two warnings silence a lot of noise.
 
+from __future__ import annotations
+
 import struct
 import warnings
 from array import array

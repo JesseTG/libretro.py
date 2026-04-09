@@ -175,6 +175,30 @@ class _SessionBuilderArgs(TypedDict):
     power: _OptionalFactory[PowerDriver]
 
 
+type AnySession = Session[
+    AudioDriver,
+    InputDriver,
+    VideoDriver,
+    ContentDriver | None,
+    MessageDriver | None,
+    OptionDriver | None,
+    PathDriver | None,
+    RumbleDriver | None,
+    SensorDriver | None,
+    CameraDriver | None,
+    LogDriver | None,
+    PerfDriver | None,
+    LocationDriver | None,
+    UserDriver | None,
+    FileSystemDriver | None,
+    LedDriver | None,
+    MidiDriver | None,
+    TimingDriver | None,
+    MicrophoneDriver | None,
+    PowerDriver | None,
+]
+
+
 @deprecated("Use Session's constructor with kwargs instead")
 class SessionBuilder:
     """
@@ -977,7 +1001,7 @@ class SessionBuilder:
 
         return self
 
-    def build(self) -> Session:
+    def build(self) -> AnySession:
         """
         Constructs a :py:class:`.Session` with the provided arguments.
 
@@ -1069,4 +1093,5 @@ __all__ = [
     "DEFAULT",
     "defaults",
     "RequiredError",
+    "AnySession",
 ]

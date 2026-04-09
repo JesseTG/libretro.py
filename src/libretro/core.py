@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from collections.abc import Buffer, Callable, Sequence
 from copy import deepcopy
