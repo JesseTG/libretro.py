@@ -1,8 +1,8 @@
 from array import array
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from itertools import repeat
+from typing import override
 
-from libretro._typing import override
 from libretro.api.microphone import (
     INTERFACE_VERSION,
     retro_microphone,

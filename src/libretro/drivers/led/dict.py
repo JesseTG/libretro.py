@@ -1,4 +1,4 @@
-from libretro._typing import override
+from typing import override
 
 from .driver import LedDriver
 

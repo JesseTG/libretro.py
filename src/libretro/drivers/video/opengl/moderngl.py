@@ -10,7 +10,7 @@ from collections.abc import Iterator, Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
-from typing import TYPE_CHECKING, cast, final
+from typing import TYPE_CHECKING, cast, final, override
 
 import moderngl
 from OpenGL import GL
@@ -43,7 +43,6 @@ from moderngl import (
     create_context,
 )
 
-from libretro._typing import override
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.video import (
     HardwareContext,

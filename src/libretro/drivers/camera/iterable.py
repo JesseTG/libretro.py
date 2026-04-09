@@ -1,4 +1,5 @@
-from libretro._typing import override
+from typing import override
+
 from libretro.api.camera import (
     CameraCapabilityFlags,
     retro_camera_frame_opengl_texture_t,

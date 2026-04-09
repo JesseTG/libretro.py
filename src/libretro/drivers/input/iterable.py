@@ -1,9 +1,8 @@
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Literal, overload
+from typing import Literal, overload, override
 
-from libretro._typing import override
 from libretro.api.input import (
     AnalogState,
     DeviceIdAnalog,

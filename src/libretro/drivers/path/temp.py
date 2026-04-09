@@ -5,8 +5,8 @@ Types and classes for creating temporary directories for the core to use.
 import os
 from os import PathLike, fsencode
 from tempfile import TemporaryDirectory
+from typing import override
 
-from libretro._typing import override
 from libretro.core import Core
 
 from .driver import PathDriver

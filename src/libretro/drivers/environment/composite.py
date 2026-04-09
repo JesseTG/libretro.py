@@ -17,9 +17,8 @@ from ctypes import (
     pointer,
     sizeof,
 )
-from typing import TYPE_CHECKING, Literal, Required, TypedDict, overload
+from typing import TYPE_CHECKING, Literal, Required, TypedDict, overload, override
 
-from libretro._typing import override
 from libretro.api import (
     AvEnableFlags,
     HardwareContext,
