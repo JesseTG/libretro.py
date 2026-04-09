@@ -46,7 +46,7 @@ RETRO_VFS_STAT_IS_DIRECTORY = 1 << 1
 RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 
-@dataclass(init=False, slots=True)
+@dataclass(slots=True)
 class retro_vfs_file_handle(Structure):
     id: int
     path: bytes | None
@@ -59,6 +59,12 @@ class retro_vfs_file_handle(Structure):
         ("mode", c_uint),
         ("hints", c_uint),
     )
+
+    def __init__(self, id: int, path: bytes | None, mode: int, hints: int):
+        self.id = id
+        self.path = path
+        self.mode = mode
+        self.hints = hints
 
 
 @dataclass(init=False, slots=True)
