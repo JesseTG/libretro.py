@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import c_uintptr
-from libretro.api.proc import retro_proc_address_t
-from libretro.typing import CStringArg, TypedFunctionPointer
+from libretro.typing import CStringArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 
@@ -42,7 +41,8 @@ class HardwareContext(IntEnum):
 
 retro_hw_context_reset_t = TypedFunctionPointer[None, []]
 retro_hw_get_current_framebuffer_t = TypedFunctionPointer[c_uintptr, []]
-retro_hw_get_proc_address_t = TypedFunctionPointer[retro_proc_address_t, [CStringArg]]
+retro_hw_get_proc_address_t = TypedFunctionPointer[c_void_ptr, [CStringArg]]
+# Workaround for ctypes not allowing callbacks to return function pointers
 
 
 @dataclass(init=False, slots=True)
