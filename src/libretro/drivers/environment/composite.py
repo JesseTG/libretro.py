@@ -1,3 +1,4 @@
+import typing
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import (
@@ -102,7 +103,7 @@ from libretro.api import (
     retro_vfs_open_t,
 )
 from libretro.api._utils import (
-    as_bytes,
+    MAX_POINTER_VALUE,
     deepcopy_array,
     from_zero_terminated,
     is_zeroed,
@@ -133,13 +134,19 @@ from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemInterface
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
+from libretro.drivers.video.driver import UnsupportedContextError
 from libretro.typing import TypedFunctionPointer, TypedPointer, c_void_ptr
 
 from .default import DefaultEnvironmentDriver
+from .dict import DictEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
     from ctypes import _CDataType, _CFunctionType  # type: ignore
+
+_return_on_raise = DictEnvironmentDriver.return_on_raise
+# No need to apply this decorator to environment calls,
+# since the base implementation of environment() in DictEnvironmentDriver does so.
 
 
 class CompositeEnvironmentDriver[
@@ -423,14 +430,16 @@ class CompositeEnvironmentDriver[
         return self._rumble
 
     @override
+    @_return_on_raise(None)
     def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
         # Handle the constants and their equivalent ints, just to be safe
-        match data:
-            case FrameBufferSpecial.DUPE | 0 | None:
+        match data.value:
+            case 0:
+                # Passing NULL to retro_video_refresh_t means "redraw the frame"
                 self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
-            case FrameBufferSpecial.HARDWARE | -1 | 18446744073709551615:
+            case int(i) if i == MAX_POINTER_VALUE:
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
-            case int() | c_void_p():
+            case int():
                 view = memoryview_at(data, pitch * height, readonly=True)
                 assert (
                     len(view) == pitch * height
@@ -442,10 +451,12 @@ class CompositeEnvironmentDriver[
                 )
 
     @override
+    @_return_on_raise(None)
     def audio_sample(self, left: int, right: int) -> None:
         self._audio.sample(left, right)
 
     @override
+    @_return_on_raise(0)
     def audio_sample_batch(self, data: TypedPointer[c_int16], frames: int) -> int:
         sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16)).cast("h")
         assert (
@@ -454,6 +465,7 @@ class CompositeEnvironmentDriver[
         return self._audio.sample_batch(sample_view)
 
     @override
+    @_return_on_raise(None)
     def input_poll(self) -> None:
         # TODO: Ensure this isn't called more than once per frame
         self._input.poll()
@@ -462,6 +474,7 @@ class CompositeEnvironmentDriver[
             self._sensor.poll()
 
     @override
+    @_return_on_raise(0)
     def input_state(self, port: Port, device: int, index: int, id: int) -> int:
         return self._input.state(port, InputDevice(device), index, id)
 
@@ -617,7 +630,10 @@ class CompositeEnvironmentDriver[
             raise ValueError("RETRO_ENVIRONMENT_SET_HW_RENDER doesn't accept NULL")
 
         core_callback = callback[0]
-        self._video.set_context(core_callback)
+        try:
+            self._video.set_context(core_callback)
+        except UnsupportedContextError:
+            return False
 
         if not self._hw_render_callback:
             self._hw_render_callback = retro_hw_render_callback(
@@ -633,11 +649,18 @@ class CompositeEnvironmentDriver[
 
         return True
 
+    @_return_on_raise(0)
     def _get_current_framebuffer(self) -> int:
         return self._video.current_framebuffer or 0
 
-    def _get_hw_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
-        return self._video.get_proc_address(sym)
+    @_return_on_raise(0)
+    def _get_hw_proc_address(self, sym: bytes) -> int:
+        proc = self._video.get_proc_address(sym)
+
+        if not proc:
+            return 0
+
+        return cast(proc, c_void_p).value or 0
 
     @property
     def options(self) -> Option:
@@ -747,6 +770,7 @@ class CompositeEnvironmentDriver[
         rumble[0] = self._rumble_interface
         return True
 
+    @_return_on_raise(False)
     def _set_rumble_state(self, port: Port, effect: int, strength: int) -> bool:
         if self._rumble is None:
             return False
@@ -784,6 +808,7 @@ class CompositeEnvironmentDriver[
         interface[0] = self._sensor_interface
         return True
 
+    @_return_on_raise(False)
     def _set_sensor_state(self, port: Port, action: int, rate: int) -> bool:
         if self._sensor is None:
             return False
@@ -798,17 +823,18 @@ class CompositeEnvironmentDriver[
 
         return self._sensor.set_sensor_state(port, SensorAction(action), rate)
 
+    @_return_on_raise(0.0)
     def _get_sensor_input(self, port: Port, sensor: int) -> float:
         if self._sensor is None:
             return 0.0
 
         if self._input.max_users is not None and port >= self._input.max_users:
             # If we have a max-user limit set, and the port number exceeds it...
-            return False
+            return 0.0
 
         if sensor not in SensorAxis:
             # If the sensor isn't a valid SensorAxis, then we shouldn't pass it to the driver
-            return False
+            return 0.0
 
         return self._sensor.get_sensor_input(port, SensorAxis(sensor))
 
@@ -839,12 +865,14 @@ class CompositeEnvironmentDriver[
 
         return True
 
+    @_return_on_raise(False)
     def _camera_start(self) -> bool:
         if self._camera is None:
             return False
 
         return self._camera.start()
 
+    @_return_on_raise(None)
     def _camera_stop(self) -> None:
         if self._camera is not None:
             self._camera.stop()
@@ -867,6 +895,7 @@ class CompositeEnvironmentDriver[
         interface[0] = self._log_callback
         return True
 
+    @_return_on_raise(None)
     def _log(self, level: int, message: bytes):
         if self._log_driver is not None and level in LogLevel:
             self._log_driver.log(LogLevel(level), message)
@@ -885,48 +914,55 @@ class CompositeEnvironmentDriver[
 
         if not self._perf_callback:
             self._perf_callback = retro_perf_callback(
-                get_time_usec=self._perf.get_time_usec,
-                get_cpu_features=self._perf.get_cpu_features,
-                get_perf_counter=self._perf.get_perf_counter,
-                perf_register=self._perf.perf_register,
-                perf_start=self._perf.perf_start,
-                perf_stop=self._perf.perf_stop,
-                perf_log=self._perf.perf_log,
+                get_time_usec=self._get_time_usec,
+                get_cpu_features=self._get_cpu_features,
+                get_perf_counter=self._get_perf_counter,
+                perf_register=self._perf_register,
+                perf_start=self._perf_start,
+                perf_stop=self._perf_stop,
+                perf_log=self._perf_log,
             )
 
         interface[0] = self._perf_callback
         return True
 
+    @_return_on_raise(0)
     def _get_time_usec(self) -> int:
         if self._perf is None:
             return 0
 
         return self._perf.get_time_usec()
 
+    @_return_on_raise(0)
     def _get_cpu_features(self) -> int:
         if self._perf is None:
             return 0
 
         return self._perf.get_cpu_features()
 
+    @_return_on_raise(0)
     def _get_perf_counter(self) -> int:
         if self._perf is None:
             return 0
 
         return self._perf.get_perf_counter()
 
+    @_return_on_raise(None)
     def _perf_register(self, counter: TypedPointer[retro_perf_counter]):
         if self._perf is not None and counter:
             self._perf.perf_register(counter[0])
 
+    @_return_on_raise(None)
     def _perf_start(self, counter: TypedPointer[retro_perf_counter]):
         if self._perf is not None and counter:
             self._perf.perf_start(counter[0])
 
+    @_return_on_raise(None)
     def _perf_stop(self, counter: TypedPointer[retro_perf_counter]):
         if self._perf is not None and counter:
             self._perf.perf_stop(counter[0])
 
+    @_return_on_raise(None)
     def _perf_log(self):
         if self._perf is not None:
             self._perf.perf_log()
@@ -963,16 +999,19 @@ class CompositeEnvironmentDriver[
 
         return True
 
+    @_return_on_raise(False)
     def _location_start(self) -> bool:
         if self._location is None:
             return False
 
         return self._location.start()
 
+    @_return_on_raise(None)
     def _location_stop(self) -> None:
         if self._location is not None:
             self._location.stop()
 
+    @_return_on_raise(False)
     def _location_get_position(
         self,
         lat: TypedPointer[c_double],
@@ -996,6 +1035,7 @@ class CompositeEnvironmentDriver[
         vert_accuracy[0] = position.vertical_accuracy or 0.0
         return True
 
+    @_return_on_raise(None)
     def _location_set_interval(self, ms: int, distance: int) -> None:
         if self._location is not None:
             self._location.set_interval(ms, distance)
@@ -1303,46 +1343,53 @@ class CompositeEnvironmentDriver[
         vfs_info.iface = pointer(self._vfs_interface)
         return True
 
+    @_return_on_raise(typing.cast(bytes | None, None))
     def _vfs_get_path(self, file: TypedPointer[retro_vfs_file_handle]) -> bytes | None:
         if self._vfs is None or not file:
             return None
 
         return self._vfs.get_path(file[0])
 
+    @_return_on_raise(0)
     def _vfs_open(self, path: bytes, mode: int, hints: int):
         if self._vfs is None or mode not in VfsFileAccess:
-            return None
+            return 0
 
         file = self._vfs.open(path, VfsFileAccess(mode), VfsFileAccessHint(hints))
         if not file:
-            return None
+            return 0
 
-        return cast(pointer(file), c_void_p).value
+        return cast(pointer(file), c_void_p).value or 0
 
+    @_return_on_raise(-1)
     def _vfs_close(self, file: TypedPointer[retro_vfs_file_handle]):
         if self._vfs is None or not file:
             return -1
 
         return 0 if self._vfs.close(file[0]) else -1
 
+    @_return_on_raise(-1)
     def _vfs_size(self, file: TypedPointer[retro_vfs_file_handle]) -> int:
         if self._vfs is None or not file:
             return -1
 
         return self._vfs.size(file[0])
 
+    @_return_on_raise(-1)
     def _vfs_truncate(self, file: TypedPointer[retro_vfs_file_handle], length: int) -> int:
         if self._vfs is None or not file or length < 0:
             return -1
 
         return 0 if self._vfs.truncate(file[0], length) else -1
 
+    @_return_on_raise(-1)
     def _vfs_tell(self, file: TypedPointer[retro_vfs_file_handle]) -> int:
         if self._vfs is None or not file:
             return -1
 
         return self._vfs.tell(file[0])
 
+    @_return_on_raise(-1)
     def _vfs_seek(
         self, file: TypedPointer[retro_vfs_file_handle], offset: int, whence: int
     ) -> int:
@@ -1351,6 +1398,7 @@ class CompositeEnvironmentDriver[
 
         return self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
 
+    @_return_on_raise(-1)
     def _vfs_read(
         self, file: TypedPointer[retro_vfs_file_handle], data: c_void_ptr, size: int
     ) -> int:
@@ -1359,6 +1407,7 @@ class CompositeEnvironmentDriver[
 
         return self._vfs.read(file[0], memoryview_at(data, size, readonly=False))
 
+    @_return_on_raise(-1)
     def _vfs_write(
         self, file: TypedPointer[retro_vfs_file_handle], data: c_void_ptr, size: int
     ) -> int:
@@ -1367,24 +1416,28 @@ class CompositeEnvironmentDriver[
 
         return self._vfs.write(file[0], memoryview_at(data, size, readonly=True))
 
+    @_return_on_raise(-1)
     def _vfs_flush(self, file: TypedPointer[retro_vfs_file_handle]) -> int:
         if self._vfs is None or not file:
             return -1
 
         return 0 if self._vfs.flush(file[0]) else -1
 
+    @_return_on_raise(-1)
     def _vfs_remove(self, path: bytes) -> int:
         if self._vfs is None or not path:
             return -1
 
         return 0 if self._vfs.remove(path) else -1
 
+    @_return_on_raise(-1)
     def _vfs_rename(self, old_path: bytes, new_path: bytes) -> int:
         if self._vfs is None or not old_path or not new_path:
             return -1
 
         return 0 if self._vfs.rename(old_path, new_path) else -1
 
+    @_return_on_raise(0)
     def _vfs_stat(self, path: bytes, size: TypedPointer[c_int32]) -> int:
         if self._vfs is None or not path:
             return 0
@@ -1399,40 +1452,46 @@ class CompositeEnvironmentDriver[
 
         return vfs_stat
 
+    @_return_on_raise(-1)
     def _vfs_mkdir(self, path: bytes) -> int:
         if self._vfs is None or not path:
             return -1
 
         return self._vfs.mkdir(path)
 
+    @_return_on_raise(0)
     def _vfs_opendir(self, path: bytes, include_hidden: bool):
         if self._vfs is None or not path:
-            return None
+            return 0
 
         dir = self._vfs.opendir(path, include_hidden)
         if not dir:
-            return None
+            return 0
 
-        return cast(pointer(dir), c_void_p).value
+        return cast(pointer(dir), c_void_p).value or 0
 
+    @_return_on_raise(False)
     def _vfs_readdir(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bool:
         if self._vfs is None or not dir:
             return False
 
         return self._vfs.readdir(dir[0])
 
+    @_return_on_raise(typing.cast(bytes | None, None))
     def _vfs_dirent_get_name(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bytes | None:
         if self._vfs is None or not dir:
             return None
 
         return self._vfs.dirent_get_name(dir[0])
 
+    @_return_on_raise(False)
     def _vfs_dirent_is_dir(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bool:
         if self._vfs is None or not dir:
             return False
 
         return self._vfs.dirent_is_dir(dir[0])
 
+    @_return_on_raise(False)
     def _vfs_closedir(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bool:
         if self._vfs is None or not dir:
             return False
@@ -1460,6 +1519,7 @@ class CompositeEnvironmentDriver[
         led[0] = self._led_interface
         return True
 
+    @_return_on_raise(None)
     def _set_led_state(self, led: int, state: int) -> None:
         if self._led is not None:
             self._led.set_led_state(led, state)
@@ -1516,18 +1576,21 @@ class CompositeEnvironmentDriver[
 
         return True
 
+    @_return_on_raise(False)
     def _midi_input_enabled(self) -> bool:
         if self._midi is None:
             return False
 
         return self._midi.input_enabled
 
+    @_return_on_raise(False)
     def _midi_output_enabled(self) -> bool:
         if self._midi is None:
             return False
 
         return self._midi.output_enabled
 
+    @_return_on_raise(False)
     def _midi_read(self, byte: TypedPointer[c_uint8]) -> bool:
         if self._midi is None or not byte:
             return False
@@ -1539,12 +1602,14 @@ class CompositeEnvironmentDriver[
         byte[0] = result
         return True
 
+    @_return_on_raise(False)
     def _midi_write(self, byte: int, delta_time: int) -> bool:
         if self._midi is None:
             return False
 
         return self._midi.write(byte, delta_time)
 
+    @_return_on_raise(False)
     def _midi_flush(self) -> bool:
         if self._midi is None:
             return False
@@ -1955,20 +2020,23 @@ class CompositeEnvironmentDriver[
         # This envcall supports passing NULL to query for support
         return True
 
+    @_return_on_raise(0)
     def _open_mic(self, params: TypedPointer[retro_microphone_params]):
         if self._mic is None:
-            return None
+            return 0
 
         mic = self._mic.open_mic(params[0] if params else None)
         if not mic:
-            return None
+            return 0
 
-        return cast(pointer(mic), c_void_p).value
+        return cast(pointer(mic), c_void_p).value or 0
 
+    @_return_on_raise(None)
     def _close_mic(self, mic: TypedPointer[retro_microphone]) -> None:
         if self._mic is not None and mic:
             self._mic.close_mic(mic[0])
 
+    @_return_on_raise(False)
     def _get_mic_params(
         self,
         mic: TypedPointer[retro_microphone],
@@ -1984,6 +2052,7 @@ class CompositeEnvironmentDriver[
         params[0] = returned_params
         return True
 
+    @_return_on_raise(False)
     def _set_mic_state(self, mic: TypedPointer[retro_microphone], state: bool) -> bool:
         if self._mic is None or not mic:
             return False
@@ -1991,12 +2060,14 @@ class CompositeEnvironmentDriver[
         self._mic.set_mic_state(mic[0], state)
         return True
 
+    @_return_on_raise(False)
     def _get_mic_state(self, mic: TypedPointer[retro_microphone]) -> bool:
         if self._mic is None or not mic:
             return False
 
         return self._mic.get_mic_state(mic[0])
 
+    @_return_on_raise(-1)
     def _read_mic(
         self, mic: TypedPointer[retro_microphone], buffer: TypedPointer[c_int16], frames: int
     ) -> int:

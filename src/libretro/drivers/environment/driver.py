@@ -1,6 +1,8 @@
+import functools
 from abc import abstractmethod
+from collections.abc import Callable
 from ctypes import c_bool, c_char_p, c_float, c_int16, c_uint, c_uint64
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Self, runtime_checkable
 
 from libretro.api import (
     retro_audio_buffer_status_callback,
@@ -324,6 +326,36 @@ class EnvironmentDriver(Protocol):
 
     def _get_playlist_directory(self, dir: TypedPointer[c_char_p]) -> bool:
         return False
+
+    @staticmethod
+    def return_on_raise[T, **P](default: T) -> Callable[[Callable[P, T]], Callable[P, T]]:
+        """
+        ctypes doesn't propagate exceptions out of callbacks,
+        so this is necessary to detect an error in a driver
+        instead of just swallowing it with a warning.
+        """
+
+        def decorator(fn: Callable[P, T]) -> Callable[P, T]:
+            @functools.wraps(fn)
+            def wrapper(self: Self, *args: P.args, **kwargs: P.kwargs) -> T:
+                try:
+                    return fn(self, *args, **kwargs)  # type: ignore
+                    # "fn" is the original method, including the "self" parameter
+                except Exception as e:
+                    self._handle_callback_exception(e)
+                    return default
+
+            return wrapper  # pyright: ignore[reportReturnType]
+
+        return decorator
+
+    def _handle_callback_exception(self, exception: Exception) -> None:
+        """
+        Handle an exception thrown from a callback.
+        By default, this just re-raises the exception, but it can be overridden
+        to log the error instead or something like that.
+        """
+        raise exception
 
 
 __all__ = [

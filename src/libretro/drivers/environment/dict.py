@@ -32,6 +32,7 @@ class DictEnvironmentDriver(
         return iter(self._envcalls.keys())
 
     @override
+    @EnvironmentDriver.return_on_raise(False)
     def environment(self, cmd: int, data: c_void_p) -> bool:
         if cmd not in EnvironmentCall:
             return False

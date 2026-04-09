@@ -1,8 +1,10 @@
+import warnings
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import CDLL
 from os import PathLike
 from types import TracebackType
+from typing import override
 
 from libretro.api import API_VERSION, AvEnableFlags
 from libretro.api import Content as GameContent
@@ -40,7 +42,11 @@ from libretro.drivers import (
     VideoDriver,
 )
 from libretro.drivers.types import Pollable
-from libretro.error import CoreShutDownException
+from libretro.error import (
+    CallbackException,
+    CallbackExceptionGroup,
+    CoreShutDownException,
+)
 
 
 class Session[
@@ -164,24 +170,33 @@ class Session[
 
         self._content = content
         self._system_av_info: retro_system_av_info | None = None
-
-        self._pending_callback_exceptions: list[BaseException] = []
+        self._pending_callback_exceptions: list[Exception] = []
         self._is_exited = False
 
     def __enter__(self):
         api_version = self._core.api_version()
+        self._raise_pending_exceptions("retro_api_version")
+
         if api_version != API_VERSION:
             raise RuntimeError(
                 f"libretro.py is only compatible with API version {API_VERSION}, but the core uses {api_version}"
             )
 
         self._core.set_video_refresh(self.video_refresh)
+        self._raise_pending_exceptions("retro_set_video_refresh")
         self._core.set_audio_sample(self.audio_sample)
+        self._raise_pending_exceptions("retro_set_audio_sample")
         self._core.set_audio_sample_batch(self.audio_sample_batch)
+        self._raise_pending_exceptions("retro_set_audio_sample_batch")
         self._core.set_input_poll(self.input_poll)
+        self._raise_pending_exceptions("retro_set_input_poll")
         self._core.set_input_state(self.input_state)
+        self._raise_pending_exceptions("retro_set_input_state")
         self._core.set_environment(self.environment)
+        self._raise_pending_exceptions("retro_set_environment")
+
         system_info = self._core.get_system_info()
+        self._raise_pending_exceptions("retro_get_system_info")
 
         if system_info.library_name is None:
             raise RuntimeError("Core did not provide a library name")
@@ -193,6 +208,7 @@ class Session[
             raise RuntimeError("Core did not provide valid extensions")
 
         self._core.init()
+        self._raise_pending_exceptions("retro_init")
 
         if self._content is None:
             # Do nothing, we're testing something that doesn't need to load a game
@@ -205,9 +221,11 @@ class Session[
             match subsystem, content:
                 case (_, None | []):
                     loaded = self._core.load_game(None)
+                    self._raise_pending_exceptions("retro_load_game")
                 case None, [info]:
                     # Loading exactly one regular content file
                     loaded = self._core.load_game(info.info)
+                    self._raise_pending_exceptions("retro_load_game")
                 case None, [*_]:
                     raise RuntimeError(
                         "Content driver returned multiple files, but not a subsystem that uses them all"
@@ -215,12 +233,16 @@ class Session[
                 case retro_subsystem_info(), [*infos]:
                     game_infos = tuple(i.info for i in infos)
                     loaded = self._core.load_game_special(subsystem.id, game_infos)
+                    self._raise_pending_exceptions("retro_load_game_special")
                 case _, _:
                     raise RuntimeError("Failed to load content")
+
         if not loaded:
             raise RuntimeError("Failed to load game")
 
         self._system_av_info = self._core.get_system_av_info()
+        self._raise_pending_exceptions("retro_get_system_av_info")
+
         self._video.system_av_info = self._system_av_info
         if self._audio is not self._video:
             # Handle the case where the audio and video drivers are the same object
@@ -233,8 +255,11 @@ class Session[
     def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType):
         if self._content is not None:
             self._core.unload_game()
+            self._raise_pending_exceptions("retro_unload_game")
 
         self._core.deinit()
+        self._raise_pending_exceptions("retro_deinit")
+
         del self._core
         self._is_exited = True
         return isinstance(exc_val, CoreShutDownException)
@@ -303,6 +328,7 @@ class Session[
         # TODO: In RetroArch, an audio thread is started if the core registers an audio callback
 
         if isinstance(self._mic, Pollable):
+            # TODO: Call all pollable drivers
             self._mic.poll()
 
         if self._timing is not None:
@@ -314,21 +340,63 @@ class Session[
         # TODO: self._environment.camera.poll() (see runloop_iterate in runloop.c, lion)
         # TODO: Ensure that input is not polled more than once per frame
         self._core.run()
+        self._raise_pending_exceptions("retro_run")
 
     def reset(self) -> None:
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
         self._core.reset()
+        self._raise_pending_exceptions("retro_reset")
 
     def set_controller_port_device(self, port: Port, device: int) -> None:
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
         self._core.set_controller_port_device(port, device)
+        self._raise_pending_exceptions("retro_set_controller_port_device", port, device)
+
+    def cheat_reset(self) -> None:
+        if self._is_exited or self.is_shutdown:
+            raise CoreShutDownException()
+
+        self._core.cheat_reset()
+        self._raise_pending_exceptions("retro_cheat_reset")
+
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str) -> None:
+        if self._is_exited or self.is_shutdown:
+            raise CoreShutDownException()
+
+        self._core.cheat_set(index, enabled, code)
+        self._raise_pending_exceptions("retro_cheat_set", index, enabled, code)
+
+    @override
+    def _handle_callback_exception(self, exception: Exception) -> None:
+        warnings.warn(f"Exception raised in libretro.py callback: {exception}")
+        # TODO: Look at the warnings module to see how I can improve the warning message
+        self._pending_callback_exceptions.append(exception)
+
+    def _raise_pending_exceptions(self, function: str, *args: object) -> None:
+        match self._pending_callback_exceptions:
+            # If there are no pending exceptions, do nothing
+            case []:
+                return
+            # If there is exactly one pending exception, raise it directly to preserve the original traceback
+            case [exception]:
+                self._pending_callback_exceptions.clear()
+                raise CallbackException(
+                    f"Exception raised in libretro.py callbacks during {function}", *args
+                ) from exception
+            # If there are multiple pending exceptions, raise them as an ExceptionGroup
+            case [*exceptions]:
+                self._pending_callback_exceptions.clear()
+                raise CallbackExceptionGroup(
+                    f"Exceptions raised in libretro.py callbacks during {function}",
+                    exceptions,
+                    *args,
+                )
 
 
 __all__ = [
     "Session",
-    "CoreShutDownException",
 ]
