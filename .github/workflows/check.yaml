@@ -2,6 +2,17 @@ name: Check & Test
 
 on:
   workflow_dispatch:
+    # Allow manual triggering of this workflow
+    inputs:
+      run-id:
+        type: string
+        description: "Workflow run ID"
+        required: false
+      dry-run:
+        type: boolean
+        description: "Skip release steps"
+        required: false
+        default: true
   push:
     branches:
       - main
@@ -20,10 +31,8 @@ jobs:
         # Test against multiple Python versions to ensure compatibility
         python-version: ["3.12", "3.13", "3.14"]
     steps:
-      - name: Check Out Sources
+      - name: Check Out Source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0 # To ensure we have all tags
 
       - name: Install Just
         uses: extractions/setup-just@c26183993cea0054160ffaaa55fab2cad53c12fc # v3.1.0
@@ -43,3 +52,17 @@ jobs:
 
       - name: Check Style
         run: just black-check isort-check
+
+      - name: Build Package
+        run: just build
+        # Uses the "build" recipe from the justfile
+
+      - name: Upload Build
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: ${{ matrix.python-version == '3.14' }}
+        # Only upload artifacts for the latest Python version,
+        # since the package should be the same for all versions
+        with:
+          archive: false
+          path: dist/libretro_py-*.whl
+          if-no-files-found: error
