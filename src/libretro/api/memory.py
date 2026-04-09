@@ -124,4 +124,9 @@ __all__ = [
     "retro_memory_descriptor",
     "retro_memory_map",
     "MemoryDescriptorFlag",
+    "RETRO_MEMORY_MASK",
+    "RETRO_MEMORY_SAVE_RAM",
+    "RETRO_MEMORY_RTC",
+    "RETRO_MEMORY_SYSTEM_RAM",
+    "RETRO_MEMORY_VIDEO_RAM",
 ]
