@@ -35,7 +35,7 @@ from libretro.typing import TypedPointer
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType
 
-_MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
+MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 
 def address[
@@ -48,10 +48,10 @@ def address[
     match ptr:
         case None:
             return 0
-        case int() if 0 <= ptr <= _MAX_POINTER_VALUE:
+        case int() if 0 <= ptr <= MAX_POINTER_VALUE:
             return ptr
         case int():
-            raise ValueError(f"Expected an int between 0 and {_MAX_POINTER_VALUE}, got {ptr}")
+            raise ValueError(f"Expected an int between 0 and {MAX_POINTER_VALUE}, got {ptr}")
         case c_void_p():
             return ptr.value or 0
         case c_char_p() | _Pointer() | CFuncPtr():
@@ -243,4 +243,5 @@ __all__ = [
     "addressof_buffer",
     "memoryview_at",
     "c_uintptr",
+    "MAX_POINTER_VALUE",
 ]
