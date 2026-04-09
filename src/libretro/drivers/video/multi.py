@@ -109,17 +109,9 @@ class MultiVideoDriver(VideoDriver):
         self._current: VideoDriver | None = None
         self._rotation: Rotation = Rotation.NONE
         self._system_av_info: retro_system_av_info | None = None
-        self._callback: retro_hw_render_callback | None = None
-        self._can_dupe: bool | None = True
+        self._callback = retro_hw_render_callback(context_type=HardwareContext.NONE)
         self._shared_context = False
         self._next_hw_context: HardwareContext | None = HardwareContext.NONE
-
-        # We need to keep these objects alive before we can pass these callbacks to the core,
-        # or else they'll be garbage-collected and the core will crash.
-        self._get_current_framebuffer = retro_hw_get_current_framebuffer_t(
-            lambda: self.current_framebuffer
-        )
-        self._get_proc_address = retro_hw_get_proc_address_t(self.get_proc_address)
 
     @override
     def refresh(
@@ -166,14 +158,10 @@ class MultiVideoDriver(VideoDriver):
 
             Does not use :attr:`~.VideoDriver.preferred_context`.
         """
-        if self._next_hw_context is None or self._callback is None:
-            # no-op if we haven't gotten a request for a new (or reinitialized) hardware context
-            return
-
         if self._current is not None and self._current.active_context == self._next_hw_context:
             # If we're not switching to a whole new video driver...
             self._current.reinit()  # ...then just let the driver reinit itself
-        else:
+        elif self._next_hw_context is not None:
             # If we're switching to another hardware rendering API...
 
             driver = self._drivers[self._next_hw_context]()
@@ -310,8 +298,6 @@ class MultiVideoDriver(VideoDriver):
     def can_dupe(self) -> bool | None:
         if self._current is not None:
             return self._current.can_dupe
-
-        return self._can_dupe
 
     @property
     @override
