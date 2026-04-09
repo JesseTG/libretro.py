@@ -30,6 +30,7 @@ class TempDirPathDriver(PathDriver):
         self,
         corepath: str | bytes | PathLike[str] | PathLike[bytes] | Core | None = None,
         prefix: str | bytes = b"libretro.py-",
+        ignore_cleanup_errors: bool = True,
     ):
         """
         Initializes a new :py:class:`.TempDirPathDriver` and creates the necessary directories.
@@ -74,9 +75,13 @@ class TempDirPathDriver(PathDriver):
 
         match prefix:
             case str() | bytes():
-                self._root = TemporaryDirectory(prefix=fsencode(prefix))
+                self._root = TemporaryDirectory(
+                    prefix=fsencode(prefix), ignore_cleanup_errors=ignore_cleanup_errors
+                )
             case None:
-                self._root = TemporaryDirectory(prefix=b"libretro.py-")
+                self._root = TemporaryDirectory(
+                    prefix=b"libretro.py-", ignore_cleanup_errors=ignore_cleanup_errors
+                )
             case _:
                 raise TypeError(f"Expected prefix to be a str or bytes; got {prefix!r}")
 
