@@ -121,7 +121,7 @@ from libretro.drivers.input import InputDriver
 from libretro.drivers.led import LedDriver
 from libretro.drivers.location import LocationDriver
 from libretro.drivers.log import LogDriver
-from libretro.drivers.message import MessageInterface
+from libretro.drivers.message import MessageDriver
 from libretro.drivers.microphone import MicrophoneDriver
 from libretro.drivers.midi import MidiDriver
 from libretro.drivers.options import OptionDriver
@@ -132,7 +132,7 @@ from libretro.drivers.rumble import RumbleDriver
 from libretro.drivers.sensor import SensorDriver
 from libretro.drivers.timing import TimingDriver
 from libretro.drivers.user import UserDriver
-from libretro.drivers.vfs import FileSystemInterface
+from libretro.drivers.vfs import FileSystemDriver
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
 from libretro.drivers.video.driver import UnsupportedContextError
 from libretro.typing import TypedFunctionPointer, TypedPointer, c_void_ptr
@@ -154,7 +154,7 @@ class CompositeEnvironmentDriver[
     Input: InputDriver,
     Video: VideoDriver,
     Content: ContentDriver | None,
-    Message: MessageInterface | None,
+    Message: MessageDriver | None,
     Option: OptionDriver | None,
     Path: PathDriver | None,
     Rumble: RumbleDriver | None,
@@ -164,7 +164,7 @@ class CompositeEnvironmentDriver[
     Perf: PerfDriver | None,
     Location: LocationDriver | None,
     User: UserDriver | None,
-    Vfs: FileSystemInterface | None,
+    Vfs: FileSystemDriver | None,
     Led: LedDriver | None,
     Midi: MidiDriver | None,
     Timing: TimingDriver | None,
@@ -177,7 +177,7 @@ class CompositeEnvironmentDriver[
         video: Required[VideoDriver]
         content: ContentDriver | None
         overscan: bool | None
-        message: MessageInterface | None
+        message: MessageDriver | None
         options: OptionDriver | None
         path: PathDriver | None
         rumble: RumbleDriver | None
@@ -187,7 +187,7 @@ class CompositeEnvironmentDriver[
         perf: PerfDriver | None
         location: LocationDriver | None
         user: UserDriver | None
-        vfs: FileSystemInterface | None
+        vfs: FileSystemDriver | None
         led: LedDriver | None
         av_enable: AvEnableFlags | None
         midi: MidiDriver | None
@@ -254,9 +254,9 @@ class CompositeEnvironmentDriver[
             raise TypeError(f"Expected bool or None, got {type(self._overscan).__qualname__}")
 
         self._message = message
-        if self._message is not None and not isinstance(self._message, MessageInterface):
+        if self._message is not None and not isinstance(self._message, MessageDriver):
             raise TypeError(
-                f"Expected MessageInterface or None, got {type(self._message).__qualname__}"
+                f"Expected MesasgeDriver or None, got {type(self._message).__qualname__}"
             )
 
         self.__shutdown = False
@@ -314,9 +314,9 @@ class CompositeEnvironmentDriver[
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
         self._vfs = vfs
-        if self._vfs is not None and not isinstance(self._vfs, FileSystemInterface):
+        if self._vfs is not None and not isinstance(self._vfs, FileSystemDriver):
             raise TypeError(
-                f"Expected FileSystemInterface or None, got {type(self._vfs).__qualname__}"
+                f"Expected FileSystemDriver or None, got {type(self._vfs).__qualname__}"
             )
 
         self._led = led

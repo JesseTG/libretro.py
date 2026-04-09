@@ -14,7 +14,7 @@ from libretro.api.vfs import (
     retro_vfs_file_handle,
 )
 
-from .interface import DirectoryHandle, FileHandle, FileSystemInterface
+from .driver import DirectoryHandle, FileHandle, FileSystemDriver
 
 
 class StandardFileHandle(FileHandle):
@@ -166,7 +166,7 @@ class StandardDirectoryHandle(DirectoryHandle):
         return True
 
 
-class StandardFileSystemInterface(FileSystemInterface):
+class DefaultFileSystemDriver(FileSystemDriver):
     _file_handles: dict[int, StandardFileHandle]
     _dir_handles: dict[int, StandardDirectoryHandle]
 
@@ -358,5 +358,5 @@ class StandardFileSystemInterface(FileSystemInterface):
 __all__ = [
     "StandardFileHandle",
     "StandardDirectoryHandle",
-    "StandardFileSystemInterface",
+    "DefaultFileSystemDriver",
 ]

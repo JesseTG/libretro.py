@@ -28,6 +28,7 @@ from libretro.drivers import (
     CameraDriver,
     ConstantPowerDriver,
     ContentDriver,
+    DefaultFileSystemDriver,
     DefaultPerfDriver,
     DefaultTimingDriver,
     DefaultUserDriver,
@@ -35,7 +36,7 @@ from libretro.drivers import (
     DictOptionDriver,
     DictRumbleDriver,
     DriverMap,
-    FileSystemInterface,
+    FileSystemDriver,
     GeneratorMicrophoneDriver,
     GeneratorMidiDriver,
     InputDriver,
@@ -47,8 +48,8 @@ from libretro.drivers import (
     LedDriver,
     LocationDriver,
     LogDriver,
-    LoggerMessageInterface,
-    MessageInterface,
+    LoggerMessageDriver,
+    MessageDriver,
     MicrophoneDriver,
     MicrophoneSource,
     MidiDriver,
@@ -63,7 +64,6 @@ from libretro.drivers import (
     SensorStateIterable,
     SensorStateIterator,
     StandardContentDriver,
-    StandardFileSystemInterface,
     TempDirPathDriver,
     TimingDriver,
     UnformattedLogDriver,
@@ -109,7 +109,7 @@ type ContentArg = (
 )
 type ContentDriverArg = _OptionalArg[ContentDriver]
 type BoolArg = _OptionalArg[bool]
-type MessageDriverArg = _OptionalArg[MessageInterface] | Logger
+type MessageDriverArg = _OptionalArg[MessageDriver] | Logger
 type OptionDriverArg = (
     _OptionalArg[OptionDriver] | Mapping[str, str] | Mapping[bytes, bytes] | Literal[0, 1, 2]
 )
@@ -122,7 +122,7 @@ type LogDriverArg = _OptionalArg[LogDriver] | Logger
 type PerfDriverArg = _OptionalArg[PerfDriver]
 type LocationDriverArg = _OptionalArg[LocationDriver]
 type UserDriverArg = _OptionalArg[UserDriver]
-type FileSystemArg = _OptionalArg[FileSystemInterface] | Literal[1, 2, 3]
+type FileSystemArg = _OptionalArg[FileSystemDriver] | Literal[1, 2, 3]
 type LedDriverArg = _OptionalArg[LedDriver]
 type AvEnableFlagsArg = _OptionalArg[AvEnableFlags]
 type MidiDriverArg = _OptionalArg[MidiDriver]
@@ -151,7 +151,7 @@ class _SessionBuilderArgs(TypedDict):
     content: _OptionalFactory[Content | SubsystemContent]
     content_driver: _OptionalFactory[ContentDriver]
     overscan: _OptionalFactory[bool]  # TODO: Replace with some driver (not sure what yet)
-    message: _OptionalFactory[MessageInterface]
+    message: _OptionalFactory[MessageDriver]
     options: _OptionalFactory[OptionDriver]
     path: Callable[[Core], PathDriver | None]
     rumble: _OptionalFactory[RumbleDriver]
@@ -160,7 +160,7 @@ class _SessionBuilderArgs(TypedDict):
     perf: _OptionalFactory[PerfDriver]
     location: _OptionalFactory[LocationDriver]
     user: _OptionalFactory[UserDriver]
-    vfs: _OptionalFactory[FileSystemInterface]
+    vfs: _OptionalFactory[FileSystemDriver]
     led: _OptionalFactory[LedDriver]
     av_mask: _OptionalFactory[AvEnableFlags]
     midi: _OptionalFactory[MidiDriver]
@@ -514,12 +514,12 @@ class SessionBuilder:
         match message:
             case Callable() as func:
                 self._args["message"] = func
-            case MessageInterface():
+            case MessageDriver():
                 self._args["message"] = lambda: message
             case Logger() as logger:
-                self._args["message"] = lambda: LoggerMessageInterface(logger=logger)
+                self._args["message"] = lambda: LoggerMessageDriver(logger=logger)
             case _DefaultType.DEFAULT:
-                self._args["message"] = LoggerMessageInterface
+                self._args["message"] = LoggerMessageDriver
             case None:
                 self._args["message"] = _nothing
             case _:
@@ -774,12 +774,12 @@ class SessionBuilder:
         match vfs:
             case Callable() as func:
                 self._args["vfs"] = func
-            case FileSystemInterface() as interface:
+            case FileSystemDriver() as interface:
                 self._args["vfs"] = lambda: interface
             case 1 | 2 | 3 as version:
-                self._args["vfs"] = lambda: StandardFileSystemInterface(version)
+                self._args["vfs"] = lambda: DefaultFileSystemDriver(version)
             case _DefaultType.DEFAULT:
-                self._args["vfs"] = StandardFileSystemInterface
+                self._args["vfs"] = DefaultFileSystemDriver
             case None:
                 self._args["vfs"] = _nothing
             case _:

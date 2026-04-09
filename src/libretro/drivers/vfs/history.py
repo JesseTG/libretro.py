@@ -11,7 +11,7 @@ from libretro.api.vfs import (
     retro_vfs_file_handle,
 )
 
-from .interface import FileSystemInterface
+from .driver import FileSystemDriver
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -160,10 +160,10 @@ VfsOperation = (
 )
 
 
-class HistoryFileSystemInterface(FileSystemInterface):
-    def __init__(self, interface: FileSystemInterface):
-        if not isinstance(interface, FileSystemInterface):
-            raise TypeError(f"Expected a FileSystemInterface, got {type(interface).__name__}")
+class HistoryFileSystemDriver(FileSystemDriver):
+    def __init__(self, interface: FileSystemDriver):
+        if not isinstance(interface, FileSystemDriver):
+            raise TypeError(f"Expected a FileSystemDriver, got {type(interface).__name__}")
 
         self._interface = interface
         self._history: list[VfsOperation] = []
@@ -371,7 +371,7 @@ class HistoryFileSystemInterface(FileSystemInterface):
 
 
 __all__ = [
-    "HistoryFileSystemInterface",
+    "HistoryFileSystemDriver",
     "VfsOperation",
     "GetPath",
     "Open",

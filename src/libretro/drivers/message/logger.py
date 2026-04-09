@@ -5,10 +5,10 @@ from typing import override
 
 from libretro.api import LogLevel, MessageTarget, retro_message, retro_message_ext
 
-from .driver import MessageInterface
+from .driver import MessageDriver
 
 
-class LoggerMessageInterface(MessageInterface):
+class LoggerMessageDriver(MessageDriver):
     def __init__(self, version: int = 1, logger: Logger | None = None):
         self._version = version
         self._logger = logger
@@ -49,5 +49,5 @@ class LoggerMessageInterface(MessageInterface):
 
 
 __all__ = [
-    "LoggerMessageInterface",
+    "LoggerMessageDriver",
 ]

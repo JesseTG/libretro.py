@@ -74,7 +74,7 @@ class DirectoryHandle(Protocol):
 
 
 @runtime_checkable
-class FileSystemInterface(Protocol):
+class FileSystemDriver(Protocol):
     @property
     @abstractmethod
     def version(self) -> int: ...
@@ -139,4 +139,4 @@ class FileSystemInterface(Protocol):
     def closedir(self, dir: retro_vfs_dir_handle) -> bool: ...
 
 
-__all__ = ["FileSystemInterface", "FileHandle", "DirectoryHandle"]
+__all__ = ["FileSystemDriver", "FileHandle", "DirectoryHandle"]

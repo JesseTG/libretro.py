@@ -5,7 +5,7 @@ from libretro.api import retro_message, retro_message_ext
 
 
 @runtime_checkable
-class MessageInterface(Protocol):
+class MessageDriver(Protocol):
     @property
     @abstractmethod
     def version(self) -> int: ...
@@ -15,5 +15,5 @@ class MessageInterface(Protocol):
 
 
 __all__ = [
-    "MessageInterface",
+    "MessageDriver",
 ]
