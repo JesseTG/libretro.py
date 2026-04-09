@@ -52,7 +52,7 @@ from libretro.api import (
     retro_variable,
     retro_vfs_interface_info,
 )
-from libretro.typing import TypedPointer
+from libretro.ctypes import TypedPointer
 
 from .dict import DictEnvironmentDriver, EnvironmentCallbackFunction
 

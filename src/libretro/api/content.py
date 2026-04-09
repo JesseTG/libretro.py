@@ -26,7 +26,7 @@ from libretro.api._utils import (
     deepcopy_buffer,
     mmap_file,
 )
-from libretro.typing import Pointer, c_void_ptr
+from libretro.ctypes import Pointer, c_void_ptr
 
 
 @dataclass(init=False, slots=True)

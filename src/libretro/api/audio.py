@@ -1,7 +1,7 @@
 from ctypes import Structure, c_int16, c_size_t, c_uint
 from dataclasses import dataclass
 
-from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_audio_sample_t = TypedFunctionPointer[None, [CIntArg[c_int16], CIntArg[c_int16]]]
 retro_audio_sample_batch_t = TypedFunctionPointer[

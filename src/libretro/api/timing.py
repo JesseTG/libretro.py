@@ -13,7 +13,7 @@ RETRO_THROTTLE_UNBLOCKED = 6
 
 retro_usec_t = c_int64
 
-from libretro.typing import CIntArg, TypedFunctionPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]]
 

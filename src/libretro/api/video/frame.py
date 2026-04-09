@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import Literal
 
-from libretro.typing import CIntArg, TypedFunctionPointer, c_void_ptr
+from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0

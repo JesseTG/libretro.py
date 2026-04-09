@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from libretro.api._utils import c_uintptr
-from libretro.typing import CStringArg, TypedFunctionPointer, c_void_ptr
+from libretro.ctypes import CStringArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
 

@@ -2,7 +2,7 @@ from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
 
-from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer
+from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer
 
 from .device import InputDeviceState
 

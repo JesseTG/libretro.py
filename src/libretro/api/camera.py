@@ -11,7 +11,7 @@ from ctypes import (
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 
-from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_camera_buffer = c_int
 RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0

@@ -2,7 +2,7 @@ from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16
 from dataclasses import dataclass
 from enum import IntFlag
 
-from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, c_void_ptr
+from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_NETPACKET_UNRELIABLE = 0
 RETRO_NETPACKET_RELIABLE = 1 << 0

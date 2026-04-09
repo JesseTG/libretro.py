@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import override
 
 from libretro.api.content import retro_game_info
-from libretro.typing import (
+from libretro.ctypes import (
     CBoolArg,
     CIntArg,
     CStringArg,

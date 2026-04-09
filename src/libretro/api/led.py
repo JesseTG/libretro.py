@@ -1,7 +1,7 @@
 from ctypes import Structure, c_int
 from dataclasses import dataclass
 
-from libretro.typing import CIntArg, TypedFunctionPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_set_led_state_t = TypedFunctionPointer[None, [CIntArg[c_int], CIntArg[c_int]]]
 

@@ -1,7 +1,7 @@
 from ctypes import Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
 
-from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_midi_input_enabled_t = TypedFunctionPointer[c_bool, []]
 retro_midi_output_enabled_t = TypedFunctionPointer[c_bool, []]

@@ -3,7 +3,7 @@ from ctypes import Structure, c_int
 from dataclasses import dataclass
 from enum import IntEnum
 
-from libretro.typing import CIntArg, CStringArg, TypedFunctionPointer
+from libretro.ctypes import CIntArg, CStringArg, TypedFunctionPointer
 
 RETRO_LOG_DEBUG = 0
 RETRO_LOG_INFO = RETRO_LOG_DEBUG + 1

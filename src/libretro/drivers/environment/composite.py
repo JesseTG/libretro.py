@@ -115,6 +115,7 @@ from libretro.api.microphone import *
 from libretro.api.midi import *
 from libretro.api.vfs import *
 from libretro.api.vfs import retro_vfs_close_t, retro_vfs_file_handle
+from libretro.ctypes import TypedFunctionPointer, TypedPointer, c_void_ptr
 from libretro.drivers.audio import AudioDriver
 from libretro.drivers.camera import CameraDriver
 from libretro.drivers.content import ContentDriver
@@ -136,7 +137,6 @@ from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemDriver
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
 from libretro.drivers.video.driver import UnsupportedContextError
-from libretro.typing import TypedFunctionPointer, TypedPointer, c_void_ptr
 
 from .default import DefaultEnvironmentDriver
 from .dict import DictEnvironmentDriver

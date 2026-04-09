@@ -36,7 +36,7 @@ from libretro.api import (
 )
 from libretro.api._utils import memoryview_at
 from libretro.api.input import Port
-from libretro.typing import TypedPointer, c_void_ptr
+from libretro.ctypes import TypedPointer, c_void_ptr
 
 # TODO: Add a CorePhase enum that's updated when entering/leaving each phase.
 # (Some envcalls can only be called in certain phases, so this would be useful for error checking.)

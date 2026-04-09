@@ -3,7 +3,7 @@ from ctypes import POINTER, Array, Structure, c_bool, c_char_p, pointer
 from dataclasses import dataclass
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import TypedArray, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import TypedArray, TypedFunctionPointer, TypedPointer
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 

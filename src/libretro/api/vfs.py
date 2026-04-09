@@ -17,7 +17,7 @@ from enum import IntEnum, IntFlag
 from os import PathLike
 from typing import Literal
 
-from libretro.typing import (
+from libretro.ctypes import (
     CBoolArg,
     CIntArg,
     CStringArg,

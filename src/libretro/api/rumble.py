@@ -2,7 +2,7 @@ from ctypes import Structure, c_bool, c_int, c_uint, c_uint16
 from dataclasses import dataclass
 from enum import IntEnum
 
-from libretro.typing import CIntArg, TypedFunctionPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_rumble_effect = c_int
 RETRO_RUMBLE_STRONG = 0

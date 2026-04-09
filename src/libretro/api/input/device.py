@@ -6,7 +6,7 @@ from enum import CONFORM, IntEnum, IntFlag
 from typing import NewType, overload
 
 from libretro.api._utils import MemoDict, deepcopy_array
-from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 Port = NewType("Port", int)
 """

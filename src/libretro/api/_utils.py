@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 
 from _ctypes import CFuncPtr
 
-from libretro.typing import TypedPointer
+from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType

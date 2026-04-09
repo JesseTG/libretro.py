@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import overload
 
-from libretro.typing import TypedPointer, c_void_ptr
+from libretro.ctypes import TypedPointer, c_void_ptr
 
 from ._utils import MemoDict, deepcopy_array
 

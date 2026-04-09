@@ -2,7 +2,7 @@ from ctypes import Structure, c_bool, c_char_p, c_int64, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
 
-from libretro.typing import TypedFunctionPointer, TypedPointer
+from libretro.ctypes import TypedFunctionPointer, TypedPointer
 
 RETRO_SIMD_SSE = 1 << 0
 RETRO_SIMD_SSE2 = 1 << 1

@@ -1,7 +1,7 @@
 from ctypes import Structure, c_bool, c_double, c_uint
 from dataclasses import dataclass
 
-from libretro.typing import CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_location_set_interval_t = TypedFunctionPointer[None, [CIntArg[c_uint], CIntArg[c_uint]]]
 retro_location_start_t = TypedFunctionPointer[c_bool, []]

@@ -1,7 +1,7 @@
 from ctypes import Structure, c_bool, c_int, c_int16, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 
-from libretro.typing import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION

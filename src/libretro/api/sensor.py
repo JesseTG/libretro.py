@@ -2,7 +2,7 @@ from ctypes import Structure, c_bool, c_float, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 
-from libretro.typing import CIntArg, TypedFunctionPointer
+from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_sensor_action = c_int
 RETRO_SENSOR_ACCELEROMETER_ENABLE = 0

@@ -1,7 +1,7 @@
 from ctypes import Structure
 from dataclasses import dataclass
 
-from libretro.typing import CStringArg, TypedFunctionPointer
+from libretro.ctypes import CStringArg, TypedFunctionPointer
 
 retro_proc_address_t = TypedFunctionPointer[None, []]
 retro_get_proc_address_t = TypedFunctionPointer[retro_proc_address_t, [CStringArg]]
