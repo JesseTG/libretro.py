@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
-## [Unreleased]
+## [0.7.0] - 2026-04-10
 
 I'm still here! I've had many "I'll-get-around-to-it-someday" tasks
 on my to-do list for libretro.py. Well, _someday has come_.
