@@ -52,7 +52,7 @@ jobs:
     name: Release Next Version
     needs: check-release-version
     if: "${{ needs.check-release-version.outputs.newest-tag != needs.check-release-version.outputs.newest-version }}"
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
 
     environment:
       name: release
