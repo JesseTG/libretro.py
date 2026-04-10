@@ -12,44 +12,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+I'm still here! I've had many "I'll-get-around-to-it-someday" tasks
+on my to-do list for libretro.py. Well, _someday has come_.
+This release primarily addresses stability and API consistency;
+the most notable change is full type coverage.
+
 ### Added
 
-- Add annotations to all public-facing types and functions in libretro.py.
-- Add type checking with Pyright to the CI pipeline.
-- Added some symbols to `libretro.api` to account for additions to `libretro.h`.
+- Type annotations to all public-facing types and functions in libretro.py.
+  Too many to list here, but the library has 100% coverage.
+- Type checking with Pyright to the CI pipeline.
+  _All future pull requests must pass type-checking._
+- Additional symbols to `libretro.api` to match [`libretro.h`][libretro.h]
+- The `libretro.ctypes` module for type declarations
+  that describe the behavior documented by [`ctypes`][ctypes]
 - Added `PathDriver.file_browser_start_dir`,
   and implement it in `ExplicitPathDriver` and `TempDirPathDriver`.
 - Added `libretro.typing`, which contains types that enforce `ctypes`'s
   documented rules statically while falling back to it at runtme.
 - Added linting pipelines to GitHub Actions for Python 3.12, 3.13, and 3.14.
-- Added types for each VFS operation in `libretro.drivers.vfs.history`
+  _All future pull requests must pass linting checks for these versions._
+- Added types for each VFS operation in `libretro.drivers.vfs.history`.
+- Fields to `retro_vfs_file_handle` and `retro_vfs_dir_handle`
+  that are helpful for `FileSystemDriver` implementations.
+- Add `SessionBuilder.with_rumble`.
+- Add `AnySession` as a type alias of `Session` with
+  just the base driver protocols as its type parameters.
 
 ### Fixed
 
-- Fix compatibility with Python 3.14 due to `FieldsFromTypeHints`
+- Fix a compatibility issue with Python 3.14 due to `FieldsFromTypeHints`
   relying on behavior that was changed since Python 3.12.
 
 ### Changed
 
 - **BREAKING:** Raise minimum required Python version to 3.12.
+- **BREAKING:** Separate `RumbleDriver` from `InputDriver`.
+- **BREAKING:** Make `Session` a subclass of `CompositeEnvironmentDriver`.
+- **BREAKING:** Move all libretro callback struct creation
+  into `CompositeEnvironmentDriver`.
+- **BREAKING:** Move compatibility shims into `libretro.compat`.
+- **BREAKING:** Move memory-related constants (e.g. `RETRO_MEMORY_SAVE_RAM`)
+  into `libretro.api.memory`.
+- **BREAKING:** Change the values of some names in `SensorType`.
+- **BREAKING:** Rename `MessageInterface` to `MessageDriver`.
+- **BREAKING:** Rename `LoggerMessageInterface` to `LoggerMessageDriver`.
+- **BREAKING:** Move `ConstantPowerDriver` into `libretro.drivers.power.constant`.
+- **BREAKING:** Remove validation logic from `SensorDriver`.
+- **BREAKING:** Rename `FileSystemInterface` to `FileSystemDriver`.
+- **BREAKING:** Rename `StandardFileSystemInterface` to `DefaultFileSystemDriver`.
+- **BREAKING:** Rename `HistoryFileSystemInterface` to `HistoryFileSystemDriver`.
+- Refactor `FileSystemInterface` to primarily expose its VFS methods on itself,
+  rather than through `FileHandle` or `DirectoryHandle`
+  (although they're still available).
 - Make `justfile` recipes operate in the current environment
   instead of forcibly creating a virtual environment.
-- Separate `RumbleDriver` from `InputDriver`.
-- Deprecate `SessionBuilder` in favor of just creating `Session` directly.
 - Add type parameters to `CompositeEnvironmentDriver` for each driver
   so that test script authors don't have to check classes
   before accessing installed drivers.
-- **BREAKING:** Make `Session` a subclass of `CompositeEnvironmentDriver`.
+- Catch exceptions raised in `EnvironmentDriver`'s callbacks
+  (including those returned to the core),
+  and allow subclasses to handle those exceptions
+  once control returns from the core.
+- `Session` re-raises exceptions that occur during callbacks
+  once control returns from the core.
 - Change all uses of `c_void_p` to `c_void_ptr`,
   to avoid implicit conversions to `int`.
+- Allow `TempDirPathDriver` to ignore exceptions that are raised
+  while deleting the temporary directories.
+- Update required `moderngl-window` version for the `opengl` extra to `3.*`.
+- Redefine all function pointer types to use `TypedFunctionPointer`,
+  and their arguments to use various helper types like `CIntArg`.
+- `PointerState.pointers` is now a `tuple` instead of a `Sequence`.
+- Allow `CoreInterface` and `Core`'s `set_...` methods to accept
+  Python `Callable`s as well as corresponding function pointers.
+
+### Deprecated
+
+- Deprecate `SessionBuilder` in favor of creating `Session` directly.
 
 ### Removed
 
+- **BREAKING:** Remove `GeneratorLocationDriver`.
+- **BREAKING:** Remove `retro_log_callback.__call__`.
+  It served no purpose as a helper method,
+  since the callback is meant for cores.
 - Removed `flake8` from the repo's linters.
 - Removed the `_type_` field from all `IntEnum` subclasses.
-- **BREAKING:** Drivers no longer create their own libretro callback structs,
-  this work has all moved into the environment driver.
-- **BREAKING:** Remove `GeneratorLocationDriver`.
 
 ## [0.6.0] - 2025-01-27
 
@@ -295,3 +344,6 @@ Thanks to @JSensebe for his contributions!
 ### Added
 
 - Everything.
+
+[libretro.h]: https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro.h
+[ctypes]: https://docs.python.org/3/library/ctypes.html
