@@ -35,7 +35,7 @@ from _ctypes import CFuncPtr
 from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
-    from ctypes import _CData, _CDataType
+    from ctypes import _CData, _CDataType, _CVoidConstPLike
 
 MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
@@ -206,10 +206,8 @@ else:
     pythonapi.PyMemoryView_FromMemory.argtypes = (c_char_p, c_ssize_t, c_int)
     pythonapi.PyMemoryView_FromMemory.restype = py_object
 
-    def memoryview_at[
-        T: _CDataType
-    ](
-        address: c_char_p | c_void_p | int | bytes | TypedPointer[T],
+    def memoryview_at(
+        address: _CVoidConstPLike,
         size: int,
         readonly: bool = False,
     ) -> memoryview[int]:
