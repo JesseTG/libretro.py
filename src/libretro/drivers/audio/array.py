@@ -21,10 +21,16 @@ class ArrayAudioDriver(AudioDriver):
 
     @override
     def sample_batch(self, frames: memoryview) -> int:
-        self._buffer.frombytes(frames.cast("B"))
+        if frames.format != "h":
+            byte_view = frames.cast("B")
+            sample_view = byte_view.cast("h")
+        else:
+            sample_view = frames
+
+        self._buffer.extend(sample_view)
 
         # Divide by two to return number of frames
-        return len(frames) // 2
+        return len(sample_view) // 2
 
     @property
     @override
