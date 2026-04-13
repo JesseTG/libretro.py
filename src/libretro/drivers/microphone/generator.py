@@ -76,7 +76,8 @@ class GeneratorMicrophone(Microphone):
             return None
 
         buffer = array("h", self._overflow)
-        self._overflow.clear()
+        # array.clear() wasn't introduced until Python 3.13
+        del self._overflow[:]
 
         while len(buffer) < frames:
             # Until we have the requested number of frames in the buffer,
