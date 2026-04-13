@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Change `libretro.api._utils.memoryview_at`'s type hints to match
+  those of Python 3.14's `memoryview_at`,
+  and fix behavior to be similarly forgiving with its input.
+
 ## [0.7.0] - 2026-04-10
 
 I'm still here! I've had many "I'll-get-around-to-it-someday" tasks

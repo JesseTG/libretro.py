@@ -211,8 +211,23 @@ else:
         size: int,
         readonly: bool = False,
     ) -> memoryview[int]:
+        match address:
+            case int():
+                ptr = c_char_p(address)
+            case c_char_p() | bytes():
+                ptr = address
+            case c_void_p() | _Pointer():
+                ptr = cast(address, c_char_p)  # pyright: ignore[reportUnknownArgumentType]
+            case Array():
+                ptr = c_char_p(addressof(address))
+            case _:
+                ptr = cast(address, c_char_p)
+
         flags = 0x100 if readonly else 0x200
-        return pythonapi.PyMemoryView_FromMemory(address, size, flags)
+        return pythonapi.PyMemoryView_FromMemory(ptr, size, flags)
+
+    # PyMemoryView_FromMemory's first argument is a char*,
+    # so we need to cast our address to a char* before passing it.
 
 
 if TYPE_CHECKING:
