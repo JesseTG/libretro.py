@@ -90,21 +90,20 @@ class retro_hw_render_callback(Structure):
         context_destroy: retro_hw_context_reset_t | None = None,
         debug_context: bool = False,
     ):
-        super().__init__(
-            context_type=context_type,
-            context_reset=context_reset or retro_hw_context_reset_t(),
-            get_current_framebuffer=get_current_framebuffer
-            or retro_hw_get_current_framebuffer_t(),
-            get_proc_address=get_proc_address or retro_hw_get_proc_address_t(),
-            depth=depth,
-            stencil=stencil,
-            bottom_left_origin=bottom_left_origin,
-            version_major=version_major,
-            version_minor=version_minor,
-            cache_context=cache_context,
-            context_destroy=context_destroy or retro_hw_context_reset_t(),
-            debug_context=debug_context,
+        self.context_type = context_type
+        self.context_reset = context_reset or retro_hw_context_reset_t()
+        self.get_current_framebuffer = (
+            get_current_framebuffer or retro_hw_get_current_framebuffer_t()
         )
+        self.get_proc_address = get_proc_address or retro_hw_get_proc_address_t()
+        self.depth = depth
+        self.stencil = stencil
+        self.bottom_left_origin = bottom_left_origin
+        self.version_major = version_major
+        self.version_minor = version_minor
+        self.cache_context = cache_context
+        self.context_destroy = context_destroy or retro_hw_context_reset_t()
+        self.debug_context = debug_context
 
     def __deepcopy__(self, _):
         return retro_hw_render_callback(

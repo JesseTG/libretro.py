@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change `libretro.api._utils.memoryview_at`'s type hints to match
   those of Python 3.14's `memoryview_at`,
   and fix behavior to be similarly forgiving with its input.
+- Fix exceptions raised in the initializers for
+  `retro_hw_render_callback` and `retro_microphone_interface`.
 
 ## [0.7.0] - 2026-04-10
 

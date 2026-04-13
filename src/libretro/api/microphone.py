@@ -68,15 +68,13 @@ class retro_microphone_interface(Structure):
         get_mic_state: retro_get_mic_state_t | None = None,
         read_mic: retro_read_mic_t | None = None,
     ):
-        super().__init__(
-            interface_version,
-            open_mic,
-            close_mic,
-            get_params,
-            set_mic_state,
-            get_mic_state,
-            read_mic,
-        )
+        self.interface_version = interface_version
+        self.open_mic = open_mic or retro_open_mic_t()
+        self.close_mic = close_mic or retro_close_mic_t()
+        self.get_params = get_params or retro_get_mic_params_t()
+        self.set_mic_state = set_mic_state or retro_set_mic_state_t()
+        self.get_mic_state = get_mic_state or retro_get_mic_state_t()
+        self.read_mic = read_mic or retro_read_mic_t()
 
     def __deepcopy__(self, _):
         return retro_microphone_interface(
