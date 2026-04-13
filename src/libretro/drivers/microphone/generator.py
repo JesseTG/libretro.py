@@ -14,18 +14,20 @@ from .driver import Microphone, MicrophoneDriver
 MicrophoneInput = int | Sequence[int] | None
 MicrophoneInputIterator = Iterator[MicrophoneInput]
 MicrophoneInputIterable = Iterable[MicrophoneInput]
-MicrophoneInputGenerator = Callable[[], MicrophoneInputIterator]
-MicrophoneSource = MicrophoneInputIterable | MicrophoneInputGenerator
+MicrophoneInputGeneratorFunction = Callable[[], MicrophoneInputIterator]
+MicrophoneSource = MicrophoneInputIterable | MicrophoneInputGeneratorFunction
 
 
 class GeneratorMicrophone(Microphone):
     _generator_state: MicrophoneInputIterator
+    _handle: retro_microphone
 
     def __init__(self, generator: MicrophoneSource | None, params: retro_microphone_params | None):
         self._params = params or retro_microphone_params(44100)
         self._enabled = False
         self._closed = False
         self._overflow = array("h")
+        self._handle = retro_microphone(id(self))
 
         match generator:
             case None:
@@ -34,6 +36,10 @@ class GeneratorMicrophone(Microphone):
                 self._generator_state = generator()
             case Iterable() as it:
                 self._generator_state = iter(it)
+            case _:
+                raise TypeError(
+                    f"GeneratorMicrophone requires a generator function or an iterable as input; got {type(generator).__name__}"
+                )
 
     @override
     def close(self) -> None:
@@ -75,7 +81,8 @@ class GeneratorMicrophone(Microphone):
         while len(buffer) < frames:
             # Until we have the requested number of frames in the buffer,
             # keep asking the generator for more input and filling the buffer with it.
-            match next(self._generator_state, None):
+            next_samples = next(self._generator_state, None)
+            match next_samples:
                 case None:
                     buffer.append(0)
                 case int(frame):
@@ -97,10 +104,14 @@ class GeneratorMicrophone(Microphone):
 
         return buffer
 
+    @property
+    def handle(self) -> retro_microphone:
+        return self._handle
+
 
 class GeneratorMicrophoneDriver(MicrophoneDriver):
     def __init__(
-        self, generator: MicrophoneInputGenerator | MicrophoneInputIterable | None = None
+        self, generator: MicrophoneInputGeneratorFunction | MicrophoneInputIterable | None = None
     ):
         self._microphones: dict[int, GeneratorMicrophone] = {}
         self._generator = generator
@@ -113,9 +124,8 @@ class GeneratorMicrophoneDriver(MicrophoneDriver):
     @override
     def open_mic(self, params: retro_microphone_params | None) -> retro_microphone | None:
         mic = GeneratorMicrophone(self._generator, params)
-        mic_id = id(mic)
-        handle = retro_microphone(mic_id)
-        self._microphones[mic_id] = mic
+        handle = mic.handle
+        self._microphones[handle.id] = mic
         return handle
 
     @override
@@ -166,6 +176,6 @@ __all__ = [
     "GeneratorMicrophoneDriver",
     "MicrophoneInput",
     "MicrophoneInputIterator",
-    "MicrophoneInputGenerator",
+    "MicrophoneInputGeneratorFunction",
     "MicrophoneSource",
 ]
