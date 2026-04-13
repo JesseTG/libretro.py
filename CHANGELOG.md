@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** `SessionBuilder.with_mic` no longer accepts
+  a generator function that yields microphone samples.
+  Since the method accepts a `Callable` that returns a `MicrophoneDriver`,
+  this complicated handling arguments.
+  Use `with_mic(GeneratorMicrophoneDriver(your_function))` instead.
+
 ### Fixed
 
 - Change `libretro.api._utils.memoryview_at`'s type hints to match

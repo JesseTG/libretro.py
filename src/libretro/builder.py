@@ -131,7 +131,7 @@ type FloatArg = _OptionalArg[float | int]
 type HardwareContextArg = _OptionalArg[HardwareContext]
 type ThrottleStateArg = _OptionalArg[retro_throttle_state]
 type SavestateContextArg = _OptionalArg[SavestateContext]
-type MicDriverArg = _OptionalArg[MicrophoneDriver] | MicrophoneSource
+type MicDriverArg = _OptionalArg[MicrophoneDriver]
 type PowerDriverArg = _OptionalArg[PowerDriver] | retro_device_power
 
 
@@ -954,19 +954,7 @@ class SessionBuilder:
     def with_mic(self, mic: MicDriverArg) -> Self:
         match mic:
             case Callable() as func:
-                # Either a generator or a driver type;
-                def _generate():
-                    match func():
-                        case Generator() | Iterable() | Iterator() as gen:
-                            return GeneratorMicrophoneDriver(gen)
-                        case MicrophoneDriver() as driver:
-                            return driver
-                        case err:
-                            raise TypeError(
-                                f"Expected a generator, an iterable, an iterator, or a MicrophoneDriver from the callable, got {type(err).__name__}"
-                            )
-
-                self._args["mic"] = _generate
+                self._args["mic"] = func
             case MicrophoneDriver():
                 self._args["mic"] = lambda: mic
             case _DefaultType.DEFAULT:
