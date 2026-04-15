@@ -1,10 +1,17 @@
-"""Audio callback and sample rendering types.
+"""
+Audio callback and sample rendering types.
 
 Corresponds to :c:type:`retro_audio_callback` and related types in ``libretro.h``.
 These types allow cores to push audio samples to the frontend
 or to be notified of audio buffer status changes.
 
-.. seealso:: :mod:`libretro.drivers.audio`
+.. seealso::
+
+    :class:`.AudioDriver`
+        The protocol that uses these types to implement audio output support in libretro.py.
+
+    :mod:`libretro.drivers.audio`
+        libretro.py's included :class:`.AudioDriver` implementations.
 """
 
 from ctypes import Structure, c_int16, c_size_t, c_uint
@@ -20,10 +27,10 @@ Corresponds to :c:type:`retro_audio_sample_t`.
 
 .. seealso ::
 
-    :meth:`libretro.core.Core.set_audio_sample`
+    :meth:`.Core.set_audio_sample`
         The method that exposes this callback to cores.
 
-    :meth:`libretro.drivers.audio.driver.AudioDriver.sample`
+    :meth:`.AudioDriver.sample`
         The method that implements this callback in libretro.py.
 
 """
@@ -40,10 +47,10 @@ Corresponds to :c:type:`retro_audio_sample_batch_t`.
 
 .. seealso ::
 
-    :meth:`libretro.core.Core.set_audio_sample_batch`
+    :meth:`.Core.set_audio_sample_batch`
         The method that exposes this callback to cores.
 
-    :meth:`libretro.drivers.audio.driver.AudioDriver.sample_batch`
+    :meth:`.AudioDriver.sample_batch`
         The method that implements this callback in libretro.py.
 """
 
@@ -56,7 +63,7 @@ Corresponds to :c:type:`retro_audio_callback_t`.
 
 .. seealso ::
 
-    :meth:`libretro.drivers.audio.driver.AudioDriver.callback`
+    :meth:`.AudioDriver.callback`
         The suggested entry point for this registered callback in libretro.py.
 """
 
@@ -69,7 +76,7 @@ Corresponds to :c:type:`retro_audio_set_state_callback_t`.
 
 .. seealso ::
 
-    :meth:`libretro.drivers.audio.driver.AudioDriver.set_state`
+    :meth:`.AudioDriver.set_state`
         The suggested entry point for this registered callback in libretro.py.
 """
 
@@ -78,13 +85,13 @@ retro_audio_buffer_status_callback_t = TypedFunctionPointer[
 ]
 """
 Registered by the core so that libretro.py can inform the core
-about the active :type:`AudioDriver`'s buffer occupancy and underrun status.
+about the active :class:`.AudioDriver`'s buffer occupancy and underrun status.
 
 Corresponds to :c:type:`retro_audio_buffer_status_callback_t`.
 
 .. seealso ::
 
-    :meth:`libretro.drivers.audio.driver.AudioDriver.report_buffer_status`
+    :meth:`.AudioDriver.report_buffer_status`
         The suggested entry point for this registered callback in libretro.py.
 """
 
