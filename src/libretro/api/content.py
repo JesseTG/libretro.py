@@ -1,3 +1,15 @@
+"""
+Types that define the content that can be (or has been) loaded by a :class:`.Core`.
+
+.. seealso::
+
+    :class:`.ContentDriver`
+        The :class:`.Protocol` that uses these types to load content in libretro.py.
+
+    :mod:`libretro.drivers.content`
+        libretro.py's included :class:`.ContentDriver` implementations.
+"""
+
 from __future__ import annotations
 
 import os
@@ -31,11 +43,42 @@ from libretro.ctypes import Pointer, c_void_ptr
 
 @dataclass(init=False, slots=True)
 class retro_system_info(Structure):
+    """
+    Describes the :class:`.Core`'s basic properties such as its name, version,
+    and supported file extensions.
+
+    Corresponds to :c:type:`retro_system_info` in ``libretro.h``.
+
+    .. seealso::
+
+        :meth:`.Core.get_system_info`
+            The method used to provide this information to libretro.py.
+    """
+
     library_name: bytes | None
+    """Human-readable name for the core."""
+
     library_version: bytes | None
+    """Human-readable version string for the core."""
+
     valid_extensions: bytes | None
+    """Pipe-delimited string of file extensions the core accepts, without leading dots."""
+
     need_fullpath: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` should not open content files itself,
+    instead letting the :class:`.Core` handle it.
+    """
+
     block_extract: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` should not extract content from compressed archives.
+
+    .. tip::
+
+        This is useful for cores that treat the archive itself as content,
+        like most cores for arcade machines.
+    """
 
     _fields_ = (
         ("library_name", c_char_p),
@@ -46,6 +89,24 @@ class retro_system_info(Structure):
     )
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this system info,
+        including copies of all strings.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_system_info
+        >>> info = retro_system_info(library_name=b'TestCore', library_version=b'1.0')
+        >>> info2 = copy.deepcopy(info)
+        >>> info == info2
+        True
+        >>> info is info2
+        False
+        >>> info.library_name == info2.library_name
+        True
+        >>> info.library_name is info2.library_name
+        False
+        """
         return retro_system_info(
             library_name=self.library_name,
             library_version=self.library_version,
@@ -57,9 +118,13 @@ class retro_system_info(Structure):
     @property
     def extensions(self) -> Iterator[bytes]:
         """
-        Returns an iterator over the valid extensions for this system, as bytes.
-        A convenience property for a common use of the ``valid_extensions`` field,
-        which is a pipe-delimited list of extensions.
+        Yields each extension named in :attr:`valid_extensions` as :class:`bytes`,
+        or nothing if :attr:`valid_extensions` is :obj:`None`.
+
+        >>> from libretro.api import retro_system_info
+        >>> info = retro_system_info(valid_extensions=b'bin|rom|iso')
+        >>> list(info.extensions)
+        [b'bin', b'rom', b'iso']
         """
         if self.valid_extensions:
             yield from self.valid_extensions.split(b"|")
@@ -67,10 +132,40 @@ class retro_system_info(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_game_info(Structure):
+    """
+    Describes a game that's been loaded and exposed to a :class:`.Core`.
+
+    Corresponds to :c:type:`retro_game_info` in ``libretro.h``.
+
+    .. seealso::
+        :meth:`.Core.load_game`, :meth:`.Core.load_game_special`
+            The methods used to load a game into a core.
+    """
+
     path: bytes | None
+    """
+    Path from which the content was loaded,
+    or :obj:`None` if loaded from memory.
+    """
+
     data: c_void_ptr | None
+    """
+    Pointer to the content data in memory,
+    or :obj:`None` if :attr:`~retro_system_info.need_fullpath` was set.
+    """
+
     size: int
+    """
+    Size of the content data in bytes.
+
+    Assigned values are bitwise-masked to fit into a :c:expr:`size_t`.
+    """
+
     meta: bytes | None
+    """
+    Optional metadata string.
+    Usually :obj:`None`, but can contain any additional text.
+    """
 
     _fields_ = (
         ("path", c_char_p),
@@ -81,6 +176,19 @@ class retro_game_info(Structure):
 
     @property
     def ext(self) -> bytes | None:
+        """
+        Returns the file extension of :attr:`path` without a leading dot,
+        :obj:`None` if :attr:`path` is :obj:`None`,
+        or an empty string if :attr:`path` has no extension.
+
+        >>> from libretro.api import retro_game_info
+        >>> retro_game_info(path=b'/game.bin').ext
+        b'bin'
+        >>> retro_game_info(path=None).ext is None
+        True
+        >>> retro_game_info(path=b'/game').ext
+        b''
+        """
         path = self.path
         if path is None:
             return None
@@ -89,6 +197,22 @@ class retro_game_info(Structure):
         return ext.removeprefix(b".")
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this object,
+        including copies of all strings and content data.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_game_info
+        >>> info = retro_game_info(path=b'/game.bin')
+        >>> info2 = copy.deepcopy(info)
+        >>> info == info2
+        True
+        >>> info is info2
+        False
+        >>> info.data == info2.data
+        False
+        """
         return retro_game_info(
             path=self.path,
             data=deepcopy_buffer(self.data, self.size),
@@ -98,19 +222,50 @@ class retro_game_info(Structure):
 
 
 type ContentPath = str | PathLike[str] | PathLike[bytes] | ZipPath
+"""A path to content, supporting filesystem paths and ZIP archive paths."""
+
 type ContentData = bytes | bytearray | memoryview[int] | Buffer
+"""Raw content data in memory."""
+
 type Content = ContentPath | ContentData | retro_game_info
+"""Any of the supported ways to provide content to a core."""
 
 
 class SubsystemContent(NamedTuple):
+    """Content for a subsystem, pairing a game type with a sequence of content items.
+
+    >>> from libretro.api.content import SubsystemContent
+    >>> sc = SubsystemContent(game_type=0, info=[b'/game.bin'])
+    >>> sc.game_type
+    0
+    """
+
     game_type: int | str | bytes
     info: Sequence[Content]
 
 
 @dataclass(init=False, slots=True)
 class retro_subsystem_memory_info(Structure):
+    """
+    Describes a memory type associated with a subsystem ROM.
+    Usually refers to save data, but not always.
+
+    Corresponds to :c:type:`retro_subsystem_memory_info` in ``libretro.h``.
+    """
+
     extension: bytes | None
+    """File extension used when saving this memory type to disk, e.g. ``b"srm"``."""
+
     type: int
+    """
+    Memory type identifier. Should be at least 0x100 to avoid conflict with standard memory types.
+
+    Assigned values are bitwise-masked to fit into an :c:expr:`unsigned int`.
+
+    .. seealso::
+
+        :obj:`.RETRO_MEMORY_SAVE_RAM`
+    """
 
     _fields_ = (
         ("extension", c_char_p),
@@ -118,18 +273,64 @@ class retro_subsystem_memory_info(Structure):
     )
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this object, including copies of strings.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_subsystem_memory_info(self.extension, self.type)
 
 
 @dataclass(init=False, slots=True)
 class retro_subsystem_rom_info(Structure):
+    """
+    Describes a type of ROM (or other data) that can be used with a subsystem.
+
+    Can be indexed like a :class:`~collections.abc.Sequence` to access
+    this ROM type's associated memory info.
+
+    Corresponds to :c:type:`retro_subsystem_rom_info` in ``libretro.h``.
+    """
+
     desc: bytes | None
+    """Human-readable description of the content type."""
+
     valid_extensions: bytes | None
+    """Pipe-delimited string of accepted file extensions."""
+
     need_fullpath: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` should populate :attr:`retro_game_info.path`
+    without loading its content into memory.
+    """
+
     block_extract: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` should not extract content from compressed archives.
+    """
+
     required: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` should reject attempts
+    to use the associated subsystem without this ROM.
+    """
+
     memory: Pointer[retro_subsystem_memory_info] | None
+    """
+    Pointer to an array of memory descriptors associated with this subsystem ROM.
+    May be :obj:`None` if there are no associated memory types
+    (i.e. :attr:`num_memory` is ``0``).
+
+    .. seealso:: :meth:`__getitem__` for a more Pythonic way of accessing this.
+    """
+
     num_memory: int
+    """
+    Number of entries in the array pointed to by :attr:`memory`.
+
+    Assigned values are bitwise-masked to fit into an :c:expr:`unsigned int`.
+
+    .. seealso:: :meth:`__len__` for a more Pythonic way of accessing this.
+    """
 
     _fields_ = (
         ("desc", c_char_p),
@@ -142,6 +343,14 @@ class retro_subsystem_rom_info(Structure):
     )
 
     def __len__(self):
+        """
+        Returns :attr:`num_memory`.
+
+        >>> from libretro.api import retro_subsystem_rom_info
+        >>> rom = retro_subsystem_rom_info(num_memory=0)
+        >>> len(rom)
+        0
+        """
         return int(self.num_memory)
 
     @overload
@@ -153,6 +362,13 @@ class retro_subsystem_rom_info(Structure):
     ) -> list[retro_subsystem_memory_info]: ...
 
     def __getitem__(self, index: int | slice[retro_subsystem_memory_info]):
+        """
+        Returns a :class:`retro_subsystem_memory_info` at the given index,
+        or a list of them if a slice is provided.
+
+        :raises ValueError: If :attr:`memory` is :obj:`None`.
+        :raises IndexError: If ``index`` is out of the range given by :attr:`num_memory`.
+        """
         if not self.memory:
             raise ValueError("No subsystem ROM memory types available")
 
@@ -169,6 +385,11 @@ class retro_subsystem_rom_info(Structure):
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __deepcopy__(self, memo: MemoDict = None):
+        """
+        Returns a deep copy of this object,
+        including copies of all strings and subobjects.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_subsystem_rom_info(
             desc=self.desc,
             valid_extensions=self.valid_extensions,
@@ -181,17 +402,55 @@ class retro_subsystem_rom_info(Structure):
 
     @property
     def extensions(self) -> Iterator[bytes]:
+        """
+        Yields each extension named in :attr:`valid_extensions`,
+        or nothing if :attr:`valid_extensions` is :obj:`None`.
+
+        >>> from libretro.api import retro_subsystem_rom_info
+        >>> rom = retro_subsystem_rom_info(valid_extensions=b'bin|rom')
+        >>> list(rom.extensions)
+        [b'bin', b'rom']
+        """
         if self.valid_extensions:
             yield from self.valid_extensions.split(b"|")
 
 
 @dataclass(init=False, slots=True)
 class retro_subsystem_info(Structure):
+    """
+    Describes a subsystem that supports loading zero or more content files.
+
+    Corresponds to :c:type:`retro_subsystem_info` in ``libretro.h``.
+    """
+
     desc: bytes | None
+    """Human-readable description of the subsystem."""
+
     ident: bytes | None
+    """Short identifier for the subsystem, used for lookups."""
+
     roms: Pointer[retro_subsystem_rom_info] | None
+    """
+    Pointer to an array of ROM info structures.
+
+    .. seealso:: :meth:`__getitem__` for a more Pythonic way of accessing this.
+    """
+
     num_roms: int
+    """
+    Number of entries in the array pointed to by :attr:`roms`.
+
+    Assigned values are bitwise-masked to fit into an :c:expr:`unsigned int`.
+
+    .. seealso:: :meth:`__len__` for a more Pythonic way of accessing this.
+    """
+
     id: int
+    """
+    Unique identifier for this subsystem.
+
+    Assigned values are bitwise-masked to fit into an :c:expr:`unsigned int`.
+    """
 
     _fields_ = (
         ("desc", c_char_p),
@@ -202,6 +461,9 @@ class retro_subsystem_info(Structure):
     )
 
     def __len__(self):
+        """
+        Returns :attr:`num_roms`.
+        """
         return int(self.num_roms)
 
     @overload
@@ -215,6 +477,13 @@ class retro_subsystem_info(Structure):
     def __getitem__(
         self, index: int | slice[retro_subsystem_rom_info]
     ) -> retro_subsystem_rom_info | list[retro_subsystem_rom_info]:
+        """
+        Returns a :class:`retro_subsystem_rom_info` at the given index,
+        or a list of them if a slice is provided.
+
+        :raises ValueError: If :attr:`roms` is :obj:`None`.
+        :raises IndexError: If ``index`` is out of range.
+        """
         if not self.roms:
             raise ValueError("No subsystem ROM types available")
 
@@ -231,6 +500,17 @@ class retro_subsystem_info(Structure):
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __deepcopy__(self, memo: MemoDict = None):
+        """
+        Returns a deep copy of this subsystem info,
+        including all strings and subobjects.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_subsystem_info
+        >>> sub = retro_subsystem_info(desc=b'SGB', ident=b'sgb', id=1)
+        >>> copy.deepcopy(sub).ident
+        b'sgb'
+        """
         return retro_subsystem_info(
             desc=self.desc,
             ident=self.ident,
@@ -241,16 +521,39 @@ class retro_subsystem_info(Structure):
 
     @property
     def extensions(self) -> Iterator[bytes]:
+        """
+        Yields all valid extensions across all ROM slots.
+        """
         for rom in self:
             yield from rom.extensions
 
     @property
     def by_extensions(self) -> Iterator[tuple[bytes, retro_subsystem_rom_info]]:
+        """Yields ``(extension, rom_info)`` pairs for all ROM slots.
+
+        >>> from libretro.api import retro_subsystem_info
+        >>> sub = retro_subsystem_info(num_roms=0)
+        >>> list(sub.by_extensions)
+        []
+        """
         for info in self:
             for ext in info.extensions:
                 yield ext, info
 
     def by_extension(self, ext: str | bytes) -> retro_subsystem_rom_info:
+        """Returns the ROM info for the given file extension.
+
+        :param ext: The file extension (with or without leading dot).
+        :raises KeyError: If no ROM slot supports the extension.
+
+        >>> from libretro.api import retro_subsystem_info
+        >>> sub = retro_subsystem_info(num_roms=0)
+        >>> try:
+        ...     sub.by_extension('bin')
+        ... except KeyError:
+        ...     print('Not found')
+        Not found
+        """
         ext = as_bytes(ext).removeprefix(b".")
         for info in self:
             if ext in info.extensions:
@@ -260,7 +563,30 @@ class retro_subsystem_info(Structure):
 
 
 class Subsystems(Sequence[retro_subsystem_info]):
+    """An indexed and identifier-keyed collection of :class:`retro_subsystem_info`.
+
+    Supports lookup by integer index, string identifier, or bytes identifier.
+
+    >>> from libretro.api.content import Subsystems
+    >>> from libretro.api import retro_subsystem_info
+    >>> subs = Subsystems([retro_subsystem_info(desc=b'SGB', ident=b'sgb', id=1)])
+    >>> len(subs)
+    1
+    >>> subs[b'sgb'].id
+    1
+    """
+
     def __init__(self, subsystems: Sequence[retro_subsystem_info]):
+        """Initializes from a sequence of :class:`retro_subsystem_info`.
+
+        :param subsystems: The subsystem info entries.
+        :raises TypeError: If *subsystems* is not a sequence or contains non-:class:`retro_subsystem_info` elements.
+
+        >>> from libretro.api.content import Subsystems
+        >>> subs = Subsystems([])
+        >>> len(subs)
+        0
+        """
         if not isinstance(subsystems, Sequence):
             raise TypeError(
                 f"Expected a sequence of retro_subsystem_info objects, got {type(subsystems).__name__}"
@@ -282,6 +608,18 @@ class Subsystems(Sequence[retro_subsystem_info]):
     def __getitem__(
         self, item: int | str | bytes | slice
     ) -> retro_subsystem_info | Sequence[retro_subsystem_info]:
+        """Returns a subsystem info by index or identifier.
+
+        :param item: An integer index, string/bytes identifier, or slice.
+        :raises IndexError: If an integer index is out of range.
+        :raises KeyError: If a string/bytes identifier is not found.
+
+        >>> from libretro.api.content import Subsystems
+        >>> from libretro.api import retro_subsystem_info
+        >>> subs = Subsystems([retro_subsystem_info(ident=b'sgb', id=1)])
+        >>> subs[0].id
+        1
+        """
         length = len(self._subsystems)
         match item:
             case int() if -length <= item < length:
@@ -299,6 +637,14 @@ class Subsystems(Sequence[retro_subsystem_info]):
 
     @override
     def __contains__(self, item: str | bytes | retro_subsystem_info | object):
+        """Tests for membership by identifier or value.
+
+        >>> from libretro.api.content import Subsystems
+        >>> from libretro.api import retro_subsystem_info
+        >>> subs = Subsystems([retro_subsystem_info(ident=b'sgb')])
+        >>> b'sgb' in subs
+        True
+        """
         match item:
             case str(ident) | bytes(ident):
                 return as_bytes(ident) in self._subsystems_by_ident
@@ -311,15 +657,34 @@ class Subsystems(Sequence[retro_subsystem_info]):
 
     @override
     def __iter__(self) -> Iterator[retro_subsystem_info]:
+        """Iterates over the subsystem info entries.
+
+        >>> from libretro.api.content import Subsystems
+        >>> list(Subsystems([]))
+        []
+        """
         return iter(self._subsystems)
 
     @override
     def __len__(self) -> int:
+        """Returns the number of subsystem info entries.
+
+        >>> from libretro.api.content import Subsystems
+        >>> len(Subsystems([]))
+        0
+        """
         return len(self._subsystems)
 
 
 @dataclass(init=False, slots=True)
 class retro_system_content_info_override(Structure):
+    """
+    Descriptors for core content that needs to be handled differently
+    than described by :meth:`.Core.get_system_info`.
+
+    Corresponds to :c:type:`retro_system_content_info_override` in ``libretro.h``.
+    """
+
     extensions: bytes | None
     need_fullpath: bool
     persistent_data: bool
@@ -331,6 +696,14 @@ class retro_system_content_info_override(Structure):
     )
 
     def __deepcopy__(self, _):
+        """Returns a deep copy.
+
+        >>> import copy
+        >>> from libretro.api import retro_system_content_info_override
+        >>> ov = retro_system_content_info_override(extensions=b'bin')
+        >>> copy.deepcopy(ov).extensions
+        b'bin'
+        """
         return retro_system_content_info_override(
             extensions=self.extensions,
             need_fullpath=self.need_fullpath,
@@ -338,12 +711,38 @@ class retro_system_content_info_override(Structure):
         )
 
     def get_extensions(self) -> Iterator[bytes]:
+        """Yields each extension in the pipe-delimited :attr:`extensions` field.
+
+        >>> from libretro.api import retro_system_content_info_override
+        >>> ov = retro_system_content_info_override(extensions=b'a|b')
+        >>> list(ov.get_extensions())
+        [b'a', b'b']
+        """
         if self.extensions:
             yield from self.extensions.split(b"|")
 
 
 class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
+    """An indexed and extension-keyed collection of :class:`retro_system_content_info_override`.
+
+    Supports lookup by integer index or by file extension.
+
+    >>> from libretro.api.content import ContentInfoOverrides
+    >>> from libretro.api import retro_system_content_info_override
+    >>> overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b'bin')])
+    >>> len(overrides)
+    1
+    """
+
     def __init__(self, overrides: Sequence[retro_system_content_info_override]):
+        """Initializes from a sequence of :class:`retro_system_content_info_override`.
+
+        :param overrides: The override entries.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> len(ContentInfoOverrides([]))
+        0
+        """
         if not isinstance(overrides, Sequence):
             raise TypeError(
                 f"Expected a sequence of retro_system_content_info_override objects, "
@@ -379,6 +778,20 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
     def __getitem__(
         self, item: int | slice | str | bytes
     ) -> retro_system_content_info_override | Sequence[retro_system_content_info_override]:
+        """Returns an override by index, extension, or slice.
+
+        :param item: An integer index, extension string/bytes, or slice.
+        :raises IndexError: If an integer index is out of range.
+        :raises KeyError: If an extension is not found.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> from libretro.api import retro_system_content_info_override
+        >>> overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b'bin')])
+        >>> overrides[0].extensions
+        b'bin'
+        >>> overrides[b'bin'].extensions
+        b'bin'
+        """
         match item:
             case int() if -len(self) <= item < len(self):
                 return self._overrides[item]
@@ -399,13 +812,18 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
     def __contains__(
         self, item: str | bytes | retro_system_content_info_override | object
     ) -> bool:
-        """
-        Tests if the given item is in the overrides list.
+        """Tests if the given item is in the overrides list.
 
-        :param item: The item to test.
-            If a ``retro_system_content_info_override`` object, looks for an exact match.
-            If a ``str`` or ``bytes`` object,
-            looks for a ``retro_system_content_info_override`` with a matching extension.
+        :param item: If a :class:`retro_system_content_info_override`, checks for an exact match.
+            If :class:`str` or :class:`bytes`, checks for a matching extension.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> from libretro.api import retro_system_content_info_override
+        >>> overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b'bin')])
+        >>> b'bin' in overrides
+        True
+        >>> b'rom' in overrides
+        False
         """
         match item:
             case str(ext) | bytes(ext):
@@ -419,19 +837,51 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
     @override
     def __iter__(self) -> Iterator[retro_system_content_info_override]:
+        """Iterates over the override entries.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> list(ContentInfoOverrides([]))
+        []
+        """
         return iter(self._overrides)
 
     @override
     def __len__(self) -> int:
+        """Returns the number of override entries.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> len(ContentInfoOverrides([]))
+        0
+        """
         return len(self._overrides)
 
     @property
     def by_extension(self) -> Mapping[bytes, retro_system_content_info_override]:
+        """A read-only mapping from extension to override.
+
+        >>> from libretro.api.content import ContentInfoOverrides
+        >>> from libretro.api import retro_system_content_info_override
+        >>> overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b'bin')])
+        >>> b'bin' in overrides.by_extension
+        True
+        """
         return self._overrides_by_ext
 
 
 @dataclass(init=False, slots=True)
 class retro_game_info_ext(Structure):
+    """
+    An extended version of :class:`retro_game_info` with additional metadata
+    about the content file, including archive and directory information.
+
+        Corresponds to :c:type:`retro_game_info_ext` in ``libretro.h``.
+
+    >>> from libretro.api import retro_game_info_ext
+    >>> info = retro_game_info_ext(full_path=b'/games/test.bin', ext=b'bin')
+    >>> info.ext
+    b'bin'
+    """
+
     full_path: bytes | None
     archive_path: bytes | None
     archive_file: bytes | None
@@ -439,8 +889,23 @@ class retro_game_info_ext(Structure):
     name: bytes | None
     ext: bytes | None
     meta: bytes | None
+    """
+    Optional metadata string, similar to :attr:`retro_game_info.meta`.
+    """
+
     data: c_void_ptr | None
+    """
+    Pointer to the content data in memory,
+    or :obj:`None` if :attr:`~retro_system_info.need_fullpath` was set.
+    """
+
     size: int
+    """
+    Size of the content data in bytes.
+
+    Assigned values are bitwise-masked to fit into a :c:expr:`size_t`.
+    """
+
     file_in_archive: bool
     persistent_data: bool
 
@@ -459,6 +924,17 @@ class retro_game_info_ext(Structure):
     )
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this object,
+        including copies of all strings and content data.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_game_info_ext
+        >>> info = retro_game_info_ext(full_path=b'/test.bin')
+        >>> copy.deepcopy(info).full_path
+        b'/test.bin'
+        """
         return retro_game_info_ext(
             full_path=self.full_path,
             archive_path=self.archive_path,
