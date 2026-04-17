@@ -883,11 +883,47 @@ class retro_game_info_ext(Structure):
     """
 
     full_path: bytes | None
+    """
+    Full path to the content file.
+    Can be :obj:`None` if :attr:`file_in_archive` is :obj:`True`.
+    """
+
     archive_path: bytes | None
+    """
+    Path to the archive containing the content file, if applicable.
+    Can be :obj:`None` if :attr:`file_in_archive` is :obj:`False`.
+    """
+
     archive_file: bytes | None
+    """
+    Path to the content file within the archive, if applicable.
+    Can be :obj:`None` if :attr:`file_in_archive` is :obj:`False`.
+    """
+
     dir: bytes | None
+    """
+    Path of the directory containing the content file if :attr:`file_in_archive` is :obj:`False`,
+    or to the directory containing the archive itself if :obj:`True`.
+    """
+
     name: bytes | None
+    """
+    A 'canonical' name for the content file without an extension,
+    intended for loading complementary files.
+
+    If :attr:`file_in_archive` is :obj:`False`,
+    this is the basename of :attr:`full_path` without :attr:`ext`.
+    Otherwise, it can be the basename of :attr:`archive_path` or :attr:`archive_file`
+    (also without :attr:`ext`).
+    """
+
     ext: bytes | None
+    """
+    Contains the file extension of the content file.
+    If :attr:`file_in_archive` is :obj:`False`, this is the extension of :attr:`full_path`.
+    Otherwise, it can be the extension of :attr:`archive_path`.
+    """
+
     meta: bytes | None
     """
     Optional metadata string, similar to :attr:`retro_game_info.meta`.
@@ -895,8 +931,10 @@ class retro_game_info_ext(Structure):
 
     data: c_void_ptr | None
     """
-    Pointer to the content data in memory,
-    or :obj:`None` if :attr:`~retro_system_info.need_fullpath` was set.
+    Pointer to the content data in memory.
+
+    Can be :obj:`None` if :attr:`~retro_system_info.need_fullpath` or an
+    overriding :attr:`retro_system_content_info_override.need_fullpath` is :obj:`True`.
     """
 
     size: int
@@ -907,7 +945,16 @@ class retro_game_info_ext(Structure):
     """
 
     file_in_archive: bool
+    """
+    :obj:`True` if the content is inside an archive file.
+    """
+
     persistent_data: bool
+    """
+    If :obj:`True`, the :class:`.ContentDriver` must keep :attr:`data`
+    in memory until :meth:`.Core.deinit` completes.
+    Otherwise, the :class:`.ContentDriver` may unload it after :meth:`.Core.load_game` completes.
+    """
 
     _fields_ = (
         ("full_path", c_char_p),
