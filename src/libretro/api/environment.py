@@ -1,3 +1,17 @@
+"""
+Types for interfacing between a :class:`.Core`
+and libretro.py's :mod:`driver implementations <libretro.drivers>`.
+
+.. seealso::
+
+    :class:`.EnvironmentDriver`
+        The :class:`~typing.Protocol` that defines the layer
+        between :class:`.Core`\\s and libretro.py's drivers.
+
+    :mod:`libretro.drivers.environment`
+        libretro.py's included :class:`.EnvironmentDriver` implementations.
+"""
+
 from ctypes import c_bool, c_uint
 from enum import IntEnum, unique
 
@@ -85,100 +99,388 @@ RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY = 79
 RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY = 80
 
 RETRO_API_VERSION = 1
+
 API_VERSION = RETRO_API_VERSION
+"""The version of the libretro API that this library implements."""
 
 
 @unique
 class EnvironmentCall(IntEnum):
+    """
+    Enumeration of all :c:macro:`RETRO_ENVIRONMENT` callback identifiers.
+
+    Each member corresponds to a ``RETRO_ENVIRONMENT_*`` constant in ``libretro.h``.
+    Passed as the ``cmd`` argument to :func:`retro_environment_t`.
+
+    >>> from libretro.api import EnvironmentCall
+    >>> EnvironmentCall.SHUTDOWN
+    <EnvironmentCall.SHUTDOWN: 7>
+    """
+
     SET_ROTATION = RETRO_ENVIRONMENT_SET_ROTATION
+    """
+    .. seealso:: :attr:`.VideoDriver.rotation`
+    """
     GET_OVERSCAN = RETRO_ENVIRONMENT_GET_OVERSCAN
     GET_CAN_DUPE = RETRO_ENVIRONMENT_GET_CAN_DUPE
+    """
+    .. seealso:: :attr:`.VideoDriver.can_dupe`
+    """
+
     SET_MESSAGE = RETRO_ENVIRONMENT_SET_MESSAGE
+    """
+    .. seealso:: :meth:`.MessageDriver.set_message`
+    """
+
     SHUTDOWN = RETRO_ENVIRONMENT_SHUTDOWN
     SET_PERFORMANCE_LEVEL = RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL
     GET_SYSTEM_DIRECTORY = RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY
+    """
+    .. seealso:: :meth:`.PathDriver.system_dir`
+    """
+
     SET_PIXEL_FORMAT = RETRO_ENVIRONMENT_SET_PIXEL_FORMAT
+    """
+    .. seealso:: :attr:`.VideoDriver.pixel_format`
+    """
+
     SET_INPUT_DESCRIPTORS = RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS
+    """
+    .. seealso:: :attr:`.InputDriver.descriptors`
+    """
+
     SET_KEYBOARD_CALLBACK = RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK
+    """
+    .. seealso:: :attr:`.InputDriver.keyboard_callback`
+    """
+
     SET_DISK_CONTROL_INTERFACE = RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE
+    """
+    .. seealso:: :class:`.DiskDriver`
+    """
+
     SET_HW_RENDER = RETRO_ENVIRONMENT_SET_HW_RENDER
+    """
+    .. seealso:: :attr:`.VideoDriver.set_context`
+    """
+
     SET_HW_RENDER_EXPERIMENTAL = RETRO_ENVIRONMENT_SET_HW_RENDER | RETRO_ENVIRONMENT_EXPERIMENTAL
+    """
+    .. seealso:: :attr:`.VideoDriver.set_context`
+    """
+
     GET_VARIABLE = RETRO_ENVIRONMENT_GET_VARIABLE
+    """
+    .. seealso:: :attr:`.OptionDriver.variables`
+    """
+
     SET_VARIABLES = RETRO_ENVIRONMENT_SET_VARIABLES
+    """
+    .. seealso:: :attr:`.OptionDriver.set_variables`
+    """
+
     GET_VARIABLE_UPDATE = RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE
+    """
+    .. seealso:: :attr:`.OptionDriver.variable_updated`
+    """
     SET_SUPPORT_NO_GAME = RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME
     GET_LIBRETRO_PATH = RETRO_ENVIRONMENT_GET_LIBRETRO_PATH
+    """
+    .. seealso:: :meth:`.PathDriver.libretro_path`
+    """
+
     SET_FRAME_TIME_CALLBACK = RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK
+    """
+    .. seealso:: :attr:`.TimingDriver.frame_time_callback`
+    """
+
     SET_AUDIO_CALLBACK = RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK
+    """
+    .. seealso:: :attr:`.AudioDriver.callbacks`
+    """
+
     GET_RUMBLE_INTERFACE = RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE
+    """
+    .. seealso:: :class:`.RumbleDriver`
+    """
+
     GET_INPUT_DEVICE_CAPABILITIES = RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES
+    """
+    .. seealso:: :attr:`.InputDriver.device_capabilities`
+    """
+
     GET_SENSOR_INTERFACE = RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE
+    """
+    .. seealso:: :class:`.SensorDriver`
+    """
+
     GET_CAMERA_INTERFACE = RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE
+    """
+    .. seealso:: :class:`.CameraDriver`
+    """
+
     GET_LOG_INTERFACE = RETRO_ENVIRONMENT_GET_LOG_INTERFACE
+    """
+    .. seealso:: :class:`.LogDriver`
+    """
+
     GET_PERF_INTERFACE = RETRO_ENVIRONMENT_GET_PERF_INTERFACE
+    """
+    .. seealso:: :class:`.PerfDriver`
+    """
+
     GET_LOCATION_INTERFACE = RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE
+    """
+    .. seealso:: :class:`.LocationDriver`
+    """
+
     GET_CORE_ASSETS_DIRECTORY = RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY
+    """
+    .. seealso:: :attr:`.PathDriver.core_assets_dir`
+    """
+
     GET_SAVE_DIRECTORY = RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY
+    """
+    .. seealso:: :attr:`.PathDriver.save_dir`
+    """
+
     SET_SYSTEM_AV_INFO = RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO
+    """
+    .. seealso:: :attr:`.AudioDriver.system_av_info`
+    """
+
     SET_PROC_ADDRESS_CALLBACK = RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK
+    """
+    .. seealso:: :class:`.retro_get_proc_address_interface`
+    """
+
     SET_SUBSYSTEM_INFO = RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO
+    """
+    .. seealso:: :attr:`.ContentDriver.subsystem_info`
+    """
+
     SET_CONTROLLER_INFO = RETRO_ENVIRONMENT_SET_CONTROLLER_INFO
+    """
+    .. seealso:: :attr:`.InputDriver.controller_info`
+    """
+
     SET_MEMORY_MAPS = RETRO_ENVIRONMENT_SET_MEMORY_MAPS
+    """
+    .. seealso:: :class:`.retro_memory_map`
+    """
+
     SET_GEOMETRY = RETRO_ENVIRONMENT_SET_GEOMETRY
+    """
+    .. seealso:: :attr:`.VideoDriver.geometry`
+    """
+
     GET_USERNAME = RETRO_ENVIRONMENT_GET_USERNAME
+    """
+    .. seealso:: :attr:`.UserDriver.username`
+    """
+
     GET_LANGUAGE = RETRO_ENVIRONMENT_GET_LANGUAGE
+    """
+    .. seealso:: :attr:`.UserDriver.language`
+    """
+
     GET_CURRENT_SOFTWARE_FRAMEBUFFER = RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER
+    """
+    .. seealso:: :meth:`.VideoDriver.get_software_framebuffer`
+    """
+
     GET_HW_RENDER_INTERFACE = RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE
+    """
+    .. seealso:: :attr:`.VideoDriver.hw_render_interface`
+    """
+
     SET_SUPPORT_ACHIEVEMENTS = RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS
     SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE = (
         RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE
     )
+    """
+    .. seealso:: :class:`.retro_hw_render_context_negotiation_interface`
+    """
+
     SET_SERIALIZATION_QUIRKS = RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS
+    """
+    .. seealso:: :class:`.SerializationQuirks`
+    """
+
     SET_HW_SHARED_CONTEXT = RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT
+    """
+    .. seealso:: :attr:`.VideoDriver.shared_context`
+    """
+
     GET_VFS_INTERFACE = RETRO_ENVIRONMENT_GET_VFS_INTERFACE
+    """
+    .. seealso:: :class:`.FileSystemDriver`
+    """
+
     GET_LED_INTERFACE = RETRO_ENVIRONMENT_GET_LED_INTERFACE
+    """
+    .. seealso:: :class:`.LedDriver`
+    """
+
     GET_AUDIO_VIDEO_ENABLE = RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE
+    """
+    .. seealso:: :class:`.AvEnableFlags`
+    """
+
     GET_MIDI_INTERFACE = RETRO_ENVIRONMENT_GET_MIDI_INTERFACE
+    """
+    .. seealso:: :class:`.MidiDriver`
+    """
+
     GET_FASTFORWARDING = RETRO_ENVIRONMENT_GET_FASTFORWARDING
+    """
+    .. seealso:: :attr:`.TimingDriver.throttle_state`
+    """
+
     GET_TARGET_REFRESH_RATE = RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE
+    """
+    .. seealso:: :attr:`.TimingDriver.target_refresh_rate`
+    """
+
     GET_INPUT_BITMASKS = RETRO_ENVIRONMENT_GET_INPUT_BITMASKS
+    """
+    .. seealso:: :attr:`.InputDriver.bitmasks_supported`
+    """
+
     GET_CORE_OPTIONS_VERSION = RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION
+    """
+    .. seealso:: :attr:`.OptionDriver.version`
+    """
+
     SET_CORE_OPTIONS = RETRO_ENVIRONMENT_SET_CORE_OPTIONS
+    """
+    .. seealso:: :attr:`.OptionDriver.set_options`
+    """
+
     SET_CORE_OPTIONS_INTL = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL
+    """
+    .. seealso:: :attr:`.OptionDriver.set_options_intl`
+    """
+
     SET_CORE_OPTIONS_DISPLAY = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY
+    """
+    .. seealso:: :attr:`.OptionDriver.set_display`
+    """
+
     GET_PREFERRED_HW_RENDER = RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER
+    """
+    .. seealso:: :attr:`.VideoDriver.preferred_context`
+    """
+
     GET_DISK_CONTROL_INTERFACE_VERSION = RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION
     SET_DISK_CONTROL_EXT_INTERFACE = RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE
+
     GET_MESSAGE_INTERFACE_VERSION = RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION
+    """
+    .. seealso:: :attr:`.MessageDriver.version`
+    """
+
     SET_MESSAGE_EXT = RETRO_ENVIRONMENT_SET_MESSAGE_EXT
+    """
+    .. seealso:: :meth:`.MessageDriver.set_message`
+    """
+
     GET_INPUT_MAX_USERS = RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS
+    """
+    .. seealso:: :attr:`.InputDriver.max_users`
+    """
+
     SET_AUDIO_BUFFER_STATUS_CALLBACK = RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK
+    """
+    .. seealso:: :attr:`.AudioDriver.buffer_status`
+    """
+
     SET_MINIMUM_AUDIO_LATENCY = RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY
+    """
+    .. seealso:: :attr:`.AudioDriver.minimum_latency`
+    """
+
     SET_FASTFORWARDING_OVERRIDE = RETRO_ENVIRONMENT_SET_FASTFORWARDING_OVERRIDE
+    """
+    .. seealso:: :attr:`.TimingDriver.fastforwarding_override`
+    """
+
     SET_CONTENT_INFO_OVERRIDE = RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE
+    """
+    .. seealso:: :attr:`.ContentDriver.overrides`
+    """
+
     GET_GAME_INFO_EXT = RETRO_ENVIRONMENT_GET_GAME_INFO_EXT
+    """
+    .. seealso:: :attr:`.ContentDriver.game_info_ext`
+    """
+
     SET_CORE_OPTIONS_V2 = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2
+    """
+    .. seealso:: :attr:`.OptionDriver.set_options_v2`
+    """
+
     SET_CORE_OPTIONS_V2_INTL = RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL
+    """
+    .. seealso:: :attr:`.OptionDriver.set_options_v2_intl`
+    """
+
     SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK = (
         RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK
     )
+    """
+    .. seealso:: :attr:`.OptionDriver.update_display_callback`
+    """
+
     SET_VARIABLE = RETRO_ENVIRONMENT_SET_VARIABLE
+    """
+    .. seealso:: :attr:`.OptionDriver.set_variable`
+    """
+
     GET_THROTTLE_STATE = RETRO_ENVIRONMENT_GET_THROTTLE_STATE
+    """
+    .. seealso:: :attr:`.TimingDriver.throttle_state`
+    """
+
     GET_SAVESTATE_CONTEXT = RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT
+    """
+    .. seealso:: :class:`.SavestateContext`
+    """
+
     GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT = (
         RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT
     )
+
     GET_JIT_CAPABLE = RETRO_ENVIRONMENT_GET_JIT_CAPABLE
     GET_MICROPHONE_INTERFACE = RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE
+    """
+    .. seealso:: :class:`.MicrophoneDriver`
+    """
+
     SET_NETPACKET_INTERFACE = RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE
     GET_DEVICE_POWER = RETRO_ENVIRONMENT_GET_DEVICE_POWER
+    """
+    .. seealso:: :class:`.PowerDriver`
+    """
+
     GET_PLAYLIST_DIRECTORY = RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY
+    """
+    .. seealso:: :attr:`.PathDriver.playlist_dir`
+    """
+
     GET_FILE_BROWSER_START_DIRECTORY = RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
+    """
+    .. seealso:: :attr:`.PathDriver.file_browser_start_dir`
+    """
 
 
 from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_environment_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint], c_void_ptr]]
+"""
+Called by a :class:`.Core` to interact with the libretro frontend,
+such as libretro.py's :mod:`driver implementations <libretro.drivers>`.
+"""
 
 
 __all__ = [
