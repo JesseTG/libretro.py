@@ -35,6 +35,10 @@ A :c:func:`printf`-style logging function.
 
     As a workaround, your :class:`.Core` can format log messages with :c:func:`sprintf` or similar,
     then pass it as the format string.
+
+.. seealso::
+    :attr:`.LogDriver.log`
+        The suggested entry point for this callback in libretro.py.
 """
 
 
@@ -83,13 +87,19 @@ class retro_log_callback(Structure):
     """
 
     log: retro_log_printf_t | None
-    """A printf-style logging function. Set by the frontend."""
+    """
+    A printf-style logging function. Set by the frontend.
+
+    .. seealso::
+        :attr:`.LogDriver.log`
+            The suggested entry point for this callback in libretro.py.
+    """
 
     _fields_ = (("log", retro_log_printf_t),)
 
     def __deepcopy__(self, _):
         """
-        Returns a shallow copy of this object.
+        Returns a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_log_callback(self.log)
