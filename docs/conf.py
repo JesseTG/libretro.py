@@ -49,7 +49,10 @@ autosummary_generate = True
 
 # -- Options for extlinks extension ------------------------------------------
 
-extlinks = {"issue": ("https://github.com/JesseTG/libretro.py/issues/%s", "issue %s")}
+extlinks = {
+    "python-issue": ("https://github.com/python/cpython/issues/%s", "Python issue %s"),
+    "issue": ("https://github.com/JesseTG/libretro.py/issues/%s", "issue %s"),
+}
 extlinks_detect_hardcoded_links = True
 
 # -- Options for intersphinx extension ---------------------------------------
