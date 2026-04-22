@@ -1,3 +1,7 @@
+"""
+Types that describe hardware rendering contexts and callbacks for using them.
+"""
+
 from ctypes import Structure, c_bool, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
@@ -22,43 +26,170 @@ RETRO_HW_CONTEXT_D3D9 = 10
 RETRO_HW_CONTEXT_DUMMY = 0x7FFFFFFF
 
 HW_FRAME_BUFFER_VALID = RETRO_HW_FRAME_BUFFER_VALID
+"""
+Passed to :class:`.retro_video_refresh_t` to signal that the next video frame
+should be rendered with the GPU context state instead of a framebuffer.
+"""
 
 
 class HardwareContext(IntEnum):
+    """
+    Denotes a hardware rendering API supported by libretro.
+    Hardware rendering context type.
+
+    Corresponds to :c:type:`retro_hw_context_type` in ``libretro.h``.
+
+    .. seealso::
+        :class:`.VideoDriver`
+            The :class:`~typing.Protocol` that implements one or more of these context types.
+    """
+
     NONE = RETRO_HW_CONTEXT_NONE
+    """
+    Software rendering only.
+
+    .. note::
+        The active :class:`.VideoDriver` may still use a hardware rendering API,
+        but it won't be exposed to the core.
+    """
+
     OPENGL = RETRO_HW_CONTEXT_OPENGL
+    """OpenGL 2.x, or a newer OpenGL version with the compatibility profile."""
+
     OPENGLES2 = RETRO_HW_CONTEXT_OPENGLES2
+    """OpenGL ES 2.0."""
+
     OPENGL_CORE = RETRO_HW_CONTEXT_OPENGL_CORE
+    """OpenGL 3.2+ core profile."""
+
     OPENGLES3 = RETRO_HW_CONTEXT_OPENGLES3
+    """OpenGL ES 3.0."""
+
     OPENGLES_VERSION = RETRO_HW_CONTEXT_OPENGLES_VERSION
+    """OpenGL ES with version specified by :attr:`.version_major` and :attr:`.version_minor`."""
+
     VULKAN = RETRO_HW_CONTEXT_VULKAN
+    """
+    Vulkan.
+
+    .. note::
+        libretro.py doesn't currently support Vulkan contexts.
+    """
+
     DIRECT3D = 7
     D3D11 = RETRO_HW_CONTEXT_D3D11
+    """Direct3D 11."""
     D3D10 = RETRO_HW_CONTEXT_D3D10
+    """Direct3D 10."""
     D3D12 = RETRO_HW_CONTEXT_D3D12
+    """Direct3D 12."""
     D3D9 = RETRO_HW_CONTEXT_D3D9
+    """Direct3D 9."""
 
 
 retro_hw_context_reset_t = TypedFunctionPointer[None, []]
+"""
+Context reset/destroy callback.
+"""
+
 retro_hw_get_current_framebuffer_t = TypedFunctionPointer[c_uintptr, []]
+"""
+Returns the current hardware framebuffer,
+if applicable for the current rendering API and context state.
+
+.. note::
+    This callback exists for historical reasons and is only meaningful for OpenGL contexts.
+"""
+
 retro_hw_get_proc_address_t = TypedFunctionPointer[c_void_ptr, [CStringArg]]
+"""Looks up a hardware rendering procedure by name."""
 # Workaround for ctypes not allowing callbacks to return function pointers
 
 
 @dataclass(init=False, slots=True)
 class retro_hw_render_callback(Structure):
+    """
+    Describes the hardware rendering context a core requires
+    and provides callbacks for reacting to or querying the context.
+
+    Corresponds to :c:type:`retro_hw_render_callback` in ``libretro.h``.
+
+
+    >>> from libretro.api.video import retro_hw_render_callback, HardwareContext
+    >>> cb = retro_hw_render_callback()
+    >>> cb.context_type == HardwareContext.NONE
+    True
+    """
+
     context_type: HardwareContext
+    """Hardware rendering API to use."""
+
     context_reset: retro_hw_context_reset_t | None
+    """
+    Called when the rendering context is created or reset.
+
+    .. seealso::
+        :meth:`.VideoDriver.reinit`
+            The suggested method to call this callback.
+    """
+
     get_current_framebuffer: retro_hw_get_current_framebuffer_t | None
+    """
+    Returns the current hardware framebuffer. Set by the frontend.
+
+    .. note::
+        This callback exists for historical reasons and is only meaningful for OpenGL contexts.
+
+    .. seealso::
+        :meth:`.VideoDriver.get_current_framebuffer`
+    """
+
     get_proc_address: retro_hw_get_proc_address_t | None
+    """
+    Looks up a rendering API function by name. Set by the frontend.
+
+    .. seealso::
+        :meth:`.VideoDriver.get_proc_address`
+            The suggested method to implement this callback.
+    """
+
     depth: bool
+    """
+    Whether the framebuffer should have a depth component.
+
+    .. note::
+        This field exists for historical reasons and is only meaningful for OpenGL contexts.
+    """
+
     stencil: bool
+    """
+    Whether the framebuffer should have a stencil component.
+
+    .. note::
+        This field exists for historical reasons and is only meaningful for OpenGL contexts.
+    """
+
     bottom_left_origin: bool
+    """Whether to use bottom-left origin convention."""
+
     version_major: int
+    """Major version number for the rendering context."""
+
     version_minor: int
+    """Minor version number for the rendering context."""
+
     cache_context: bool
+    """
+    Whether the frontend should avoid resetting the context.
+    """
+
     context_destroy: retro_hw_context_reset_t | None
+    """
+    Called before the context is destroyed.
+    """
+
     debug_context: bool
+    """Whether to create a debug rendering context."""
 
     _fields_ = (
         ("context_type", retro_hw_context_type),
@@ -107,6 +238,10 @@ class retro_hw_render_callback(Structure):
         )
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this object.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_hw_render_callback(
             self.context_type,
             self.context_reset,
