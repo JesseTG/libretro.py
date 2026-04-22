@@ -1,3 +1,7 @@
+"""
+Analog axis input state.
+"""
+
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -13,18 +17,44 @@ RETRO_DEVICE_ID_ANALOG_Y = 1
 
 
 class DeviceIndexAnalog(IntEnum):
+    """
+    The device that provides an analog axis.
+    """
+
     LEFT = RETRO_DEVICE_INDEX_ANALOG_LEFT
+    """Denotes the left analog stick."""
+
     RIGHT = RETRO_DEVICE_INDEX_ANALOG_RIGHT
+    """Denotes the right analog stick."""
+
     BUTTON = RETRO_DEVICE_INDEX_ANALOG_BUTTON
+    """Denotes any analog button."""
 
 
 class DeviceIdAnalog(IntEnum):
+    """
+    Selects the axis of an analog stick.
+
+    >>> from libretro.api.input import DeviceIdAnalog
+    >>> DeviceIdAnalog.X
+    <DeviceIdAnalog.X: 0>
+    """
+
     X = RETRO_DEVICE_ID_ANALOG_X
+    """Analog stick's horizontal axis."""
+
     Y = RETRO_DEVICE_ID_ANALOG_Y
+    """Analog stick's vertical axis."""
 
 
 @dataclass(frozen=True, slots=True)
 class AnalogState(InputDeviceState):
+    """
+    Snapshot of analog sticks and buttons.
+
+    For the purpose of this snapshot, all buttons are considered "analog".
+    """
+
     b: int = 0
     y: int = 0
     select: int = 0
@@ -47,18 +77,51 @@ class AnalogState(InputDeviceState):
 
     @property
     def left_x(self) -> int:
+        """
+        The horizontal axis of the left analog stick.
+
+        >>> from libretro.api.input import AnalogState
+        >>> state = AnalogState(lstick=(123, 0))
+        >>> state.left_x
+        123
+        """
+
         return self.lstick[0]
 
     @property
     def left_y(self) -> int:
+        """
+        The vertical axis of the left analog stick.
+
+        >>> from libretro.api.input import AnalogState
+        >>> state = AnalogState(lstick=(0, 123))
+        >>> state.left_y
+        123
+        """
         return self.lstick[1]
 
     @property
     def right_x(self) -> int:
+        """
+        The horizontal axis of the right analog stick.
+
+        >>> from libretro.api.input import AnalogState
+        >>> state = AnalogState(rstick=(123, 0))
+        >>> state.right_x
+        123
+        """
         return self.rstick[0]
 
     @property
     def right_y(self) -> int:
+        """
+        The vertical axis of the right analog stick.
+
+        >>> from libretro.api.input import AnalogState
+        >>> state = AnalogState(rstick=(0, 123))
+        >>> state.right_y
+        123
+        """
         return self.rstick[1]
 
     def __getitem__(self, item: DeviceIdJoypad | int) -> int:
