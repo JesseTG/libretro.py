@@ -1,3 +1,12 @@
+"""
+An audio driver that accumulates all received samples in an :class:`~array.array`.
+
+.. seealso::
+
+    :mod:`libretro.api.audio`
+        Defines the audio callback types and sample formats this driver handles.
+"""
+
 from array import array
 from copy import deepcopy
 from typing import override
@@ -10,6 +19,12 @@ from .driver import AudioDriver
 
 
 class ArrayAudioDriver(AudioDriver):
+    """
+    A basic :class:`.AudioDriver` that stores all audio samples in an in-memory :class:`~array.array`.
+
+    Suitable for tests that need to inspect audio output after the fact.
+    """
+
     def __init__(self):
         self._buffer = array("h")
         self._system_av_info: retro_system_av_info | None = None
@@ -29,6 +44,12 @@ class ArrayAudioDriver(AudioDriver):
     @property
     @override
     def callbacks(self) -> retro_audio_callback | None:
+        """
+        This driver class doesn't support using :class:`.retro_audio_callback`.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @callbacks.setter
@@ -39,6 +60,12 @@ class ArrayAudioDriver(AudioDriver):
     @property
     @override
     def buffer_status(self) -> retro_audio_buffer_status_callback | None:
+        """
+        This driver class doesn't support using :class:`.retro_audio_buffer_status_callback`.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @buffer_status.setter
@@ -51,6 +78,12 @@ class ArrayAudioDriver(AudioDriver):
     @property
     @override
     def minimum_latency(self) -> int | None:
+        """
+        This driver class doesn't support setting a minimum latency.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @minimum_latency.setter
@@ -73,6 +106,9 @@ class ArrayAudioDriver(AudioDriver):
 
     @property
     def buffer(self) -> array[int]:
+        """
+        The accumulated audio data as an :class:`~array.array` of signed 16-bit interleaved stereo samples.
+        """
         return self._buffer
 
 
