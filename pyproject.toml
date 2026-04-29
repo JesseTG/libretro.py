@@ -45,9 +45,9 @@ cli = [
 ]
 dev = [
     'bandit == 1.9.*',
-    'black == 24.*',
     'isort == 5.*',
     'pyright == 1.1.*',
+    "ruff == 0.15.*",
     "libretro.py[build]"
 ]
 docs = [
@@ -84,7 +84,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.black]
+[tool.ruff]
 line-length = 99
 
 [tool.bandit]

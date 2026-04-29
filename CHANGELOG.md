@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Changed
+
+- Switch the formatter from `black` to `ruff`.
+
 ## [0.7.1] - 2026-04-12
 
 ### Changed

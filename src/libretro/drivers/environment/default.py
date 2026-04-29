@@ -93,8 +93,10 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.SET_KEYBOARD_CALLBACK: lambda data: self._set_keyboard_callback(
                 cast(data, TypedPointer[retro_keyboard_callback])
             ),
-            EnvironmentCall.SET_DISK_CONTROL_INTERFACE: lambda data: self._set_disk_control_interface(
-                cast(data, TypedPointer[retro_disk_control_callback])
+            EnvironmentCall.SET_DISK_CONTROL_INTERFACE: lambda data: (
+                self._set_disk_control_interface(
+                    cast(data, TypedPointer[retro_disk_control_callback])
+                )
             ),
             EnvironmentCall.SET_HW_RENDER: lambda data: self._set_hw_render(
                 cast(data, TypedPointer[retro_hw_render_callback])
@@ -123,8 +125,8 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_RUMBLE_INTERFACE: lambda data: self._get_rumble_interface(
                 cast(data, TypedPointer[retro_rumble_interface])
             ),
-            EnvironmentCall.GET_INPUT_DEVICE_CAPABILITIES: lambda data: self._get_input_device_capabilities(
-                cast(data, TypedPointer[c_uint64])
+            EnvironmentCall.GET_INPUT_DEVICE_CAPABILITIES: lambda data: (
+                self._get_input_device_capabilities(cast(data, TypedPointer[c_uint64]))
             ),
             EnvironmentCall.GET_SENSOR_INTERFACE: lambda data: self._get_sensor_interface(
                 cast(data, TypedPointer[retro_sensor_interface])
@@ -141,8 +143,8 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_LOCATION_INTERFACE: lambda data: self._get_location_interface(
                 cast(data, TypedPointer[retro_location_callback])
             ),
-            EnvironmentCall.GET_CORE_ASSETS_DIRECTORY: lambda data: self._get_core_assets_directory(
-                cast(data, TypedPointer[c_char_p])
+            EnvironmentCall.GET_CORE_ASSETS_DIRECTORY: lambda data: (
+                self._get_core_assets_directory(cast(data, TypedPointer[c_char_p]))
             ),
             EnvironmentCall.GET_SAVE_DIRECTORY: lambda data: self._get_save_directory(
                 cast(data, TypedPointer[c_char_p])
@@ -150,8 +152,10 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.SET_SYSTEM_AV_INFO: lambda data: self._set_system_av_info(
                 cast(data, TypedPointer[retro_system_av_info])
             ),
-            EnvironmentCall.SET_PROC_ADDRESS_CALLBACK: lambda data: self._set_proc_address_callback(
-                cast(data, TypedPointer[retro_get_proc_address_interface])
+            EnvironmentCall.SET_PROC_ADDRESS_CALLBACK: lambda data: (
+                self._set_proc_address_callback(
+                    cast(data, TypedPointer[retro_get_proc_address_interface])
+                )
             ),
             EnvironmentCall.SET_SUBSYSTEM_INFO: lambda data: self._set_subsystem_info(
                 cast(data, TypedPointer[retro_subsystem_info])
@@ -171,8 +175,8 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_LANGUAGE: lambda data: self._get_language(
                 cast(data, TypedPointer[retro_language])
             ),
-            EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER: lambda data: self._get_current_software_framebuffer(
-                cast(data, TypedPointer[retro_framebuffer])
+            EnvironmentCall.GET_CURRENT_SOFTWARE_FRAMEBUFFER: lambda data: (
+                self._get_current_software_framebuffer(cast(data, TypedPointer[retro_framebuffer]))
             ),
             EnvironmentCall.GET_HW_RENDER_INTERFACE: lambda data: self._get_hw_render_interface(
                 cast(data, TypedPointer[retro_hw_render_interface])
@@ -180,8 +184,10 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.SET_SUPPORT_ACHIEVEMENTS: lambda data: self._set_support_achievements(
                 cast(data, TypedPointer[c_bool])
             ),
-            EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE: lambda data: self._set_hw_render_context_negotiation_interface(
-                cast(data, TypedPointer[retro_hw_render_context_negotiation_interface])
+            EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE: lambda data: (
+                self._set_hw_render_context_negotiation_interface(
+                    cast(data, TypedPointer[retro_hw_render_context_negotiation_interface])
+                )
             ),
             EnvironmentCall.SET_SERIALIZATION_QUIRKS: lambda data: self._set_serialization_quirks(
                 cast(data, TypedPointer[c_uint64])
@@ -221,14 +227,16 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_PREFERRED_HW_RENDER: lambda data: self._get_preferred_hw_render(
                 cast(data, TypedPointer[retro_hw_context_type])
             ),
-            EnvironmentCall.GET_DISK_CONTROL_INTERFACE_VERSION: lambda data: self._get_disk_control_interface_version(
-                cast(data, TypedPointer[c_uint])
+            EnvironmentCall.GET_DISK_CONTROL_INTERFACE_VERSION: lambda data: (
+                self._get_disk_control_interface_version(cast(data, TypedPointer[c_uint]))
             ),
-            EnvironmentCall.SET_DISK_CONTROL_EXT_INTERFACE: lambda data: self._set_disk_control_ext_interface(
-                cast(data, TypedPointer[retro_disk_control_ext_callback])
+            EnvironmentCall.SET_DISK_CONTROL_EXT_INTERFACE: lambda data: (
+                self._set_disk_control_ext_interface(
+                    cast(data, TypedPointer[retro_disk_control_ext_callback])
+                )
             ),
-            EnvironmentCall.GET_MESSAGE_INTERFACE_VERSION: lambda data: self._get_message_interface_version(
-                cast(data, TypedPointer[c_uint])
+            EnvironmentCall.GET_MESSAGE_INTERFACE_VERSION: lambda data: (
+                self._get_message_interface_version(cast(data, TypedPointer[c_uint]))
             ),
             EnvironmentCall.SET_MESSAGE_EXT: lambda data: self._set_message_ext(
                 cast(data, TypedPointer[retro_message_ext])
@@ -236,17 +244,23 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_INPUT_MAX_USERS: lambda data: self._get_input_max_users(
                 cast(data, TypedPointer[c_uint])
             ),
-            EnvironmentCall.SET_AUDIO_BUFFER_STATUS_CALLBACK: lambda data: self._set_audio_buffer_status_callback(
-                cast(data, TypedPointer[retro_audio_buffer_status_callback])
+            EnvironmentCall.SET_AUDIO_BUFFER_STATUS_CALLBACK: lambda data: (
+                self._set_audio_buffer_status_callback(
+                    cast(data, TypedPointer[retro_audio_buffer_status_callback])
+                )
             ),
-            EnvironmentCall.SET_MINIMUM_AUDIO_LATENCY: lambda data: self._set_minimum_audio_latency(
-                cast(data, TypedPointer[c_uint])
+            EnvironmentCall.SET_MINIMUM_AUDIO_LATENCY: lambda data: (
+                self._set_minimum_audio_latency(cast(data, TypedPointer[c_uint]))
             ),
-            EnvironmentCall.SET_FASTFORWARDING_OVERRIDE: lambda data: self._set_fastforwarding_override(
-                cast(data, TypedPointer[retro_fastforwarding_override])
+            EnvironmentCall.SET_FASTFORWARDING_OVERRIDE: lambda data: (
+                self._set_fastforwarding_override(
+                    cast(data, TypedPointer[retro_fastforwarding_override])
+                )
             ),
-            EnvironmentCall.SET_CONTENT_INFO_OVERRIDE: lambda data: self._set_content_info_override(
-                cast(data, TypedPointer[retro_system_content_info_override])
+            EnvironmentCall.SET_CONTENT_INFO_OVERRIDE: lambda data: (
+                self._set_content_info_override(
+                    cast(data, TypedPointer[retro_system_content_info_override])
+                )
             ),
             EnvironmentCall.GET_GAME_INFO_EXT: lambda data: self._get_game_info_ext(
                 cast(data, TypedPointer[TypedPointer[retro_game_info_ext]])
@@ -257,8 +271,10 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.SET_CORE_OPTIONS_V2_INTL: lambda data: self._set_core_options_v2_intl(
                 cast(data, TypedPointer[retro_core_options_v2_intl])
             ),
-            EnvironmentCall.SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK: lambda data: self._set_core_options_update_display_callback(
-                cast(data, TypedPointer[retro_core_options_update_display_callback])
+            EnvironmentCall.SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK: lambda data: (
+                self._set_core_options_update_display_callback(
+                    cast(data, TypedPointer[retro_core_options_update_display_callback])
+                )
             ),
             EnvironmentCall.SET_VARIABLE: lambda data: self._set_variable(
                 cast(data, TypedPointer[retro_variable])
@@ -269,8 +285,10 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_SAVESTATE_CONTEXT: lambda data: self._get_savestate_context(
                 cast(data, TypedPointer[retro_savestate_context])
             ),
-            EnvironmentCall.GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT: lambda data: self._get_hw_render_context_negotiation_interface_support(
-                cast(data, TypedPointer[retro_hw_render_context_negotiation_interface])
+            EnvironmentCall.GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT: lambda data: (
+                self._get_hw_render_context_negotiation_interface_support(
+                    cast(data, TypedPointer[retro_hw_render_context_negotiation_interface])
+                )
             ),
             EnvironmentCall.GET_JIT_CAPABLE: lambda data: self._get_jit_capable(
                 cast(data, TypedPointer[c_bool])

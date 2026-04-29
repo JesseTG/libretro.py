@@ -70,9 +70,9 @@ class AsParameter[T: _CDataType](Protocol):
 
 
 type ConvertibleTo[T: _CDataType] = T | AsParameter[T]
-type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = ConvertibleTo[
-    T
-] | U | _SimpleCData[U]
+type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = (
+    ConvertibleTo[T] | U | _SimpleCData[U]
+)
 
 
 class _FunctionPointerDeclaration:
@@ -86,7 +86,11 @@ class _FunctionPointerDeclaration:
         # and be cast back to the correct type in the implementation.
         # https://github.com/python/cpython/issues/49960
         restype = args[0]
-        if restype and issubclass(restype, _Pointer) and issubclass(restype._type_, (Structure, CFuncPtr)):  # type: ignore
+        if (
+            restype
+            and issubclass(restype, _Pointer)
+            and issubclass(restype._type_, (Structure, CFuncPtr))  # type: ignore
+        ):
             return CFUNCTYPE(c_void_ptr, *args[1])
         else:
             return CFUNCTYPE(restype, *args[1])
@@ -136,33 +140,29 @@ if TYPE_CHECKING:
             self: TypedFunctionPointer[c_bool, P], *args: P.args, **kwargs: P.kwargs
         ) -> bool: ...
         @overload
-        def __call__[
-            I: CInt | CUint
-        ](self: TypedFunctionPointer[I, P], *args: P.args, **kwargs: P.kwargs) -> int: ...
+        def __call__[I: CInt | CUint](
+            self: TypedFunctionPointer[I, P], *args: P.args, **kwargs: P.kwargs
+        ) -> int: ...
         @overload
-        def __call__[
-            F: CReal
-        ](self: TypedFunctionPointer[F, P], *args: P.args, **kwargs: P.kwargs) -> float: ...
+        def __call__[F: CReal](
+            self: TypedFunctionPointer[F, P], *args: P.args, **kwargs: P.kwargs
+        ) -> float: ...
         @overload
-        def __call__[
-            S: Structure
-        ](
+        def __call__[S: Structure](
             self: TypedFunctionPointer[TypedPointer[S] | Pointer[S], P],
             *args: P.args,
             **kwargs: P.kwargs,
-        ) -> (c_void_ptr | None): ...
+        ) -> c_void_ptr | None: ...
         @overload
         def __call__(
             self: TypedFunctionPointer[None, []], *args: P.args, **kwargs: P.kwargs
         ) -> TypedFunctionPointer[None, []] | None: ...
         @overload
-        def __call__[
-            T: _CDataType, **Q
-        ](
+        def __call__[T: _CDataType, **Q](
             self: TypedFunctionPointer[TypedFunctionPointer[T, Q], P],
             *args: P.args,
             **kwargs: P.kwargs,
-        ) -> (c_void_ptr | None): ...
+        ) -> c_void_ptr | None: ...
 
         # See https://github.com/python/cpython/issues/49960
         @overload
@@ -206,11 +206,9 @@ if TYPE_CHECKING:
         def __getitem__[S: Structure](self: TypedArray[S], key: int, /) -> S: ...
 
         @overload
-        def __getitem__[
-            P: _CDataType
-        ](self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]], key: int, /) -> TypedArray[
-            P
-        ]: ...
+        def __getitem__[P: _CDataType](
+            self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]], key: int, /
+        ) -> TypedArray[P]: ...
 
         @overload
         def __getitem__(self, key: slice[T], /) -> list[T]: ...
@@ -225,34 +223,30 @@ if TYPE_CHECKING:
         def __getitem__[S: Structure](self: TypedArray[S], key: slice, /) -> list[S]: ...
 
         @overload
-        def __getitem__[
-            P: _CDataType
-        ](self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]], key: slice, /) -> list[
-            TypedArray[P]
-        ]: ...
+        def __getitem__[P: _CDataType](
+            self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]], key: slice, /
+        ) -> list[TypedArray[P]]: ...
 
         @overload
         def __setitem__(self, key: int, value: ConvertibleTo[T], /) -> None: ...
 
         @overload
-        def __setitem__[
-            I: CInt | CUint
-        ](self: TypedArray[I], key: int, value: ConvertibleTo[I], /) -> None: ...
+        def __setitem__[I: CInt | CUint](
+            self: TypedArray[I], key: int, value: ConvertibleTo[I], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            F: CReal
-        ](self: TypedArray[F], key: int, value: ConvertibleTo[F], /) -> None: ...
+        def __setitem__[F: CReal](
+            self: TypedArray[F], key: int, value: ConvertibleTo[F], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            S: Structure
-        ](self: TypedArray[S], key: int, value: ConvertibleTo[S], /) -> None: ...
+        def __setitem__[S: Structure](
+            self: TypedArray[S], key: int, value: ConvertibleTo[S], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            P: _CDataType
-        ](
+        def __setitem__[P: _CDataType](
             self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]],
             key: int,
             value: ConvertibleTo[TypedArray[P]] | ConvertibleTo[_Pointer[P]],
@@ -265,24 +259,22 @@ if TYPE_CHECKING:
         ) -> None: ...
 
         @overload
-        def __setitem__[
-            I: CInt | CUint
-        ](self: TypedArray[I], key: slice, value: Iterable[ConvertibleTo[I]], /) -> None: ...
+        def __setitem__[I: CInt | CUint](
+            self: TypedArray[I], key: slice, value: Iterable[ConvertibleTo[I]], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            F: CReal
-        ](self: TypedArray[F], key: slice, value: Iterable[ConvertibleTo[F]], /) -> None: ...
+        def __setitem__[F: CReal](
+            self: TypedArray[F], key: slice, value: Iterable[ConvertibleTo[F]], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            S: Structure
-        ](self: TypedArray[S], key: slice, value: Iterable[ConvertibleTo[S]], /) -> None: ...
+        def __setitem__[S: Structure](
+            self: TypedArray[S], key: slice, value: Iterable[ConvertibleTo[S]], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            P: _CDataType
-        ](
+        def __setitem__[P: _CDataType](
             self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]],
             key: slice,
             value: Iterable[ConvertibleTo[TypedArray[P]] | ConvertibleTo[_Pointer[P]]],
@@ -318,9 +310,7 @@ if TYPE_CHECKING:
         def __getitem__[S: Structure](self: TypedPointer[S], key: int, /) -> S: ...
 
         @overload
-        def __getitem__[
-            P: _CDataType
-        ](
+        def __getitem__[P: _CDataType](
             self: TypedPointer[TypedPointer[P]] | TypedPointer[_Pointer[P]], key: int, /
         ) -> TypedPointer[P]: ...
 
@@ -340,37 +330,33 @@ if TYPE_CHECKING:
         def __getitem__[S: Structure](self: TypedPointer[S], key: slice, /) -> list[S]: ...
 
         @overload
-        def __getitem__[
-            P: _CDataType
-        ](self: TypedPointer[TypedPointer[P]] | TypedPointer[_Pointer[P]], key: slice, /) -> list[
-            TypedPointer[P]
-        ]: ...
+        def __getitem__[P: _CDataType](
+            self: TypedPointer[TypedPointer[P]] | TypedPointer[_Pointer[P]], key: slice, /
+        ) -> list[TypedPointer[P]]: ...
 
         @overload
         def __setitem__(self: TypedPointer[c_bool], key: int, value: CBoolArg, /) -> None: ...
 
         @overload
-        def __setitem__[
-            I: CInt | CUint
-        ](self: TypedPointer[I], key: int, value: CIntArg[I], /) -> None: ...
+        def __setitem__[I: CInt | CUint](
+            self: TypedPointer[I], key: int, value: CIntArg[I], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            F: CReal
-        ](self: TypedPointer[F], key: int, value: CFloatArg[F], /) -> None: ...
+        def __setitem__[F: CReal](
+            self: TypedPointer[F], key: int, value: CFloatArg[F], /
+        ) -> None: ...
 
         @overload
         def __setitem__(self: TypedPointer[c_char_p], key: int, value: CStringArg, /) -> None: ...
 
         @overload
-        def __setitem__[
-            S: Structure
-        ](self: TypedPointer[S], key: int, value: ConvertibleTo[S], /) -> None: ...
+        def __setitem__[S: Structure](
+            self: TypedPointer[S], key: int, value: ConvertibleTo[S], /
+        ) -> None: ...
 
         @overload
-        def __setitem__[
-            P: _CDataType
-        ](
+        def __setitem__[P: _CDataType](
             self: TypedPointer[TypedPointer[P]] | TypedPointer[_Pointer[P]],
             key: int,
             value: ConvertibleTo[TypedPointer[P]] | ConvertibleTo[_Pointer[P]],

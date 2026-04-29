@@ -308,7 +308,7 @@ class IterableInputDriver(InputDriver):
                 InputDevice.JOYPAD,
                 _,
                 id,
-            ) if (device_id == id):
+            ) if device_id == id:
                 # Yield 1 for the pressed button
                 return 1
             case DeviceIdJoypad(_), _, _, _:
@@ -328,14 +328,14 @@ class IterableInputDriver(InputDriver):
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.LEFT,
                 id,
-            ) if (id in DeviceIdAnalog):
+            ) if id in DeviceIdAnalog:
                 return analog.lstick[id]
             case (
                 AnalogState() as analog,
                 InputDevice.ANALOG,
                 DeviceIndexAnalog.RIGHT,
                 id,
-            ) if (id in DeviceIdAnalog):
+            ) if id in DeviceIdAnalog:
                 return analog.rstick[id]
             case AnalogState(), _, _, _:
                 return 0
@@ -415,21 +415,21 @@ class IterableInputDriver(InputDriver):
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.X,
-            ) if (0 <= index < len(pointer.pointers)):
+            ) if 0 <= index < len(pointer.pointers):
                 return pointer.pointers[index].x
             case (
                 PointerState() as pointer,
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.Y,
-            ) if (0 <= index < len(pointer.pointers)):
+            ) if 0 <= index < len(pointer.pointers):
                 return pointer.pointers[index].y
             case (
                 PointerState() as pointer,
                 InputDevice.POINTER,
                 index,
                 DeviceIdPointer.PRESSED,
-            ) if (0 <= index < len(pointer.pointers)):
+            ) if 0 <= index < len(pointer.pointers):
                 return pointer.pointers[index].pressed
             case PointerState(), _, _, _:
                 return 0

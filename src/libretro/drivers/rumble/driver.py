@@ -7,7 +7,6 @@ from libretro.api.rumble import RumbleEffect
 
 @runtime_checkable
 class RumbleDriver(Protocol):
-
     @abstractmethod
     def set_rumble_state(self, port: Port, effect: RumbleEffect, strength: int) -> bool:
         """

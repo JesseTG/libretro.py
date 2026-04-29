@@ -224,7 +224,7 @@ class IterableSensorDriver(SensorDriver):
             # yielding a number returns it unconditionally
             case float(r), _:
                 return r
-            case (int() | bool()), _:
+            case ((int() | bool()), _):
                 return float(result)
 
             # yielding a Vector3 returns the corresponding axis for the gyroscope and accelerometer

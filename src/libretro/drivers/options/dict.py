@@ -83,9 +83,9 @@ class DictOptionDriver(OptionDriver):
             # If this option exists but hasn't been set yet,
             # return the default value and save it to the dict
             value = self._options_us[key].default_value
-            assert (
-                value is not None
-            ), f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            assert value is not None, (
+                f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            )
             self._options[key] = _Option(value=value, visible=True)
             return value
 
@@ -98,9 +98,9 @@ class DictOptionDriver(OptionDriver):
             # but don't actually change the value in the dict
             # (RetroArch does this to handle cases like updated options)
             value = self._options_us[key].default_value
-            assert (
-                value is not None
-            ), f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            assert value is not None, (
+                f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            )
 
         return value
 
@@ -216,9 +216,9 @@ class DictOptionDriver(OptionDriver):
             # If this option exists but hasn't been set yet,
             # return the default value and save it to the dict
             value = self._options_us[key].default_value
-            assert (
-                value is not None
-            ), f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            assert value is not None, (
+                f"Option {key!r} has no default value, it should've been filtered out when initializing"
+            )
             self._options[key] = _Option(value=value, visible=visible)
 
     @override
@@ -336,9 +336,9 @@ class DictOptionDriver(OptionDriver):
             """
             k = as_bytes(key)
             default = self._options._options_us[k].default_value
-            assert (
-                default is not None
-            ), f"Option {k!r} has no default value, it should've been filtered out when it was registered"
+            assert default is not None, (
+                f"Option {k!r} has no default value, it should've been filtered out when it was registered"
+            )
             option = self._options._options.get(k, None)
 
             return option.value if option else default

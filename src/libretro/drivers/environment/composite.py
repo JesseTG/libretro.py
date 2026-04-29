@@ -442,9 +442,9 @@ class CompositeEnvironmentDriver[
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
             case int():
                 view = memoryview_at(data, pitch * height, readonly=True)
-                assert (
-                    len(view) == pitch * height
-                ), f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
+                assert len(view) == pitch * height, (
+                    f"Expected view to have {pitch * height} bytes, got {len(view)} bytes"
+                )
                 self._video.refresh(view, width, height, pitch)
             case _:
                 raise TypeError(
@@ -460,9 +460,9 @@ class CompositeEnvironmentDriver[
     @_return_on_raise(0)
     def audio_sample_batch(self, data: TypedPointer[c_int16], frames: int) -> int:
         sample_view = memoryview_at(data, frames * 2 * sizeof(c_int16)).cast("h")
-        assert (
-            len(sample_view) == frames * 2
-        ), f"Expected view to have {frames * 2} samples, got {len(sample_view)} samples"
+        assert len(sample_view) == frames * 2, (
+            f"Expected view to have {frames * 2} samples, got {len(sample_view)} samples"
+        )
         return self._audio.sample_batch(sample_view)
 
     @override
@@ -1080,9 +1080,9 @@ class CompositeEnvironmentDriver[
         return self._proc_address_callback
 
     @overload
-    def get_proc_address[
-        T: _CFunctionType
-    ](self, sym: str | bytes, funtype: type[T]) -> T | None: ...
+    def get_proc_address[T: _CFunctionType](
+        self, sym: str | bytes, funtype: type[T]
+    ) -> T | None: ...
     @overload
     def get_proc_address(
         self, sym: str | bytes, funtype: None = None
@@ -1092,17 +1092,13 @@ class CompositeEnvironmentDriver[
         self, sym: Literal[b"", ""], funtype: type[_CFunctionType] | None = None
     ) -> None: ...
     @overload
-    def get_proc_address[
-        R: _CDataType | None, **P
-    ](self, sym: str | bytes, funtype: type[TypedFunctionPointer[R, P]]) -> (
-        TypedFunctionPointer[R, P] | None
-    ): ...
+    def get_proc_address[R: _CDataType | None, **P](
+        self, sym: str | bytes, funtype: type[TypedFunctionPointer[R, P]]
+    ) -> TypedFunctionPointer[R, P] | None: ...
 
-    def get_proc_address[
-        T: _CFunctionType, R: _CDataType | None, **P
-    ](
+    def get_proc_address[T: _CFunctionType, R: _CDataType | None, **P](
         self, sym: str | bytes, funtype: type[T] | type[TypedFunctionPointer[R, P]] | None = None
-    ) -> (retro_proc_address_t | T | TypedFunctionPointer[R, P] | None):
+    ) -> retro_proc_address_t | T | TypedFunctionPointer[R, P] | None:
         if not sym:
             return None
 

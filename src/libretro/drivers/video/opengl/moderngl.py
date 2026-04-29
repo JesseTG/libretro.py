@@ -362,41 +362,41 @@ class ModernGlVideoDriver(VideoDriver):
                     # TODO: Re-render whichever framebuffer was most recently used
                     pass
                 case FrameBufferSpecial.HARDWARE:
-                    assert (
-                        self._color is not None
-                    ), "Color buffer should have been initialized in reinit() by now"
-                    assert (
-                        self._hw_render_fbo is not None
-                    ), "Hardware render FBO should have been initialized in reinit() by now"
-                    assert (
-                        self._hw_render_color is not None
-                    ), "Hardware render color buffer should have been initialized in reinit() by now"
+                    assert self._color is not None, (
+                        "Color buffer should have been initialized in reinit() by now"
+                    )
+                    assert self._hw_render_fbo is not None, (
+                        "Hardware render FBO should have been initialized in reinit() by now"
+                    )
+                    assert self._hw_render_color is not None, (
+                        "Hardware render color buffer should have been initialized in reinit() by now"
+                    )
                     self._context.copy_framebuffer(self._color, self._hw_render_fbo)
                     self._hw_render_color.use()
                 case memoryview():
                     self.__update_cpu_texture(data, width, height, pitch)
-                    assert (
-                        self._cpu_color is not None
-                    ), "CPU-rendered color buffer should have been initialized in reinit() by now"
+                    assert self._cpu_color is not None, (
+                        "CPU-rendered color buffer should have been initialized in reinit() by now"
+                    )
                     self._cpu_color.use()
 
             self._context.viewport = (0, 0, width, height)
             matrix = _create_orthogonal_projection(-1, 1, 1, -1, -1, 1)
-            assert (
-                self._shader_program is not None
-            ), "Shader program should have been initialized in reinit() by now"
+            assert self._shader_program is not None, (
+                "Shader program should have been initialized in reinit() by now"
+            )
             mvp_uniform = self._shader_program.get("mvp", None)
 
-            assert isinstance(
-                mvp_uniform, Uniform
-            ), "shader should've been verified to have an 'mvp' uniform in reinit() by now"
+            assert isinstance(mvp_uniform, Uniform), (
+                "shader should've been verified to have an 'mvp' uniform in reinit() by now"
+            )
 
             mvp_uniform.write(matrix)
 
             assert self._fbo is not None, "FBO should have been initialized in reinit() by now"
-            assert (
-                self._color is not None
-            ), "Color buffer should have been initialized in reinit() by now"
+            assert self._color is not None, (
+                "Color buffer should have been initialized in reinit() by now"
+            )
             assert self._vao is not None, "VAO should have been initialized in reinit() by now"
             self._fbo.use()
             self._color.use(1)
@@ -490,9 +490,9 @@ class ModernGlVideoDriver(VideoDriver):
                 moderngl_window.activate_context(self._window)
                 self._context = self._window.ctx
             case HardwareContext.OPENGL_CORE, type() as window_class:
-                assert (
-                    self._callback is not None
-                ), "Should've been set by the core, or else this branch wouldn't have been taken"
+                assert self._callback is not None, (
+                    "Should've been set by the core, or else this branch wouldn't have been taken"
+                )
                 self._window = window_class(
                     title="libretro.py",
                     gl_version=(self._callback.version_major, self._callback.version_minor),
@@ -510,9 +510,9 @@ class ModernGlVideoDriver(VideoDriver):
             case HardwareContext.OPENGL, None:
                 self._context = create_context(require=210, standalone=True, share=self._shared)
             case HardwareContext.OPENGL_CORE, None:
-                assert (
-                    self._callback is not None
-                ), "Should've been set by the core, or else this branch wouldn't have been taken"
+                assert self._callback is not None, (
+                    "Should've been set by the core, or else this branch wouldn't have been taken"
+                )
                 ver = self._callback.version_major * 100 + self._callback.version_minor * 10
                 self._context = create_context(require=ver, standalone=True, share=self._shared)
 

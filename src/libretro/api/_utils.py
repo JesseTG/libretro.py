@@ -40,9 +40,9 @@ if TYPE_CHECKING:
 MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 
-def address[
-    T: _CDataType
-](ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None) -> int:
+def address[T: _CDataType](
+    ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None,
+) -> int:
     """
     Returns the address of the given pointer as an integer.
     If the input is already an integer, it is returned as-is.
@@ -106,18 +106,16 @@ def deepcopy_array(array: None, length: int, memo: MemoDict) -> None: ...
 
 
 @overload
-def deepcopy_array[
-    T: _CDataType
-](array: _Pointer[T] | Array[T], length: int, memo: MemoDict = None) -> Array[T] | None: ...
+def deepcopy_array[T: _CDataType](
+    array: _Pointer[T] | Array[T], length: int, memo: MemoDict = None
+) -> Array[T] | None: ...
 @overload
 def deepcopy_array[T: _CDataType](array: Array[T], length: MemoDict = None) -> Array[T] | None: ...
 
 
-def deepcopy_array[
-    T: _CDataType
-](array: _Pointer[T] | Array[T] | None, length: int | MemoDict = None, memo: MemoDict = None) -> (
-    Array[T] | None
-):
+def deepcopy_array[T: _CDataType](
+    array: _Pointer[T] | Array[T] | None, length: int | MemoDict = None, memo: MemoDict = None
+) -> Array[T] | None:
     if not array:
         return None
 

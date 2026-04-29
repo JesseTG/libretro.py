@@ -104,9 +104,7 @@ type InputDriverArg = (
     | Default
 )
 type VideoDriverArg = _RequiredArg[VideoDriver] | DriverMap | Default
-type ContentArg = (
-    Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
-)
+type ContentArg = Content | SubsystemContent | _OptionalFactory[Content | SubsystemContent] | None
 type ContentDriverArg = _OptionalArg[ContentDriver]
 type BoolArg = _OptionalArg[bool]
 type MessageDriverArg = _OptionalArg[MessageDriver] | Logger
