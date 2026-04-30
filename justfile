@@ -23,53 +23,36 @@ vars:
 help:
     @{{ just_executable() }} --help
 
-# Scans for security vulnerabilities
-[group('Linting')]
-bandit:
-    bandit -c pyproject.toml -r src
-
 # Builds a release for libretro.py
 [group('Getting Started')]
 build: install
     python -m build
 
-# Runs the Black Python formatter against the project
+# Reformats according configured rules
 [group('Linting')]
-black:
-    black src docs setup.py
-
-# Checks if libretro.py is formatted correctly against the Black rules
-[group('Linting')]
-black-check:
-    black src docs setup.py --check
+format:
+    ruff format
 
 # Cleans the project
 clean:
     git clean -xdf
 
-# Runs all other checks in this section
+# Check against style guide, fails if any issues are found
 [group('Linting')]
-lint: black-check isort-check pyright bandit
+check:
+    ruff format --check
+    ruff check --no-fix
 
-# Runs all formatting tools against the project
+# Fix linter and style issues where safe to do so
 [group('Linting')]
-lint-fix: black isort
+fix: format
+    ruff check --fix
 
 # Install libretro.py locally, including all optional dependencies, and set up pre-commit hooks
 [group('Getting Started')]
 install:
     pip install --editable ".[all]"
     pre-commit install
-
-# Sorts imports throughout the project
-[group('Linting')]
-isort:
-    isort src
-
-# Checks that imports throughout the project are sorted correctly
-[group('Linting')]
-isort-check:
-    isort src --check-only
 
 # Type-check libretro.py
 [group('Linting')]

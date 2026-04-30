@@ -44,8 +44,6 @@ cli = [
     'typer == 0.12.5',
 ]
 dev = [
-    'bandit == 1.9.*',
-    'isort == 5.*',
     'pyright == 1.1.*',
     "ruff == 0.15.*",
     "libretro.py[build]"
@@ -87,12 +85,18 @@ where = ["src"]
 [tool.ruff]
 line-length = 99
 
-[tool.bandit]
-# Don't flag asserts
-skips = ["B101"]
+[tool.ruff.lint]
+# default value of select is ["E4", "E7", "E9", "F"]
+# these type codes describe flake8-style linting rules
+# that ruff implements equivalents for
+extend-select = [
+    "I", # isort
+    "S1", # flake8-bandit (basic security checks)
+]
 
-[tool.isort]
-profile = "black"
+ignore = [
+    "S101", # Allow asserts for checking invariants
+]
 
 [tool.pyright]
 exclude = [

@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Switch the formatter from `black` to `ruff`.
+- Removed `bandit`, `black`, and `isort` in favor of `ruff`.
+- Simplify `justfile` recipes to `ruff`'s consolidated features.
 
 ## [0.7.1] - 2026-04-12
 
