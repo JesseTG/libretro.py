@@ -56,7 +56,7 @@ install:
 
 # Type-check libretro.py
 [group('Linting')]
-pyright:
+typecheck:
     pyright --version
     pyright --project .
 
