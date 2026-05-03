@@ -255,10 +255,16 @@ if TYPE_CHECKING:
         def __getitem__[S: Structure](self: TypedArray[S], key: slice, /) -> list[S]: ...
 
         @overload
-        def __getitem__[P: _CDataType](
+        def __getitem__[P: _CDataType](  # pyright: ignore[reportIncompatibleMethodOverride]
             self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]], key: slice, /
         ) -> list[TypedArray[P]]: ...
 
+        # pyright triggers reportIncompatibleMethodOverride here because
+        # it claims that not all overloads of the base type are covered;
+        # not sure if it's a false positive or if the overloads are actually incompatible.
+        # Same goes for __setitem__ below.
+
+        @override
         @overload
         def __setitem__(self, key: int, value: ConvertibleTo[T], /) -> None: ...
 
@@ -306,7 +312,7 @@ if TYPE_CHECKING:
         ) -> None: ...
 
         @overload
-        def __setitem__[P: _CDataType](
+        def __setitem__[P: _CDataType](  # pyright: ignore[reportIncompatibleMethodOverride]
             self: TypedArray[TypedArray[P]] | TypedArray[_Pointer[P]],
             key: slice,
             value: Iterable[ConvertibleTo[TypedArray[P]] | ConvertibleTo[_Pointer[P]]],
