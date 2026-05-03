@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Buffer, Iterator, Mapping, Sequence
+from collections.abc import Buffer, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from ctypes import (
     POINTER,
@@ -26,7 +26,7 @@ from libretro.api._utils import (
     deepcopy_buffer,
     mmap_file,
 )
-from libretro.ctypes import Pointer, c_void_ptr
+from libretro.ctypes import TypedPointer, c_void_ptr
 
 
 @dataclass(init=False, slots=True)
@@ -128,7 +128,7 @@ class retro_subsystem_rom_info(Structure):
     need_fullpath: bool
     block_extract: bool
     required: bool
-    memory: Pointer[retro_subsystem_memory_info] | None
+    memory: TypedPointer[retro_subsystem_memory_info] | None
     num_memory: int
 
     _fields_ = (
@@ -189,7 +189,7 @@ class retro_subsystem_rom_info(Structure):
 class retro_subsystem_info(Structure):
     desc: bytes | None
     ident: bytes | None
-    roms: Pointer[retro_subsystem_rom_info] | None
+    roms: TypedPointer[retro_subsystem_rom_info] | None
     num_roms: int
     id: int
 
@@ -485,7 +485,7 @@ def map_content(content: Content) -> Iterator[retro_game_info]: ...
 @contextmanager
 def map_content(
     content: Content | None,
-) -> Iterator[retro_game_info | None]:
+) -> Generator[retro_game_info | None]:
     """
     Context manager for mapping a content file into memory.
     The content is mapped on entering, and unmapped on exiting.
