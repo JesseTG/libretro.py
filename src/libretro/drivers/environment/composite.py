@@ -36,7 +36,6 @@ from libretro.ctypes import TypedFunctionPointer, TypedPointer, c_void_ptr
 from libretro.drivers.audio import AudioDriver
 from libretro.drivers.camera import CameraDriver
 from libretro.drivers.content import ContentDriver
-from libretro.drivers.environment import DefaultEnvironmentDriver, DictEnvironmentDriver
 from libretro.drivers.input import InputDriver
 from libretro.drivers.led import LedDriver
 from libretro.drivers.location import LocationDriver
@@ -55,6 +54,9 @@ from libretro.drivers.user import UserDriver
 from libretro.drivers.vfs import FileSystemDriver
 from libretro.drivers.video import FrameBufferSpecial, VideoDriver
 from libretro.drivers.video.driver import UnsupportedContextError
+
+from .default import DefaultEnvironmentDriver
+from .dict import DictEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
