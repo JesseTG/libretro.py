@@ -1,3 +1,6 @@
+# ruff: noqa: F405
+# We need to import a _lot_ of symbols from libretro.api
+
 from __future__ import annotations
 
 import typing
@@ -19,90 +22,9 @@ from ctypes import (
     pointer,
     sizeof,
 )
-from typing import TYPE_CHECKING, Literal, Required, TypedDict, overload, override
+from typing import TYPE_CHECKING, Literal, overload, override
 
-from libretro.api import (
-    AvEnableFlags,
-    HardwareContext,
-    InputDevice,
-    LogLevel,
-    MemoryAccess,
-    PixelFormat,
-    Port,
-    Rotation,
-    RumbleEffect,
-    SavestateContext,
-)
-from libretro.api import Sensor as SensorAxis
-from libretro.api import (
-    SensorAction,
-    SerializationQuirks,
-    ThrottleMode,
-    VfsFileAccess,
-    VfsFileAccessHint,
-    VfsSeekPosition,
-    retro_audio_buffer_status_callback,
-    retro_audio_callback,
-    retro_av_enable_flags,
-    retro_camera_callback,
-    retro_controller_description,
-    retro_controller_info,
-    retro_core_option_definition,
-    retro_core_option_display,
-    retro_core_options_intl,
-    retro_core_options_update_display_callback,
-    retro_core_options_v2,
-    retro_core_options_v2_intl,
-    retro_device_power,
-    retro_disk_control_callback,
-    retro_disk_control_ext_callback,
-    retro_fastforwarding_override,
-    retro_frame_time_callback,
-    retro_framebuffer,
-    retro_game_geometry,
-    retro_game_info_ext,
-    retro_get_proc_address_interface,
-    retro_hw_context_type,
-    retro_hw_get_current_framebuffer_t,
-    retro_hw_get_proc_address_t,
-    retro_hw_render_callback,
-    retro_hw_render_context_negotiation_interface,
-    retro_hw_render_interface,
-    retro_input_descriptor,
-    retro_keyboard_callback,
-    retro_language,
-    retro_led_interface,
-    retro_location_callback,
-    retro_log_callback,
-    retro_log_printf_t,
-    retro_memory_map,
-    retro_message,
-    retro_message_ext,
-    retro_microphone_interface,
-    retro_midi_interface,
-    retro_netpacket_callback,
-    retro_perf_callback,
-    retro_perf_counter,
-    retro_pixel_format,
-    retro_proc_address_t,
-    retro_rumble_interface,
-    retro_savestate_context,
-    retro_sensor_get_input_t,
-    retro_sensor_interface,
-    retro_set_led_state_t,
-    retro_set_rumble_state_t,
-    retro_set_sensor_state_t,
-    retro_subsystem_info,
-    retro_system_av_info,
-    retro_system_content_info_override,
-    retro_throttle_state,
-    retro_variable,
-    retro_vfs_dir_handle,
-    retro_vfs_get_path_t,
-    retro_vfs_interface,
-    retro_vfs_interface_info,
-    retro_vfs_open_t,
-)
+from libretro.api import *  # noqa: F403
 from libretro.api._utils import (
     MAX_POINTER_VALUE,
     deepcopy_array,
@@ -110,36 +32,33 @@ from libretro.api._utils import (
     is_zeroed,
     memoryview_at,
 )
-from libretro.api.location import *
-from libretro.api.microphone import *
-from libretro.api.midi import *
-from libretro.api.vfs import *
-from libretro.api.vfs import retro_vfs_close_t, retro_vfs_file_handle
 from libretro.ctypes import TypedFunctionPointer, TypedPointer, c_void_ptr
-from libretro.drivers.audio import AudioDriver
-from libretro.drivers.camera import CameraDriver
-from libretro.drivers.content import ContentDriver
-from libretro.drivers.input import InputDriver
-from libretro.drivers.led import LedDriver
-from libretro.drivers.location import LocationDriver
-from libretro.drivers.log import LogDriver
-from libretro.drivers.message import MessageDriver
-from libretro.drivers.microphone import MicrophoneDriver
-from libretro.drivers.midi import MidiDriver
-from libretro.drivers.options import OptionDriver
-from libretro.drivers.path import PathDriver
-from libretro.drivers.perf import PerfDriver
-from libretro.drivers.power import PowerDriver
-from libretro.drivers.rumble import RumbleDriver
-from libretro.drivers.sensor import SensorDriver
-from libretro.drivers.timing import TimingDriver
-from libretro.drivers.user import UserDriver
-from libretro.drivers.vfs import FileSystemDriver
-from libretro.drivers.video import FrameBufferSpecial, VideoDriver
+from libretro.drivers import (
+    AudioDriver,
+    CameraDriver,
+    ContentDriver,
+    DefaultEnvironmentDriver,
+    DictEnvironmentDriver,
+    FileSystemDriver,
+    FrameBufferSpecial,
+    InputDriver,
+    LedDriver,
+    LocationDriver,
+    LogDriver,
+    MessageDriver,
+    MicrophoneDriver,
+    MidiDriver,
+    OptionDriver,
+    PathDriver,
+    PerfDriver,
+    PowerDriver,
+    RumbleDriver,
+    SensorDriver,
+    TimingDriver,
+    UserDriver,
+    VideoDriver,
+)
 from libretro.drivers.video.driver import UnsupportedContextError
-
-from .default import DefaultEnvironmentDriver
-from .dict import DictEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
@@ -151,85 +70,57 @@ _return_on_raise = DictEnvironmentDriver.return_on_raise
 
 
 class CompositeEnvironmentDriver[
-    Audio: AudioDriver,
-    Input: InputDriver,
-    Video: VideoDriver,
-    Content: ContentDriver | None,
-    Message: MessageDriver | None,
-    Option: OptionDriver | None,
-    Path: PathDriver | None,
-    Rumble: RumbleDriver | None,
-    Sensor: SensorDriver | None,
-    Camera: CameraDriver | None,
-    Log: LogDriver | None,
-    Perf: PerfDriver | None,
-    Location: LocationDriver | None,
-    User: UserDriver | None,
-    Vfs: FileSystemDriver | None,
-    Led: LedDriver | None,
-    Midi: MidiDriver | None,
-    Timing: TimingDriver | None,
-    Mic: MicrophoneDriver | None,
-    Power: PowerDriver | None,
+    _Audio: AudioDriver,
+    _Input: InputDriver,
+    _Video: VideoDriver,
+    _Content: ContentDriver | None,
+    _Message: MessageDriver | None,
+    _Option: OptionDriver | None,
+    _Path: PathDriver | None,
+    _Rumble: RumbleDriver | None,
+    _Sensor: SensorDriver | None,
+    _Camera: CameraDriver | None,
+    _Log: LogDriver | None,
+    _Perf: PerfDriver | None,
+    _Location: LocationDriver | None,
+    _User: UserDriver | None,
+    _Vfs: FileSystemDriver | None,
+    _Led: LedDriver | None,
+    _Midi: MidiDriver | None,
+    _Timing: TimingDriver | None,
+    _Mic: MicrophoneDriver | None,
+    _Power: PowerDriver | None,
 ](DefaultEnvironmentDriver):
-    class Args(TypedDict, total=False):
-        audio: Required[AudioDriver]
-        input: Required[InputDriver]
-        video: Required[VideoDriver]
-        content: ContentDriver | None
-        overscan: bool | None
-        message: MessageDriver | None
-        options: OptionDriver | None
-        path: PathDriver | None
-        rumble: RumbleDriver | None
-        sensor: SensorDriver | None
-        camera: CameraDriver | None
-        log: LogDriver | None
-        perf: PerfDriver | None
-        location: LocationDriver | None
-        user: UserDriver | None
-        vfs: FileSystemDriver | None
-        led: LedDriver | None
-        av_enable: AvEnableFlags | None
-        midi: MidiDriver | None
-        timing: TimingDriver | None
-        preferred_hw: HardwareContext | None
-        driver_switch_enable: bool | None
-        savestate_context: SavestateContext | None
-        jit_capable: bool | None
-        mic_interface: MicrophoneDriver | None
-        device_power: PowerDriver | None
-
     @override
     def __init__(
         self,
         /,
-        audio: Audio,
-        input: Input,
-        video: Video,
-        content: Content = None,
+        audio: _Audio,
+        input: _Input,
+        video: _Video,
+        content: _Content = None,
         overscan: bool | None = None,
-        message: Message = None,
-        options: Option = None,
-        path: Path = None,
-        rumble: Rumble = None,
-        sensor: Sensor = None,
-        camera: Camera = None,
-        log: Log = None,
-        perf: Perf = None,
-        location: Location = None,
-        user: User = None,
-        vfs: Vfs = None,
-        led: Led = None,
+        message: _Message = None,
+        options: _Option = None,
+        path: _Path = None,
+        rumble: _Rumble = None,
+        sensor: _Sensor = None,
+        camera: _Camera = None,
+        log: _Log = None,
+        perf: _Perf = None,
+        location: _Location = None,
+        user: _User = None,
+        vfs: _Vfs = None,
+        led: _Led = None,
         av_enable: AvEnableFlags | None = None,
-        midi: Midi = None,
-        timing: Timing = None,
+        midi: _Midi = None,
+        timing: _Timing = None,
         preferred_hw: HardwareContext | None = None,
         driver_switch_enable: bool | None = None,
         savestate_context: SavestateContext | None = None,
         jit_capable: bool | None = None,
-        mic: Mic = None,
-        device_power: Power = None,
+        mic: _Mic = None,
+        device_power: _Power = None,
     ):
         super().__init__()
         self._audio = audio
@@ -391,43 +282,43 @@ class CompositeEnvironmentDriver[
         self._mic_interface: retro_microphone_interface | None = None
 
     @property
-    def audio(self) -> Audio:
+    def audio(self) -> _Audio:
         return self._audio
 
     @property
-    def input(self) -> Input:
+    def input(self) -> _Input:
         return self._input
 
     @property
-    def video(self) -> Video:
+    def video(self) -> _Video:
         return self._video
 
     @property
-    def content(self) -> Content:
+    def content(self) -> _Content:
         return self._content
 
     @property
-    def sensor(self) -> Sensor:
+    def sensor(self) -> _Sensor:
         return self._sensor
 
     @property
-    def camera(self) -> Camera:
+    def camera(self) -> _Camera:
         return self._camera
 
     @property
-    def user(self) -> User:
+    def user(self) -> _User:
         return self._user
 
     @property
-    def path(self) -> Path:
+    def path(self) -> _Path:
         return self._path
 
     @property
-    def timing(self) -> Timing:
+    def timing(self) -> _Timing:
         return self._timing
 
     @property
-    def rumble(self) -> Rumble:
+    def rumble(self) -> _Rumble:
         return self._rumble
 
     @override
@@ -530,7 +421,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def message(self) -> Message:
+    def message(self) -> _Message:
         return self._message
 
     @override
@@ -664,7 +555,7 @@ class CompositeEnvironmentDriver[
         return cast(proc, c_void_p).value or 0
 
     @property
-    def options(self) -> Option:
+    def options(self) -> _Option:
         return self._options
 
     @override
@@ -833,11 +724,11 @@ class CompositeEnvironmentDriver[
             # If we have a max-user limit set, and the port number exceeds it...
             return 0.0
 
-        if sensor not in SensorAxis:
-            # If the sensor isn't a valid SensorAxis, then we shouldn't pass it to the driver
+        if sensor not in Sensor:
+            # If the sensor isn't a valid Sensor, then we shouldn't pass it to the driver
             return 0.0
 
-        return self._sensor.get_sensor_input(port, SensorAxis(sensor))
+        return self._sensor.get_sensor_input(port, Sensor(sensor))
 
     @override
     def _get_camera_interface(self, interface: TypedPointer[retro_camera_callback]) -> bool:
@@ -879,7 +770,7 @@ class CompositeEnvironmentDriver[
             self._camera.stop()
 
     @property
-    def log(self) -> Log:
+    def log(self) -> _Log:
         return self._log_driver
 
     @override
@@ -902,7 +793,7 @@ class CompositeEnvironmentDriver[
             self._log_driver.log(LogLevel(level), message)
 
     @property
-    def perf(self) -> Perf:
+    def perf(self) -> _Perf:
         return self._perf
 
     @override
@@ -969,7 +860,7 @@ class CompositeEnvironmentDriver[
             self._perf.perf_log()
 
     @property
-    def location(self) -> Location:
+    def location(self) -> _Location:
         return self._location
 
     @override
@@ -1287,7 +1178,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def vfs(self) -> Vfs:
+    def vfs(self) -> _Vfs:
         return self._vfs
 
     @override
@@ -1496,7 +1387,7 @@ class CompositeEnvironmentDriver[
         return self._vfs.closedir(dir[0])
 
     @property
-    def led(self) -> Led:
+    def led(self) -> _Led:
         return self._led
 
     @override
@@ -1980,7 +1871,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def mic(self) -> Mic:
+    def mic(self) -> _Mic:
         return self._mic
 
     @override
@@ -2081,7 +1972,7 @@ class CompositeEnvironmentDriver[
         return len(returned_frames)
 
     @property
-    def power(self) -> Power:
+    def power(self) -> _Power:
         return self._device_power
 
     @override
