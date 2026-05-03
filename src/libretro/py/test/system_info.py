@@ -17,11 +17,11 @@ def main(libretro: CoreArg):
     need_fullpath = system_info.need_fullpath
     valid_extensions = system_info.valid_extensions
 
-    print(f"library_name:", "NULL" if library_name is None else library_name.decode())
-    print(f"library_version:", "NULL" if library_version is None else library_version.decode())
-    print(f"block_extract:", block_extract)
-    print(f"need_fullpath:", need_fullpath)
-    print(f"valid_extensions:", "NULL" if valid_extensions is None else valid_extensions.decode())
+    print("library_name:", "NULL" if library_name is None else library_name.decode())
+    print("library_version:", "NULL" if library_version is None else library_version.decode())
+    print("block_extract:", block_extract)
+    print("need_fullpath:", need_fullpath)
+    print("valid_extensions:", "NULL" if valid_extensions is None else valid_extensions.decode())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 from ctypes import c_bool, c_uint
 from enum import IntEnum, unique
 
+from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
+
 RETRO_ENVIRONMENT_EXPERIMENTAL = 0x10000
 RETRO_ENVIRONMENT_PRIVATE = 0x20000
 RETRO_ENVIRONMENT_SET_ROTATION = 1
@@ -175,8 +177,6 @@ class EnvironmentCall(IntEnum):
     GET_PLAYLIST_DIRECTORY = RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY
     GET_FILE_BROWSER_START_DIRECTORY = RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY
 
-
-from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_environment_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint], c_void_ptr]]
 

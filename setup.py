@@ -1,5 +1,6 @@
-from os.path import join, dirname
 import re
+from os.path import dirname, join
+
 import setuptools
 
 with open(join(dirname(__file__), "CHANGELOG.md"), "r") as file:

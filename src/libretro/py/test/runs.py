@@ -58,7 +58,10 @@ def main(
 
     driver_map = dict(DEFAULT_DRIVER_MAP)
     if windowed and HardwareContext.OPENGL in driver_map:
-        init_with_window = lambda: ModernGlVideoDriver(window="default")
+
+        def init_with_window():
+            return ModernGlVideoDriver(window="default")
+
         driver_map[HardwareContext.OPENGL] = init_with_window
         driver_map[HardwareContext.OPENGL_CORE] = init_with_window
 

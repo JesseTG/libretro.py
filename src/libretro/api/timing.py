@@ -2,6 +2,8 @@ from ctypes import Structure, c_bool, c_float, c_int64, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 
+from libretro.ctypes import CIntArg, TypedFunctionPointer
+
 RETRO_THROTTLE_NONE = 0
 RETRO_THROTTLE_FRAME_STEPPING = 1
 RETRO_THROTTLE_FAST_FORWARD = 2
@@ -13,7 +15,6 @@ RETRO_THROTTLE_UNBLOCKED = 6
 
 retro_usec_t = c_int64
 
-from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]]
 

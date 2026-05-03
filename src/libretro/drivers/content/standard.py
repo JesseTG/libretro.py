@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Buffer, Iterator, Sequence
+from collections.abc import Buffer, Generator, Sequence
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from ctypes import Array, c_void_p
 from os import PathLike
@@ -91,7 +91,7 @@ class StandardContentDriver(ContentDriver):
 
     @contextmanager
     @override
-    def load(self, content: Content | SubsystemContent | None) -> Iterator[LoadedContent]:
+    def load(self, content: Content | SubsystemContent | None) -> Generator[LoadedContent]:
         if not self._system_info:
             raise RuntimeError("System info not set")
 
@@ -157,7 +157,7 @@ class StandardContentDriver(ContentDriver):
         self,
         content: Content,
         selected_subsystem: tuple[retro_subsystem_info, retro_subsystem_rom_info] | None = None,
-    ) -> Iterator[LoadedContentFile]:
+    ) -> Generator[LoadedContentFile]:
         """
         :param content: The content to load
         :param subsystem: The subsystem we're using for this session, if any

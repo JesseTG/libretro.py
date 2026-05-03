@@ -9,7 +9,8 @@ import ctypes
 import mmap
 import struct
 import sys
-from collections.abc import Buffer, Iterator, Sized
+from _ctypes import CFuncPtr
+from collections.abc import Buffer, Generator, Iterator, Sized
 from contextlib import contextmanager
 from copy import deepcopy
 from ctypes import (
@@ -29,8 +30,6 @@ from ctypes import (
 )
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
-
-from _ctypes import CFuncPtr
 
 from libretro.ctypes import TypedPointer
 
@@ -171,7 +170,7 @@ def deepcopy_buffer(ptr: c_void_p | int | None, size: int) -> Array[c_uint8] | N
 @contextmanager
 def mmap_file(
     path: str | bytes | PathLike[str] | PathLike[bytes], mode: str = "rb"
-) -> Iterator[memoryview[int]]:
+) -> Generator[memoryview[int]]:
     with open(path, mode, buffering=0) as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY) as m:
             view = memoryview(m)

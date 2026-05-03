@@ -51,7 +51,6 @@ from libretro.drivers import (
     LoggerMessageDriver,
     MessageDriver,
     MicrophoneDriver,
-    MicrophoneSource,
     MidiDriver,
     MultiVideoDriver,
     OptionDriver,
@@ -93,7 +92,11 @@ type _OptionalFactory[T] = Callable[[], T | None]
 type _RequiredArg[T] = T | _RequiredFactory[T]
 type _OptionalArg[T] = T | _OptionalFactory[T] | Default | None
 
-_nothing = lambda: None
+
+def _nothing():
+    pass
+
+
 CoreArg = Core | str | PathLike[str] | PathLike[bytes] | CDLL | _RequiredFactory[Core]
 type AudioDriverArg = _RequiredArg[AudioDriver] | Default
 type InputDriverArg = (

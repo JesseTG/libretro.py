@@ -17,8 +17,6 @@ from libretro.api.video import (
     PixelFormat,
     Rotation,
     retro_framebuffer,
-    retro_hw_get_current_framebuffer_t,
-    retro_hw_get_proc_address_t,
     retro_hw_render_callback,
     retro_hw_render_interface,
 )
