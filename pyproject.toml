@@ -96,10 +96,23 @@ extend-select = [
 
 ignore = [
     "S101", # Allow asserts for checking invariants
+
+    # Ruff linter rules that conflict with the formatter
+    # (see https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q", # flake8-quotes
+    "COM812",
+    "COM819",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F403"] # "from module import *" is common for __init__.py files
+"src/libretro/api/input/**" = ["E741"] # Some input-related libretro.h symbols are single-letter (minus prefixes)
 
 [tool.pyright]
 exclude = [
