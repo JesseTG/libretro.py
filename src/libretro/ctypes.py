@@ -14,7 +14,39 @@ this allows them to be used as drop-in replacements for the standard types in fu
 from __future__ import annotations
 
 from collections.abc import Buffer, Callable, Iterable, Iterator
-from ctypes import *  # pyright: ignore[reportWildcardImportFromLibrary]
+from ctypes import (
+    CFUNCTYPE,
+    POINTER,
+    Array,
+    Structure,
+    c_bool,
+    c_byte,
+    c_char,
+    c_char_p,
+    c_double,
+    c_float,
+    c_int,
+    c_int8,
+    c_int16,
+    c_int32,
+    c_int64,
+    c_long,
+    c_longdouble,
+    c_longlong,
+    c_short,
+    c_size_t,
+    c_ssize_t,
+    c_ubyte,
+    c_uint,
+    c_uint8,
+    c_uint16,
+    c_uint32,
+    c_uint64,
+    c_ulong,
+    c_ulonglong,
+    c_ushort,
+    c_void_p,
+)
 from typing import (
     TYPE_CHECKING,
     Protocol,
