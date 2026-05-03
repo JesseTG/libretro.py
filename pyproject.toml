@@ -98,6 +98,9 @@ ignore = [
     "S101", # Allow asserts for checking invariants
 ]
 
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["F403"] # "from module import *" is common for __init__.py files
+
 [tool.pyright]
 exclude = [
     "**/node_modules",

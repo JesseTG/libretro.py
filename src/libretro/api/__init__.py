@@ -30,7 +30,13 @@ from .camera import *
 from .content import *
 from .disk import *
 from .environment import *
-from .input import *
+from .input.analog import *
+from .input.device import *
+from .input.joypad import *
+from .input.keyboard import *
+from .input.lightgun import *
+from .input.mouse import *
+from .input.pointer import *
 from .led import *
 from .location import *
 from .log import *
