@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `bandit`, `black`, and `isort` in favor of `ruff`.
 - Simplify `justfile` recipes to `ruff`'s consolidated features.
 
+### Removed
+
+- **BREAKING:** Remove `SocketNetpacketDriver`.
+  The interface isn't finalized,
+  and the driver wasn't even implemented.
+  It will be readded later.
+
+
 ## [0.7.1] - 2026-04-12
 
 ### Changed

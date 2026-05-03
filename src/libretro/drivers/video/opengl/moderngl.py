@@ -831,7 +831,7 @@ class ModernGlVideoDriver(VideoDriver):
             if self._hw_render_depth:
                 self._hw_render_depth.label = "libretro.py Hardware Rendering FBO Depth Attachment"
 
-    def __update_cpu_texture(self, data: memoryview[int], width: int, height: int, pitch: int):
+    def __update_cpu_texture(self, data: memoryview[int], width: int, height: int, _pitch: int):
         assert self._context is not None
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__update_cpu_texture"):
             if self._cpu_color and self._cpu_color.size == (width, height):

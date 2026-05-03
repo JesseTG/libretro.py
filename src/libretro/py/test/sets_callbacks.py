@@ -10,12 +10,12 @@ def main(libretro: CoreArg):
     Exits with 0 upon success.
     """
 
-    libretro.set_video_refresh(lambda data, width, height, pitch: None)
-    libretro.set_audio_sample(lambda left, right: None)
-    libretro.set_audio_sample_batch(lambda data, frames: 0)
+    libretro.set_video_refresh(lambda _data, _width, _height, _pitch: None)
+    libretro.set_audio_sample(lambda _left, _right: None)
+    libretro.set_audio_sample_batch(lambda _data, _frames: 0)
     libretro.set_input_poll(lambda: None)
-    libretro.set_input_state(lambda port, device, index, id: 0)
-    libretro.set_environment(lambda cmd, data: False)
+    libretro.set_input_state(lambda _port, _device, _index, _id: 0)
+    libretro.set_environment(lambda _cmd, _data: False)
 
 
 if __name__ == "__main__":

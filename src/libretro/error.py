@@ -17,11 +17,10 @@ class CallbackException(RuntimeError):
 
 
 class CallbackExceptionGroup(ExceptionGroup):
-    def __init__(self, message: str, exceptions: Sequence[Exception], *args: object):
+    def __init__(self, message: str, exceptions: Sequence[Exception]):
         super().__init__(message, exceptions)
-        self.args = args
 
-    def __new__(cls, message: str, exceptions: Sequence[Exception], *args: object):
+    def __new__(cls, message: str, exceptions: Sequence[Exception]):
         return super().__new__(cls, message, exceptions)
 
 

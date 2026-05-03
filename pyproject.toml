@@ -90,6 +90,7 @@ line-length = 99
 # these type codes describe flake8-style linting rules
 # that ruff implements equivalents for
 extend-select = [
+    "ARG", # flake8-unused-arguments
     "I", # isort
     "S1", # flake8-bandit (basic security checks)
 ]

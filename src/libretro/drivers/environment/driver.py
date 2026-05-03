@@ -77,6 +77,9 @@ class EnvironmentDriver(Protocol):
     @abstractmethod
     def input_state(self, port: Port, device: int, index: int, id: int) -> int: ...
 
+    # ruff: disable[ARG002]
+    # Disable unused argument warnings for all of these methods,
+    # since subclasses aren't required to implement all of them
     def _set_rotation(self, rotation: TypedPointer[c_uint]) -> bool:
         return False
 
@@ -326,6 +329,8 @@ class EnvironmentDriver(Protocol):
 
     def _get_playlist_directory(self, dir: TypedPointer[c_char_p]) -> bool:
         return False
+
+    # ruff: enable[ARG002]
 
     @staticmethod
     def return_on_raise[T, **P](default: T) -> Callable[[Callable[P, T]], Callable[P, T]]:

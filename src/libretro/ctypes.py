@@ -262,6 +262,7 @@ if TYPE_CHECKING:
         # pyright triggers reportIncompatibleMethodOverride here because
         # it claims that not all overloads of the base type are covered;
         # not sure if it's a false positive or if the overloads are actually incompatible.
+        # The error occurred in 1.1.409, but not 1.1.408; no idea why.
         # Same goes for __setitem__ below.
 
         @override
