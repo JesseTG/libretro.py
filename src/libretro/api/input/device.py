@@ -1,3 +1,7 @@
+"""
+Types for describing input devices.
+"""
+
 from __future__ import annotations
 
 from ctypes import POINTER, Structure, c_char_p, c_int16, c_uint
@@ -25,9 +29,30 @@ RETRO_DEVICE_POINTER = 6
 
 
 retro_input_poll_t = TypedFunctionPointer[None, []]
+"""
+Called by the :class:`.Core` once per frame to poll input devices.
+
+.. seealso::
+    :attr:`.InputDriver.poll`
+        The :class:`.InputDriver` method that implements this callback.
+
+    :attr:`.Core.set_input_poll`
+        The method that exposes this callback to a :class:`.Core` instance.
+"""
+
 retro_input_state_t = TypedFunctionPointer[
     c_int16, [CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint]]
 ]
+"""
+Called by the :class:`.Core` to query the state of a specific type of input.
+
+.. seealso::
+    :attr:`.InputDriver.state`
+        The suggested entry point for this callback in libretro.py.
+
+    :attr:`.Core.set_input_state`
+        The method that exposes this callback to a :class:`.Core` instance.
+"""
 
 
 RETRO_DEVICE_TYPE_SHIFT = 8
@@ -39,6 +64,13 @@ def RETRO_DEVICE_SUBCLASS(base: int, id: int) -> int:
 
 
 class InputDeviceFlag(IntFlag, boundary=CONFORM):
+    """Bitmask flags for input device types.
+
+    >>> from libretro.api.input import InputDeviceFlag
+    >>> InputDeviceFlag.JOYPAD
+    <InputDeviceFlag.JOYPAD: 2>
+    """
+
     NONE = 1 << RETRO_DEVICE_NONE
     JOYPAD = 1 << RETRO_DEVICE_JOYPAD
     MOUSE = 1 << RETRO_DEVICE_MOUSE
@@ -51,6 +83,16 @@ class InputDeviceFlag(IntFlag, boundary=CONFORM):
 
 
 class InputDevice(IntEnum):
+    """
+    Enumeration of standard input device types.
+
+    Corresponds to the ``RETRO_DEVICE_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api.input import InputDevice
+    >>> InputDevice.JOYPAD
+    <InputDevice.JOYPAD: 1>
+    """
+
     NONE = RETRO_DEVICE_NONE
     JOYPAD = RETRO_DEVICE_JOYPAD
     MOUSE = RETRO_DEVICE_MOUSE
@@ -61,16 +103,32 @@ class InputDevice(IntEnum):
 
     @property
     def flag(self) -> InputDeviceFlag:
+        """Returns the corresponding :class:`InputDeviceFlag` for this device."""
         return InputDeviceFlag(1 << self.value)
 
 
 @dataclass(init=False, slots=True)
 class retro_input_descriptor(Structure):
+    """
+    Describes a single kind of input action for a given device.
+
+    Corresponds to :c:type:`retro_input_descriptor` in ``libretro.h``.
+    """
+
     port: Port
+    """Controller port index."""
+
     device: int
+    """Input device type."""
+
     index: int
+    """Sub-device index (e.g. analog stick index)."""
+
     id: int
+    """Button or axis identifier."""
+
     description: bytes | None
+    """Human-readable label for this input."""
 
     _fields_ = (
         ("port", c_uint),
@@ -81,6 +139,11 @@ class retro_input_descriptor(Structure):
     )
 
     def __deepcopy__(self, _):
+        """
+        Returns a deep copy of this object, including all strings.
+
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_input_descriptor(
             port=self.port,
             device=self.device,
@@ -92,8 +155,17 @@ class retro_input_descriptor(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_controller_description(Structure):
+    """
+    Describes a kind of controller emulated by a :class:`.Core`.
+
+    Corresponds to :c:type:`retro_controller_description` in ``libretro.h``.
+    """
+
     desc: bytes | None
+    """Human-readable name of the controller type."""
+
     id: int
+    """Device type identifier, used with :c:func:`retro_set_controller_port_device`."""
 
     _fields_ = (
         ("desc", c_char_p),
@@ -101,13 +173,28 @@ class retro_controller_description(Structure):
     )
 
     def __deepcopy__(self, _):
+        """
+        Creates a deep copy of this object, including all strings.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_controller_description(self.desc, self.id)
 
 
 @dataclass(init=False, slots=True)
 class retro_controller_info(Structure):
+    """
+    Lists the controller types available for a port.
+    This class can be indexed like a :class:`.Sequence`
+    to access individual :class:`.retro_controller_description` entries.
+
+    Corresponds to :c:type:`retro_controller_info` in ``libretro.h``.
+    """
+
     types: TypedPointer[retro_controller_description] | None
+    """Array of controller types supported by this port."""
+
     num_types: int
+    """Number of entries in :attr:`types`."""
 
     _fields_ = (
         ("types", POINTER(retro_controller_description)),
@@ -129,6 +216,14 @@ class retro_controller_info(Structure):
     ) -> list[retro_controller_description]: ...
 
     def __getitem__(self, index: int | slice[retro_controller_description]):
+        """
+        Returns the :class:`.retro_controller_description` at the given index or slice.
+
+        :param index: An integer index or slice object.
+        :raises ValueError: If there are no controller types available.
+        :raises IndexError: If the index is out of range.
+        :raises TypeError: If the index is not an int or slice.
+        """
         if not self.types:
             raise ValueError("No controller types available")
 
@@ -143,6 +238,9 @@ class retro_controller_info(Structure):
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
 
     def __len__(self):
+        """
+        :returns: :attr:`num_types`
+        """
         return self.num_types
 
 

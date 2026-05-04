@@ -1,3 +1,12 @@
+"""
+A message driver that stores core messages and optionally logs them.
+
+.. seealso::
+
+    :mod:`libretro.api.message`
+        Defines the message types this driver records.
+"""
+
 from collections.abc import Sequence
 from copy import deepcopy
 from logging import Logger
@@ -9,7 +18,16 @@ from .driver import MessageDriver
 
 
 class LoggerMessageDriver(MessageDriver):
+    """
+    A :class:`.MessageDriver` that stores all messages in memory
+    and optionally forwards them to a standard Python :class:`~logging.Logger`.
+    """
+
     def __init__(self, version: int = 1, logger: Logger | None = None):
+        """
+        :param version: The message interface version to advertise (``0`` or ``1``).
+        :param logger: An optional :class:`~logging.Logger` to write messages to.
+        """
         self._version = version
         self._logger = logger
         self._messages: list[retro_message] = []
@@ -22,10 +40,16 @@ class LoggerMessageDriver(MessageDriver):
 
     @property
     def messages(self) -> Sequence[retro_message]:
+        """
+        All basic messages received from the core, in order.
+        """
         return self._messages
 
     @property
     def message_exts(self) -> Sequence[retro_message_ext]:
+        """
+        All extended messages received from the core, in order.
+        """
         return self._message_exts
 
     @override

@@ -1,7 +1,22 @@
+"""
+User interface language types and constants.
+
+Corresponds to the ``RETRO_LANGUAGE_*`` constants in ``libretro.h``.
+
+.. seealso::
+
+    :class:`.UserDriver`
+        The :class:`~typing.Protocol` that exposes this information to a :class:`.Core`.
+
+    :mod:`libretro.drivers.user`
+        libretro.py's included :class:`.UserDriver` implementations.
+"""
+
 from ctypes import c_int
 from enum import IntEnum
 
 retro_language = c_int
+"""Corresponds to :c:type:`retro_language` in ``libretro.h``."""
 RETRO_LANGUAGE_ENGLISH = 0
 RETRO_LANGUAGE_JAPANESE = 1
 RETRO_LANGUAGE_FRENCH = 2
@@ -43,6 +58,15 @@ RETRO_LANGUAGE_DUMMY = 0x7FFFFFFF
 
 
 class Language(IntEnum):
+    """Enumeration of supported user interface languages.
+
+    Corresponds to the ``RETRO_LANGUAGE_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api import Language
+    >>> Language.ENGLISH
+    <Language.ENGLISH: 0>
+    """
+
     ENGLISH = RETRO_LANGUAGE_ENGLISH
     JAPANESE = RETRO_LANGUAGE_JAPANESE
     FRENCH = RETRO_LANGUAGE_FRENCH

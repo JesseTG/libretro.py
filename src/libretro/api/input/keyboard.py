@@ -1,3 +1,7 @@
+"""
+Keyboard key codes, modifier flags, and input types.
+"""
+
 from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
@@ -7,6 +11,7 @@ from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer
 from .device import InputDeviceState
 
 retro_key = c_int
+"""Corresponds to :c:type:`retro_key` in ``libretro.h``."""
 RETROK_UNKNOWN = 0
 RETROK_FIRST = 0
 RETROK_BACKSPACE = 8
@@ -183,6 +188,15 @@ RETROKMOD_DUMMY = 0x7FFFFFFF
 
 
 class Key(IntEnum, boundary=EJECT):
+    """Enumeration of keyboard key codes.
+
+    Corresponds to the ``RETROK_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api.input import Key
+    >>> Key.A
+    <Key.A: 97>
+    """
+
     UNKNOWN = RETROK_UNKNOWN
     BACKSPACE = RETROK_BACKSPACE
     TAB = RETROK_TAB
@@ -351,6 +365,9 @@ class Key(IntEnum, boundary=EJECT):
 
     @property
     def is_modifier(self):
+        """
+        :returns: :obj:`True` if this key represents one of the modifiers defined in :class:`.KeyModifier`.
+        """
         return self in (
             Key.LCTRL,
             Key.RCTRL,
@@ -367,6 +384,16 @@ class Key(IntEnum, boundary=EJECT):
 
 
 class KeyModifier(IntFlag):
+    """
+    Flags for key modifiers.
+
+    Corresponds to the ``RETROKMOD_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api.input import KeyModifier
+    >>> KeyModifier.SHIFT
+    <KeyModifier.SHIFT: 1>
+    """
+
     NONE = RETROKMOD_NONE
     SHIFT = RETROKMOD_SHIFT
     CTRL = RETROKMOD_CTRL
@@ -379,6 +406,17 @@ class KeyModifier(IntFlag):
 
 @dataclass(frozen=True, slots=True)
 class KeyboardState(InputDeviceState):
+    """
+    Snapshot of the keyboard state.
+
+    Each field corresponds to a key's pressed state.
+
+    >>> from libretro.api.input import KeyboardState
+    >>> state = KeyboardState()
+    >>> state.space
+    False
+    """
+
     backspace: bool = False
     tab: bool = False
     clear: bool = False
@@ -544,6 +582,21 @@ class KeyboardState(InputDeviceState):
     launch_app2: bool = False
 
     def __getitem__(self, item: int | Key) -> bool:
+        """
+        Gets the pressed state of the given key.
+
+        :param item: A :class:`Key` or an equivalent key code.
+        :return: :obj:`True` if the given :class:`Key` or key code is currently pressed.
+
+        :raises KeyError: If ``item`` isn't a valid key code.
+
+        >>> from libretro.api.input import KeyboardState, Key
+        >>> state = KeyboardState(a=True)
+        >>> state[Key.A]
+        True
+        >>> state[Key.B]
+        False
+        """
         match item:
             # Special cases due to overlap with Python keywords
             case Key.RETURN:
@@ -567,20 +620,47 @@ retro_keyboard_event_t = TypedFunctionPointer[
         CIntArg[c_uint16],
     ],
 ]
+"""
+Called by libretro.py whenever a key is pressed.
+
+.. seealso ::
+
+    :meth:`.InputDriver.keyboard_event`
+        The suggested entry point for this registered callback in libretro.py.
+"""
 
 
 @dataclass(init=False, slots=True)
 class retro_keyboard_callback(Structure):
+    """
+    Wraps a keyboard event callback. Can be invoked directly as a callable.
+
+    Corresponds to :c:type:`retro_keyboard_callback` in ``libretro.h``.
+    """
+
     callback: retro_keyboard_event_t | None
 
     _fields_ = (("callback", retro_keyboard_event_t),)
 
     def __deepcopy__(self, _):
+        """
+        Returns a copy of this object.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_keyboard_callback(callback=self.callback)
 
     def __call__(
         self, pressed: bool, keycode: Key, character: int | str | bytes, key_modifiers: KeyModifier
     ) -> None:
+        """
+        Invokes the keyboard event callback.
+        Does nothing if :attr:`callback` is :obj:`None`.
+
+        :param pressed: Whether the key was pressed or released.
+        :param keycode: The :class:`Key` code.
+        :param character: A single character as a UTF-32 codepoint or a single-character :class:`str` or :class:`bytes` object.
+        :param key_modifiers: Active :class:`KeyModifier` flags.
+        """
         match character:
             case int():
                 # UTF-32 codepoint

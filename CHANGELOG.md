@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added docstrings for most public symbols in `libretro.api`.
+
 ### Changed
 
 - Removed `bandit`, `black`, and `isort` in favor of `ruff`.
@@ -44,7 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `retro_hw_render_callback` and `retro_microphone_interface`.
 - Fix `GeneratorMicrophone.read` on Python 3.12,
   as `array.clear` wasn't added until Python 3.13.
-
 
 ## [0.7.0] - 2026-04-10
 

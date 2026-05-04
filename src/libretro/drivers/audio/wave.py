@@ -1,3 +1,15 @@
+"""
+An audio driver that writes received samples to a WAV file.
+
+.. seealso::
+
+    :mod:`wave`
+        The Python standard library module used to write WAV files in this driver.
+
+    :mod:`libretro.api.audio`
+        Defines the audio callback types and sample formats this driver handles.
+"""
+
 import wave
 from copy import deepcopy
 from os import PathLike, fsdecode
@@ -11,9 +23,24 @@ from .driver import AudioDriver
 
 
 class WaveWriterAudioDriver(AudioDriver):
+    """
+    An :class:`.AudioDriver` that writes all audio output to a WAV file.
+
+    The output file is always stereo, 16-bit PCM at 44,100 Hz.
+    """
+
     _file: wave.Wave_write
 
     def __init__(self, file: str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]):
+        """
+        Opens the given file for writing WAV audio.
+
+        :param file: The output destination.
+            Can be a file path (:class:`str`, :class:`bytes`, or :class:`~os.PathLike`)
+            or a writable binary I/O object.
+        :raises ValueError: If ``file`` is an :class:`~typing.IO` object that is not writable.
+        :raises TypeError: If ``file`` is not one of the supported types.
+        """
         match file:
             case str() as name:
                 self._file = wave.open(name, "wb")
@@ -48,6 +75,12 @@ class WaveWriterAudioDriver(AudioDriver):
     @property
     @override
     def callbacks(self) -> retro_audio_callback | None:
+        """
+        This driver class doesn't support using :class:`.retro_audio_callback`.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @callbacks.setter
@@ -58,6 +91,12 @@ class WaveWriterAudioDriver(AudioDriver):
     @property
     @override
     def buffer_status(self) -> retro_audio_buffer_status_callback | None:
+        """
+        This driver class doesn't support using :class:`.retro_audio_buffer_status_callback`.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @buffer_status.setter
@@ -70,6 +109,12 @@ class WaveWriterAudioDriver(AudioDriver):
     @property
     @override
     def minimum_latency(self) -> int | None:
+        """
+        This driver class doesn't support setting a minimum latency.
+
+        :return: :obj:`None`, always.
+        :raises UnsupportedEnvCall: If setting this property.
+        """
         return None
 
     @minimum_latency.setter
@@ -91,6 +136,9 @@ class WaveWriterAudioDriver(AudioDriver):
         self._system_av_info = deepcopy(info)
 
     def close(self):
+        """
+        Closes the underlying WAV file.
+        """
         self._file.close()
 
 

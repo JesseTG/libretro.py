@@ -1,3 +1,12 @@
+"""
+The standard content driver that loads game files from disk or memory.
+
+.. seealso::
+
+    :mod:`libretro.api.content`
+        Defines the game info structures and content loading types this driver handles.
+"""
+
 from __future__ import annotations
 
 import os
@@ -56,7 +65,15 @@ class _PersistentBuffer:
 
 
 class StandardContentDriver(ContentDriver):
+    """
+    A :class:`.ContentDriver` that loads content from files on disk or from memory buffers.
+    """
+
     def __init__(self, enable_extended_info: bool = True):
+        """
+        :param enable_extended_info: If :obj:`True`, the driver will provide
+            extended content info to the core via ``RETRO_ENVIRONMENT_GET_GAME_INFO_EXT``.
+        """
         self._subsystems: Subsystems | None = None
         self._overrides: ContentInfoOverrides | None = None
         self._content: Sequence[retro_game_info] | None = None

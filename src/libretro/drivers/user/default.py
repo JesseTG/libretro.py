@@ -1,3 +1,12 @@
+"""
+A user driver with configurable username and language.
+
+.. seealso::
+
+    :mod:`libretro.api.user`
+        Defines the language and username types this driver supplies.
+"""
+
 from typing import override
 
 from libretro.api.user import Language
@@ -6,11 +15,23 @@ from .driver import UserDriver
 
 
 class DefaultUserDriver(UserDriver):
+    """
+    A :class:`.UserDriver` with configurable username and language.
+    """
+
     def __init__(
         self,
         username: str | bytes | None = "libretro.py",
         language: Language | None = Language.ENGLISH,
     ):
+        """
+        :param username: The player username to expose to cores.
+            :class:`str` values are encoded to :class:`bytes` via UTF-8.
+            :obj:`None` disables ``RETRO_ENVIRONMENT_GET_USERNAME``.
+        :param language: The UI language to expose to cores.
+            Defaults to :attr:`~libretro.api.user.Language.ENGLISH`.
+        :raises TypeError: If either argument is not of the expected type.
+        """
         self.username = username
         self.language = Language(language)
 

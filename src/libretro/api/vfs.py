@@ -1,3 +1,15 @@
+"""
+Virtual filesystem (VFS) interface types and callbacks.
+
+.. seealso::
+
+    :class:`.FileSystemDriver`
+        The :class:`~typing.Protocol` that uses these types to implement VFS support in libretro.py.
+
+    :mod:`libretro.drivers.vfs`
+        libretro.py's included :class:`.FileSystemDriver` implementations.
+"""
+
 from copy import deepcopy
 from ctypes import (
     POINTER,
@@ -48,10 +60,53 @@ RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 @dataclass(slots=True)
 class retro_vfs_file_handle(Structure):
+    """
+    Opaque handle for an open VFS file.
+
+    Corresponds to :c:type:`retro_vfs_file_handle` in ``libretro.h``.
+
+    .. note::
+
+        Unlike most other :mod:`ctypes`-wrapped ``struct``s in libretro.py,
+        the fields in this class are not part of libretro.h.
+        They are provided as a convenience for :class:`.FileSystemDriver` implementations.
+
+        :class:`.Core`\\s should treat instances of this class as opaque handles
+        and _not_ access or modify its fields directly.
+
+
+    .. seealso::
+        :meth:`.FileSystemDriver.open`
+            The suggested method for creating instances of this class.
+    """
+
     id: int
+    """
+    Opaque identifier for this file handle.
+    The :class:`.FileSystemDriver` that creates this handle can assign any value,
+    but it should be unique among opened files.
+    """
+
     path: bytes | None
+    """Path that was used to open this file."""
+
     mode: int
+    """
+    File access mode flags.
+
+    .. seealso::
+        :class:`.VfsFileAccess`
+            The flags that can be set in this field.
+    """
+
     hints: int
+    """
+    File access hint flags.
+
+    .. seealso::
+        :class:`.VfsFileAccessHint`
+            The flags that can be set in this field.
+    """
 
     _fields_ = (
         ("id", c_uint64),
@@ -69,9 +124,38 @@ class retro_vfs_file_handle(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_vfs_dir_handle(Structure):
+    """
+    Opaque handle for an open VFS directory.
+
+    Corresponds to :c:type:`retro_vfs_dir_handle` in ``libretro.h``.
+
+    .. note::
+        Unlike most other :mod:`ctypes`-wrapped ``struct``s in libretro.py,
+        the fields in this class are not part of libretro.h.
+        They are provided as a convenience for :class:`.FileSystemDriver` implementations.
+
+        :class:`.Core`\\s should treat instances of this class as opaque handles
+        and _not_ access or modify its fields directly.
+
+    .. seealso::
+        :meth:`.FileSystemDriver.opendir`
+            The method that creates instances of this class.
+    """
+
     id: int
+    """
+    Opaque identifier for this directory handle.
+    The :class:`.FileSystemDriver` that creates this handle can assign any value,
+    but it should be unique among opened directories.
+    """
+
     dir: bytes | None
+    """Path to the open directory."""
+
     include_hidden: bool
+    """
+    Whether hidden entries are included when enumerating the directory's contents.
+    """
 
     _fields_ = (
         ("id", c_uint64),
@@ -81,6 +165,16 @@ class retro_vfs_dir_handle(Structure):
 
 
 class VfsFileAccess(IntFlag):
+    """
+    File access mode flags for VFS operations.
+
+    Corresponds to the ``RETRO_VFS_FILE_ACCESS_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api import VfsFileAccess
+    >>> VfsFileAccess.READ
+    <VfsFileAccess.READ: 1>
+    """
+
     READ = RETRO_VFS_FILE_ACCESS_READ
     WRITE = RETRO_VFS_FILE_ACCESS_WRITE
     READ_WRITE = RETRO_VFS_FILE_ACCESS_READ_WRITE
@@ -90,6 +184,12 @@ class VfsFileAccess(IntFlag):
 
     @property
     def open_flag(self) -> Literal["rb", "wb", "w+b", "r+b"]:
+        """Returns the Python :func:`open` mode string for this access mode.
+
+        >>> from libretro.api import VfsFileAccess
+        >>> VfsFileAccess.READ.open_flag
+        'rb'
+        """
         match self:
             case VfsFileAccess.READ:
                 return "rb"
@@ -104,59 +204,125 @@ class VfsFileAccess(IntFlag):
 
 
 retro_vfs_get_path_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_file_handle]]]
+"""Returns the path of an open file handle."""
+
 retro_vfs_open_t = TypedFunctionPointer[
     TypedPointer[retro_vfs_file_handle], [CStringArg, CIntArg[c_uint], CIntArg[c_uint]]
 ]
+"""Opens a file with the given path, mode, and hints."""
+
 retro_vfs_close_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
+"""Closes an open file handle."""
+
 retro_vfs_size_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
+"""Returns the size of an open file."""
+
 retro_vfs_truncate_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64]]
 ]
+"""Truncates an open file to the given length."""
+
 retro_vfs_tell_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
+"""Returns the current position in an open file."""
+
 retro_vfs_seek_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64], CIntArg[c_int]]
 ]
+"""Seeks to a position in an open file."""
+
 retro_vfs_read_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
 ]
+"""Reads data from an open file."""
+
 retro_vfs_write_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
 ]
+"""Writes data to an open file."""
+
 retro_vfs_flush_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
+"""Flushes pending writes to an open file."""
+
 retro_vfs_remove_t = TypedFunctionPointer[c_int, [CStringArg]]
+"""Removes a file at the given path."""
+
 retro_vfs_rename_t = TypedFunctionPointer[c_int, [CStringArg, CStringArg]]
+"""Renames a file from one path to another."""
+
 retro_vfs_stat_t = TypedFunctionPointer[c_int, [CStringArg, TypedPointer[c_int32]]]
+"""Stats a path and returns flags and optionally the file size."""
+
 retro_vfs_mkdir_t = TypedFunctionPointer[c_int, [CStringArg]]
+"""Creates a directory at the given path."""
+
 retro_vfs_opendir_t = TypedFunctionPointer[
     TypedPointer[retro_vfs_dir_handle], [CStringArg, CBoolArg]
 ]
+"""Opens a directory for iteration."""
+
 retro_vfs_readdir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
+"""Advances the directory iterator to the next entry."""
+
 retro_vfs_dirent_get_name_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_dir_handle]]]
+"""Returns the name of the current directory entry."""
+
 retro_vfs_dirent_is_dir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
+"""Returns whether the current directory entry is a subdirectory."""
+
 retro_vfs_closedir_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_dir_handle]]]
+"""Closes an open directory handle."""
 
 
 @dataclass(init=False, slots=True)
 class retro_vfs_interface(Structure):
+    """Corresponds to :c:type:`retro_vfs_interface` in ``libretro.h``.
+
+    A complete set of callbacks for virtual filesystem operations.
+
+    >>> from libretro.api import retro_vfs_interface
+    >>> vfs = retro_vfs_interface()
+    >>> vfs.open is None
+    True
+    """
+
     get_path: retro_vfs_get_path_t | None
+    """Returns the path of an open file handle."""
     open: retro_vfs_open_t | None
+    """Opens a file with the given path, mode, and hints."""
     close: retro_vfs_close_t | None
+    """Closes an open file handle."""
     size: retro_vfs_size_t | None
+    """Returns the size of an open file in bytes."""
     tell: retro_vfs_tell_t | None
+    """Returns the current read/write position."""
     seek: retro_vfs_seek_t | None
+    """Sets the current read/write position."""
     read: retro_vfs_read_t | None
+    """Reads data from an open file."""
     write: retro_vfs_write_t | None
+    """Writes data to an open file."""
     flush: retro_vfs_flush_t | None
+    """Flushes pending writes to an open file."""
     remove: retro_vfs_remove_t | None
+    """Deletes a file at the given path."""
     rename: retro_vfs_rename_t | None
+    """Renames a file from one path to another."""
     truncate: retro_vfs_truncate_t | None
+    """Sets an open file's length."""
     stat: retro_vfs_stat_t | None
+    """Gets status flags and size of a file."""
     mkdir: retro_vfs_mkdir_t | None
+    """Creates a directory at the given path."""
     opendir: retro_vfs_opendir_t | None
+    """Opens a directory for iteration."""
     readdir: retro_vfs_readdir_t | None
+    """Advances to the next directory entry."""
     dirent_get_name: retro_vfs_dirent_get_name_t | None
+    """Returns the name of the current directory entry."""
     dirent_is_dir: retro_vfs_dirent_is_dir_t | None
+    """Returns whether the current directory entry is a subdirectory."""
     closedir: retro_vfs_closedir_t | None
+    """Closes an open directory handle."""
 
     _fields_ = (
         ("get_path", retro_vfs_get_path_t),
@@ -181,6 +347,7 @@ class retro_vfs_interface(Structure):
     )
 
     def __deepcopy__(self, _):
+        """Returns a shallow copy."""
         return retro_vfs_interface(
             self.get_path,
             self.open,
@@ -206,8 +373,20 @@ class retro_vfs_interface(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_vfs_interface_info(Structure):
+    """Corresponds to :c:type:`retro_vfs_interface_info` in ``libretro.h``.
+
+    Wraps a :class:`retro_vfs_interface` pointer with a version number.
+
+    >>> from libretro.api import retro_vfs_interface_info
+    >>> info = retro_vfs_interface_info()
+    >>> info.required_interface_version
+    0
+    """
+
     required_interface_version: int
+    """Minimum VFS API version required by the core."""
     iface: TypedPointer[retro_vfs_interface] | Pointer[retro_vfs_interface] | None
+    """VFS interface provided by the frontend."""
 
     _fields_ = (
         ("required_interface_version", c_uint32),
@@ -215,6 +394,10 @@ class retro_vfs_interface_info(Structure):
     )
 
     def __deepcopy__(self, memo: MemoDict = None):
+        """
+        Returns a deep copy of this object, including all subobjects.
+        Intended for use with :func:`copy.deepcopy`.
+        """
         return retro_vfs_interface_info(
             self.required_interface_version,
             pointer(deepcopy(self.iface[0], memo)) if self.iface else None,
@@ -222,23 +405,51 @@ class retro_vfs_interface_info(Structure):
 
 
 class VfsFileAccessHint(IntFlag):
+    """Hints for file access patterns.
+
+    >>> from libretro.api import VfsFileAccessHint
+    >>> VfsFileAccessHint.FREQUENT_ACCESS
+    <VfsFileAccessHint.FREQUENT_ACCESS: 1>
+    """
+
     NONE = RETRO_VFS_FILE_ACCESS_HINT_NONE
     FREQUENT_ACCESS = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
 
 
 class VfsSeekPosition(IntEnum):
+    """Seek origin for VFS seek operations.
+
+    >>> from libretro.api import VfsSeekPosition
+    >>> VfsSeekPosition.START
+    <VfsSeekPosition.START: 0>
+    """
+
     START = RETRO_VFS_SEEK_POSITION_START
     CURRENT = RETRO_VFS_SEEK_POSITION_CURRENT
     END = RETRO_VFS_SEEK_POSITION_END
 
 
 class VfsStat(IntFlag):
+    """Flags returned by VFS stat operations.
+
+    >>> from libretro.api import VfsStat
+    >>> VfsStat.IS_DIRECTORY
+    <VfsStat.IS_DIRECTORY: 2>
+    """
+
     IS_VALID = RETRO_VFS_STAT_IS_VALID
     IS_DIRECTORY = RETRO_VFS_STAT_IS_DIRECTORY
     IS_CHARACTER_SPECIAL = RETRO_VFS_STAT_IS_CHARACTER_SPECIAL
 
 
 class VfsMkdirResult(IntEnum):
+    """Return codes for VFS mkdir operations.
+
+    >>> from libretro.api import VfsMkdirResult
+    >>> VfsMkdirResult.SUCCESS
+    <VfsMkdirResult.SUCCESS: 0>
+    """
+
     SUCCESS = 0
     ERROR = -1
     ALREADY_EXISTS = -2

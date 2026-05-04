@@ -1,3 +1,8 @@
+"""Light gun input types, button and axis IDs.
+
+Corresponds to the ``RETRO_DEVICE_ID_LIGHTGUN_*`` constants in ``libretro.h``.
+"""
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Literal, overload
@@ -28,6 +33,16 @@ RETRO_DEVICE_ID_LIGHTGUN_PAUSE = 5
 
 
 class DeviceIdLightgun(IntEnum):
+    """
+    Input IDs for the light gun device.
+
+    Corresponds to the ``RETRO_DEVICE_ID_LIGHTGUN_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api.input import DeviceIdLightgun
+    >>> DeviceIdLightgun.TRIGGER
+    <DeviceIdLightgun.TRIGGER: 2>
+    """
+
     SCREEN_X = RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X
     SCREEN_Y = RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y
     IS_OFFSCREEN = RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN
@@ -85,6 +100,14 @@ DeviceIdLightGunButton = Literal[
 
 @dataclass(frozen=True, slots=True)
 class LightGunState(InputDeviceState):
+    """Snapshot of a light gun's state.
+
+    >>> from libretro.api.input import LightGunState
+    >>> state = LightGunState()
+    >>> state.trigger
+    False
+    """
+
     screen_x: int = 0
     screen_y: int = 0
     is_offscreen: bool = False

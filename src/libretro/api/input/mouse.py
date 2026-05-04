@@ -1,3 +1,8 @@
+"""Mouse input types, buttons, and axis IDs.
+
+Corresponds to the ``RETRO_DEVICE_ID_MOUSE_*`` constants in ``libretro.h``.
+"""
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Literal, overload
@@ -18,6 +23,15 @@ RETRO_DEVICE_ID_MOUSE_BUTTON_5 = 10
 
 
 class DeviceIdMouse(IntEnum):
+    """Input IDs for the mouse device.
+
+    Corresponds to the ``RETRO_DEVICE_ID_MOUSE_*`` constants in ``libretro.h``.
+
+    >>> from libretro.api.input import DeviceIdMouse
+    >>> DeviceIdMouse.LEFT
+    <DeviceIdMouse.LEFT: 2>
+    """
+
     X = RETRO_DEVICE_ID_MOUSE_X
     Y = RETRO_DEVICE_ID_MOUSE_Y
     LEFT = RETRO_DEVICE_ID_MOUSE_LEFT
@@ -54,6 +68,14 @@ type DeviceIdMouseAxis = Literal[
 
 @dataclass(frozen=True, slots=True)
 class MouseState(InputDeviceState):
+    """Snapshot of mouse state.
+
+    >>> from libretro.api.input import MouseState
+    >>> state = MouseState()
+    >>> state.left
+    False
+    """
+
     x: int = 0
     y: int = 0
     left: bool = False
