@@ -1,4 +1,5 @@
-"""Core option definitions, values, categories, and internationalization.
+"""
+Core option definitions, values, categories, and internationalization.
 
 Corresponds to the ``retro_core_option_*`` and ``retro_variable`` types
 in ``libretro.h``. Defines option definitions, values, categories,
@@ -24,7 +25,8 @@ retro_core_options_update_display_callback_t = TypedFunctionPointer[c_bool, []]
 
 @dataclass(init=False, slots=True)
 class retro_variable(Structure):
-    """Corresponds to :c:type:`retro_variable` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_variable` in ``libretro.h``.
 
     A key/value pair used for legacy core options (v0).
 
@@ -45,7 +47,8 @@ class retro_variable(Structure):
     )
 
     def __deepcopy__(self, _):
-        """Returns a copy of this object, including all strings.
+        """
+        Return a copy of this object, including all strings.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -58,7 +61,8 @@ class retro_variable(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_option_display(Structure):
-    """Corresponds to :c:type:`retro_core_option_display` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_option_display` in ``libretro.h``.
 
     Controls whether a core option is visible in the frontend UI.
 
@@ -80,7 +84,7 @@ class retro_core_option_display(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object, including all strings.
+        Return a copy of this object, including all strings.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_option_display(self.key, self.visible)
@@ -88,7 +92,8 @@ class retro_core_option_display(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_option_value(Structure):
-    """Corresponds to :c:type:`retro_core_option_value` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_option_value` in ``libretro.h``.
 
     A single selectable value for a core option.
 
@@ -109,7 +114,8 @@ class retro_core_option_value(Structure):
     )
 
     def __deepcopy__(self, _):
-        """Returns a copy of this object, including all strings.
+        """
+        Return a copy of this object, including all strings.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_option_value(self.value, self.label)
@@ -124,7 +130,8 @@ CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 @dataclass(init=False, slots=True)
 class retro_core_option_definition(Structure):
-    """Corresponds to :c:type:`retro_core_option_definition` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_option_definition` in ``libretro.h``.
 
     Defines a single core option with a key, description, info text,
     possible values, and a default value (v1 options API).
@@ -156,7 +163,7 @@ class retro_core_option_definition(Structure):
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
-        Returns a copy of this object, including all strings and subobjects.
+        Return a copy of this object, including all strings and subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_option_definition(
@@ -170,7 +177,8 @@ class retro_core_option_definition(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_options_intl(Structure):
-    """Corresponds to :c:type:`retro_core_options_intl` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_options_intl` in ``libretro.h``.
 
     Wraps US English and localized option definitions for v1 options.
 
@@ -192,7 +200,7 @@ class retro_core_options_intl(Structure):
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
-        Returns a copy of this object, including all strings and subobjects.
+        Return a copy of this object, including all strings and subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_options_intl(
@@ -203,7 +211,8 @@ class retro_core_options_intl(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_option_v2_category(Structure):
-    """Corresponds to :c:type:`retro_core_option_v2_category` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_option_v2_category` in ``libretro.h``.
 
     Groups related options under a named category (v2 options API).
 
@@ -228,7 +237,7 @@ class retro_core_option_v2_category(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object, including all strings.
+        Return a copy of this object, including all strings.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_option_v2_category(self.key, self.desc, self.info)
@@ -236,7 +245,8 @@ class retro_core_option_v2_category(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_option_v2_definition(Structure):
-    """Corresponds to :c:type:`retro_core_option_v2_definition` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_option_v2_definition` in ``libretro.h``.
 
     Defines a single core option with category support (v2 options API).
 
@@ -276,7 +286,7 @@ class retro_core_option_v2_definition(Structure):
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
-        Returns a copy of this object, including all strings and subobjects.
+        Return a copy of this object, including all strings and subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_option_v2_definition(
@@ -293,7 +303,8 @@ class retro_core_option_v2_definition(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_options_v2(Structure):
-    """Corresponds to :c:type:`retro_core_options_v2` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_options_v2` in ``libretro.h``.
 
     Top-level container for v2 option categories and definitions.
 
@@ -315,7 +326,7 @@ class retro_core_options_v2(Structure):
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
-        Returns a copy of this object, including all strings and subobjects.
+        Return a copy of this object, including all strings and subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_options_v2(
@@ -326,7 +337,8 @@ class retro_core_options_v2(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_options_v2_intl(Structure):
-    """Corresponds to :c:type:`retro_core_options_v2_intl` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_options_v2_intl` in ``libretro.h``.
 
     Wraps US English and localized v2 option sets.
 
@@ -347,7 +359,8 @@ class retro_core_options_v2_intl(Structure):
     )
 
     def __deepcopy__(self, memo: MemoDict = None):
-        """Returns a copy of this object, including all strings and subobjects.
+        """
+        Return a copy of this object, including all strings and subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_options_v2_intl(
@@ -358,7 +371,8 @@ class retro_core_options_v2_intl(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_core_options_update_display_callback(Structure):
-    """Corresponds to :c:type:`retro_core_options_update_display_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_core_options_update_display_callback` in ``libretro.h``.
 
     Wraps a callback that the frontend calls to determine
     whether to refresh option visibility.
@@ -375,7 +389,8 @@ class retro_core_options_update_display_callback(Structure):
     _fields_ = (("callback", retro_core_options_update_display_callback_t),)
 
     def __call__(self) -> bool:
-        """Invokes the callback.
+        """
+        Invoke the callback.
 
         :raises ValueError: If no callback has been set.
         :returns: ``True`` if the display should be updated.
@@ -387,7 +402,7 @@ class retro_core_options_update_display_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_core_options_update_display_callback(self.callback)

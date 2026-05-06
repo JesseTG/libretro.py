@@ -1,4 +1,5 @@
-"""Hardware rendering context negotiation types.
+"""
+Hardware rendering context negotiation types.
 
 Corresponds to :c:type:`retro_hw_render_context_negotiation_interface`
 in ``libretro.h``.
@@ -14,7 +15,8 @@ RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_DUMMY = 0x7FFFFFFF
 
 
 class ContextNegotiationInterfaceType(IntEnum):
-    """Type of context negotiation interface.
+    """
+    Type of context negotiation interface.
 
     Corresponds to the ``RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_*``
     constants in ``libretro.h``.
@@ -25,7 +27,8 @@ class ContextNegotiationInterfaceType(IntEnum):
 
 @dataclass(init=False, slots=True)
 class retro_hw_render_context_negotiation_interface(Structure):
-    """Corresponds to :c:type:`retro_hw_render_context_negotiation_interface`
+    """
+    Corresponds to :c:type:`retro_hw_render_context_negotiation_interface`
     in ``libretro.h``.
 
     >>> from libretro.api.video import retro_hw_render_context_negotiation_interface

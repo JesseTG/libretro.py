@@ -43,8 +43,13 @@ def address[T: _CDataType](
     ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None,
 ) -> int:
     """
-    Returns the address of the given pointer as an integer.
-    If the input is already an integer, it is returned as-is.
+    Return the address of the given pointer as an integer.
+    If the input is already an integer, return it as-is.
+
+    :param ptr: A pointer, a C function pointer, an integer address, or :obj:`None`.
+    :return: The address of the pointer as an integer, or 0 if ``ptr`` is :obj:`None` or a ``NULL`` pointer.
+    :raises ValueError: If ``ptr`` is an integer but not a valid pointer address.
+    :raises TypeError: If ``ptr`` is not one of the expected types.
     """
     match ptr:
         case None:
@@ -57,6 +62,8 @@ def address[T: _CDataType](
             return ptr.value or 0
         case c_char_p() | _Pointer() | CFuncPtr():
             return cast(ptr, c_void_p).value or 0
+        case _:
+            raise TypeError(f"Expected a pointer type or int, got {type(ptr).__name__}")
 
 
 @overload
@@ -74,9 +81,7 @@ def as_bytes(value: str | bytes | None) -> bytes | None:
 
 
 def is_zeroed(struct: _CData | _CDataType) -> bool:
-    """
-    Returns true if the given ``ctypes`` type is zeroed (all bytes are zero).
-    """
+    """Return :obj:`True` if the given :mod:`ctypes` type is zeroed (all bytes are zero)."""
     view = memoryview_at(addressof(struct), sizeof(struct), True)
 
     return not any(view)
@@ -84,11 +89,11 @@ def is_zeroed(struct: _CData | _CDataType) -> bool:
 
 def from_zero_terminated[T: _CData](ptr: _Pointer[T] | None) -> Iterator[T]:
     """
-    Returns an iterator that yields items from a zero-terminated array of ``ctypes`` types.
+    Return an iterator that yields items from a zero-terminated array of :mod:`ctypes` types.
     The iterator will stop when it encounters an item that is zeroed (all bytes are zero).
     If no such item exists, the behavior is undefined.
 
-    If ptr is ``None``, the iterator will be empty.
+    The iterator will be empty if ``ptr`` is :obj:`None` or a ``NULL`` pointer.
     """
     if ptr:
         i = 0

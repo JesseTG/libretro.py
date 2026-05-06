@@ -1,4 +1,5 @@
-"""Geographic location service interface types.
+"""
+Geographic location service interface types.
 
 Allows cores to access the host device's geographic location.
 
@@ -36,7 +37,8 @@ retro_location_lifetime_status_t = TypedFunctionPointer[None, []]
 
 @dataclass(init=False, slots=True)
 class retro_location_callback(Structure):
-    """Corresponds to :c:type:`retro_location_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_location_callback` in ``libretro.h``.
 
     A set of callbacks for managing location services.
 
@@ -70,7 +72,7 @@ class retro_location_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

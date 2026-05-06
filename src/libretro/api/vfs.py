@@ -60,7 +60,7 @@ RETRO_VFS_STAT_IS_CHARACTER_SPECIAL = 1 << 2
 
 @dataclass(slots=True)
 class retro_vfs_file_handle(Structure):
-    """
+    r"""
     Opaque handle for an open VFS file.
 
     Corresponds to :c:type:`retro_vfs_file_handle` in ``libretro.h``.
@@ -71,7 +71,7 @@ class retro_vfs_file_handle(Structure):
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.FileSystemDriver` implementations.
 
-        :class:`.Core`\\s should treat instances of this class as opaque handles
+        :class:`.Core`\s should treat instances of this class as opaque handles
         and _not_ access or modify its fields directly.
 
 
@@ -116,6 +116,12 @@ class retro_vfs_file_handle(Structure):
     )
 
     def __init__(self, id: int, path: bytes | None, mode: int, hints: int):
+        """
+        Initialize a new file handle with the given values.
+
+        ..seealso::
+            :class:`retro_vfs_open_t`
+        """
         self.id = id
         self.path = path
         self.mode = mode
@@ -124,7 +130,7 @@ class retro_vfs_file_handle(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_vfs_dir_handle(Structure):
-    """
+    r"""
     Opaque handle for an open VFS directory.
 
     Corresponds to :c:type:`retro_vfs_dir_handle` in ``libretro.h``.
@@ -134,7 +140,7 @@ class retro_vfs_dir_handle(Structure):
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.FileSystemDriver` implementations.
 
-        :class:`.Core`\\s should treat instances of this class as opaque handles
+        :class:`.Core`\s should treat instances of this class as opaque handles
         and _not_ access or modify its fields directly.
 
     .. seealso::
@@ -184,7 +190,8 @@ class VfsFileAccess(IntFlag):
 
     @property
     def open_flag(self) -> Literal["rb", "wb", "w+b", "r+b"]:
-        """Returns the Python :func:`open` mode string for this access mode.
+        """
+        Returns the Python :func:`open` mode string for this access mode.
 
         >>> from libretro.api import VfsFileAccess
         >>> VfsFileAccess.READ.open_flag
@@ -275,7 +282,8 @@ retro_vfs_closedir_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_dir_h
 
 @dataclass(init=False, slots=True)
 class retro_vfs_interface(Structure):
-    """Corresponds to :c:type:`retro_vfs_interface` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_vfs_interface` in ``libretro.h``.
 
     A complete set of callbacks for virtual filesystem operations.
 
@@ -347,7 +355,7 @@ class retro_vfs_interface(Structure):
     )
 
     def __deepcopy__(self, _):
-        """Returns a shallow copy."""
+        """Return a shallow copy."""
         return retro_vfs_interface(
             self.get_path,
             self.open,
@@ -373,7 +381,8 @@ class retro_vfs_interface(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_vfs_interface_info(Structure):
-    """Corresponds to :c:type:`retro_vfs_interface_info` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_vfs_interface_info` in ``libretro.h``.
 
     Wraps a :class:`retro_vfs_interface` pointer with a version number.
 
@@ -395,7 +404,7 @@ class retro_vfs_interface_info(Structure):
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
-        Returns a deep copy of this object, including all subobjects.
+        Return a deep copy of this object, including all subobjects.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_vfs_interface_info(
@@ -405,7 +414,8 @@ class retro_vfs_interface_info(Structure):
 
 
 class VfsFileAccessHint(IntFlag):
-    """Hints for file access patterns.
+    """
+    Hints for file access patterns.
 
     >>> from libretro.api import VfsFileAccessHint
     >>> VfsFileAccessHint.FREQUENT_ACCESS
@@ -417,7 +427,8 @@ class VfsFileAccessHint(IntFlag):
 
 
 class VfsSeekPosition(IntEnum):
-    """Seek origin for VFS seek operations.
+    """
+    Seek origin for VFS seek operations.
 
     >>> from libretro.api import VfsSeekPosition
     >>> VfsSeekPosition.START
@@ -430,7 +441,8 @@ class VfsSeekPosition(IntEnum):
 
 
 class VfsStat(IntFlag):
-    """Flags returned by VFS stat operations.
+    """
+    Flags returned by VFS stat operations.
 
     >>> from libretro.api import VfsStat
     >>> VfsStat.IS_DIRECTORY
@@ -443,7 +455,8 @@ class VfsStat(IntFlag):
 
 
 class VfsMkdirResult(IntEnum):
-    """Return codes for VFS mkdir operations.
+    """
+    Return codes for VFS mkdir operations.
 
     >>> from libretro.api import VfsMkdirResult
     >>> VfsMkdirResult.SUCCESS

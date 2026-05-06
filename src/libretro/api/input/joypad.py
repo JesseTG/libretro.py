@@ -1,4 +1,5 @@
-"""Joypad (RetroPad) button input types.
+"""
+Joypad (RetroPad) button input types.
 
 Corresponds to the ``RETRO_DEVICE_ID_JOYPAD_*`` constants in ``libretro.h``.
 """
@@ -29,7 +30,8 @@ RETRO_DEVICE_ID_JOYPAD_MASK = 256
 
 
 class DeviceIdJoypad(IntEnum):
-    """Button IDs for the standard joypad.
+    """
+    Button IDs for the standard joypad.
 
     Corresponds to the ``RETRO_DEVICE_ID_JOYPAD_*`` constants in ``libretro.h``.
 
@@ -79,7 +81,8 @@ type DeviceIdJoypadButton = Literal[
 
 @dataclass(frozen=True, slots=True)
 class JoypadState(InputDeviceState):
-    """Snapshot of a standard joypad's button states.
+    """
+    Snapshot of a standard joypad's button states.
 
     >>> from libretro.api.input import JoypadState
     >>> state = JoypadState(a=True)
@@ -112,7 +115,7 @@ class JoypadState(InputDeviceState):
     def __getitem__(self, item: int) -> bool | int: ...
     def __getitem__(self, item: DeviceIdJoypad | int) -> bool | int:
         """
-        Gets the state of a joypad button or the bitmask of all buttons.
+        Get the state of a joypad button or the bitmask of all buttons.
 
         >>> from libretro.api.input import JoypadState, DeviceIdJoypad
         >>> state = JoypadState(a=True)
@@ -163,9 +166,7 @@ class JoypadState(InputDeviceState):
 
     @property
     def mask(self) -> int:
-        """
-        Bitmask of all button states, where bit 0 corresponds to ``B``, bit 1 to ``Y``, and so on.
-        """
+        """Bitmask of all button states, where bit 0 corresponds to ``B``, bit 1 to ``Y``, and so on."""
         return (
             (self.b << 0)
             | (self.y << 1)

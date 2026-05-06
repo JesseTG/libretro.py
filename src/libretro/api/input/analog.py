@@ -1,6 +1,4 @@
-"""
-Analog axis input state.
-"""
+"""Analog axis input state."""
 
 from dataclasses import dataclass
 from enum import IntEnum
@@ -17,23 +15,21 @@ RETRO_DEVICE_ID_ANALOG_Y = 1
 
 
 class DeviceIndexAnalog(IntEnum):
-    """
-    The device that provides an analog axis.
-    """
+    """The device that provides an analog axis."""
 
     LEFT = RETRO_DEVICE_INDEX_ANALOG_LEFT
-    """Denotes the left analog stick."""
+    """The left analog stick."""
 
     RIGHT = RETRO_DEVICE_INDEX_ANALOG_RIGHT
-    """Denotes the right analog stick."""
+    """The right analog stick."""
 
     BUTTON = RETRO_DEVICE_INDEX_ANALOG_BUTTON
-    """Denotes any analog button."""
+    """Any analog button (e.g. shoulder triggers)."""
 
 
 class DeviceIdAnalog(IntEnum):
     """
-    Selects the axis of an analog stick.
+    Analog stick axis.
 
     >>> from libretro.api.input import DeviceIdAnalog
     >>> DeviceIdAnalog.X
@@ -41,16 +37,16 @@ class DeviceIdAnalog(IntEnum):
     """
 
     X = RETRO_DEVICE_ID_ANALOG_X
-    """Analog stick's horizontal axis."""
+    """An analog stick's horizontal axis."""
 
     Y = RETRO_DEVICE_ID_ANALOG_Y
-    """Analog stick's vertical axis."""
+    """An analog stick's vertical axis."""
 
 
 @dataclass(frozen=True, slots=True)
 class AnalogState(InputDeviceState):
     """
-    Snapshot of analog sticks and buttons.
+    Snapshot of analog axis and button state.
 
     For the purpose of this snapshot, all buttons are considered "analog".
     """
@@ -85,7 +81,6 @@ class AnalogState(InputDeviceState):
         >>> state.left_x
         123
         """
-
         return self.lstick[0]
 
     @property
@@ -125,6 +120,24 @@ class AnalogState(InputDeviceState):
         return self.rstick[1]
 
     def __getitem__(self, item: DeviceIdJoypad | int) -> int:
+        """
+        Get the state of a button by its button ID or :class:`.DeviceIdJoypad`.
+
+        For example:
+
+        >>> from libretro.api.input import AnalogState, DeviceIdJoypad
+        >>> state = AnalogState(a=779)
+        >>> state[DeviceIdJoypad.A]
+        779
+        >>> state[DeviceIdJoypad.A] == state.a
+        True
+        >>> state[DeviceIdJoypad.A] == state[8]
+        True
+
+        :raises IndexError: If ``item`` is an :class:`int` out of range of valid button IDs.
+        :raises TypeError: If ``item`` isn't an :class:`int` or :class:`.DeviceIdJoypad`.
+        :returns: The analog state of the button, where 0 is not pressed and 32767 is fully pressed.
+        """
         match item:
             case DeviceIdJoypad.B:
                 return self.b

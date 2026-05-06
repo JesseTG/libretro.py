@@ -1,4 +1,5 @@
-"""Microphone audio capture interface types.
+"""
+Microphone audio capture interface types.
 
 Corresponds to :c:type:`retro_microphone_interface` in ``libretro.h``.
 Allows cores to capture audio input from the host device.
@@ -20,7 +21,8 @@ INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
 
 @dataclass(init=False, slots=True)
 class retro_microphone(Structure):
-    """Opaque handle for an open microphone.
+    r"""
+    Opaque handle for an open microphone.
 
     Corresponds to :c:type:`retro_microphone` in ``libretro.h``.
 
@@ -30,7 +32,7 @@ class retro_microphone(Structure):
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.MicrophoneDriver` implementations.
 
-        :class:`.Core`\\s should treat instances of this class as opaque handles
+        :class:`.Core`\s should treat instances of this class as opaque handles
         and _not_ access or modify its fields directly.
     """
 
@@ -42,7 +44,8 @@ class retro_microphone(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_microphone_params(Structure):
-    """Parameters for opening a microphone.
+    """
+    Parameters for opening a microphone.
 
     Corresponds to :c:type:`retro_microphone_params` in ``libretro.h``.
 
@@ -58,7 +61,8 @@ class retro_microphone_params(Structure):
     _fields_ = (("rate", c_uint),)
 
     def __deepcopy__(self, _):
-        """Returns a shallow copy.
+        """
+        Return a shallow copy.
 
         >>> import copy
         >>> from libretro.api.microphone import retro_microphone_params
@@ -95,7 +99,8 @@ retro_read_mic_t = TypedFunctionPointer[
 
 @dataclass(init=False, slots=True)
 class retro_microphone_interface(Structure):
-    """Corresponds to :c:type:`retro_microphone_interface` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_microphone_interface` in ``libretro.h``.
 
     Provides functions for managing microphone input.
 
@@ -140,7 +145,8 @@ class retro_microphone_interface(Structure):
         get_mic_state: retro_get_mic_state_t | None = None,
         read_mic: retro_read_mic_t | None = None,
     ):
-        """Initializes the interface with a required version number.
+        """
+        Initialize the interface with a required version number.
 
         :param interface_version: Must match :const:`INTERFACE_VERSION`.
         """
@@ -155,7 +161,8 @@ class retro_microphone_interface(Structure):
         )
 
     def __deepcopy__(self, _):
-        """Returns a shallow copy.
+        """
+        Return a shallow copy.
 
         >>> import copy
         >>> from libretro.api.microphone import retro_microphone_interface, INTERFACE_VERSION

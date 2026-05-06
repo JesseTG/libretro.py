@@ -1,5 +1,5 @@
 """
-Types for input device, state representations, and callbacks.
+Input device definitions, state representations, and callbacks.
 
 .. seealso::
 

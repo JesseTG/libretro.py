@@ -1,6 +1,4 @@
-"""
-Types that describe the address space of the :class:`.Core`'s emulated memory.
-"""
+"""Types that describe the address space of the :class:`.Core`'s emulated memory."""
 
 from __future__ import annotations
 
@@ -43,7 +41,8 @@ RETRO_MEMDESC_MINSIZE_8 = 3 << 24
 
 
 class MemoryDescriptorFlag(IntFlag):
-    """Flags that describe properties of a :class:`retro_memory_descriptor`.
+    """
+    Flags that describe properties of a :class:`retro_memory_descriptor`.
 
     Corresponds to the ``RETRO_MEMDESC_*`` constants in ``libretro.h``.
 
@@ -119,7 +118,7 @@ class retro_memory_descriptor(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object,
+        Return a deep copy of this object,
         including all subobjects and strings.
         Intended for use with :func:`copy.deepcopy`.
 
@@ -145,8 +144,8 @@ class retro_memory_descriptor(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_memory_map(Structure):
-    """
-    A collection of :class:`retro_memory_descriptor`\\s
+    r"""
+    A collection of :class:`retro_memory_descriptor`\s
     that define the address space of the :class:`.Core`'s emulated memory.
 
     Corresponds to :c:type:`retro_memory_map` in ``libretro.h``.
@@ -168,7 +167,8 @@ class retro_memory_map(Structure):
     )
 
     def __len__(self):
-        """Returns the number of memory descriptors.
+        """
+        Return the number of memory descriptors.
 
         >>> from libretro.api import retro_memory_map
         >>> len(retro_memory_map())
@@ -185,7 +185,8 @@ class retro_memory_map(Structure):
     def __getitem__(
         self, item: int | slice[retro_memory_descriptor]
     ) -> retro_memory_descriptor | list[retro_memory_descriptor]:
-        """Returns a descriptor by index or a list of descriptors by slice.
+        """
+        Return a descriptor by index or a list of descriptors by slice.
 
         :param item: An integer index or slice.
         :returns: A single :class:`retro_memory_descriptor` or a list of them.
@@ -204,7 +205,7 @@ class retro_memory_map(Structure):
 
     def __deepcopy__(self, memodict: MemoDict = None):
         """
-        Returns a deep copy of this object,
+        Return a deep copy of this object,
         including all subobjects and strings.
         Intended for use with :func:`copy.deepcopy`.
 

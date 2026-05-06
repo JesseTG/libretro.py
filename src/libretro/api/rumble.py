@@ -69,7 +69,7 @@ class retro_rumble_interface(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns copy of this object.
+        Return copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_rumble_interface(self.set_rumble_state)

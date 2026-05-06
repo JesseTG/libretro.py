@@ -29,7 +29,8 @@ retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]
 
 @dataclass(init=False, slots=True)
 class retro_frame_time_callback(Structure):
-    """Corresponds to :c:type:`retro_frame_time_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_frame_time_callback` in ``libretro.h``.
 
     Wraps a callback that is invoked each frame with the elapsed time.
 
@@ -51,11 +52,10 @@ class retro_frame_time_callback(Structure):
 
     def __call__(self, time: CIntArg[retro_usec_t] | None = None):
         """
-        Invokes :attr:`callback` with the given time, or with :attr:`reference` if it's :obj:`None`.
+        Invoke :attr:`callback` with the given time, or with :attr:`reference` if it's :obj:`None`.
 
         Does nothing if :attr:`callback` is unset.
         """
-
         if self.callback:
             if time is None:
                 self.callback(self.reference)
@@ -64,7 +64,7 @@ class retro_frame_time_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -76,7 +76,8 @@ class retro_frame_time_callback(Structure):
 
 
 class ThrottleMode(IntEnum):
-    """The frontend's current throttle mode.
+    """
+    The frontend's current throttle mode.
 
     >>> from libretro.api import ThrottleMode
     >>> ThrottleMode.FAST_FORWARD
@@ -123,7 +124,7 @@ class retro_fastforwarding_override(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -161,7 +162,7 @@ class retro_throttle_state(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

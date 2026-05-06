@@ -1,5 +1,5 @@
-"""
-Types for allowing :class:`.Core`\\s to control LED indicators on the host device.
+r"""
+Types for allowing :class:`.Core`\s to control LED indicators on the host device.
 
 .. seealso::
 
@@ -27,8 +27,8 @@ Called by the :class:`.Core` to set the state of an LED.
 
 @dataclass(init=False, slots=True)
 class retro_led_interface(Structure):
-    """
-    Defines a callback that :class:`.Core`\\s can use
+    r"""
+    Defines a callback that :class:`.Core`\s can use
     to control LED indicators on the host device.
 
     Corresponds to :c:type:`retro_led_interface` in ``libretro.h``.
@@ -43,7 +43,7 @@ class retro_led_interface(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

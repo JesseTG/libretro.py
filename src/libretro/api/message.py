@@ -1,5 +1,5 @@
-"""
-Types that allow :class:`.Core`\\s to display notifications on the frontend's OSD.
+r"""
+Types that allow :class:`.Core`\s to display notifications on the frontend's OSD.
 
 .. seealso::
     :class:`.MessageDriver`
@@ -33,10 +33,10 @@ retro_message_type = c_int
 
 
 class MessageTarget(IntEnum):
-    """
+    r"""
     Where a message should be displayed.
 
-    :class:`.MessageDriver`\\s can interpret these however they want.
+    :class:`.MessageDriver`\s can interpret these however they want.
 
     >>> from libretro.api import MessageTarget
     >>> MessageTarget.OSD
@@ -49,10 +49,10 @@ class MessageTarget(IntEnum):
 
 
 class MessageType(IntEnum):
-    """
+    r"""
     The presentation style of a message.
 
-    :class:`.MessageDriver`\\s can interpret these however they want.
+    :class:`.MessageDriver`\s can interpret these however they want.
     """
 
     NOTIFICATION = RETRO_MESSAGE_TYPE_NOTIFICATION
@@ -82,7 +82,7 @@ class retro_message(Structure):
 
     def __deepcopy__(self, memodict: MemoDict = None):
         """
-        Returns a copy of this object,
+        Return a copy of this object,
         including all strings.
         Intended for use with :func:`copy.deepcopy`.
         """
@@ -128,7 +128,7 @@ class retro_message_ext(Structure):
 
     def __deepcopy__(self, memodict: MemoDict = None):
         """
-        Returns a copy of this object,
+        Return a copy of this object,
         including all strings.
         Intended for use with :func:`copy.deepcopy`.
 

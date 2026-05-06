@@ -1,6 +1,4 @@
-"""
-Types that define serialization quirks and savestate contexts.
-"""
+"""Types that define serialization quirks and savestate contexts."""
 
 from ctypes import c_int
 from enum import IntEnum, IntFlag

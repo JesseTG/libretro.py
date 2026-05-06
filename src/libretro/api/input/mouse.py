@@ -1,4 +1,5 @@
-"""Mouse input types, buttons, and axis IDs.
+"""
+Mouse input types, buttons, and axis IDs.
 
 Corresponds to the ``RETRO_DEVICE_ID_MOUSE_*`` constants in ``libretro.h``.
 """
@@ -23,7 +24,8 @@ RETRO_DEVICE_ID_MOUSE_BUTTON_5 = 10
 
 
 class DeviceIdMouse(IntEnum):
-    """Input IDs for the mouse device.
+    """
+    Input IDs for the mouse device.
 
     Corresponds to the ``RETRO_DEVICE_ID_MOUSE_*`` constants in ``libretro.h``.
 
@@ -68,7 +70,8 @@ type DeviceIdMouseAxis = Literal[
 
 @dataclass(frozen=True, slots=True)
 class MouseState(InputDeviceState):
-    """Snapshot of mouse state.
+    """
+    Snapshot of mouse state.
 
     >>> from libretro.api.input import MouseState
     >>> state = MouseState()
@@ -97,6 +100,26 @@ class MouseState(InputDeviceState):
     def __getitem__(self, item: int) -> bool | int: ...
 
     def __getitem__(self, item: DeviceIdMouse | int) -> bool | int:
+        """
+        Get the state of a specific mouse input by its ID.
+
+        For example:
+
+        >>> from libretro.api.input import MouseState, DeviceIdMouse
+        >>> state = MouseState(x=123, left=True)
+        >>> state[DeviceIdMouse.X]
+        123
+        >>> state[DeviceIdMouse.LEFT]
+        True
+
+        :param item: The ID of the input to query, as a :class:`DeviceIdMouse` or integer.
+        :return: The state of the specified input,
+            as an :class:`int` for axes or :class:`bool` for buttons.
+            Note that wheel inputs are treated as buttons that are "pressed"
+            when the wheel is moved in the corresponding direction.
+        :raises KeyError: If ``item`` isn't a valid input ID.
+        :raises IndexError: If ``item`` is an integer but not a valid input ID
+        """
         match item:
             case DeviceIdMouse.X:
                 return self.x

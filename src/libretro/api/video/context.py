@@ -1,6 +1,4 @@
-"""
-Types that describe hardware rendering contexts and callbacks for using them.
-"""
+"""Hardware rendering API context types and callbacks."""
 
 from ctypes import Structure, c_bool, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
@@ -28,14 +26,13 @@ RETRO_HW_CONTEXT_DUMMY = 0x7FFFFFFF
 HW_FRAME_BUFFER_VALID = RETRO_HW_FRAME_BUFFER_VALID
 """
 Passed to :class:`.retro_video_refresh_t` to signal that the next video frame
-should be rendered with the GPU context state instead of a framebuffer.
+should be rendered with the GPU context state instead of a software-accessible framebuffer.
 """
 
 
 class HardwareContext(IntEnum):
     """
-    Denotes a hardware rendering API supported by libretro.
-    Hardware rendering context type.
+    Hardware rendering API supported by libretro.
 
     Corresponds to :c:type:`retro_hw_context_type` in ``libretro.h``.
 
@@ -74,17 +71,49 @@ class HardwareContext(IntEnum):
 
     .. note::
         libretro.py doesn't currently support Vulkan contexts.
+        Pull requests are welcome!
     """
 
     DIRECT3D = 7
+    """
+    :deprecated: Use :attr:`.D3D11`, :attr:`.D3D10`, :attr:`.D3D12`, or :attr:`.D3D9` instead.
+    """
+
     D3D11 = RETRO_HW_CONTEXT_D3D11
-    """Direct3D 11."""
+    """
+    Direct3D 11.
+
+    .. note::
+        libretro.py doesn't currently support Direct3D contexts.
+        Pull requests are welcome!
+    """
+
     D3D10 = RETRO_HW_CONTEXT_D3D10
-    """Direct3D 10."""
+    """
+    Direct3D 10.
+
+    .. note::
+        libretro.py doesn't currently support Direct3D contexts.
+        Pull requests are welcome!
+    """
+
     D3D12 = RETRO_HW_CONTEXT_D3D12
-    """Direct3D 12."""
+    """
+    Direct3D 12.
+
+    .. note::
+        libretro.py doesn't currently support Direct3D contexts.
+        Pull requests are welcome!
+    """
+
     D3D9 = RETRO_HW_CONTEXT_D3D9
-    """Direct3D 9."""
+    """
+    Direct3D 9.
+
+    .. note::
+        libretro.py doesn't currently support Direct3D contexts.
+        Pull requests are welcome!
+    """
 
 
 retro_hw_context_reset_t = TypedFunctionPointer[None, []]
@@ -109,8 +138,8 @@ retro_hw_get_proc_address_t = TypedFunctionPointer[c_void_ptr, [CStringArg]]
 @dataclass(init=False, slots=True)
 class retro_hw_render_callback(Structure):
     """
-    Describes the hardware rendering context a core requires
-    and provides callbacks for reacting to or querying the context.
+    Description of the hardware rendering context a core requires,
+    with callbacks for reacting to or querying the context.
 
     Corresponds to :c:type:`retro_hw_render_callback` in ``libretro.h``.
 
@@ -135,13 +164,14 @@ class retro_hw_render_callback(Structure):
 
     get_current_framebuffer: retro_hw_get_current_framebuffer_t | None
     """
-    Returns the current hardware framebuffer. Set by the frontend.
+    Return the current hardware framebuffer. Set by the :term:`frontend`.
 
     .. note::
         This callback exists for historical reasons and is only meaningful for OpenGL contexts.
 
     .. seealso::
-        :meth:`.VideoDriver.get_current_framebuffer`
+        :attr:`.VideoDriver.current_framebuffer`
+            The suggested property to implement this callback.
     """
 
     get_proc_address: retro_hw_get_proc_address_t | None
@@ -221,6 +251,7 @@ class retro_hw_render_callback(Structure):
         context_destroy: retro_hw_context_reset_t | None = None,
         debug_context: bool = False,
     ):
+        """Create a new :class:`retro_hw_render_callback`."""
         self.context_type = context_type
         self.context_reset = context_reset or retro_hw_context_reset_t()
         self.get_current_framebuffer = (
@@ -238,7 +269,7 @@ class retro_hw_render_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_hw_render_callback(

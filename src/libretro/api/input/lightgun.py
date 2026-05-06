@@ -1,4 +1,5 @@
-"""Light gun input types, button and axis IDs.
+"""
+Light gun input types, button and axis IDs.
 
 Corresponds to the ``RETRO_DEVICE_ID_LIGHTGUN_*`` constants in ``libretro.h``.
 """
@@ -66,6 +67,7 @@ class DeviceIdLightgun(IntEnum):
 
     @property
     def is_button(self) -> bool:
+        """:obj:`True` if this ID represents a physical button on the abstract light gun."""
         return self not in (
             self.SCREEN_X,
             self.SCREEN_Y,
@@ -100,7 +102,8 @@ DeviceIdLightGunButton = Literal[
 
 @dataclass(frozen=True, slots=True)
 class LightGunState(InputDeviceState):
-    """Snapshot of a light gun's state.
+    """
+    Snapshot of a light gun's state.
 
     >>> from libretro.api.input import LightGunState
     >>> state = LightGunState()
@@ -128,16 +131,28 @@ class LightGunState(InputDeviceState):
     @property
     @deprecated("The aux_a property is recommended instead")
     def cursor(self) -> bool:
+        """
+        Alias of :attr:`aux_a` for consistency with ``libretro.h``.
+        Discouraged, but not planned for removal.
+        """
         return self.aux_a
 
     @property
     @deprecated("The aux_b property is recommended instead")
     def turbo(self) -> bool:
+        """
+        Alias of :attr:`aux_b` for consistency with ``libretro.h``.
+        Discouraged, but not planned for removal.
+        """
         return self.aux_b
 
     @property
     @deprecated("The start property is recommended instead")
     def pause(self) -> bool:
+        """
+        Alias of :attr:`start` for consistency with ``libretro.h``.
+        Discouraged, but not planned for removal.
+        """
         return self.start
 
     @overload
@@ -148,6 +163,26 @@ class LightGunState(InputDeviceState):
     def __getitem__(self, item: int) -> int | bool: ...
 
     def __getitem__(self, item: DeviceIdLightgun | int) -> int | bool:
+        """
+        Get the state of a specific light gun input by its ID.
+
+        For example:
+
+        >>> from libretro.api.input import LightGunState, DeviceIdLightgun
+        >>> state = LightGunState(screen_x=123, trigger=True, aux_a=True)
+        >>> state[DeviceIdLightgun.SCREEN_X]
+        123
+        >>> state[DeviceIdLightgun.TRIGGER]
+        True
+        >>> state[DeviceIdLightgun.AUX_A]
+        True
+
+        :param item: The ID of the button, axis, or action to get the state for.
+        :return: The state of the specified button, axis, or action.
+            Will be an :class:`int` for axes and a :class:`bool` for buttons and actions.
+        :raises IndexError: If the index is out of range.
+        :raises KeyError: If the ID is not a valid DeviceIdLightgun.
+        """
         match item:
             case DeviceIdLightgun.SCREEN_X:
                 return self.screen_x

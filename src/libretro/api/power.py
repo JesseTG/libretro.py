@@ -72,7 +72,7 @@ class retro_device_power(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_device_power(state=self.state, seconds=self.seconds, percent=self.percent)

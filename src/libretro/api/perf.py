@@ -119,7 +119,7 @@ class retro_perf_counter(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object,
+        Return a deep copy of this object,
         including all strings.
         Intended for use with :func:`copy.deepcopy`.
         """
@@ -189,7 +189,7 @@ class retro_perf_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

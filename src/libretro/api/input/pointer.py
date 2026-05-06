@@ -1,4 +1,5 @@
-"""Pointer (touch/pen) input types and multi-touch state.
+"""
+Pointer (touch/pen) input types and multi-touch state.
 
 Corresponds to the ``RETRO_DEVICE_ID_POINTER_*`` constants in ``libretro.h``.
 """
@@ -16,7 +17,8 @@ RETRO_DEVICE_ID_POINTER_IS_OFFSCREEN = 15
 
 
 class DeviceIdPointer(IntEnum):
-    """Input IDs for the pointer device.
+    """
+    Input IDs for the pointer device.
 
     Corresponds to the ``RETRO_DEVICE_ID_POINTER_*`` constants in ``libretro.h``.
 
@@ -34,7 +36,8 @@ class DeviceIdPointer(IntEnum):
 
 @dataclass(frozen=True, slots=True)
 class Pointer:
-    """A single pointer contact point.
+    """
+    A single pointer contact point.
 
     >>> from libretro.api.input import Pointer
     >>> p = Pointer()
@@ -50,7 +53,8 @@ class Pointer:
 
 @dataclass(frozen=True, slots=True)
 class PointerState(InputDeviceState):
-    """Snapshot of pointer (multi-touch) state.
+    """
+    Snapshot of pointer (multi-touch) state.
 
     >>> from libretro.api.input import PointerState
     >>> state = PointerState()

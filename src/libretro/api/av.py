@@ -106,7 +106,7 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
 @dataclass(init=False, slots=True)
 class retro_game_geometry(Structure):
     """
-    Describes the expected (and possible) size of the framebuffer.
+    The expected (and possible) dimensions of the framebuffer.
 
     Corresponds to :c:type:`retro_game_geometry`.
 
@@ -173,7 +173,7 @@ class retro_game_geometry(Structure):
     # ctypes structures don't natively support deepcopy, so we have to implement it ourselves.
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -225,7 +225,7 @@ class retro_game_geometry(Structure):
 @dataclass(init=False, slots=True)
 class retro_system_timing(Structure):
     """
-    Describes the timing of the emulated system's video and audio output.
+    Description of the emulated system's video and audio output timings.
 
     Corresponds to :c:type:`retro_system_timing` in ``libretro.h``.
     """
@@ -251,7 +251,7 @@ class retro_system_timing(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -266,7 +266,7 @@ class retro_system_timing(Structure):
 @dataclass(init=False, slots=True)
 class retro_system_av_info(Structure):
     """
-    Bundles the system's geometry and timing information.
+    Description of the emulated platform's audio and video characteristics.
 
     Corresponds to :c:type:`retro_system_av_info` in ``libretro.h``.
 
@@ -304,7 +304,7 @@ class retro_system_av_info(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

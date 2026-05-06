@@ -116,7 +116,7 @@ class retro_audio_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this struct.
+        Return a copy of this struct.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -146,7 +146,7 @@ class retro_audio_buffer_status_callback(Structure):
 
     def __call__(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         """
-        Calls :attr:`callback` with the given parameters if non-:obj:`None`,
+        Call :attr:`callback` with the given parameters if non-:obj:`None`,
         otherwise  does nothing.
 
         :param active: Whether audio is active.
@@ -162,7 +162,7 @@ class retro_audio_buffer_status_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this struct with the same callback.
+        Return a copy of this struct with the same callback.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

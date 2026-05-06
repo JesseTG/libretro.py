@@ -68,7 +68,8 @@ class retro_sensor_interface(Structure):
     )
 
     def __deepcopy__(self, _):
-        """Returns a copy of this object.
+        """
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -80,7 +81,8 @@ class retro_sensor_interface(Structure):
 
 
 class SensorType(IntEnum):
-    """Type of sensor hardware.
+    """
+    Type of sensor hardware.
 
     >>> from libretro.api import SensorType
     >>> SensorType.ACCELEROMETER
@@ -93,7 +95,8 @@ class SensorType(IntEnum):
 
 
 class SensorAction(IntEnum):
-    """Action to enable or disable a sensor.
+    """
+    Action to enable or disable a sensor.
 
     >>> from libretro.api import SensorAction
     >>> SensorAction.GYROSCOPE_ENABLE.enabled
@@ -109,7 +112,8 @@ class SensorAction(IntEnum):
 
     @property
     def sensor_type(self) -> SensorType:
-        """Returns the :class:`SensorType` this action applies to.
+        """
+        Returns the :class:`SensorType` this action applies to.
 
         >>> from libretro.api import SensorAction, SensorType
         >>> SensorAction.ACCELEROMETER_ENABLE.sensor_type == SensorType.ACCELEROMETER
@@ -127,7 +131,8 @@ class SensorAction(IntEnum):
 
     @property
     def enabled(self) -> bool:
-        """Returns ``True`` if this action enables the sensor.
+        """
+        Returns ``True`` if this action enables the sensor.
 
         >>> from libretro.api import SensorAction
         >>> SensorAction.GYROSCOPE_DISABLE.enabled
@@ -151,7 +156,8 @@ class SensorAction(IntEnum):
 
 
 class Sensor(IntEnum):
-    """Individual sensor axis or value identifiers.
+    """
+    Individual sensor axis or value identifiers.
 
     >>> from libretro.api import Sensor, SensorType
     >>> Sensor.GYROSCOPE_X.type == SensorType.GYROSCOPE
@@ -168,7 +174,8 @@ class Sensor(IntEnum):
 
     @property
     def type(self) -> SensorType:
-        """Returns the :class:`SensorType` for this sensor reading.
+        """
+        Returns the :class:`SensorType` for this sensor reading.
 
         >>> from libretro.api import Sensor, SensorType
         >>> Sensor.ILLUMINANCE.type == SensorType.ILLUMINANCE

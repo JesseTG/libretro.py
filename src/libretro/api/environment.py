@@ -1,4 +1,4 @@
-"""
+r"""
 Types for interfacing between a :class:`.Core`
 and libretro.py's :mod:`driver implementations <libretro.drivers>`.
 
@@ -6,7 +6,7 @@ and libretro.py's :mod:`driver implementations <libretro.drivers>`.
 
     :class:`.EnvironmentDriver`
         The :class:`~typing.Protocol` that defines the layer
-        between :class:`.Core`\\s and libretro.py's drivers.
+        between :class:`.Core`\s and libretro.py's drivers.
 
     :mod:`libretro.drivers.environment`
         libretro.py's included :class:`.EnvironmentDriver` implementations.

@@ -58,7 +58,8 @@ RETRO_LANGUAGE_DUMMY = 0x7FFFFFFF
 
 
 class Language(IntEnum):
-    """Enumeration of supported user interface languages.
+    """
+    Enumeration of supported user interface languages.
 
     Corresponds to the ``RETRO_LANGUAGE_*`` constants in ``libretro.h``.
 

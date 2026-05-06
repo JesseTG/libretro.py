@@ -1,4 +1,5 @@
-"""Pixel format and software framebuffer types.
+"""
+Pixel format and software framebuffer types.
 
 Corresponds to the ``retro_pixel_format`` and ``retro_framebuffer`` types
 in ``libretro.h``.
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import Literal
 
+from libretro.api._utils import deepcopy_buffer
 from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_pixel_format = c_int
@@ -28,7 +30,8 @@ retro_video_refresh_t = TypedFunctionPointer[
 
 
 class PixelFormat(IntEnum):
-    """Pixel format for video output.
+    """
+    Pixel format for video output.
 
     Corresponds to :c:type:`retro_pixel_format` in ``libretro.h``.
 
@@ -43,6 +46,7 @@ class PixelFormat(IntEnum):
 
     @property
     def bytes_per_pixel(self) -> Literal[2, 4]:
+        """Size of a single pixel in this format, in bytes."""
         match self:
             case self.RGB1555:
                 return 2
@@ -55,6 +59,7 @@ class PixelFormat(IntEnum):
 
     @property
     def pixel_typecode(self) -> Literal["H", "L"]:
+        """Typecode for this pixel format, suitable for use with :mod:`array` or :mod:`struct`."""
         match self:
             case self.RGB1555:
                 return "H"
@@ -67,6 +72,7 @@ class PixelFormat(IntEnum):
 
     @property
     def pillow_mode(self) -> Literal["BGR;15", "RGBX", "BGR;16"]:
+        """PIL-compatible mode string for this pixel format."""
         match self:
             case self.RGB1555:
                 return "BGR;15"
@@ -79,7 +85,8 @@ class PixelFormat(IntEnum):
 
 
 class MemoryAccess(IntFlag):
-    """Flags describing allowed memory access for a framebuffer.
+    """
+    Flags describing allowed memory access for a framebuffer.
 
     Corresponds to the ``RETRO_MEMORY_ACCESS_*`` constants in ``libretro.h``.
     """
@@ -90,7 +97,8 @@ class MemoryAccess(IntFlag):
 
 
 class MemoryType(IntFlag):
-    """Flags describing the type of memory behind a framebuffer.
+    """
+    Flags describing the type of memory behind a framebuffer.
 
     Corresponds to the ``RETRO_MEMORY_TYPE_*`` constants in ``libretro.h``.
     """
@@ -101,7 +109,8 @@ class MemoryType(IntFlag):
 
 @dataclass(init=False, slots=True)
 class retro_framebuffer(Structure):
-    """Corresponds to :c:type:`retro_framebuffer` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_framebuffer` in ``libretro.h``.
 
     Describes a framebuffer obtained from the frontend.
 
@@ -136,10 +145,13 @@ class retro_framebuffer(Structure):
         ("memory_flags", c_uint),
     )
 
-    # TODO: Copy the framebuffer, but also implement plain copy()
     def __deepcopy__(self, _):
+        """
+        Create a deep copy of this framebuffer, including the pixel data.
+        Intended for use by :func:`copy.deepcopy`.
+        """
         return retro_framebuffer(
-            self.data,
+            deepcopy_buffer(self.data, self.height * self.pitch),
             self.width,
             self.height,
             self.pitch,

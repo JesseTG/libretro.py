@@ -49,7 +49,8 @@ retro_netpacket_start_t = TypedFunctionPointer[
 
 
 class NetpacketFlags(IntFlag):
-    """Flags controlling network packet delivery.
+    """
+    Flags controlling network packet delivery.
 
     >>> from libretro.api import NetpacketFlags
     >>> NetpacketFlags.RELIABLE
@@ -68,7 +69,8 @@ BROADCAST = RETRO_NETPACKET_BROADCAST
 
 @dataclass(init=False, slots=True)
 class retro_netpacket_callback(Structure):
-    """Corresponds to :c:type:`retro_netpacket_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_netpacket_callback` in ``libretro.h``.
 
     A set of callbacks for network packet exchange.
 
@@ -104,7 +106,8 @@ class retro_netpacket_callback(Structure):
     )
 
     def __deepcopy__(self, _):
-        """Returns a deep copy of this object, including all strings.
+        """
+        Return a deep copy of this object, including all strings.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

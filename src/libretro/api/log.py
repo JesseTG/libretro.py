@@ -1,5 +1,5 @@
-"""
-Types for allowing :class:`.Core`\\s to log messages.
+r"""
+Types for allowing :class:`.Core`\s to log messages.
 
 .. seealso::
     :class:`.LogDriver`
@@ -54,13 +54,10 @@ class LogLevel(IntEnum):
     WARNING = RETRO_LOG_WARN
     ERROR = RETRO_LOG_ERROR
 
-    def __init__(self, value: int):
-        self._type_ = "I"
-        self._as_parameter_ = value
-
     @property
     def logging_level(self) -> int:
-        """Returns the equivalent :mod:`logging` level.
+        """
+        Returns the equivalent :mod:`logging` level.
 
         >>> import logging
         >>> from libretro.api import LogLevel
@@ -99,7 +96,7 @@ class retro_log_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_log_callback(self.log)

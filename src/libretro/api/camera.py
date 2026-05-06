@@ -64,7 +64,7 @@ class CameraCapabilities(IntEnum):
 
     def flag(self) -> int:
         """
-        Returns this capability as a bitmask flag.
+        Return this capability as a bitmask flag.
 
         Equivalent to ``1 << self.value``.
 
@@ -91,7 +91,7 @@ class CameraCapabilityFlags(IntFlag):
 @dataclass(init=False, slots=True)
 class retro_camera_callback(Structure):
     """
-    Configures the interface between the :class:`.Core` and the :class:`.CameraDriver`.
+    Interface between the :term:`core` and the :class:`.CameraDriver`.
 
     Corresponds to :c:type:`retro_camera_callback` in ``libretro.h``.
     """
@@ -107,7 +107,7 @@ class retro_camera_callback(Structure):
 
     width: int
     """
-    The :class:`.Core`'s requested width of the camera frame in pixels.
+    The :term:`core`'s requested width of the camera frame in pixels.
     ``0`` means that the :class:`.CameraDriver` should choose the width.
 
     Assigned values will be bitwise-masked to fit into an :c:expr:`unsigned int`.
@@ -117,7 +117,7 @@ class retro_camera_callback(Structure):
 
     height: int
     """
-    The :class:`.Core`'s requested height of the camera frame in pixels.
+    The :term:`core`'s requested height of the camera frame in pixels.
     ``0`` means that the :class:`.CameraDriver` should choose the height.
 
     Assigned values will be bitwise-masked to fit into an :c:expr:`unsigned int`.
@@ -127,14 +127,14 @@ class retro_camera_callback(Structure):
 
     start: retro_camera_start_t | None
     """
-    Called by the :class:`.Core` to start the camera.
+    Called by the :term:`core` to start the camera.
 
     .. seealso:: :meth:`.CameraDriver.start`
     """
 
     stop: retro_camera_stop_t | None
     """
-    Called by the :class:`.Core` to stop the camera.
+    Called by the :term:`core` to stop the camera.
 
     .. seealso:: :meth:`.CameraDriver.stop`
     """
@@ -183,7 +183,7 @@ class retro_camera_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a deep copy of this object.
+        Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

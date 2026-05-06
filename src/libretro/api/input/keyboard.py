@@ -1,6 +1,4 @@
-"""
-Keyboard key codes, modifier flags, and input types.
-"""
+"""Keyboard key codes, modifier flags, and input types."""
 
 from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
@@ -188,7 +186,8 @@ RETROKMOD_DUMMY = 0x7FFFFFFF
 
 
 class Key(IntEnum, boundary=EJECT):
-    """Enumeration of keyboard key codes.
+    """
+    Enumeration of keyboard key codes.
 
     Corresponds to the ``RETROK_*`` constants in ``libretro.h``.
 
@@ -365,9 +364,7 @@ class Key(IntEnum, boundary=EJECT):
 
     @property
     def is_modifier(self):
-        """
-        :returns: :obj:`True` if this key represents one of the modifiers defined in :class:`.KeyModifier`.
-        """
+        """:returns: :obj:`True` if this key represents one of the modifiers defined in :class:`.KeyModifier`."""
         return self in (
             Key.LCTRL,
             Key.RCTRL,
@@ -583,7 +580,7 @@ class KeyboardState(InputDeviceState):
 
     def __getitem__(self, item: int | Key) -> bool:
         """
-        Gets the pressed state of the given key.
+        Get the pressed state of the given key.
 
         :param item: A :class:`Key` or an equivalent key code.
         :return: :obj:`True` if the given :class:`Key` or key code is currently pressed.
@@ -633,7 +630,8 @@ Called by libretro.py whenever a key is pressed.
 @dataclass(init=False, slots=True)
 class retro_keyboard_callback(Structure):
     """
-    Wraps a keyboard event callback. Can be invoked directly as a callable.
+    Function registered by a :term:`core` to receive keyboard events.
+    Can be invoked directly as a callable.
 
     Corresponds to :c:type:`retro_keyboard_callback` in ``libretro.h``.
     """
@@ -644,7 +642,7 @@ class retro_keyboard_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_keyboard_callback(callback=self.callback)
@@ -653,7 +651,7 @@ class retro_keyboard_callback(Structure):
         self, pressed: bool, keycode: Key, character: int | str | bytes, key_modifiers: KeyModifier
     ) -> None:
         """
-        Invokes the keyboard event callback.
+        Invoke the keyboard event callback.
         Does nothing if :attr:`callback` is :obj:`None`.
 
         :param pressed: Whether the key was pressed or released.

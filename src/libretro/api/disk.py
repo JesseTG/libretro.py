@@ -1,6 +1,4 @@
-"""
-Types and callbacks for using the emulated system's disk drives, if any.
-"""
+"""Types and callbacks for using the emulated system's disk drives, if any."""
 
 from ctypes import Structure, c_bool, c_size_t, c_uint
 from dataclasses import dataclass
@@ -65,7 +63,8 @@ retro_get_image_label_t = TypedFunctionPointer[
 
 @dataclass(init=False, slots=True)
 class retro_disk_control_callback(Structure):
-    """Corresponds to :c:type:`retro_disk_control_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_disk_control_callback` in ``libretro.h``.
 
     A set of callbacks for basic disk image management.
 
@@ -102,7 +101,7 @@ class retro_disk_control_callback(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy
@@ -124,7 +123,8 @@ class retro_disk_control_callback(Structure):
 
 @dataclass(init=False, slots=True)
 class retro_disk_control_ext_callback(retro_disk_control_callback):
-    """Corresponds to :c:type:`retro_disk_control_ext_callback` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_disk_control_ext_callback` in ``libretro.h``.
 
     Extends :class:`retro_disk_control_callback` with additional functions
     for initial image selection, image paths, and labels.
@@ -151,7 +151,7 @@ class retro_disk_control_ext_callback(retro_disk_control_callback):
     @override
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
         >>> import copy

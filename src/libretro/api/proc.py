@@ -41,7 +41,7 @@ class retro_get_proc_address_interface(Structure):
 
     def __call__(self, sym: str | bytes) -> retro_proc_address_t | None:
         """
-        Calls :attr:`get_proc_address` with the given symbol name.
+        Call :attr:`get_proc_address` with the given symbol name.
 
         :param sym: Symbol name as a string or bytes.
         :returns: The function pointer, or :obj:`None` if not found.
@@ -63,7 +63,7 @@ class retro_get_proc_address_interface(Structure):
 
     def __deepcopy__(self, _):
         """
-        Returns a copy of this object.
+        Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
         """
         return retro_get_proc_address_interface(self.get_proc_address)

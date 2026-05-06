@@ -1,4 +1,5 @@
-"""Hardware rendering interface and screen rotation types.
+"""
+Hardware rendering interface types.
 
 Corresponds to :c:type:`retro_hw_render_interface` and the rotation constants
 in ``libretro.h``.
@@ -19,7 +20,8 @@ RETRO_HW_RENDER_INTERFACE_DUMMY = 0x7FFFFFFF
 
 
 class Rotation(IntEnum):
-    """Screen rotation angle.
+    """
+    Screen rotation angle.
 
     >>> from libretro.api.video import Rotation
     >>> Rotation.NONE
@@ -33,7 +35,8 @@ class Rotation(IntEnum):
 
 
 class HardwareRenderInterfaceType(IntEnum):
-    """Type of hardware rendering interface.
+    """
+    Type of hardware rendering interface.
 
     Corresponds to :c:type:`retro_hw_render_interface_type` in ``libretro.h``.
     """
@@ -48,7 +51,8 @@ class HardwareRenderInterfaceType(IntEnum):
 
 @dataclass(init=False, slots=True)
 class retro_hw_render_interface(Structure):
-    """Corresponds to :c:type:`retro_hw_render_interface` in ``libretro.h``.
+    """
+    Corresponds to :c:type:`retro_hw_render_interface` in ``libretro.h``.
 
     Base type for hardware-specific render interfaces.
 
