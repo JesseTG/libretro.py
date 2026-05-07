@@ -91,12 +91,16 @@ line-length = 99
 # that ruff implements equivalents for
 extend-select = [
     "ARG", # flake8-unused-arguments
+    "D", # pydocstyle
     "I", # isort
     "S1", # flake8-bandit (basic security checks)
 ]
 
 ignore = [
     "S101", # Allow asserts for checking invariants
+    "D203",
+    "D205", # We use semantic linebreaks for docstrings, which violate PEP 257
+    "D212",
 
     # Ruff linter rules that conflict with the formatter
     # (see https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
@@ -114,6 +118,8 @@ ignore = [
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F403"] # "from module import *" is common for __init__.py files
 "src/libretro/api/input/**" = ["E741"] # Some input-related libretro.h symbols are single-letter (minus prefixes)
+"setup.py" = ["D100"]
+"docs/conf.py" = ["D100"]
 
 [tool.pyright]
 exclude = [
