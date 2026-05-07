@@ -1,3 +1,5 @@
+"""Test scenario that loads a libretro core together with zero or more content files."""
+
 import typer
 
 from libretro import Content, SessionBuilder, SubsystemContent
@@ -11,13 +13,12 @@ def main(
     content_paths: ContentArg | None = None,
 ):
     """
-    Loads a libretro core with zero or more content files.
+    Load a libretro core with zero or more content files.
 
     Exits with 0 if the core loaded the content successfully.
 
     Exits with failure if the core failed to load the content
     """
-
     content: Content | SubsystemContent | None
     match subsystem, content_paths:
         case None, [path]:

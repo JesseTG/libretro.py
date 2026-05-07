@@ -1,4 +1,4 @@
-"""
+r"""
 Python equivalents of the C data structures defined in
 `libretro.h <https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro.h>`_.
 
@@ -21,7 +21,7 @@ Naming
   that match the name of their C counterparts with the common ``RETRO_`` prefix removed.
 * All groups of related ``#define`` constants are given ``CamelCase`` type names
   derived from their common prefix in C.
-* All enum values (both explicit and :c:expr:`#define` s )
+* All enum values (both explicit and ``#define``\s )
   are named in ``ALL_CAPS_SNAKE_CASE``, with their common prefix removed.
 
 ================
@@ -45,15 +45,15 @@ The linked documentation provides details, but in a nutshell:
       (or the equivalent :class:`.TypedFunctionPointer`).
 * Python classes that implement :class:`.AsParameter`
   can be implicitly converted to C data types when passed to :func:`~ctypes.CFUNCTYPE`-defined functions.
-* C integers are converted to Python :class:`int` s regardless of their size or signedness.
-* Python :class:`int` s are masked to fit the size and signedness
+* C integers are converted to Python :class:`int`\s regardless of their size or signedness.
+* Python :class:`int`\s are masked to fit the size and signedness
   of the target C integer type when converted to C.
-* C floating-point types are converted to and from Python :class:`float` s.
-* Python :class:`bytes` objects are converted to and from ``NULL``-terminated :c:expr:`char *` s.
+* C floating-point types are converted to and from Python :class:`float`\s.
+* Python :class:`bytes` objects are converted to and from ``NULL``-terminated :c:expr:`char *`\s.
 * ``NULL`` C pointers of any type are converted to and from :obj:`None`.
-* C :c:expr:`bool` s are converted to and from Python :class:`bool` s.
-* C :c:expr:`void *` pointers are converted to and from :class:`int` s.
-* Subclasses of any :mod:`ctypes` type are _not_ implicitly converted to Python primitives.
+* C :c:expr:`bool`\s are converted to and from Python :class:`bool`\s.
+* C :c:expr:`void *` pointers are converted to and from :class:`int`\s.
+* Subclasses of any :mod:`ctypes` primitive are *not* implicitly converted to Python primitives.
 
 .. seealso::
 

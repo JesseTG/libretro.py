@@ -1,3 +1,12 @@
+"""
+:class:`.PathDriver` implementation whose paths are supplied explicitly at construction.
+
+.. seealso::
+
+    :class:`.PathDriver`
+        The protocol this driver implements.
+"""
+
 import os
 from os import PathLike, fsencode
 from typing import override
@@ -8,9 +17,7 @@ from .driver import PathDriver
 
 
 class ExplicitPathDriver(PathDriver):
-    """
-    A path driver that supports defining individual locations for each directory.
-    """
+    """A path driver that supports defining individual locations for each directory."""
 
     _libretro: bytes | None
     _system: bytes | None

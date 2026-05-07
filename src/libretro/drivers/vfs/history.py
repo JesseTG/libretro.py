@@ -1,3 +1,12 @@
+"""
+:class:`.FileSystemDriver` decorator that records the operations performed against another driver.
+
+.. seealso::
+
+    :class:`.FileSystemDriver`
+        The protocol this driver implements.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,12 +27,16 @@ from .driver import FileSystemDriver
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GetPath:
+    """Recorded :meth:`.FileSystemDriver.get_path` call."""
+
     stream: retro_vfs_file_handle
     result: bytes | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Open:
+    """Recorded :meth:`.FileSystemDriver.open` call."""
+
     path: bytes
     mode: VfsFileAccess
     hints: VfsFileAccessHint
@@ -32,18 +45,24 @@ class Open:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Close:
+    """Recorded :meth:`.FileSystemDriver.close` call."""
+
     stream: retro_vfs_file_handle
     result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Size:
+    """Recorded :meth:`.FileSystemDriver.size` call."""
+
     stream: retro_vfs_file_handle
     result: int
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Truncate:
+    """Recorded :meth:`.FileSystemDriver.truncate` call."""
+
     stream: retro_vfs_file_handle
     length: int
     result: bool
@@ -51,12 +70,16 @@ class Truncate:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Tell:
+    """Recorded :meth:`.FileSystemDriver.tell` call."""
+
     stream: retro_vfs_file_handle
     result: int
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Seek:
+    """Recorded :meth:`.FileSystemDriver.seek` call."""
+
     stream: retro_vfs_file_handle
     offset: int
     whence: VfsSeekPosition
@@ -65,6 +88,8 @@ class Seek:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Read:
+    """Recorded :meth:`.FileSystemDriver.read` call."""
+
     stream: retro_vfs_file_handle
     buffer: bytes
     result: int
@@ -72,6 +97,8 @@ class Read:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Write:
+    """Recorded :meth:`.FileSystemDriver.write` call."""
+
     stream: retro_vfs_file_handle
     buffer: bytes
     result: int
@@ -79,18 +106,24 @@ class Write:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Flush:
+    """Recorded :meth:`.FileSystemDriver.flush` call."""
+
     stream: retro_vfs_file_handle
     result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Remove:
+    """Recorded :meth:`.FileSystemDriver.remove` call."""
+
     path: bytes
     result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Rename:
+    """Recorded :meth:`.FileSystemDriver.rename` call."""
+
     old_path: bytes
     new_path: bytes
     result: bool
@@ -98,18 +131,24 @@ class Rename:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Stat:
+    """Recorded :meth:`.FileSystemDriver.stat` call."""
+
     path: bytes
     result: tuple[VfsStat, int] | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Mkdir:
+    """Recorded :meth:`.FileSystemDriver.mkdir` call."""
+
     path: bytes
     result: VfsMkdirResult
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OpenDir:
+    """Recorded :meth:`.FileSystemDriver.opendir` call."""
+
     path: bytes
     include_hidden: bool
     result: retro_vfs_dir_handle | None
@@ -117,24 +156,32 @@ class OpenDir:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ReadDir:
+    """Recorded :meth:`.FileSystemDriver.readdir` call."""
+
     dir: retro_vfs_dir_handle
     result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DirentGetName:
+    """Recorded :meth:`.FileSystemDriver.dirent_get_name` call."""
+
     dir: retro_vfs_dir_handle
     result: bytes | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DirentIsDir:
+    """Recorded :meth:`.FileSystemDriver.dirent_is_dir` call."""
+
     dir: retro_vfs_dir_handle
     result: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CloseDir:
+    """Recorded :meth:`.FileSystemDriver.closedir` call."""
+
     dir: retro_vfs_dir_handle
     result: int
 
@@ -163,7 +210,20 @@ VfsOperation = (
 
 
 class HistoryFileSystemDriver(FileSystemDriver):
+    """
+    :class:`.FileSystemDriver` that wraps another and records every call made through it.
+
+    Each recorded call is appended to :attr:`history` as a :class:`VfsOperation` instance,
+    making it easy to assert against the exact sequence of VFS operations a core performed.
+    """
+
     def __init__(self, interface: FileSystemDriver):
+        """
+        Wrap ``interface`` and start with an empty history.
+
+        :param interface: The underlying :class:`.FileSystemDriver` to delegate to.
+        :raises TypeError: If ``interface`` is not a :class:`.FileSystemDriver`.
+        """
         if not isinstance(interface, FileSystemDriver):
             raise TypeError(f"Expected a FileSystemDriver, got {type(interface).__name__}")
 
@@ -369,6 +429,7 @@ class HistoryFileSystemDriver(FileSystemDriver):
 
     @property
     def history(self) -> tuple[VfsOperation, ...]:
+        """The recorded operations in the order they were performed."""
         return tuple(self._history)
 
 

@@ -1,3 +1,12 @@
+"""
+High-level harness that drives a :class:`.Core` through its libretro lifecycle.
+
+.. seealso::
+
+    :mod:`libretro.builder`
+        The :class:`.SessionBuilder` factory used to construct a configured :class:`.Session`.
+"""
+
 import warnings
 from collections.abc import Sequence
 from copy import deepcopy
@@ -95,6 +104,22 @@ class Session[
         _Power,
     ]
 ):
+    """
+    A configured libretro core paired with the drivers that satisfy its environment calls.
+
+    Use :class:`Session` as a context manager:
+    entering it loads the core (and game, if any) and wires up callbacks;
+    exiting it unloads the game and deinitializes the core.
+    Each constructor argument selects which driver implementation to use for one libretro subsystem;
+    most are optional and default to :obj:`None`,
+    in which case the matching env-call returns failure.
+
+    .. seealso::
+
+        :class:`.SessionBuilder`
+            Fluent builder that constructs a :class:`Session` with sensible defaults.
+    """
+
     def __init__(
         self,
         /,
@@ -127,6 +152,50 @@ class Session[
         mic: _Mic = None,
         device_power: _Power = None,
     ):
+        """
+        Initialize the session with a core, optional game content, and driver implementations.
+
+        :param core: The libretro core to load.
+            Accepts a :class:`.Core`, an already-loaded :class:`ctypes.CDLL`,
+            or a path to a shared library on disk.
+        :param game: The content to pass to ``retro_load_game`` (or ``retro_load_game_special``),
+            or :obj:`None` to load the core without content.
+        :param audio: Required audio driver.
+        :param input: Required input driver.
+        :param video: Required video driver.
+        :param content: Optional content driver
+            that resolves :class:`.Content` references to loaded files.
+        :param overscan: Initial value for the ``overscan`` env-call response,
+            or :obj:`None` to leave it unset.
+        :param message: Optional driver that handles ``RETRO_ENVIRONMENT_SET_MESSAGE``.
+        :param options: Optional core-options driver.
+        :param path: Optional driver that supplies system/save/asset directory paths.
+        :param rumble: Optional rumble driver.
+        :param sensor: Optional motion-sensor driver.
+        :param camera: Optional camera driver.
+        :param log: Optional log driver.
+        :param perf: Optional performance-counter driver.
+        :param location: Optional geolocation driver.
+        :param user: Optional driver that exposes username and language to the core.
+        :param vfs: Optional virtual filesystem driver.
+        :param led: Optional LED driver.
+        :param av_enable: Initial value for the ``audio_video_enable`` env-call response,
+            or :obj:`None` to leave it unset.
+        :param midi: Optional MIDI driver.
+        :param timing: Optional timing driver.
+        :param preferred_hw: Initial value for the ``preferred_hw_render`` env-call response,
+            or :obj:`None` to leave it unset.
+        :param driver_switch_enable: Whether ``RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE``
+            should report driver-switch support, or :obj:`None` to leave it unset.
+        :param savestate_context: Initial value for the ``savestate_context`` env-call response,
+            or :obj:`None` to leave it unset.
+        :param jit_capable: Initial value for the ``jit_capable`` env-call response,
+            or :obj:`None` to leave it unset.
+        :param mic: Optional microphone driver.
+        :param device_power: Optional driver that reports device battery state.
+        :raises TypeError: If ``core`` is not a :class:`.Core`,
+            :class:`ctypes.CDLL`, or a filesystem path.
+        """
         super().__init__(
             audio=audio,
             input=input,
@@ -175,6 +244,14 @@ class Session[
         self._is_exited = False
 
     def __enter__(self):
+        """
+        Initialize the core, register callbacks, and load content.
+
+        :return: This session, suitable for use inside a ``with`` block.
+        :raises RuntimeError: If the core's API version is incompatible,
+            its system info is incomplete,
+            or content loading fails.
+        """
         api_version = self._core.api_version()
         self._raise_pending_exceptions("retro_api_version")
 
@@ -254,6 +331,11 @@ class Session[
         return self
 
     def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType):
+        """
+        Unload the game and deinitialize the core, propagating exceptions unless the core shut down.
+
+        :return: :obj:`True` if a :class:`.CoreShutDownException` should be suppressed.
+        """
         if self._content is not None:
             self._core.unload_game()
             self._raise_pending_exceptions("retro_unload_game")
@@ -272,6 +354,11 @@ class Session[
 
     @property
     def core(self) -> CoreInterface:
+        """
+        The active :class:`.CoreInterface` for this session.
+
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
@@ -279,10 +366,16 @@ class Session[
 
     @property
     def is_exited(self) -> bool:
+        """Whether this session has exited its ``with`` block."""
         return self._is_exited
 
     @property
     def system_directory(self) -> bytes | None:
+        """
+        The system directory the path driver advertises to the core.
+
+        :obj:`None` if no path driver was configured.
+        """
         if self._path is None:
             return None
 
@@ -290,10 +383,16 @@ class Session[
 
     @property
     def system_dir(self) -> bytes | None:
+        """Alias for :attr:`system_directory`."""
         return self.system_directory
 
     @property
     def save_directory(self) -> bytes | None:
+        """
+        The save directory the path driver advertises to the core.
+
+        :obj:`None` if no path driver was configured.
+        """
         if self._path is None:
             return None
 
@@ -301,22 +400,36 @@ class Session[
 
     @property
     def save_dir(self) -> bytes | None:
+        """Alias for :attr:`save_directory`."""
         return self.save_directory
 
     @property
     def max_users(self) -> int | None:
+        """The maximum number of input ports the input driver advertises."""
         return self._input.max_users
 
     @property
     def content_info_overrides(
         self,
     ) -> Sequence[retro_system_content_info_override] | None:
+        """
+        Content-info overrides registered by the core, exposed by the content driver.
+
+        :obj:`None` if no content driver was configured.
+        """
         if self._content is None:
             return None
 
         return self._content.overrides
 
     def run(self) -> None:
+        """
+        Advance the core by one frame.
+
+        Polls per-frame drivers, ticks the timing driver, and calls ``retro_run``.
+
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
@@ -344,6 +457,11 @@ class Session[
         self._raise_pending_exceptions("retro_run")
 
     def reset(self) -> None:
+        """
+        Reset the running core, equivalent to flipping the emulated power switch.
+
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
@@ -351,6 +469,13 @@ class Session[
         self._raise_pending_exceptions("retro_reset")
 
     def set_controller_port_device(self, port: Port, device: int) -> None:
+        """
+        Bind a controller class to an input port.
+
+        :param port: The input port to update.
+        :param device: The ``RETRO_DEVICE_*`` controller class to assign to ``port``.
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
@@ -358,6 +483,11 @@ class Session[
         self._raise_pending_exceptions("retro_set_controller_port_device", port, device)
 
     def cheat_reset(self) -> None:
+        """
+        Clear all cheats currently registered with the core.
+
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 
@@ -365,6 +495,14 @@ class Session[
         self._raise_pending_exceptions("retro_cheat_reset")
 
     def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str) -> None:
+        """
+        Register or update a single cheat with the core.
+
+        :param index: The cheat slot to set.
+        :param enabled: Whether the cheat is active.
+        :param code: The cheat code in the core's expected format.
+        :raises CoreShutDownException: If the session has exited or the core has shut down.
+        """
         if self._is_exited or self.is_shutdown:
             raise CoreShutDownException()
 

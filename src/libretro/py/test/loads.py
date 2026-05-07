@@ -1,3 +1,5 @@
+"""Test scenario that verifies a libretro core can be loaded and exposes the required symbols."""
+
 import typer
 
 from ._common import CoreArg
@@ -6,7 +8,7 @@ from ._common import CoreArg
 # noinspection PyUnusedLocal
 def main(libretro: CoreArg):
     """
-    Loads a libretro core.
+    Load a libretro core.
     Exits with 0 if the core loaded and exposes the required symbols.
     Does not call any functions.
     """

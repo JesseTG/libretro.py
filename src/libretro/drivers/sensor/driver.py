@@ -1,3 +1,12 @@
+"""
+:class:`~typing.Protocol` definition for accelerometer/gyroscope sensor drivers.
+
+.. seealso::
+
+    :mod:`libretro.api.sensor`
+        The matching :mod:`ctypes` types and callback definitions.
+"""
+
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
@@ -18,7 +27,7 @@ class SensorDriver(Protocol):
     @abstractmethod
     def set_sensor_state(self, port: Port, action: SensorAction, rate: int) -> bool:
         """
-        Configures a sensor on a port,
+        Configure a sensor on a port,
         possibly with a specific query rate.
 
         Corresponds to :obj:`.retro_set_sensor_state_t`.
@@ -38,15 +47,11 @@ class SensorDriver(Protocol):
 
     @abstractmethod
     def get_sensor_input(self, port: Port, sensor: Sensor) -> float:
-        """
-        Corresponds to ``retro_sensor_get_input_t``.
-        """
+        """Corresponds to ``retro_sensor_get_input_t``."""
 
     @abstractmethod
     def poll(self):
-        """
-        Updates the sensor driver's readings.
-        """
+        """Update the sensor driver's readings."""
         ...
 
 

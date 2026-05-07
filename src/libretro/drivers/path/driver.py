@@ -1,12 +1,12 @@
+""":class:`~typing.Protocol` definition for drivers that expose path information to a core."""
+
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class PathDriver(Protocol):
-    """
-    Interface for a driver that defines various paths exposed to libretro cores.
-    """
+    """Interface for a driver that defines various paths exposed to libretro cores."""
 
     @property
     @abstractmethod

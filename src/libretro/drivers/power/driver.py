@@ -29,9 +29,7 @@ class PowerDriver(Protocol):
     @property
     @abstractmethod
     def device_power(self) -> retro_device_power:
-        """
-        The current device power state reported to the core.
-        """
+        """The current device power state reported to the core."""
         ...
 
 

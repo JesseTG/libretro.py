@@ -1,6 +1,4 @@
-"""
-Drivers that determine the paths and directories associated with the core.
-"""
+"""Drivers that determine the paths and directories associated with the core."""
 
 from .driver import *
 from .explicit import *

@@ -1,3 +1,12 @@
+"""
+Default :class:`.EnvironmentDriver` mapping that ships with libretro.py.
+
+.. seealso::
+
+    :class:`.EnvironmentDriver`
+        The protocol this implementation satisfies.
+"""
+
 from collections.abc import Mapping
 from ctypes import c_bool, c_char_p, c_float, c_uint, c_uint64, cast
 from typing import override
@@ -58,6 +67,13 @@ from .dict import DictEnvironmentDriver, EnvironmentCallbackFunction
 
 
 class DefaultEnvironmentDriver(DictEnvironmentDriver):
+    """
+    :class:`.EnvironmentDriver` that registers handlers for the standard environment calls.
+
+    Subclasses implement the underscore-prefixed handler methods
+    (``_set_rotation``, ``_get_overscan``, etc.) for each call they support.
+    """
+
     @override
     def __init__(self):
         # These parameterized types are resolved at runtime to regular "POINTER(...)" types,

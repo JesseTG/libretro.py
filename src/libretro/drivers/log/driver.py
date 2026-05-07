@@ -29,7 +29,7 @@ class LogDriver(Protocol):
     @abstractmethod
     def log(self, level: LogLevel, fmt: bytes) -> None:
         """
-        Emits a log message from the core.
+        Emit a log message from the core.
 
         Corresponds to :c:type:`retro_log_printf_t`.
 

@@ -1,3 +1,12 @@
+"""
+Default :class:`.FileSystemDriver` implementation backed by :mod:`os` and :mod:`io`.
+
+.. seealso::
+
+    :class:`.FileSystemDriver`
+        The protocol this driver implements.
+"""
+
 from __future__ import annotations
 
 import os
@@ -20,8 +29,19 @@ from .driver import DirectoryHandle, FileHandle, FileSystemDriver
 
 
 class StandardFileHandle(FileHandle):
+    """Default :class:`.FileHandle` implementation backed by :class:`io.FileIO`."""
+
     @override
     def __init__(self, path: bytes, mode: VfsFileAccess, hints: VfsFileAccessHint):
+        """
+        Open the file at ``path`` using :class:`io.FileIO`.
+
+        :param path: Path of the file to open, encoded as :class:`bytes`.
+        :param mode: Access mode flags controlling read/write behavior.
+        :param hints: Hints describing the intended access pattern.
+        :raises ValueError: If ``path`` is empty.
+        :raises OSError: If the file cannot be opened.
+        """
         self._file: FileIO | None = None
 
         if not path:
@@ -32,6 +52,7 @@ class StandardFileHandle(FileHandle):
         self._handle = retro_vfs_file_handle(self._file.fileno(), path, mode, hints)
 
     def __del__(self):
+        """Close the underlying file when this handle is garbage-collected."""
         self.close()
 
     @override
@@ -106,6 +127,12 @@ class StandardFileHandle(FileHandle):
 
     @property
     def fileno(self) -> int:
+        """
+        Return the OS-level file descriptor backing this handle.
+
+        :return: The integer file descriptor of the underlying :class:`io.FileIO`.
+        :raises IOError: If the file is closed.
+        """
         if not self._file:
             raise IOError("File is closed")
 
@@ -113,17 +140,32 @@ class StandardFileHandle(FileHandle):
 
     @property
     def vfs_handle(self) -> retro_vfs_file_handle:
+        """
+        Return the :class:`.retro_vfs_file_handle` that represents this file in the VFS.
+
+        :return: The opaque VFS handle associated with this file.
+        """
         return self._handle
 
 
 class StandardDirectoryHandle(DirectoryHandle):
+    """Default :class:`.DirectoryHandle` implementation backed by :func:`os.scandir`."""
+
     @override
     def __init__(self, path: bytes, include_hidden: bool):
+        """
+        Open the directory at ``path`` for iteration via :func:`os.scandir`.
+
+        :param path: Path of the directory to open, encoded as :class:`bytes`.
+        :param include_hidden: Whether hidden entries should be returned during iteration.
+        :raises OSError: If the directory cannot be opened.
+        """
         self._scandir = os.scandir(path)
         self._dirent: DirEntry[bytes] | None = None
         self._include_hidden = include_hidden
 
     def __del__(self):
+        """Close the underlying scan iterator when this handle is garbage-collected."""
         self.closedir()
 
     @override
@@ -169,10 +211,23 @@ class StandardDirectoryHandle(DirectoryHandle):
 
 
 class DefaultFileSystemDriver(FileSystemDriver):
+    """
+    Default :class:`.FileSystemDriver` implementation backed by :mod:`os` and :mod:`io`.
+
+    Open files and directories are tracked internally by their VFS handle ID so
+    that they can be looked up when cores invoke the corresponding VFS callbacks.
+    """
+
     _file_handles: dict[int, StandardFileHandle]
     _dir_handles: dict[int, StandardDirectoryHandle]
 
     def __init__(self, version: Literal[1, 2, 3] = 3):
+        """
+        Initialize the driver and declare which VFS interface version it advertises.
+
+        :param version: The VFS interface version to report via :attr:`version`;
+            must be 1, 2, or 3. Defaults to 3.
+        """
         self._version = version
         self._file_handles = {}
         self._dir_handles = {}

@@ -1,6 +1,4 @@
-"""
-Types and classes for creating temporary directories for the core to use.
-"""
+"""Types and classes for creating temporary directories for the core to use."""
 
 import os
 from os import PathLike, fsencode
@@ -33,7 +31,7 @@ class TempDirPathDriver(PathDriver):
         ignore_cleanup_errors: bool = True,
     ):
         """
-        Initializes a new :py:class:`.TempDirPathDriver` and creates the necessary directories.
+        Initialize a new :py:class:`.TempDirPathDriver` and creates the necessary directories.
 
         :param corepath:
             May be one of the following:
@@ -98,9 +96,7 @@ class TempDirPathDriver(PathDriver):
 
     @property
     def root_dir(self) -> bytes:
-        """
-        Path to the root directory created by this driver.
-        """
+        """Path to the root directory created by this driver."""
         return self._root_path
 
     @property

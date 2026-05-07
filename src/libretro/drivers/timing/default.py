@@ -1,3 +1,12 @@
+"""
+Default :class:`.TimingDriver` used when none is supplied to a session.
+
+.. seealso::
+
+    :class:`.TimingDriver`
+        The protocol this driver implements.
+"""
+
 from typing import override
 
 from libretro.api.timing import (
@@ -10,11 +19,34 @@ from .driver import TimingDriver
 
 
 class DefaultTimingDriver(TimingDriver):
+    """
+    The default :class:`.TimingDriver` used when a :class:`.Session` is given no other.
+
+    Stores the throttle state and target refresh rate verbatim
+    and reports them to the core unchanged.
+
+    .. seealso::
+
+        :class:`.TimingDriver`
+            The protocol this class implements.
+    """
+
     def __init__(
         self,
         throttle_state: retro_throttle_state | None = None,
         target_refresh_rate: float | None = 60.0,
     ):
+        """
+        Initialize the driver with optional throttle state and target refresh rate.
+
+        :param throttle_state: The throttle state to report to the core,
+            or :obj:`None` if no throttle state should be reported.
+        :param target_refresh_rate: The target refresh rate in Hz to report to the core,
+            or :obj:`None` if no target refresh rate should be reported.
+        :raises TypeError: If ``throttle_state`` is neither a
+            :class:`.retro_throttle_state` nor :obj:`None`,
+            or if ``target_refresh_rate`` is neither a :class:`float` nor :obj:`None`.
+        """
         if not isinstance(throttle_state, retro_throttle_state) and throttle_state is not None:
             raise TypeError(
                 f"throttle_state must be a retro_throttle_state or None, not {type(throttle_state).__name__}"

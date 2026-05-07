@@ -1,3 +1,12 @@
+"""
+:class:`.OptionDriver` implementation backed by a :class:`~collections.abc.Mapping` of values.
+
+.. seealso::
+
+    :class:`.OptionDriver`
+        The protocol this implementation satisfies.
+"""
+
 import re
 from collections.abc import Collection, Iterator, Mapping, MutableMapping
 from copy import deepcopy
@@ -31,6 +40,18 @@ class _Option:
 
 
 class DictOptionDriver(OptionDriver):
+    """
+    An :class:`.OptionDriver` backed by an in-memory :class:`dict` of option values.
+
+    Supports all three core-options interface versions (v0, v1, v2)
+    so the same harness can drive cores written against any of them.
+
+    .. seealso::
+
+        :class:`.OptionDriver`
+            The protocol this class implements.
+    """
+
     _version: Literal[0, 1, 2]
     _options: dict[bytes, _Option]
     _categories_supported: bool
@@ -47,6 +68,16 @@ class DictOptionDriver(OptionDriver):
         categories_supported: bool | None = None,
         variables: Mapping[str, str] | Mapping[bytes, bytes] | None = None,
     ):
+        """
+        Initialize the driver with a chosen interface version and seed values.
+
+        :param version: The core-options interface version to advertise (``0``, ``1``, or ``2``).
+        :param categories_supported: Whether to advertise category support.
+            Defaults to :obj:`True` for v2 and :obj:`False` otherwise.
+        :param variables: Initial option values, keyed by option key.
+            String keys and values are encoded as UTF-8.
+        :raises ValueError: If ``version`` is not ``0``, ``1``, or ``2``.
+        """
         if version not in (0, 1, 2):
             raise ValueError(f"Expected a core option version of 0, 1, or 2; got {version}")
 
@@ -322,6 +353,11 @@ class DictOptionDriver(OptionDriver):
         """
 
         def __init__(self, options: "DictOptionDriver"):
+            """
+            Initialize the mapping with a back-reference to its owning driver.
+
+            :param options: The :class:`DictOptionDriver` this mapping reads from and writes to.
+            """
             self._options = options
 
         @override
@@ -401,7 +437,19 @@ class DictOptionDriver(OptionDriver):
         return DictOptionDriver.VariableMapping(self)
 
     class VisibilityMapping(Mapping[bytes, bool]):
+        """
+        A read-only :class:`~collections.abc.Mapping` of option key to visibility flag.
+
+        Used by :attr:`DictOptionDriver.visibility`
+        to expose per-option visibility decisions to test code.
+        """
+
         def __init__(self, options: "DictOptionDriver"):
+            """
+            Initialize the mapping with a back-reference to its owning driver.
+
+            :param options: The :class:`DictOptionDriver` this mapping reads from.
+            """
             self._options = options
 
         @override

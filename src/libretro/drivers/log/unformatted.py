@@ -49,9 +49,7 @@ class UnformattedLogDriver(LogDriver):
 
     @property
     def records(self) -> Sequence[LogRecord]:
-        """
-        All log records received from the core, in the order they were emitted.
-        """
+        """All log records received from the core, in the order they were emitted."""
         return self._records
 
     @override

@@ -1,3 +1,12 @@
+"""
+:class:`.MidiDriver` implementation that streams events produced by a generator function.
+
+.. seealso::
+
+    :class:`.MidiDriver`
+        The protocol this driver implements.
+"""
+
 from collections import deque
 from collections.abc import Callable, Iterator, Sequence
 from typing import NamedTuple, override
@@ -14,7 +23,26 @@ class MidiWrite(NamedTuple):
 
 
 class GeneratorMidiDriver(MidiDriver):
+    """
+    A :class:`.MidiDriver` that streams input bytes from a generator function.
+
+    Output bytes are appended to an in-memory buffer
+    accessible through :attr:`output` so tests can assert on what the core sent.
+
+    .. seealso::
+
+        :class:`.MidiDriver`
+            The protocol this class implements.
+    """
+
     def __init__(self, generator: MidiGenerator | None = None):
+        """
+        Initialize the driver with an optional MIDI input source.
+
+        :param generator: A callable returning an iterator of MIDI input bytes
+            (or :obj:`None` for "no byte this poll"),
+            or :obj:`None` to disable MIDI input entirely.
+        """
         super().__init__()
         self._generator = generator
         self._generator_state: MidiIterator | None = None
@@ -47,6 +75,7 @@ class GeneratorMidiDriver(MidiDriver):
 
     @property
     def output(self) -> Sequence[MidiWrite]:
+        """The buffered :class:`MidiWrite` events produced by the core, in send order."""
         return self._output
 
     @override

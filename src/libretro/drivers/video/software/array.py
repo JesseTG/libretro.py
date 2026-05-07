@@ -1,3 +1,12 @@
+"""
+Software-rendered :class:`.VideoDriver` that stores frames in an :class:`~array.array`.
+
+.. seealso::
+
+    :class:`.VideoDriver`
+        The protocol this driver implements.
+"""
+
 import itertools
 from array import array
 from copy import deepcopy
@@ -25,7 +34,15 @@ class FramebufferDimensions:
 
 @final
 class ArrayVideoDriver(SoftwareVideoDriver):
+    """
+    Video driver that stores frames in an :class:`~array.array`.
+
+    Does not actually do any rendering,
+    but supports taking screenshots of the framebuffer.
+    """
+
     def __init__(self):
+        """Initialize the video driver."""
         self._frame: array[int] | None = None
         self._pixel_format: PixelFormat = PixelFormat.RGB1555
         self._system_av_info: retro_system_av_info | None = None

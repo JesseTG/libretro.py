@@ -1,3 +1,12 @@
+"""
+:class:`.VideoDriver` implementation backed by :mod:`moderngl` and PyOpenGL.
+
+.. seealso::
+
+    :class:`.VideoDriver`
+        The protocol this driver implements.
+"""
+
 # pyright: reportUnknownMemberType=false, reportMissingTypeStubs=false
 # ModernGL's typeshed stubs are very incomplete,
 # and PyOpenGL doesn't have any at all.
@@ -184,6 +193,11 @@ def _warn_unhandled_gl_errors():
 
 @final
 class ModernGlVideoDriver(VideoDriver):
+    """
+    A video driver that exposes an OpenGL context to the :term:`core`
+    via :mod:`moderngl` and PyOpenGL.
+    """
+
     def __init__(
         self,
         vertex_shader: str | None = None,
@@ -195,8 +209,8 @@ class ModernGlVideoDriver(VideoDriver):
         # TODO: Add ability to force an OpenGL version
     ):
         """
-        Initializes the video driver.
-        Does not create an OpenGL context; that will occur when ``reinit`` is called.
+        Initialize the video driver.
+        Does not create an OpenGL context; that will occur when :meth:`reinit` is called.
 
         This driver uses a basic shader program, but custom shaders can be provided.
 
@@ -204,9 +218,9 @@ class ModernGlVideoDriver(VideoDriver):
             so GLSL errors won't be detected until then.
 
         :param vertex_shader: The GLSL source of the vertex shader to use for rendering,
-            or ``None`` to use the built-in default.
+            or :obj:`None` to use the built-in default.
         :param fragment_shader: The GLSL source of the fragment shader to use for rendering,
-            or ``None`` to use the built-in default.
+            or :obj:`None` to use the built-in default.
         :param varyings: The names of the "varyings" (vertex value outputs) to use.
         """
         package_files = resources.files(modules[__name__].__package__)
@@ -274,6 +288,7 @@ class ModernGlVideoDriver(VideoDriver):
             self._window_class = moderngl_window.get_local_window_cls(window_mode)
 
     def __del__(self):
+        """Clean up allocated OpenGL resources and the underlying context."""
         if self._cpu_color:
             del self._cpu_color
 

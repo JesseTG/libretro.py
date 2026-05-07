@@ -70,7 +70,7 @@ class MultiVideoDriver(VideoDriver):
         preferred: HardwareContext = HardwareContext.NONE,
     ):
         """
-        Initializes a new multi-video driver with the preferred :class:`.HardwareContext`.
+        Initialize a new multi-video driver with the preferred :class:`.HardwareContext`.
 
         :param drivers: A map of hardware context types to callables;
           each callable should accept no arguments
@@ -114,10 +114,7 @@ class MultiVideoDriver(VideoDriver):
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
-        """
-        Delegates to the active video driver's :meth:`.VideoDriver.refresh` method.
-        """
-
+        """Delegate to the active video driver's :meth:`.VideoDriver.refresh` method."""
         if self._current is None:
             raise RuntimeError("No active video driver")
 
@@ -131,7 +128,6 @@ class MultiVideoDriver(VideoDriver):
         a new graphics API has been requested with :meth:`~.MultiVideoDriver.set_context`,
         or the active driver's :attr:`~.VideoDriver.needs_reinit` is :obj:`True`.
         """
-
         if self._current is None:
             return True
 
@@ -143,7 +139,7 @@ class MultiVideoDriver(VideoDriver):
     @override
     def reinit(self) -> None:
         """
-        Initializes a new :class:`.VideoDriver` instance based on the most recent graphics API request,
+        Initialize a new :class:`.VideoDriver` instance based on the most recent graphics API request,
         or reinitializes the current one if no new context has been requested.
 
         If initializing a new :class:`.VideoDriver` then

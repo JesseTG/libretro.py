@@ -15,9 +15,7 @@ from .driver import UserDriver
 
 
 class DefaultUserDriver(UserDriver):
-    """
-    A :class:`.UserDriver` with configurable username and language.
-    """
+    """A :class:`.UserDriver` with configurable username and language."""
 
     def __init__(
         self,

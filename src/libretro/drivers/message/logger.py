@@ -40,16 +40,12 @@ class LoggerMessageDriver(MessageDriver):
 
     @property
     def messages(self) -> Sequence[retro_message]:
-        """
-        All basic messages received from the core, in order.
-        """
+        """All basic messages received from the core, in order."""
         return self._messages
 
     @property
     def message_exts(self) -> Sequence[retro_message_ext]:
-        """
-        All extended messages received from the core, in order.
-        """
+        """All extended messages received from the core, in order."""
         return self._message_exts
 
     @override

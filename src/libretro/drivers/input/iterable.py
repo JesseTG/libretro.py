@@ -1,3 +1,12 @@
+"""
+:class:`.InputDriver` implementation that replays an iterable of input states.
+
+.. seealso::
+
+    :class:`.InputDriver`
+        The protocol this driver implements.
+"""
+
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -32,6 +41,8 @@ from .driver import InputDriver
 
 @dataclass(frozen=True, order=True, slots=True)
 class Point:
+    """A 2D integer coordinate, used for pointer and light-gun positions."""
+
     x: int = 0
     y: int = 0
 
@@ -40,6 +51,8 @@ DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogS
 
 
 class Direction(Enum):
+    """Cardinal direction used to match against directional buttons across device types."""
+
     RIGHT = auto()
     UP = auto()
     LEFT = auto()
@@ -123,6 +136,13 @@ InputStateSource = InputStateGenerator | InputStateIterable | InputStateIterator
 
 
 class IterableInputDriver(InputDriver):
+    """
+    :class:`.InputDriver` that replays input states drawn from an iterable source.
+
+    Each call to :meth:`poll` advances one step through the supplied source,
+    making it convenient to script deterministic input sequences for tests.
+    """
+
     _input_generator: InputStateSource | None
     _input_generator_state: InputStateIterator | None
     _input_poll_result: InputPollResult | Sequence[InputPollResult] | None
@@ -140,6 +160,16 @@ class IterableInputDriver(InputDriver):
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
     ):
+        """
+        Construct the driver with optional input source and capability flags.
+
+        :param input_generator: A generator function, iterable, or iterator
+            that yields per-frame input poll results.
+            ``None`` produces no input.
+        :param device_capabilities: Bitmask of supported device kinds.
+        :param bitmasks_supported: Whether the joypad bitmask query is supported.
+        :param max_users: Maximum number of controller ports.
+        """
         self._input_generator = input_generator
         self._input_generator_state = None
         self._input_poll_result = None

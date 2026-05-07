@@ -1,3 +1,12 @@
+"""
+:class:`.SensorDriver` implementation that replays sensor readings from an iterable.
+
+.. seealso::
+
+    :class:`.SensorDriver`
+        The protocol this driver implements.
+"""
+
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -11,6 +20,8 @@ from .driver import SensorDriver
 
 @dataclass(frozen=True, slots=True)
 class Vector3:
+    """An immutable triple of axis values used for accelerometer and gyroscope readings."""
+
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
@@ -18,17 +29,22 @@ class Vector3:
 
 @dataclass(slots=True)
 class SensorState:
+    """Per-sensor state: whether the core has enabled it and its requested update rate in Hz."""
+
     enabled: bool = False
     rate: int = 0
 
 
 @dataclass(frozen=True, slots=True)
 class PortInput:
+    """A frozen snapshot of every sensor reading on a single input port."""
+
     accelerometer = Vector3()
     gyroscope = Vector3()
     illuminance: float = 0.0
 
     def __getitem__(self, item: Sensor) -> float:
+        """Return the scalar reading for the axis or sensor identified by ``item``."""
         match item:
             case Sensor.ACCELEROMETER_X:
                 return self.accelerometer.x
@@ -50,9 +66,7 @@ class PortInput:
 
 @dataclass(slots=True)
 class PortState:
-    """
-    Represents the state of all possible sensors on a port.
-    """
+    """Represents the state of all possible sensors on a port."""
 
     accelerometer: SensorState = field(default_factory=SensorState)
     gyroscope: SensorState = field(default_factory=SensorState)
@@ -92,7 +106,7 @@ class IterableSensorDriver(SensorDriver):
 
     def __init__(self, source: SensorStateSource | None = None):
         """
-        Initializes this sensor driver.
+        Initialize this sensor driver.
         If a sensor is disabled, then it will always output 0.0.
 
         :param source: An iterator or iterable whose elements are each one of the following:
@@ -124,6 +138,7 @@ class IterableSensorDriver(SensorDriver):
 
     @property
     def sensor_state(self) -> Mapping[Port, PortState]:
+        """A live mapping of input port to its per-sensor enable/rate state."""
         return self._ports
 
     @override

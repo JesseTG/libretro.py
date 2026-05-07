@@ -1,3 +1,12 @@
+"""
+Default :class:`.EnvironmentDriver` that composes per-feature drivers into a single dispatcher.
+
+.. seealso::
+
+    :class:`.EnvironmentDriver`
+        The protocol this implementation satisfies.
+"""
+
 # ruff: noqa: F405
 # We need to import a _lot_ of symbols from libretro.api
 
@@ -89,6 +98,14 @@ class CompositeEnvironmentDriver[
     _Mic: MicrophoneDriver | None,
     _Power: PowerDriver | None,
 ](DefaultEnvironmentDriver):
+    """
+    :class:`.EnvironmentDriver` that composes individual feature drivers into one dispatcher.
+
+    Each constructor argument supplies the driver responsible for one libretro subsystem
+    (audio, input, video, etc.); ``None`` indicates the subsystem is not provided
+    and the corresponding environment calls will return ``false``.
+    """
+
     @override
     def __init__(
         self,
@@ -281,42 +298,52 @@ class CompositeEnvironmentDriver[
 
     @property
     def audio(self) -> _Audio:
+        """Return the :class:`.AudioDriver` supplied at construction time."""
         return self._audio
 
     @property
     def input(self) -> _Input:
+        """Return the :class:`.InputDriver` supplied at construction time."""
         return self._input
 
     @property
     def video(self) -> _Video:
+        """Return the :class:`.VideoDriver` supplied at construction time."""
         return self._video
 
     @property
     def content(self) -> _Content:
+        """Return the :class:`.ContentDriver` supplied at construction time, or ``None`` if absent."""
         return self._content
 
     @property
     def sensor(self) -> _Sensor:
+        """Return the :class:`.SensorDriver` supplied at construction time, or ``None`` if absent."""
         return self._sensor
 
     @property
     def camera(self) -> _Camera:
+        """Return the :class:`.CameraDriver` supplied at construction time, or ``None`` if absent."""
         return self._camera
 
     @property
     def user(self) -> _User:
+        """Return the :class:`.UserDriver` supplied at construction time, or ``None`` if absent."""
         return self._user
 
     @property
     def path(self) -> _Path:
+        """Return the :class:`.PathDriver` supplied at construction time, or ``None`` if absent."""
         return self._path
 
     @property
     def timing(self) -> _Timing:
+        """Return the :class:`.TimingDriver` supplied at construction time, or ``None`` if absent."""
         return self._timing
 
     @property
     def rumble(self) -> _Rumble:
+        """Return the :class:`.RumbleDriver` supplied at construction time, or ``None`` if absent."""
         return self._rumble
 
     @override
@@ -370,6 +397,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def rotation(self) -> Rotation:
+        """
+        Return the screen :class:`.Rotation` currently set on the underlying :class:`.VideoDriver`.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_ROTATION`
+                The environment call that updates this value.
+        """
         return self._video.rotation
 
     @override
@@ -382,6 +417,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def overscan(self) -> bool | None:
+        """
+        Return whether the frontend wants overscan to be visible, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_OVERSCAN`
+                The environment call that queries this value.
+        """
         return self._overscan
 
     @overscan.setter
@@ -405,6 +448,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def can_dupe(self) -> bool | None:
+        """
+        Return whether the underlying :class:`.VideoDriver` supports frame duping.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_CAN_DUPE`
+                The environment call that queries this value.
+        """
         return self._video.can_dupe
 
     @override
@@ -420,6 +471,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def message(self) -> _Message:
+        """Return the :class:`.MessageDriver` supplied at construction time, or ``None`` if absent."""
         return self._message
 
     @override
@@ -434,6 +486,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def is_shutdown(self) -> bool:
+        """
+        Return ``True`` if the core has requested a shutdown via the environment call.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SHUTDOWN`
+                The environment call that flips this flag.
+        """
         return self.__shutdown
 
     @override
@@ -443,6 +503,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def performance_level(self) -> int | None:
+        """
+        Return the performance level the core has reported, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_PERFORMANCE_LEVEL`
+                The environment call that sets this value.
+        """
         return self._performance_level
 
     @performance_level.setter
@@ -474,6 +542,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def pixel_format(self) -> PixelFormat:
+        """
+        Return the :class:`.PixelFormat` currently set on the underlying :class:`.VideoDriver`.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_PIXEL_FORMAT`
+                The environment call that updates this value.
+        """
         return self._video.pixel_format
 
     @override
@@ -486,6 +562,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def input_descriptors(self) -> Sequence[retro_input_descriptor] | None:
+        """
+        Return the input descriptors registered by the core, or ``None`` if none were set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_INPUT_DESCRIPTORS`
+                The environment call that registers these descriptors.
+        """
         return self._input.descriptors
 
     @override
@@ -498,6 +582,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def keyboard_callback(self) -> retro_keyboard_callback | None:
+        """
+        Return the keyboard callback registered by the core, or ``None`` if none was set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_KEYBOARD_CALLBACK`
+                The environment call that registers this callback.
+        """
         return self._input.keyboard_callback
 
     @override
@@ -554,6 +646,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def options(self) -> _Option:
+        """Return the :class:`.OptionDriver` supplied at construction time, or ``None`` if absent."""
         return self._options
 
     @override
@@ -597,6 +690,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def support_no_game(self) -> bool | None:
+        """
+        Return whether the core can run without content, or ``None`` if no content driver is set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_SUPPORT_NO_GAME`
+                The environment call that sets this value.
+        """
         if self._content is None:
             return None
 
@@ -769,6 +870,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def log(self) -> _Log:
+        """Return the :class:`.LogDriver` supplied at construction time, or ``None`` if absent."""
         return self._log_driver
 
     @override
@@ -792,6 +894,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def perf(self) -> _Perf:
+        """Return the :class:`.PerfDriver` supplied at construction time, or ``None`` if absent."""
         return self._perf
 
     @override
@@ -859,6 +962,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def location(self) -> _Location:
+        """Return the :class:`.LocationDriver` supplied at construction time, or ``None`` if absent."""
         return self._location
 
     @override
@@ -966,6 +1070,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def proc_address_callback(self) -> retro_get_proc_address_interface | None:
+        """
+        Return the :c:type:`retro_get_proc_address_interface` registered by the core, if any.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_PROC_ADDRESS_CALLBACK`
+                The environment call that registers this interface.
+        """
         return self._proc_address_callback
 
     @overload
@@ -988,6 +1100,18 @@ class CompositeEnvironmentDriver[
     def get_proc_address[T: _CFunctionType, R: _CDataType | None, **P](
         self, sym: str | bytes, funtype: type[T] | type[TypedFunctionPointer[R, P]] | None = None
     ) -> retro_proc_address_t | T | TypedFunctionPointer[R, P] | None:
+        """
+        Look up a function pointer the core exposed via its proc-address interface.
+
+        :param sym: The name of the symbol to look up;
+            an empty name returns ``None``.
+        :param funtype: An optional :mod:`ctypes` function type
+            to cast the returned pointer to;
+            if omitted, a generic :c:type:`retro_proc_address_t` is returned.
+        :return: The requested function pointer cast to ``funtype``,
+            or ``None`` if the core has not registered a proc-address interface,
+            the symbol is empty, or the lookup failed.
+        """
         if not sym:
             return None
 
@@ -1018,6 +1142,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def subsystems(self) -> Sequence[retro_subsystem_info] | None:
+        """
+        Return the subsystem info the core registered, or ``None`` if no content driver is set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_SUBSYSTEM_INFO`
+                The environment call that registers this information.
+        """
         if self._content is None:
             return None
 
@@ -1036,6 +1168,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def controller_info(self) -> Sequence[retro_controller_description] | None:
+        """
+        Return the controller descriptions the core registered, or ``None`` if none were set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_CONTROLLER_INFO`
+                The environment call that registers this information.
+        """
         return self._input.controller_info
 
     @override
@@ -1056,6 +1196,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def memory_maps(self) -> retro_memory_map | None:
+        """
+        Return the memory map the core registered, or ``None`` if none was set.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_MEMORY_MAPS`
+                The environment call that registers this information.
+        """
         return self._memory_maps
 
     @override
@@ -1068,6 +1216,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def geometry(self) -> retro_game_geometry | None:
+        """
+        Return the current frame geometry from the underlying :class:`.VideoDriver`.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_GEOMETRY`
+                The environment call that updates this value.
+        """
         return self._video.geometry
 
     @override
@@ -1138,6 +1294,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def support_achievements(self) -> bool | None:
+        """
+        Return whether the core supports achievements, or ``None`` if it has not declared.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_SUPPORT_ACHIEVEMENTS`
+                The environment call that sets this value.
+        """
         return self._supports_achievements
 
     @override
@@ -1156,6 +1320,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def serialization_quirks(self) -> SerializationQuirks | None:
+        """
+        Return the :class:`.SerializationQuirks` the core declared, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_SERIALIZATION_QUIRKS`
+                The environment call that sets these flags.
+        """
         return self._serialization_quirks
 
     @override
@@ -1168,6 +1340,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def hw_shared_context(self) -> bool:
+        """
+        Return whether the underlying :class:`.VideoDriver` is configured for a shared HW context.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.SET_HW_SHARED_CONTEXT`
+                The environment call that enables shared-context mode.
+        """
         return self._video.shared_context
 
     @override
@@ -1177,6 +1357,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def vfs(self) -> _Vfs:
+        """Return the :class:`.FileSystemDriver` supplied at construction time, or :obj:`None` if absent."""
         return self._vfs
 
     @override
@@ -1386,6 +1567,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def led(self) -> _Led:
+        """Return the :class:`.LedDriver` supplied at construction time, or ``None`` if absent."""
         return self._led
 
     @override
@@ -1412,6 +1594,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def av_enable(self) -> AvEnableFlags | None:
+        """
+        Return the :class:`.AvEnableFlags` the frontend exposes to the core, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_AUDIO_VIDEO_ENABLE`
+                The environment call that queries this value.
+        """
         return self._av_enable
 
     @av_enable.setter
@@ -1438,6 +1628,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def midi(self) -> MidiDriver | None:
+        """Return the :class:`.MidiDriver` supplied at construction time, or ``None`` if absent."""
         return self._midi
 
     @override
@@ -1531,6 +1722,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def input_bitmasks(self) -> bool | None:
+        """
+        Return whether the underlying :class:`.InputDriver` supports input bitmasks.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_INPUT_BITMASKS`
+                The environment call that queries this value.
+        """
         return self._input.bitmasks_supported
 
     @override
@@ -1539,6 +1738,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def core_options_version(self) -> int | None:
+        """
+        Return the core-options API version supported by the option driver, or ``None`` if absent.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_CORE_OPTIONS_VERSION`
+                The environment call that queries this value.
+        """
         if self._options is None:
             return None
 
@@ -1603,6 +1810,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def preferred_hw_render(self) -> HardwareContext | None:
+        """
+        Return the preferred :class:`.HardwareContext` exposed to the core, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_PREFERRED_HW_RENDER`
+                The environment call that queries this value.
+        """
         return self._preferred_hw
 
     @preferred_hw_render.setter
@@ -1815,6 +2030,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def savestate_context(self) -> SavestateContext | None:
+        """
+        Return the :class:`.SavestateContext` the frontend exposes to the core, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_SAVESTATE_CONTEXT`
+                The environment call that queries this value.
+        """
         return self._savestate_context
 
     @savestate_context.setter
@@ -1847,6 +2070,14 @@ class CompositeEnvironmentDriver[
 
     @property
     def jit_capable(self) -> bool | None:
+        """
+        Return whether the frontend permits JIT compilation, or ``None`` if unset.
+
+        .. seealso::
+
+            :attr:`.EnvironmentCall.GET_JIT_CAPABLE`
+                The environment call that queries this value.
+        """
         return self._jit_capable
 
     @jit_capable.setter
@@ -1870,6 +2101,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def mic(self) -> _Mic:
+        """Return the :class:`.MicrophoneDriver` supplied at construction time, or ``None`` if absent."""
         return self._mic
 
     @override
@@ -1971,6 +2203,7 @@ class CompositeEnvironmentDriver[
 
     @property
     def power(self) -> _Power:
+        """Return the :class:`.PowerDriver` supplied at construction time, or ``None`` if absent."""
         return self._device_power
 
     @override

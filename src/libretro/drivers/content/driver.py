@@ -46,9 +46,7 @@ class ContentAttributes:
 
 
 class LoadedContentFile(NamedTuple):
-    """
-    A single content file that has been loaded and prepared for the core.
-    """
+    """A single content file that has been loaded and prepared for the core."""
 
     info: retro_game_info
     """The :class:`~libretro.api.content.retro_game_info` passed to :c:func:`retro_load_game`."""
@@ -84,7 +82,7 @@ class ContentDriver(Protocol):
         self, content: Content | SubsystemContent | None
     ) -> AbstractContextManager[LoadedContent]:
         """
-        Loads all content files.
+        Load all content files.
 
         :param content: May be one of the following:
 
@@ -149,41 +147,31 @@ class ContentDriver(Protocol):
     @system_info.setter
     @abstractmethod
     def system_info(self, info: retro_system_info) -> None:
-        """
-        :param info: The :class:`~libretro.api.content.retro_system_info` returned by the core.
-        """
+        """:param info: The :class:`~libretro.api.content.retro_system_info` returned by the core."""
         ...
 
     @property
     @abstractmethod
     def overrides(self) -> Sequence[retro_system_content_info_override] | None:
-        """
-        Per-extension content-info overrides registered by the core.
-        """
+        """Per-extension content-info overrides registered by the core."""
         ...
 
     @overrides.setter
     @abstractmethod
     def overrides(self, overrides: Sequence[retro_system_content_info_override]) -> None:
-        """
-        :param overrides: The content-info overrides provided by the core.
-        """
+        """:param overrides: The content-info overrides provided by the core."""
         ...
 
     @property
     @abstractmethod
     def subsystem_info(self) -> Subsystems | None:
-        """
-        Subsystem descriptors registered by the core, or :obj:`None` if none were registered.
-        """
+        """Subsystem descriptors registered by the core, or :obj:`None` if none were registered."""
         ...
 
     @subsystem_info.setter
     @abstractmethod
     def subsystem_info(self, subsystems: Sequence[retro_subsystem_info]) -> None:
-        """
-        :param subsystems: The subsystem descriptors provided by the core.
-        """
+        """:param subsystems: The subsystem descriptors provided by the core."""
         ...
 
     @property
@@ -199,9 +187,7 @@ class ContentDriver(Protocol):
     @support_no_game.setter
     @abstractmethod
     def support_no_game(self, support: bool) -> None:
-        """
-        :param support: Whether the core supports no-content mode.
-        """
+        """:param support: Whether the core supports no-content mode."""
         ...
 
 

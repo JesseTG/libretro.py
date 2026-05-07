@@ -1,3 +1,12 @@
+"""
+Abstract base class for software-rendered :class:`.VideoDriver` implementations.
+
+.. seealso::
+
+    :class:`.VideoDriver`
+        The protocol the base class implements.
+"""
+
 from abc import ABC
 from collections.abc import Set
 from typing import Literal, final, override
@@ -22,9 +31,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @override
     @final
     def supported_contexts(self) -> Set[Literal[HardwareContext.NONE]]:
-        """
-        :return: A set containing only ``HardwareContext.NONE``.
-        """
+        """:return: A set containing only :attr:`HardwareContext.NONE`."""
         return _EMPTY
 
     @property
@@ -32,7 +39,10 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def active_context(self) -> Literal[HardwareContext.NONE]:
         """
-        :return: ``HardwareContext.NONE``.
+        Always returns :attr:`HardwareContext.NONE`,
+        as software-rendered drivers lack a hardware context.
+
+        :return: :attr:`HardwareContext.NONE`.
         """
         return HardwareContext.NONE
 
@@ -45,9 +55,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @override
     @final
     def set_context(self, callback: retro_hw_render_callback) -> None:
-        """
-        No-op if the context type is ``HardwareContext.NONE``; raises a RuntimeError otherwise.
-        """
+        """No-op if the context type is ``HardwareContext.NONE``; raises a RuntimeError otherwise."""
         if callback.context_type != HardwareContext.NONE:
             raise UnsupportedContextError(
                 "Software-rendered drivers only support HardwareContext.NONE"
@@ -57,17 +65,13 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @override
     @final
     def current_framebuffer(self) -> None:
-        """
-        :return: ``None``, as software-rendered drivers don't have a hardware framebuffer.
-        """
+        """:return: ``None``, as software-rendered drivers don't have a hardware framebuffer."""
         return None
 
     @override
     @final
     def get_proc_address(self, sym: bytes) -> None:
-        """
-        :return: ``None``, as software-rendered drivers don't have any hardware functions to call.
-        """
+        """:return: ``None``, as software-rendered drivers don't have any hardware functions to call."""
         return None
 
     @property

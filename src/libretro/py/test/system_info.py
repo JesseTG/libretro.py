@@ -1,3 +1,5 @@
+"""Test scenario that loads a libretro core and prints its reported system information."""
+
 import typer
 
 from ._common import CoreArg
@@ -5,10 +7,9 @@ from ._common import CoreArg
 
 def main(libretro: CoreArg):
     """
-    Loads a libretro core and displays its system info.
+    Load a libretro core and displays its system info.
     Exits with 0 upon success.
     """
-
     system_info = libretro.get_system_info()
 
     library_name = system_info.library_name

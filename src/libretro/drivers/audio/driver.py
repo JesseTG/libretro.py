@@ -1,5 +1,5 @@
 """
-Defines an interface for audio output functionality in libretro.py.
+Interface for audio output.
 
 .. seealso::
     :mod:`libretro.api.audio`
@@ -86,7 +86,7 @@ class AudioDriver(Protocol):
 
     def set_state(self, enabled: bool) -> None:
         """
-        Enables or disables the registered asynchronous audio callback.
+        Enable or disables the registered asynchronous audio callback.
 
         Calls :attr:`retro_audio_callback.set_state` if a callback is registered.
 
@@ -98,7 +98,7 @@ class AudioDriver(Protocol):
 
     def callback(self) -> None:
         """
-        Invokes the registered asynchronous audio callback, if any.
+        Invoke the registered asynchronous audio callback, if any.
 
         Calls :attr:`retro_audio_callback.callback` if a callback is registered.
         """
@@ -132,7 +132,7 @@ class AudioDriver(Protocol):
 
     def report_buffer_status(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         """
-        Invokes the registered buffer-status callback, if any.
+        Invoke the registered buffer-status callback, if any.
 
         :param active: Whether the audio buffer is actively being filled.
         :param occupancy: The percentage of the buffer that is currently filled (0–100).

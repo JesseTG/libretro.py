@@ -33,7 +33,7 @@ class WaveWriterAudioDriver(AudioDriver):
 
     def __init__(self, file: str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]):
         """
-        Opens the given file for writing WAV audio.
+        Open the given file for writing WAV audio.
 
         :param file: The output destination.
             Can be a file path (:class:`str`, :class:`bytes`, or :class:`~os.PathLike`)
@@ -76,7 +76,7 @@ class WaveWriterAudioDriver(AudioDriver):
     @override
     def callbacks(self) -> retro_audio_callback | None:
         """
-        This driver class doesn't support using :class:`.retro_audio_callback`.
+        Audio callbacks are not supported by this driver.
 
         :return: :obj:`None`, always.
         :raises UnsupportedEnvCall: If setting this property.
@@ -92,7 +92,7 @@ class WaveWriterAudioDriver(AudioDriver):
     @override
     def buffer_status(self) -> retro_audio_buffer_status_callback | None:
         """
-        This driver class doesn't support using :class:`.retro_audio_buffer_status_callback`.
+        Buffer-status callbacks are not supported by this driver.
 
         :return: :obj:`None`, always.
         :raises UnsupportedEnvCall: If setting this property.
@@ -110,7 +110,7 @@ class WaveWriterAudioDriver(AudioDriver):
     @override
     def minimum_latency(self) -> int | None:
         """
-        This driver class doesn't support setting a minimum latency.
+        Setting a minimum latency is not supported by this driver.
 
         :return: :obj:`None`, always.
         :raises UnsupportedEnvCall: If setting this property.
@@ -136,9 +136,7 @@ class WaveWriterAudioDriver(AudioDriver):
         self._system_av_info = deepcopy(info)
 
     def close(self):
-        """
-        Closes the underlying WAV file.
-        """
+        """Close the underlying WAV file."""
         self._file.close()
 
 

@@ -1,5 +1,9 @@
 """
-TODO this is API docs
+A libretro frontend for Python intended for testing cores.
+
+Top-level package that re-exports the public API
+from :mod:`libretro.api`, :mod:`libretro.drivers`,
+:class:`.Core`, :class:`.Session`, and :class:`.SessionBuilder`.
 """
 
 from .api import *

@@ -1,8 +1,7 @@
 """
-This module defines type annotations for ``ctype``'s behavior
-that's documented, but not reflected in its type stubs.
+Type annotations for :mod:`ctypes` behavior that is documented but missing from its type stubs.
 
-Most of these definitions fall back to standard ``ctypes`` types at runtime;
+Most of these definitions fall back to standard :mod:`ctypes` types at runtime;
 this allows them to be used as drop-in replacements for the standard types in function signatures.
 """
 
@@ -110,9 +109,7 @@ type ConvertibleToPrimitive[T: _CDataType, U: (int, float, bytes, bool)] = (
 class _FunctionPointerDeclaration:
     @classmethod
     def __class_getitem__(cls, args: tuple[type[_CDataType] | None, list[type[_CDataType]]]):
-        """
-        Allow subscripted CoreFunctionPointer types to be used as type annotations.
-        """
+        """Allow subscripted CoreFunctionPointer types to be used as type annotations."""
         # CFUNCTYPE doesn't support returning pointers to structs,
         # so function pointers will have to return c_void_p instead
         # and be cast back to the correct type in the implementation.
@@ -131,9 +128,7 @@ class _FunctionPointerDeclaration:
 class _PointerDeclaration:
     @classmethod
     def __class_getitem__(cls, arg: type[_CDataType]):
-        """
-        Allow subscripted Pointer types to be used as type annotations.
-        """
+        """Allow subscripted Pointer types to be used as type annotations."""
         return POINTER(arg)
 
 
@@ -165,6 +160,17 @@ if TYPE_CHECKING:
     type Pointer[T: _CDataType] = _Pointer[T]
 
     class TypedFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
+        """
+        Typing-only refinement of :class:`ctypes.CFUNCTYPE` parameterized by return and parameter types.
+
+        Defined inside ``if TYPE_CHECKING:``;
+        at runtime this name resolves to a plain
+        :func:`ctypes.CFUNCTYPE` factory (see the ``else:`` branch below).
+        Exists so static analyzers can infer concrete return types
+        (``bool``, ``int``, ``float``, ``bytes``, etc.)
+        from the ctypes return-type parameter ``R``.
+        """
+
         @overload
         def __call__(self, func: Callable[P, R]) -> Self: ...
         @overload
@@ -206,6 +212,16 @@ if TYPE_CHECKING:
         def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
     class TypedArray[T: _CDataType](Array[T]):
+        """
+        Typing-only refinement of :class:`ctypes.Array` parameterized by element type.
+
+        Defined inside ``if TYPE_CHECKING:``;
+        at runtime this name resolves to plain :class:`ctypes.Array`
+        (see the ``else:`` branch below).
+        Exists so static analyzers can refine the element type
+        returned by indexing and iteration based on the ctypes element type ``T``.
+        """
+
         @property
         @override
         def raw(self: TypedArray[c_char]) -> bytes: ...
@@ -333,6 +349,16 @@ if TYPE_CHECKING:
         def __iter__(self: TypedArray[T]) -> Iterator[T]: ...
 
     class TypedPointer[T: _CDataType](_Pointer[T]):
+        """
+        Typing-only refinement of :class:`ctypes.POINTER` parameterized by referent type.
+
+        Defined inside ``if TYPE_CHECKING:``;
+        at runtime this name resolves to a plain
+        :func:`ctypes.POINTER` factory (see the ``else:`` branch below).
+        Exists so static analyzers can refine the value type
+        returned by indexing based on the ctypes referent type ``T``.
+        """
+
         @overload
         def __getitem__(self: TypedPointer[c_bool], key: int, /) -> bool: ...
 
@@ -402,7 +428,9 @@ if TYPE_CHECKING:
             /,
         ) -> None: ...
 
-        def __bool__(self) -> bool: ...
+        def __bool__(self) -> bool:
+            """Return :obj:`True` if this pointer is non-null."""
+            ...
 
 else:
     CBoolArg = c_bool

@@ -85,9 +85,7 @@ CoreOptionsOption = Annotated[
 
 
 class SoftwareVideoDriverType(StrEnum):
-    """
-    This is what the video driver option should be matched against
-    """
+    """Identifier values for the ``video_driver`` core option."""
 
     DEFAULT = "default"
     OPENGL = "opengl"

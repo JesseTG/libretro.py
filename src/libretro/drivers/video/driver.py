@@ -1,6 +1,4 @@
-"""
-Types and classes for defining how a core renders graphics.
-"""
+"""Types and classes for defining how a core renders graphics."""
 
 from __future__ import annotations
 
@@ -23,11 +21,15 @@ from libretro.api.video import (
 
 
 class FrameBufferSpecial(Enum):
+    """Sentinel return values from :meth:`VideoDriver.refresh` that aren't ordinary frame buffers."""
+
     DUPE = None
     HARDWARE = -1
 
 
 class Screenshot(NamedTuple):
+    """A snapshot of the most recently rendered video frame."""
+
     data: memoryview
     width: int
     height: int
@@ -36,9 +38,7 @@ class Screenshot(NamedTuple):
 
 
 class UnsupportedContextError(RuntimeError):
-    """
-    Raised when a core requests a graphics context that a :class:`.VideoDriver` doesn't support.
-    """
+    """Raised when a core requests a graphics context that a :class:`.VideoDriver` doesn't support."""
 
     pass
 
@@ -58,7 +58,7 @@ class VideoDriver(Protocol):
         self, data: memoryview[int] | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
         """
-        Updates the framebuffer with the given video data.
+        Update the framebuffer with the given video data.
         This method is exposed to the core through ``retro_set_video_refresh``.
 
         :param data: One of the following:
@@ -198,7 +198,7 @@ class VideoDriver(Protocol):
     @abstractmethod
     def set_context(self, callback: retro_hw_render_callback) -> None:
         """
-        Requests the use of a particular graphics context,
+        Request the use of a particular graphics context,
         including :attr:`.HardwareContext.NONE` to revert to software rendering.
         The driver won't be reinitialized until the next call to :meth:`.reinit`.
 
@@ -246,7 +246,7 @@ class VideoDriver(Protocol):
     @abstractmethod
     def get_proc_address(self, sym: bytes) -> retro_proc_address_t | None:
         """
-        Returns the address of the graphics API function with the given name.
+        Return the address of the graphics API function with the given name.
 
         :param sym: The name of the function to look up.
         :return: The address of the function if found, :obj:`None` otherwise.
@@ -388,7 +388,7 @@ class VideoDriver(Protocol):
         self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         """
-        Returns a framebuffer of the given size,
+        Return a framebuffer of the given size,
         usually (but not necessarily) mapped directly into GPU memory.
         Can be used to accelerate software rendering,
         as data doesn't need to be copied between the core and the GPU.
@@ -448,7 +448,7 @@ class VideoDriver(Protocol):
     @abstractmethod
     def screenshot(self, prerotate: bool = True) -> Screenshot | None:
         """
-        Captures the part of the most recently-rendered frame
+        Capture the part of the most recently-rendered frame
         that would be visible to the player
         in a typical libretro frontend.
 

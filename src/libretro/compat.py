@@ -1,3 +1,5 @@
+"""Compatibility shims for features that depend on the running Python version."""
+
 import sys
 
 if sys.version_info >= (3, 13):

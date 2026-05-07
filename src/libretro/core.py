@@ -1,3 +1,15 @@
+"""
+Thin :class:`ctypes` wrapper around a libretro core's exported ``retro_*`` functions.
+
+.. seealso::
+
+    :mod:`libretro.api`
+        The Python equivalents of the C types passed across this boundary.
+
+    :mod:`libretro.session`
+        The high-level harness that orchestrates calls into a :class:`.Core`.
+"""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -43,93 +55,140 @@ from libretro.ctypes import TypedPointer, c_void_ptr
 
 
 class CoreInterface(Protocol):
-    """
-    An interface for a libretro core.
-    """
+    """An interface for a libretro core."""
 
     @abstractmethod
-    def set_environment(self, env: retro_environment_t) -> None: ...
+    def set_environment(self, env: retro_environment_t) -> None:
+        """Call the core's ``retro_set_environment`` function with the given callback."""
+        ...
 
     @abstractmethod
-    def set_video_refresh(self, video: retro_video_refresh_t) -> None: ...
+    def set_video_refresh(self, video: retro_video_refresh_t) -> None:
+        """Call the core's ``retro_set_video_refresh`` function with the given callback."""
+        ...
 
     @abstractmethod
-    def set_audio_sample(
-        self, audio: retro_audio_sample_t | Callable[[int, int], None]
-    ) -> None: ...
+    def set_audio_sample(self, audio: retro_audio_sample_t | Callable[[int, int], None]) -> None:
+        """Call the core's ``retro_set_audio_sample`` function with the given callback."""
+        ...
 
     @abstractmethod
-    def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None: ...
+    def set_audio_sample_batch(self, audio: retro_audio_sample_batch_t) -> None:
+        """Call the core's ``retro_set_audio_sample_batch`` function with the given callback."""
+        ...
 
     @abstractmethod
-    def set_input_poll(self, poll: retro_input_poll_t | Callable[[], None]) -> None: ...
+    def set_input_poll(self, poll: retro_input_poll_t | Callable[[], None]) -> None:
+        """Call the core's ``retro_set_input_poll`` function with the given callback."""
+        ...
 
     @abstractmethod
     def set_input_state(
         self, state: retro_input_state_t | Callable[[int, int, int, int], int]
-    ) -> None: ...
+    ) -> None:
+        """Call the core's ``retro_set_input_state`` function with the given callback."""
+        ...
 
     @abstractmethod
-    def init(self) -> None: ...
+    def init(self) -> None:
+        """Call the core's ``retro_init`` function."""
+        ...
 
     @abstractmethod
-    def deinit(self) -> None: ...
+    def deinit(self) -> None:
+        """Call the core's ``retro_deinit`` function."""
+        ...
 
     @abstractmethod
-    def api_version(self) -> int: ...
+    def api_version(self) -> int:
+        """Call the core's ``retro_api_version`` function and return the result."""
+        ...
 
     @abstractmethod
-    def get_system_info(self) -> retro_system_info: ...
+    def get_system_info(self) -> retro_system_info:
+        """Call the core's ``retro_get_system_info`` function and return the result."""
+        ...
 
     @abstractmethod
-    def get_system_av_info(self) -> retro_system_av_info: ...
+    def get_system_av_info(self) -> retro_system_av_info:
+        """Call the core's ``retro_get_system_av_info`` function and return the result."""
+        ...
 
     @abstractmethod
-    def set_controller_port_device(self, port: Port, device: int) -> None: ...
+    def set_controller_port_device(self, port: Port, device: int) -> None:
+        """Call the core's ``retro_set_controller_port_device`` function with the given arguments."""
+        ...
 
     @abstractmethod
-    def reset(self) -> None: ...
+    def reset(self) -> None:
+        """Call the core's ``retro_reset`` function."""
+        ...
 
     @abstractmethod
-    def run(self) -> None: ...
+    def run(self) -> None:
+        """Call the core's ``retro_run`` function to advance the core by one frame."""
+        ...
 
     @abstractmethod
-    def serialize_size(self) -> int: ...
+    def serialize_size(self) -> int:
+        """Call the core's ``retro_serialize_size`` function and return the result."""
+        ...
 
     @abstractmethod
-    def serialize(self, data: bytearray | memoryview[int]) -> bool: ...
+    def serialize(self, data: bytearray | memoryview[int]) -> bool:
+        """Call the core's ``retro_serialize`` function with the given mutable buffer."""
+        ...
 
     @abstractmethod
-    def unserialize(self, data: bytes | bytearray | memoryview[int]) -> bool: ...
+    def unserialize(self, data: bytes | bytearray | memoryview[int]) -> bool:
+        """Call the core's ``retro_unserialize`` function with the given buffer."""
+        ...
 
     @abstractmethod
-    def cheat_reset(self) -> None: ...
+    def cheat_reset(self) -> None:
+        """Call the core's ``retro_cheat_reset`` function."""
+        ...
 
     @abstractmethod
-    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str) -> None: ...
+    def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str) -> None:
+        """Call the core's ``retro_cheat_set`` function with the given arguments."""
+        ...
 
     @abstractmethod
-    def load_game(self, game: retro_game_info | None) -> bool: ...
+    def load_game(self, game: retro_game_info | None) -> bool:
+        """Call the core's ``retro_load_game`` function with the given game info."""
+        ...
 
     @abstractmethod
-    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool: ...
+    def load_game_special(self, game_type: int, info: Sequence[retro_game_info]) -> bool:
+        """Call the core's ``retro_load_game_special`` function with the given arguments."""
+        ...
 
     @abstractmethod
-    def unload_game(self) -> None: ...
+    def unload_game(self) -> None:
+        """Call the core's ``retro_unload_game`` function."""
+        ...
 
     @abstractmethod
-    def get_region(self) -> Region | int: ...
+    def get_region(self) -> Region | int:
+        """Call the core's ``retro_get_region`` function and return the result."""
+        ...
 
     @abstractmethod
-    def get_memory_data(self, id: int) -> c_void_ptr | None: ...
+    def get_memory_data(self, id: int) -> c_void_ptr | None:
+        """Call the core's ``retro_get_memory_data`` function for the given memory region."""
+        ...
 
     @abstractmethod
-    def get_memory_size(self, id: int) -> int: ...
+    def get_memory_size(self, id: int) -> int:
+        """Call the core's ``retro_get_memory_size`` function for the given memory region."""
+        ...
 
     def get_memory(self, id: int) -> memoryview | None:
         """
-        Convenience method that returns a writable ``memoryview``
-        of the memory region given by ``id``.
+        Get a writable ``memoryview`` of the memory region given by ``id``.
+
+        Convenience wrapper around :meth:`get_memory_data` and :meth:`get_memory_size`.
 
         :param id: The ID of the memory region to access.
         :return: A writable ``memoryview`` of the given region,
@@ -146,6 +205,7 @@ class CoreInterface(Protocol):
 class Core(CoreInterface):
     """
     A thin wrapper around a libretro core that can be used to call its public interface.
+
     Does not manage the underlying core's life cycle,
     i.e. ``retro_*`` methods are not called implicitly unless otherwise noted;
     that's left to ``Session`` or some custom abstraction layer.
@@ -164,7 +224,6 @@ class Core(CoreInterface):
             (i.e. the ``retro_*`` function that each method corresponds to).
         :raises TypeError: If ``core`` is not one of the above-mentioned types.
         """
-
         match core:
             case CDLL():
                 self._core = core
@@ -280,7 +339,7 @@ class Core(CoreInterface):
         self, env: retro_environment_t | Callable[[int, c_void_ptr], bool]
     ) -> None:
         """
-        Calls the core's ``retro_set_environment`` function with the given callback.
+        Call the core's ``retro_set_environment`` function with the given callback.
 
         :param env: The function that the core should use for environment calls.
         :raises TypeError: If ``env`` is not a ``retro_environment_t``.
@@ -293,7 +352,7 @@ class Core(CoreInterface):
         self, video: retro_video_refresh_t | Callable[[c_void_ptr, int, int, int], None]
     ) -> None:
         """
-        Calls the core's ``retro_set_video_refresh`` function with the given callback.
+        Call the core's ``retro_set_video_refresh`` function with the given callback.
 
         :param video: The function that the core should call to update its video output.
         :raises TypeError: If ``video`` is not a ``retro_video_refresh_t``.
@@ -304,7 +363,7 @@ class Core(CoreInterface):
     @override
     def set_audio_sample(self, audio: retro_audio_sample_t | Callable[[int, int], None]) -> None:
         """
-        Calls the core's ``retro_set_audio_sample`` function with the given callback.
+        Call the core's ``retro_set_audio_sample`` function with the given callback.
 
         :param audio: The function that the core should call to render a single audio frame.
         :raises TypeError: If ``audio`` is not a ``retro_audio_sample_t``.
@@ -317,7 +376,7 @@ class Core(CoreInterface):
         self, audio: retro_audio_sample_batch_t | Callable[[TypedPointer[c_int16], int], int]
     ) -> None:
         """
-        Calls the core's ``retro_set_audio_sample_batch`` function with the given callback.
+        Call the core's ``retro_set_audio_sample_batch`` function with the given callback.
 
         :param audio: The function that the core should call to render a batch of audio frames.
         :raises TypeError: If ``audio`` is not a ``retro_audio_sample_batch_t``.
@@ -328,7 +387,7 @@ class Core(CoreInterface):
     @override
     def set_input_poll(self, poll: retro_input_poll_t | Callable[[], None]) -> None:
         """
-        Calls the core's ``retro_set_input_poll`` function with the given callback.
+        Call the core's ``retro_set_input_poll`` function with the given callback.
 
         :param poll: The function that the core should call to poll for updated input state.
         :raises TypeError: If ``poll`` is not a ``retro_input_poll_t``.
@@ -341,7 +400,7 @@ class Core(CoreInterface):
         self, state: retro_input_state_t | Callable[[Port, int, int, int], int]
     ) -> None:
         """
-        Calls the core's ``retro_set_input_state`` function with the given callback.
+        Call the core's ``retro_set_input_state`` function with the given callback.
 
         :param state: The function that the core should call to request part of the input state.
         :raises TypeError: If ``state`` is not a ``retro_input_state_t``.
@@ -352,7 +411,7 @@ class Core(CoreInterface):
     @override
     def init(self):
         """
-        Calls the core's ``retro_init`` function.
+        Call the core's ``retro_init`` function.
 
         :note: This method does not check if the core has already been initialized.
             Additionally, this method is not implicitly called by ``__init__``.
@@ -362,7 +421,7 @@ class Core(CoreInterface):
     @override
     def deinit(self):
         """
-        Calls the core's ``retro_deinit`` function.
+        Call the core's ``retro_deinit`` function.
 
         :note: This method does not validate that the core has been initialized.
             Additionally, it is not implicitly called upon deletion.
@@ -372,7 +431,7 @@ class Core(CoreInterface):
     @override
     def api_version(self) -> int:
         """
-        Calls the core's ``retro_api_version`` function.
+        Call the core's ``retro_api_version`` function.
 
         :return: The integer returned by the core's implementation of ``retro_api_version``.
 
@@ -383,7 +442,7 @@ class Core(CoreInterface):
     @override
     def get_system_info(self) -> retro_system_info:
         """
-        Calls the core's ``retro_get_system_info`` function.
+        Call the core's ``retro_get_system_info`` function.
 
         :return: A ``retro_system_info`` instance containing information about the core.
             All strings are copied and may be accessed even after unloading the core.
@@ -396,7 +455,7 @@ class Core(CoreInterface):
     @override
     def get_system_av_info(self) -> retro_system_av_info:
         """
-        Calls the core's ``retro_get_system_av_info`` function.
+        Call the core's ``retro_get_system_av_info`` function.
 
         :return: A ``retro_system_av_info`` instance
             containing information about the core's audiovisual capabilities.
@@ -409,7 +468,7 @@ class Core(CoreInterface):
     @override
     def set_controller_port_device(self, port: Port, device: int):
         """
-        Calls the core's ``retro_set_controller_port_device`` function with the given arguments.
+        Call the core's ``retro_set_controller_port_device`` function with the given arguments.
 
         :param port: The port to set the device for.
             Masked to fit within the range of an ``unsigned int``.
@@ -421,7 +480,7 @@ class Core(CoreInterface):
     @override
     def reset(self):
         """
-        Calls the core's ``retro_reset`` function.
+        Call the core's ``retro_reset`` function.
 
         :warning: Does not check if the core is in a state where it can be reset.
         """
@@ -430,7 +489,7 @@ class Core(CoreInterface):
     @override
     def run(self):
         """
-        Calls the core's ``retro_run`` function.
+        Call the core's ``retro_run`` function.
 
         :warning: Does not check if the core is in a state where it can be run.
         """
@@ -439,7 +498,7 @@ class Core(CoreInterface):
     @override
     def serialize_size(self) -> int:
         """
-        Calls the core's ``retro_serialize_size`` function.
+        Call the core's ``retro_serialize_size`` function.
 
         :return: The length of the buffer needed to serialize the core's state, in bytes.
             If zero, the core does not support serialization.
@@ -449,8 +508,9 @@ class Core(CoreInterface):
     @override
     def serialize(self, data: bytearray | memoryview[int] | Buffer) -> bool:
         """
-        Calls the core's ``retro_serialize`` function with the given mutable buffer and its length,
-        filling it with whatever data the core returns.
+        Call the core's ``retro_serialize`` function with the given mutable buffer.
+
+        Fills ``data`` with whatever serialized state the core returns.
 
         :param data: A ``bytearray``, mutable ``memoryview``, or ``Buffer`` implementation
             that core's serialized state will be saved to.
@@ -481,8 +541,9 @@ class Core(CoreInterface):
     @override
     def unserialize(self, data: bytes | bytearray | memoryview[int] | Buffer) -> bool:
         """
-        Calls the core's ``retro_unserialize`` function with the given buffer and its length,
-        restoring the core's state from the serialized data.
+        Call the core's ``retro_unserialize`` function with the given buffer.
+
+        Restores the core's state from the serialized data in ``data``.
 
         :param data: A ``bytes``, ``bytearray``, ``memoryview``, or ``Buffer``.
         :raises TypeError: If ``data`` is not one of the aforementioned types.
@@ -512,15 +573,13 @@ class Core(CoreInterface):
 
     @override
     def cheat_reset(self):
-        """
-        Calls the core's ``retro_cheat_reset`` function.
-        """
+        """Call the core's ``retro_cheat_reset`` function."""
         self._core.retro_cheat_reset()
 
     @override
     def cheat_set(self, index: int, enabled: bool, code: bytes | bytearray | str):
         """
-        Calls the core's ``retro_cheat_set`` function with the given arguments.
+        Call the core's ``retro_cheat_set`` function with the given arguments.
 
         :param index: The number of the cheat code to toggle.
         :param enabled: Whether the cheat code should be enabled or disabled.
@@ -550,7 +609,7 @@ class Core(CoreInterface):
     @override
     def load_game(self, game: retro_game_info | None) -> bool:
         """
-        Calls the core's ``retro_load_game`` function with the given game info.
+        Call the core's ``retro_load_game`` function with the given game info.
 
         :param game: A ``retro_game_info`` instance or ``None``.
         :return: ``True`` if the core successfully loaded ``game``, ``False`` otherwise.
@@ -573,7 +632,7 @@ class Core(CoreInterface):
         info: Sequence[retro_game_info] | Array[retro_game_info],
     ) -> bool:
         """
-        Calls the core's ``retro_load_game_special`` function with the given arguments.
+        Call the core's ``retro_load_game_special`` function with the given arguments.
 
         :param game_type: The subsystem type to activate.
             May be passed as an ``int`` or a ``retro_subsystem_info`` instance.
@@ -609,7 +668,7 @@ class Core(CoreInterface):
     @override
     def unload_game(self):
         """
-        Calls the core's ``retro_unload_game`` function.
+        Call the core's ``retro_unload_game`` function.
 
         :warning: Does not check if the preconditions for ``retro_unload_game`` are met,
             e.g. it doesn't check if a game is currently loaded.
@@ -619,7 +678,7 @@ class Core(CoreInterface):
     @override
     def get_region(self) -> Region | int:
         """
-        Calls the core's ``retro_get_region`` function.
+        Call the core's ``retro_get_region`` function.
 
         :return: The returned region as a ``Region`` enum if it's a known value,
             or as a plain ``int`` if not.
@@ -630,7 +689,7 @@ class Core(CoreInterface):
     @override
     def get_memory_data(self, id: int) -> c_void_ptr | None:
         """
-        Calls the core's ``retro_get_memory_data`` function for the given memory region.
+        Call the core's ``retro_get_memory_data`` function for the given memory region.
 
         :param id: The ID of the memory region to access.
         :return: Pointer to the memory region returned by the core,
@@ -646,7 +705,7 @@ class Core(CoreInterface):
     @override
     def get_memory_size(self, id: int) -> int:
         """
-        Calls the core's ``retro_get_memory_size`` function for the given memory region.
+        Call the core's ``retro_get_memory_size`` function for the given memory region.
 
         :param id: The ID of the memory region to get the size of.
         :raises TypeError: If ``id`` is not an ``int``.
@@ -659,9 +718,7 @@ class Core(CoreInterface):
 
     @property
     def path(self) -> str:
-        """
-        The path to the core's shared library.
-        """
+        """The path to the core's shared library."""
         return self._core._name
 
 

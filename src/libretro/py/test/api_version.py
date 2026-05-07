@@ -1,3 +1,5 @@
+"""Test scenario that loads a core and validates its reported API version."""
+
 from typing import Annotated
 
 import typer
@@ -8,10 +10,9 @@ from ._common import CoreArg
 
 def main(libretro: CoreArg, api_version: Annotated[int, Option(min=0)] = 1):
     """
-    Loads a libretro core and validates the version it returns.
+    Load a libretro core and validates the version it returns.
     Exits with 0 upon success.
     """
-
     core_version = libretro.api_version()
 
     if core_version != api_version:

@@ -13,11 +13,10 @@ from .driver import LedDriver
 
 
 class DictLedDriver(LedDriver):
-    """
-    A :class:`.LedDriver` that stores LED states in an in-memory :class:`dict`.
-    """
+    """A :class:`.LedDriver` that stores LED states in an in-memory :class:`dict`."""
 
     def __init__(self):
+        """Initialize the driver with an empty LED-state dictionary."""
         self._leds: dict[int, int] = {}
 
     @override

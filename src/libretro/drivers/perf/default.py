@@ -1,3 +1,12 @@
+"""
+:class:`.PerfDriver` implementation backed by :mod:`time` for timestamps.
+
+.. seealso::
+
+    :class:`.PerfDriver`
+        The protocol this driver implements.
+"""
+
 from collections.abc import Mapping
 from time import process_time_ns, time_ns
 from typing import override
@@ -8,18 +17,32 @@ from .driver import PerfDriver
 
 
 class DefaultPerfDriver(PerfDriver):
+    """
+    The default :class:`.PerfDriver` used when a :class:`.Session` is given no other.
+
+    Backed by the standard :mod:`time` module
+    (:func:`time.time_ns` for wall-clock and :func:`time.process_time_ns` for the perf counter).
+
+    .. seealso::
+
+        :class:`.PerfDriver`
+            The protocol this class implements.
+    """
+
     def __init__(self):
+        """Initialize the driver with an empty performance-counter registry."""
         super().__init__()
         self._perf_counters: dict[bytes, retro_perf_counter] = {}
 
     def __del__(self):
+        """Drop references to the registered counters before this driver is collected."""
         self._perf_counters.clear()
-        # This dict contains references to core-owned data;
-        # we clear the references here just in case
-        # someone else managed to take ownership of the dict.
+        # The dict contains references to core-owned data;
+        # clear them here in case someone else has taken ownership of the dict.
 
     @property
     def perf_counters(self) -> Mapping[bytes, retro_perf_counter]:
+        """A live mapping of registered performance-counter identifiers to their structs."""
         return self._perf_counters
 
     @override

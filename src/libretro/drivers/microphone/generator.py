@@ -1,3 +1,12 @@
+"""
+:class:`.MicrophoneDriver` implementation that returns samples produced by a generator function.
+
+.. seealso::
+
+    :class:`.MicrophoneDriver`
+        The protocol this driver implements.
+"""
+
 from array import array
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from itertools import repeat
@@ -19,10 +28,33 @@ MicrophoneSource = MicrophoneInputIterable | MicrophoneInputGeneratorFunction
 
 
 class GeneratorMicrophone(Microphone):
+    """
+    A :class:`.Microphone` that returns samples produced by a generator or iterable.
+
+    Use this to feed scripted or recorded audio into a core under test
+    without needing a real microphone.
+
+    .. seealso::
+
+        :class:`.Microphone`
+            The protocol this class implements.
+    """
+
     _generator_state: MicrophoneInputIterator
     _handle: retro_microphone
 
     def __init__(self, generator: MicrophoneSource | None, params: retro_microphone_params | None):
+        """
+        Initialize the microphone with a sample source and capture parameters.
+
+        :param generator: The audio source.
+            A generator function is called once to obtain its iterator;
+            an iterable is used directly.
+            :obj:`None` produces an infinite stream of silence.
+        :param params: The capture parameters to advertise,
+            or :obj:`None` to default to 44.1 kHz mono.
+        :raises TypeError: If ``generator`` is neither a callable, an iterable, nor :obj:`None`.
+        """
         self._params = params or retro_microphone_params(44100)
         self._enabled = False
         self._closed = False
@@ -107,13 +139,32 @@ class GeneratorMicrophone(Microphone):
 
     @property
     def handle(self) -> retro_microphone:
+        """The opaque :class:`.retro_microphone` handle exposed to the core."""
         return self._handle
 
 
 class GeneratorMicrophoneDriver(MicrophoneDriver):
+    """
+    A :class:`.MicrophoneDriver` that opens :class:`GeneratorMicrophone` instances on demand.
+
+    Each microphone the core opens is backed by the same source supplied at construction.
+
+    .. seealso::
+
+        :class:`.MicrophoneDriver`
+            The protocol this class implements.
+    """
+
     def __init__(
         self, generator: MicrophoneInputGeneratorFunction | MicrophoneInputIterable | None = None
     ):
+        """
+        Initialize the driver with a default sample source.
+
+        :param generator: The audio source used for every microphone opened by the core,
+            or :obj:`None` to default to silence.
+            See :class:`GeneratorMicrophone` for accepted forms.
+        """
         self._microphones: dict[int, GeneratorMicrophone] = {}
         self._generator = generator
 

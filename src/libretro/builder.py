@@ -1,3 +1,12 @@
+"""
+Fluent builder for assembling a configured :class:`.Session` from drivers and a core.
+
+.. seealso::
+
+    :mod:`libretro.session`
+        The :class:`.Session` produced by this builder.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Buffer, Callable, Generator, Iterable, Iterator, Mapping
@@ -137,6 +146,8 @@ type PowerDriverArg = _OptionalArg[PowerDriver] | retro_device_power
 
 
 class RequiredError(RuntimeError):
+    """Raised by :meth:`SessionBuilder.build` when a required argument has not been set."""
+
     pass
 
 
@@ -214,8 +225,7 @@ class SessionBuilder:
 
     def __init__(self):
         """
-        Initializes a new :py:class:`SessionBuilder` with no arguments,
-        not even the required ones.
+        Initialize a new :py:class:`SessionBuilder` with no arguments, not even the required ones.
 
         Calling :py:meth:`build` before setting any of the required arguments
         will raise a :py:class:`RequiredError`.
@@ -252,14 +262,12 @@ class SessionBuilder:
 
     @classmethod
     def defaults(cls, core: CoreArg) -> SessionBuilder:
-        """
-        Alias to :py:func:`defaults`.
-        """
+        """Alias to :py:func:`defaults`."""
         return defaults(core)
 
     def with_core(self, core: CoreArg) -> Self:
         """
-        Sets the core to use for the session.
+        Set the core to use for the session.
 
         :param core: The core to use for the session. May be one of the following:
 
@@ -295,7 +303,8 @@ class SessionBuilder:
 
     def with_content(self, content: ContentArg) -> Self:
         """
-        Sets the content to use for this session.
+        Set the content to use for this session.
+
         Will be loaded and managed by this builder's assigned :class:`.ContentDriver`.
 
         :param content: The content to use for this session. May be one of the following:
@@ -357,6 +366,25 @@ class SessionBuilder:
         return self
 
     def with_audio(self, audio: AudioDriverArg) -> Self:
+        """
+        Set the audio driver for this session.
+
+        :param audio: The audio driver to use for this session. May be one of the following:
+
+            :class:`.AudioDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use an :class:`.ArrayAudioDriver` with its default configuration.
+
+            :class:`~collections.abc.Callable` () -> :class:`.AudioDriver`
+                Zero-argument function that returns an :class:`.AudioDriver`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``audio`` is not one of the permitted types.
+        :raises ValueError: If ``audio`` is :obj:`None`.
+        """
         match audio:
             case Callable() as func:
                 self._args["audio"] = func
@@ -374,6 +402,31 @@ class SessionBuilder:
         return self
 
     def with_input(self, input: InputDriverArg) -> Self:
+        """
+        Set the input driver for this session.
+
+        :param input: The input driver to use for this session. May be one of the following:
+
+            :class:`.InputDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :class:`~collections.abc.Generator`, :class:`~collections.abc.Iterable`, :class:`~collections.abc.Iterator`
+                Will be wrapped in an :class:`.IterableInputDriver`
+                that yields :class:`.InputState` values.
+
+            :data:`.DEFAULT`
+                Will use an :class:`.IterableInputDriver` with its default configuration.
+
+            :class:`~collections.abc.Callable` () -> :class:`.InputDriver` | iterable
+                Zero-argument function that returns either an :class:`.InputDriver`
+                or an iterable/iterator/generator of :class:`.InputState` values.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``input`` (or the value returned by a callable ``input``)
+            is not one of the permitted types.
+        :raises ValueError: If ``input`` is :obj:`None`.
+        """
         match input:
             case Generator() as generator:
                 self._args["input"] = lambda: IterableInputDriver(generator)
@@ -407,7 +460,7 @@ class SessionBuilder:
 
     def with_rumble(self, rumble: RumbleDriverArg) -> Self:
         """
-        Configures the rumble driver for this session's input driver.
+        Configure the rumble driver for this session's input driver.
 
         :param rumble: The rumble driver to use for this session. May be one of the following:
 
@@ -445,7 +498,7 @@ class SessionBuilder:
 
     def with_video(self, video: VideoDriverArg) -> Self:
         """
-        Sets the video driver for this session.
+        Set the video driver for this session.
 
         :param video: The video driver to use for this session. May be one of the following:
 
@@ -468,7 +521,6 @@ class SessionBuilder:
         :raises TypeError: If ``video`` is not one of the aforementioned types.
         :raises ValueError: If ``video`` does not contain a mapping for :attr:`.HardwareContext.NONE`.
         """
-
         match video:
             case Callable() as func:
                 self._args["video"] = func
@@ -502,6 +554,28 @@ class SessionBuilder:
         return self
 
     def with_content_driver(self, content: ContentDriverArg) -> Self:
+        """
+        Set the content driver for this session.
+
+        :param content: The content driver to use for this session. May be one of the following:
+
+            :class:`.ContentDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.StandardContentDriver` with its default configuration.
+
+            :obj:`None`
+                No content driver will be used; content set via :meth:`with_content`
+                will not be loaded.
+
+            :class:`~collections.abc.Callable` () -> :class:`.ContentDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.ContentDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``content`` is not one of the permitted types.
+        """
         match content:
             case Callable() as func:
                 self._args["content_driver"] = func
@@ -519,6 +593,27 @@ class SessionBuilder:
         return self
 
     def with_overscan(self, overscan: BoolArg) -> Self:
+        """
+        Set whether the loaded core should render overscan regions.
+
+        :param overscan: The overscan flag to expose to the core. May be one of the following:
+
+            :class:`bool`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                Reports :obj:`False` to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`bool` | :obj:`None`
+                Zero-argument function that returns a :class:`bool` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``overscan`` is not one of the permitted types.
+        """
         match overscan:
             case bool():
                 self._args["overscan"] = lambda: overscan
@@ -536,6 +631,32 @@ class SessionBuilder:
         return self
 
     def with_message(self, message: MessageDriverArg) -> Self:
+        """
+        Set the message driver for this session.
+
+        :param message: The message driver to use for this session. May be one of the following:
+
+            :class:`.MessageDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :class:`~logging.Logger`
+                Will be wrapped in a :class:`.LoggerMessageDriver`
+                that forwards messages to the given logger.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.LoggerMessageDriver` with its default configuration.
+
+            :obj:`None`
+                The environment calls that :class:`.MessageDriver` normally implements
+                will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.MessageDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.MessageDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``message`` is not one of the permitted types.
+        """
         match message:
             case Callable() as func:
                 self._args["message"] = func
@@ -556,7 +677,7 @@ class SessionBuilder:
 
     def with_options(self, options: OptionDriverArg) -> Self:
         """
-        Configures the options driver for this session.
+        Configure the options driver for this session.
 
         :param options: May be one of the following:
 
@@ -620,7 +741,7 @@ class SessionBuilder:
 
     def with_paths(self, path: PathDriverArg) -> Self:
         """
-        Configures the path driver for this session.
+        Configure the path driver for this session.
 
         :param path: May be one of the following:
 
@@ -662,7 +783,7 @@ class SessionBuilder:
 
     def with_sensor(self, sensor: SensorDriverArg) -> Self:
         """
-        Configures the sensor driver for this session.
+        Configure the sensor driver for this session.
 
         :param sensor: May be one of the following:
 
@@ -726,6 +847,31 @@ class SessionBuilder:
         return self
 
     def with_log(self, log: LogDriverArg) -> Self:
+        """
+        Set the log driver for this session.
+
+        :param log: The log driver to use for this session. May be one of the following:
+
+            :class:`.LogDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :class:`~logging.Logger`
+                Will be wrapped in an :class:`.UnformattedLogDriver`
+                that forwards core log messages to the given logger.
+
+            :data:`.DEFAULT`
+                Will use an :class:`.UnformattedLogDriver` with its default configuration.
+
+            :obj:`None`
+                The log interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.LogDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.LogDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``log`` is not one of the permitted types.
+        """
         match log:
             case Callable() as func:
                 self._args["log"] = func
@@ -745,6 +891,27 @@ class SessionBuilder:
         return self
 
     def with_perf(self, perf: PerfDriverArg) -> Self:
+        """
+        Set the performance driver for this session.
+
+        :param perf: The performance driver to use for this session. May be one of the following:
+
+            :class:`.PerfDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DefaultPerfDriver` with its default configuration.
+
+            :obj:`None`
+                The performance interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.PerfDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.PerfDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``perf`` is not one of the permitted types.
+        """
         match perf:
             case Callable() as func:
                 self._args["perf"] = func
@@ -762,6 +929,27 @@ class SessionBuilder:
         return self
 
     def with_location(self, location: LocationDriverArg) -> Self:
+        """
+        Set the location driver for this session.
+
+        :param location: The location driver to use for this session. May be one of the following:
+
+            :class:`.LocationDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                No location driver will be used; equivalent to passing :obj:`None`.
+
+            :obj:`None`
+                The location interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.LocationDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.LocationDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``location`` is not one of the permitted types.
+        """
         match location:
             case Callable() as func:
                 self._args["location"] = func
@@ -779,6 +967,28 @@ class SessionBuilder:
         return self
 
     def with_user(self, user: UserDriverArg) -> Self:
+        """
+        Set the user driver for this session.
+
+        :param user: The user driver to use for this session. May be one of the following:
+
+            :class:`.UserDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DefaultUserDriver` with its default configuration.
+
+            :obj:`None`
+                The environment calls that :class:`.UserDriver` normally implements
+                will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.UserDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.UserDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``user`` is not one of the permitted types.
+        """
         match user:
             case Callable() as func:
                 self._args["user"] = func
@@ -796,6 +1006,30 @@ class SessionBuilder:
         return self
 
     def with_vfs(self, vfs: FileSystemArg) -> Self:
+        """
+        Set the virtual filesystem driver for this session.
+
+        :param vfs: The filesystem driver to use for this session. May be one of the following:
+
+            :class:`.FileSystemDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            ``1``, ``2``, or ``3``
+                Will use a :class:`.DefaultFileSystemDriver` with the given API version.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DefaultFileSystemDriver` with its default configuration.
+
+            :obj:`None`
+                The VFS interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.FileSystemDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.FileSystemDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``vfs`` is not one of the permitted types.
+        """
         match vfs:
             case Callable() as func:
                 self._args["vfs"] = func
@@ -815,6 +1049,27 @@ class SessionBuilder:
         return self
 
     def with_led(self, led: LedDriverArg) -> Self:
+        """
+        Set the LED driver for this session.
+
+        :param led: The LED driver to use for this session. May be one of the following:
+
+            :class:`.LedDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DictLedDriver` with its default configuration.
+
+            :obj:`None`
+                The LED interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.LedDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.LedDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``led`` is not one of the permitted types.
+        """
         match led:
             case Callable() as func:
                 self._args["led"] = func
@@ -832,6 +1087,27 @@ class SessionBuilder:
         return self
 
     def with_av_mask(self, av_mask: AvEnableFlagsArg) -> Self:
+        """
+        Set the audio/video enable mask for this session.
+
+        :param av_mask: The :class:`.AvEnableFlags` to expose to the core. May be one of the following:
+
+            :class:`.AvEnableFlags`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                Reports :attr:`.AvEnableFlags.ALL` to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`.AvEnableFlags` | :obj:`None`
+                Zero-argument function that returns an :class:`.AvEnableFlags` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``av_mask`` is not one of the permitted types.
+        """
         match av_mask:
             case Callable() as func:
                 self._args["av_mask"] = func
@@ -849,6 +1125,27 @@ class SessionBuilder:
         return self
 
     def with_midi(self, midi: MidiDriverArg) -> Self:
+        """
+        Set the MIDI driver for this session.
+
+        :param midi: The MIDI driver to use for this session. May be one of the following:
+
+            :class:`.MidiDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.GeneratorMidiDriver` with its default configuration.
+
+            :obj:`None`
+                The MIDI interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.MidiDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.MidiDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``midi`` is not one of the permitted types.
+        """
         match midi:
             case func if callable(func):
                 self._args["midi"] = func
@@ -866,6 +1163,27 @@ class SessionBuilder:
         return self
 
     def with_timing(self, timing: TimingDriverArg) -> Self:
+        """
+        Set the timing driver for this session.
+
+        :param timing: The timing driver to use for this session. May be one of the following:
+
+            :class:`.TimingDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.DefaultTimingDriver` running unblocked at 60 FPS.
+
+            :obj:`None`
+                The corresponding environment calls will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`.TimingDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.TimingDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``timing`` is not one of the permitted types.
+        """
         match timing:
             case TimingDriver():
                 self._args["timing"] = lambda: timing
@@ -885,6 +1203,27 @@ class SessionBuilder:
         return self
 
     def with_preferred_hw(self, hw: HardwareContextArg) -> Self:
+        """
+        Set the preferred hardware context to report to the core.
+
+        :param hw: The preferred hardware context to expose to the core. May be one of the following:
+
+            :class:`.HardwareContext`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                The corresponding environment call will be unavailable to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`.HardwareContext` | :obj:`None`
+                Zero-argument function that returns a :class:`.HardwareContext` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``hw`` is not one of the permitted types.
+        """
         match hw:
             case Callable() as func:
                 self._args["preferred_hw"] = func
@@ -902,6 +1241,27 @@ class SessionBuilder:
         return self
 
     def with_driver_switch_enable(self, enable: BoolArg) -> Self:
+        """
+        Set whether the core may switch hardware rendering drivers at runtime.
+
+        :param enable: The driver-switch flag to expose to the core. May be one of the following:
+
+            :class:`bool`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                Reports :obj:`False` to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`bool` | :obj:`None`
+                Zero-argument function that returns a :class:`bool` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``enable`` is not one of the permitted types.
+        """
         match enable:
             case bool():
                 self._args["driver_switch_enable"] = lambda: enable
@@ -919,6 +1279,27 @@ class SessionBuilder:
         return self
 
     def with_savestate_context(self, context: SavestateContextArg) -> Self:
+        """
+        Set the savestate context to report to the core.
+
+        :param context: The :class:`.SavestateContext` to expose to the core. May be one of the following:
+
+            :class:`.SavestateContext`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                Reports :attr:`.SavestateContext.NORMAL` to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`.SavestateContext` | :obj:`None`
+                Zero-argument function that returns a :class:`.SavestateContext` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``context`` is not one of the permitted types.
+        """
         match context:
             case SavestateContext():
                 self._args["savestate_context"] = lambda: context
@@ -936,6 +1317,27 @@ class SessionBuilder:
         return self
 
     def with_jit_capable(self, capable: BoolArg) -> Self:
+        """
+        Set whether the host environment is JIT-capable.
+
+        :param capable: The JIT-capable flag to expose to the core. May be one of the following:
+
+            :class:`bool`
+                Will be reported to the core as-is.
+
+            :data:`.DEFAULT`
+                Reports :obj:`True` to the core.
+
+            :obj:`None`
+                The corresponding environment call will be unavailable to the core.
+
+            :class:`~collections.abc.Callable` () -> :class:`bool` | :obj:`None`
+                Zero-argument function that returns a :class:`bool` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``capable`` is not one of the permitted types.
+        """
         match capable:
             case bool():
                 self._args["jit_capable"] = lambda: capable
@@ -953,6 +1355,27 @@ class SessionBuilder:
         return self
 
     def with_mic(self, mic: MicDriverArg) -> Self:
+        """
+        Set the microphone driver for this session.
+
+        :param mic: The microphone driver to use for this session. May be one of the following:
+
+            :class:`.MicrophoneDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.GeneratorMicrophoneDriver` with its default configuration.
+
+            :obj:`None`
+                The microphone interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.MicrophoneDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.MicrophoneDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``mic`` is not one of the permitted types.
+        """
         match mic:
             case Callable() as func:
                 self._args["mic"] = func
@@ -970,6 +1393,30 @@ class SessionBuilder:
         return self
 
     def with_power(self, power: PowerDriverArg) -> Self:
+        """
+        Set the power driver for this session.
+
+        :param power: The power driver to use for this session. May be one of the following:
+
+            :class:`.PowerDriver`
+                Will be used by the built :class:`.Session` as-is.
+
+            :class:`.retro_device_power`
+                Will be wrapped in a :class:`.ConstantPowerDriver` that always reports this state.
+
+            :data:`.DEFAULT`
+                Will use a :class:`.ConstantPowerDriver` reporting a fully charged, plugged-in device.
+
+            :obj:`None`
+                The power interface will be unavailable to the loaded :class:`.Core`.
+
+            :class:`~collections.abc.Callable` () -> :class:`.PowerDriver` | :obj:`None`
+                Zero-argument function that returns a :class:`.PowerDriver` or :obj:`None`.
+                Will be called in :meth:`build`.
+
+        :return: This :class:`SessionBuilder` object.
+        :raises TypeError: If ``power`` is not one of the permitted types.
+        """
         match power:
             case retro_device_power() as pow:
                 self._args["power"] = lambda: ConstantPowerDriver(pow)
@@ -992,7 +1439,7 @@ class SessionBuilder:
 
     def build(self) -> AnySession:
         """
-        Constructs a :py:class:`.Session` with the provided arguments.
+        Construct a :py:class:`.Session` with the provided arguments.
 
         :raises RequiredError: If a :py:class:`.Core`, :py:class:`.AudioDriver`, :py:class:`.InputDriver`, or :py:class:`.VideoDriver` is not set.
         :raises Exception: Any exception raised by a registered driver factory or initializer.
@@ -1034,7 +1481,8 @@ class SessionBuilder:
 
 def defaults(core: CoreArg) -> SessionBuilder:
     """
-    Constructs a :py:class:`SessionBuilder` with the recommended drivers and their default values.
+    Construct a :py:class:`SessionBuilder` with the recommended drivers and their default values.
+
     Does not build the session, so these defaults may still be overridden.
 
     :param core: The core to use for the session.

@@ -1,3 +1,12 @@
+"""
+:class:`~typing.Protocol` definition for the :c:type:`retro_environment_t` dispatcher.
+
+.. seealso::
+
+    :mod:`libretro.api.environment`
+        The matching :mod:`ctypes` types and callback definitions.
+"""
+
 import functools
 from abc import abstractmethod
 from collections.abc import Callable
@@ -59,23 +68,120 @@ from libretro.ctypes import TypedPointer, c_void_ptr
 
 @runtime_checkable
 class EnvironmentDriver(Protocol):
-    @abstractmethod
-    def environment(self, cmd: int, data: c_void_ptr) -> bool: ...
+    """
+    Protocol for the dispatcher that handles libretro environment calls and AV callbacks.
+
+    Acts as the single entry point libretro.py registers with the core
+    via :meth:`.Core.set_environment`, :meth:`.Core.set_video_refresh`, etc.
+
+    .. seealso::
+
+        :mod:`libretro.api.environment`
+            The matching :mod:`ctypes` types and callback definitions.
+    """
 
     @abstractmethod
-    def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None: ...
+    def environment(self, cmd: int, data: c_void_ptr) -> bool:
+        """
+        Dispatch an environment call from the core.
+
+        Implementations route ``cmd`` to the appropriate ``_<env_call_name>``
+        helper (e.g. :meth:`_get_variable` for ``RETRO_ENVIRONMENT_GET_VARIABLE``)
+        and return :obj:`True` if the call was handled successfully.
+
+        :param cmd: The ``RETRO_ENVIRONMENT_*`` command identifier.
+        :param data: Pointer to the command-specific data buffer,
+            interpreted according to ``cmd``.
+        :return: :obj:`True` if the call was handled,
+            :obj:`False` if the command is unsupported or failed.
+
+        .. seealso::
+
+            :data:`~libretro.api.environment.retro_environment_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
 
     @abstractmethod
-    def audio_sample(self, left: int, right: int) -> None: ...
+    def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
+        """
+        Receive one frame of video output from the core.
+
+        :param data: Pointer to the frame buffer in the core's current pixel format,
+            or :obj:`None` if the core asked the frontend to duplicate the previous frame.
+        :param width: Width of the frame in pixels.
+        :param height: Height of the frame in pixels.
+        :param pitch: Number of bytes per scanline in ``data``.
+
+        .. seealso::
+
+            :data:`~libretro.api.video.retro_video_refresh_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
 
     @abstractmethod
-    def audio_sample_batch(self, data: TypedPointer[c_int16], frames: int) -> int: ...
+    def audio_sample(self, left: int, right: int) -> None:
+        """
+        Receive a single stereo audio sample from the core.
+
+        :param left: The left-channel sample as a signed 16-bit integer.
+        :param right: The right-channel sample as a signed 16-bit integer.
+
+        .. seealso::
+
+            :data:`~libretro.api.audio.retro_audio_sample_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
 
     @abstractmethod
-    def input_poll(self) -> None: ...
+    def audio_sample_batch(self, data: TypedPointer[c_int16], frames: int) -> int:
+        """
+        Receive a batch of interleaved stereo audio frames from the core.
+
+        :param data: Pointer to interleaved signed 16-bit stereo samples.
+        :param frames: Number of stereo frames available in ``data``.
+        :return: The number of frames consumed.
+
+        .. seealso::
+
+            :data:`~libretro.api.audio.retro_audio_sample_batch_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
 
     @abstractmethod
-    def input_state(self, port: Port, device: int, index: int, id: int) -> int: ...
+    def input_poll(self) -> None:
+        """
+        Poll input devices for new input state.
+
+        Called by the core once per frame before any :meth:`input_state` queries.
+
+        .. seealso::
+
+            :data:`~libretro.api.input.retro_input_poll_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
+
+    @abstractmethod
+    def input_state(self, port: Port, device: int, index: int, id: int) -> int:
+        """
+        Return the current input state for a given device control.
+
+        :param port: The input port being queried.
+        :param device: The :data:`RETRO_DEVICE_*` device class.
+        :param index: The sub-device index (e.g. analog stick number).
+        :param id: The button or axis identifier within the device class.
+        :return: The control's current state, encoded per libretro's input conventions.
+
+        .. seealso::
+
+            :data:`~libretro.api.input.retro_input_state_t`
+                The C function pointer type whose signature this method implements.
+        """
+        ...
 
     # ruff: disable[ARG002]
     # Disable unused argument warnings for all of these methods,
@@ -335,7 +441,7 @@ class EnvironmentDriver(Protocol):
     @staticmethod
     def return_on_raise[T, **P](default: T) -> Callable[[Callable[P, T]], Callable[P, T]]:
         """
-        ctypes doesn't propagate exceptions out of callbacks,
+        Ctypes doesn't propagate exceptions out of callbacks,
         so this is necessary to detect an error in a driver
         instead of just swallowing it with a warning.
         """

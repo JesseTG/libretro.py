@@ -65,9 +65,7 @@ class _PersistentBuffer:
 
 
 class StandardContentDriver(ContentDriver):
-    """
-    A :class:`.ContentDriver` that loads content from files on disk or from memory buffers.
-    """
+    """A :class:`.ContentDriver` that loads content from files on disk or from memory buffers."""
 
     def __init__(self, enable_extended_info: bool = True):
         """
@@ -84,6 +82,7 @@ class StandardContentDriver(ContentDriver):
         self._persistent_buffers: set[_PersistentBuffer] = set()
 
     def __del__(self):
+        """Clean up any persistent buffers that haven't already been cleaned up."""
         self._persistent_buffers.clear()
 
     @property
@@ -180,7 +179,6 @@ class StandardContentDriver(ContentDriver):
         :param subsystem: The subsystem we're using for this session, if any
         :param subsysrom: The descriptor for the ROM type we're using, if any
         """
-
         assert self._system_info is not None
 
         if selected_subsystem and not self._subsystems:

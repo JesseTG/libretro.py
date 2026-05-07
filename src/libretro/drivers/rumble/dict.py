@@ -1,3 +1,12 @@
+"""
+:class:`.RumbleDriver` implementation that tracks per-port motor strengths in a dictionary.
+
+.. seealso::
+
+    :class:`.RumbleDriver`
+        The protocol this driver implements.
+"""
+
 from dataclasses import dataclass
 from typing import override
 
@@ -9,14 +18,13 @@ from .driver import RumbleDriver
 
 @dataclass(slots=True)
 class RumbleState:
-    """
-    Simulated state of a pair of rumble motors.
-    """
+    """Simulated state of a pair of rumble motors."""
 
     strong: int
     weak: int
 
     def __getitem__(self, item: RumbleEffect) -> int:
+        """Return the strength of the motor identified by ``item``."""
         match item:
             case RumbleEffect.STRONG:
                 return self.strong
@@ -28,6 +36,7 @@ class RumbleState:
                 raise TypeError(f"Expected a valid RumbleEffect, got: {type(e).__name__}")
 
     def __setitem__(self, key: RumbleEffect, value: int):
+        """Set the strength of the motor identified by ``key``."""
         match key, value:
             case RumbleEffect.STRONG, int(value):
                 self.strong = value
@@ -41,6 +50,7 @@ class RumbleState:
                 raise TypeError(f"Expected an int value, got: {type(v).__name__}")
 
     def __len__(self):
+        """Return the number of motors (always ``2``: one strong, one weak)."""
         return 2
 
 
@@ -51,6 +61,7 @@ class DictRumbleDriver(RumbleDriver):
     """
 
     def __init__(self):
+        """Initialize the driver with an empty per-port rumble state map."""
         super().__init__()
         self._rumble_state: dict[Port, RumbleState] = {}
 
@@ -61,7 +72,7 @@ class DictRumbleDriver(RumbleDriver):
 
     def __getitem__(self, port: Port) -> RumbleState:
         """
-        Gets the state of the virtual rumble motors for a controller port.
+        Get the state of the virtual rumble motors for a controller port.
 
         :param port: The controller port to get the rumble state for.
         :return: The rumble state for the controller port.

@@ -15,9 +15,7 @@ from .driver import PowerDriver
 
 
 class ConstantPowerDriver(PowerDriver):
-    """
-    A :class:`.PowerDriver` that always reports a fixed :class:`~libretro.api.power.retro_device_power`.
-    """
+    """A :class:`.PowerDriver` that always reports a fixed :class:`~libretro.api.power.retro_device_power`."""
 
     def __init__(self, device_power: retro_device_power):
         """
