@@ -32,23 +32,84 @@ RETRO_CAMERA_BUFFER_DUMMY = 0x7FFFFFFF
 
 
 retro_camera_start_t = TypedFunctionPointer[c_bool, []]
-"""Called by the :class:`.Core` to start using the camera. Returns :obj:`True` on success."""
+"""
+Start the camera.
+
+Called by the :term:`core` to begin receiving camera frames from the frontend.
+Cameras are disabled by default and must be explicitly started.
+
+:return: :obj:`True` if the camera was successfully started,
+    :obj:`False` if no camera is available
+    or the frontend lacks permission to access it.
+
+Corresponds to :c:type:`retro_camera_start_t` in ``libretro.h``.
+"""
 
 retro_camera_stop_t = TypedFunctionPointer[None, []]
-"""Called by the :class:`.Core` to stop using the camera."""
+"""
+Stop the running camera.
+
+Called by the :term:`core` to halt the delivery of camera frames.
+
+Corresponds to :c:type:`retro_camera_stop_t` in ``libretro.h``.
+"""
 
 retro_camera_lifetime_status_t = TypedFunctionPointer[None, []]
-"""Called by libretro.py when the camera is initialized or deinitialized."""
+"""
+Notify the core that the camera driver has been initialized or deinitialized.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+right after the camera driver is initialized,
+or right before it is deinitialized.
+
+Corresponds to :c:type:`retro_camera_lifetime_status_t` in ``libretro.h``.
+"""
 
 retro_camera_frame_raw_framebuffer_t = TypedFunctionPointer[
     None, [TypedPointer[c_uint32], CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_size_t]]
 ]
-"""Called by libretro.py when a raw framebuffer frame is available from the camera."""
+"""
+Deliver a new camera frame as a raw pixel buffer.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+when a new camera frame is available in system memory,
+with the top-left corner of the image as the first pixel.
+
+:param buffer: Pointer to the camera's most recent video frame,
+    with one ``XRGB8888`` pixel per :c:type:`uint32_t`.
+:param width: Width of the frame, in pixels.
+:param height: Height of the frame, in pixels.
+:param pitch: Length of one row in ``buffer``, in bytes.
+
+.. warning::
+    ``buffer`` may be invalidated when this function returns,
+    so the core should make its own copy if it needs to retain the data.
+
+Corresponds to :c:type:`retro_camera_frame_raw_framebuffer_t` in ``libretro.h``.
+"""
 
 retro_camera_frame_opengl_texture_t = TypedFunctionPointer[
     None, [CIntArg[c_uint], CIntArg[c_uint], TypedPointer[c_float]]
 ]
-"""Called by libretro.py when an OpenGL texture frame is available from the camera."""
+"""
+Deliver a new camera frame as an OpenGL texture.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+when a new camera frame is available as a frontend-owned OpenGL texture.
+
+:param texture_id: ID of the OpenGL texture that holds the frame.
+    Owned by the frontend; the core must not modify it.
+:param texture_target: OpenGL texture target type
+    (e.g. ``GL_TEXTURE_2D`` or ``GL_TEXTURE_RECTANGLE``).
+:param affine: Pointer to a 3x3 column-major affine matrix
+    that maps pixel coordinates to texture coordinates.
+
+.. warning::
+    ``texture_id`` and ``affine`` may be invalidated when this function returns,
+    so the core should make its own copy if it needs to retain them.
+
+Corresponds to :c:type:`retro_camera_frame_opengl_texture_t` in ``libretro.h``.
+"""
 
 
 class CameraCapabilities(IntEnum):

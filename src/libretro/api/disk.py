@@ -15,50 +15,158 @@ from libretro.ctypes import (
 
 retro_set_eject_state_t = TypedFunctionPointer[c_bool, [CBoolArg]]
 """
-Opens or closes the virtual disk tray.
+Open or close the emulated console's virtual disk tray.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+to swap the disk image currently inserted in the emulated drive.
+The frontend may only change the disk image index while the tray is open.
 
 :param ejected: :obj:`True` to open the tray, :obj:`False` to close it.
-:returns: :obj:`True` on success, :obj:`False` on failure.
+:return: :obj:`True` if the tray's state was changed (or was already in that state),
+    :obj:`False` if the core could not change it.
+
+Corresponds to :c:type:`retro_set_eject_state_t` in ``libretro.h``.
 """
 
 retro_get_eject_state_t = TypedFunctionPointer[c_bool, []]
 """
-Retrieves the current eject state of the emulated disk drive.
+Return whether the emulated disk tray is currently open.
 
-:returns: :obj:`True` if the tray is open.
+Registered by the :term:`core` and called by the :term:`frontend`.
+
+:return: :obj:`True` if the virtual disk tray is open,
+    :obj:`False` if it is closed.
+
+Corresponds to :c:type:`retro_get_eject_state_t` in ``libretro.h``.
 """
 
 retro_get_image_index_t = TypedFunctionPointer[c_uint, []]
 """
-Returns the index of the currently inserted disk image.
+Return the index of the currently inserted disk image.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+
+:return: The index of the inserted disk image (starting at 0),
+    or a value greater than or equal to the result of :c:type:`retro_get_num_images_t`
+    if no disk is inserted.
+
+Corresponds to :c:type:`retro_get_image_index_t` in ``libretro.h``.
 """
 
 retro_set_image_index_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint]]]
-"""Selects a disk image by index."""
+"""
+Insert the disk image at the given index into the emulated drive.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+May only be called while the tray is open.
+
+:param index: Index of the disk image to insert, starting at 0.
+    A value greater than or equal to the result of :c:type:`retro_get_num_images_t`
+    represents removing the disk without inserting another.
+:return: :obj:`True` if the disk image was successfully set,
+    :obj:`False` if the tray is closed or another error occurred.
+
+Corresponds to :c:type:`retro_set_image_index_t` in ``libretro.h``.
+"""
 
 retro_get_num_images_t = TypedFunctionPointer[c_uint, []]
-"""Returns the total number of disk images available."""
+"""
+Return the number of disk images available to the core.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+
+:return: The number of available disk images.
+
+Corresponds to :c:type:`retro_get_num_images_t` in ``libretro.h``.
+"""
 
 retro_replace_image_index_t = TypedFunctionPointer[
     c_bool, [CIntArg[c_uint], TypedPointer[retro_game_info]]
 ]
-"""Replaces the disk image at the given index."""
+"""
+Replace the disk image at the given index with a new one.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+while the tray is open.
+Passing :obj:`None` for ``info`` removes the image at ``index`` from the playlist.
+
+:param index: Index of the disk image to replace.
+:param info: Pointer to a :class:`.retro_game_info` describing the new disk image,
+    or :obj:`None` to remove the image at ``index`` from the playlist.
+:return: :obj:`True` if the disk image was successfully replaced or removed,
+    :obj:`False` if the tray is closed or another error occurred.
+
+Corresponds to :c:type:`retro_replace_image_index_t` in ``libretro.h``.
+"""
 
 retro_add_image_index_t = TypedFunctionPointer[c_bool, []]
-"""Adds a new empty disk image slot."""
+"""
+Add a new empty slot to the core's internal disk image list.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+The new slot must be populated with :c:type:`retro_replace_image_index_t`
+before it can be used.
+
+:return: :obj:`True` if a new slot was added, :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_add_image_index_t` in ``libretro.h``.
+"""
 
 retro_set_initial_image_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint], CStringArg]]
-"""Sets the initial disk image to insert at startup."""
+"""
+Set the disk image to insert before content is loaded.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+immediately before :meth:`.Core.load_game`,
+so that the correct disk image from a multi-disk playlist
+is inserted into the emulated drive.
+
+:param index: Index of the disk image to insert at startup.
+:param path: Filesystem path of the disk image to insert,
+    used by the core to validate that ``index`` refers to the expected image.
+:return: :obj:`True` if the initial image was set,
+    :obj:`False` if the arguments are invalid
+    or the core does not support this function.
+
+Corresponds to :c:type:`retro_set_initial_image_t` in ``libretro.h``.
+"""
 
 retro_get_image_path_t = TypedFunctionPointer[
     c_bool, [CIntArg[c_uint], CStringArg, CIntArg[c_size_t]]
 ]
-"""Retrieves the filesystem path of a disk image."""
+"""
+Retrieve the filesystem path of a disk image.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+
+:param index: Index of the disk image whose path will be returned.
+:param path: Buffer that receives the path,
+    written as a :obj:`bytes` string (UTF-8 encoded if applicable).
+:param len: Size of the ``path`` buffer in bytes.
+:return: :obj:`True` if a path was successfully written into ``path``,
+    :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_get_image_path_t` in ``libretro.h``.
+"""
 
 retro_get_image_label_t = TypedFunctionPointer[
     c_bool, [CIntArg[c_uint], CStringArg, CIntArg[c_size_t]]
 ]
-"""Retrieves the display label of a disk image."""
+"""
+Retrieve a friendly display label for a disk image.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+to obtain a human-readable label that helps the player choose
+which disk image to insert.
+
+:param index: Index of the disk image whose label will be returned.
+:param path: Buffer that receives the label, written as a :obj:`bytes` string.
+:param len: Size of the ``path`` buffer in bytes.
+:return: :obj:`True` if a label was successfully written into ``path``,
+    :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_get_image_label_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

@@ -24,7 +24,20 @@ retro_usec_t = c_int64
 
 
 retro_frame_time_callback_t = TypedFunctionPointer[None, [CIntArg[retro_usec_t]]]
-"""Called each frame with the elapsed time in microseconds."""
+"""
+Notify the core of the time elapsed since the last :c:func:`retro_run`.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+right before each iteration of :c:func:`retro_run`.
+If the frontend is manipulating the frame time
+(e.g. via fast-forward or slow motion),
+the value passed in is the reference value
+from :attr:`retro_frame_time_callback.reference`.
+
+:param usec: Time since the last :c:func:`retro_run`, in microseconds.
+
+Corresponds to :c:type:`retro_frame_time_callback_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

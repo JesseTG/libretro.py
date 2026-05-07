@@ -118,20 +118,51 @@ class HardwareContext(IntEnum):
 
 retro_hw_context_reset_t = TypedFunctionPointer[None, []]
 """
-Context reset/destroy callback.
+Notify the core that the hardware rendering context has been (re)created or destroyed.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+when a hardware rendering context is initialized, lost, or about to be torn down.
+A core should treat all GPU resources as invalid after this is called as a reset
+and recreate them; for a destroy notification, it should simply free its resources
+without further GPU calls.
+
+Corresponds to :c:type:`retro_hw_context_reset_t` in ``libretro.h``.
 """
 
 retro_hw_get_current_framebuffer_t = TypedFunctionPointer[c_uintptr, []]
 """
-Returns the current hardware framebuffer,
-if applicable for the current rendering API and context state.
+Return the current frontend-managed hardware framebuffer object.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to obtain the framebuffer it should render into for the current frame.
+
+:return: An opaque :class:`~ctypes.c_uintptr` identifying the framebuffer
+    (typically an OpenGL FBO ID).
+    The value may change from frame to frame.
 
 .. note::
-    This callback exists for historical reasons and is only meaningful for OpenGL contexts.
+    This callback exists for historical reasons
+    and is only meaningful for OpenGL contexts.
+
+Corresponds to :c:type:`retro_hw_get_current_framebuffer_t` in ``libretro.h``.
 """
 
 retro_hw_get_proc_address_t = TypedFunctionPointer[c_void_ptr, [CStringArg]]
-"""Looks up a hardware rendering procedure by name."""
+"""
+Look up a function pointer in the active hardware rendering API.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to obtain entry points such as ``glClear`` or other GPU API functions.
+
+:param sym: Name of the symbol to look up, as a :obj:`bytes`-like object.
+:return: A :class:`.c_void_ptr` to the requested function,
+    or :obj:`None` if the symbol could not be resolved.
+
+.. note::
+    The returned pointer must be cast to the correct function signature before use.
+
+Corresponds to :c:type:`retro_hw_get_proc_address_t` in ``libretro.h``.
+"""
 # Workaround for ctypes not allowing callbacks to return function pointers
 
 

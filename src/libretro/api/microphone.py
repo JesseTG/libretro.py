@@ -75,26 +75,101 @@ class retro_microphone_params(Structure):
 retro_open_mic_t = TypedFunctionPointer[
     TypedPointer[retro_microphone], [TypedPointer[retro_microphone_params]]
 ]
-"""Opens a microphone with the given parameters."""
+"""
+Open a new microphone for capture.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param params: Pointer to a :class:`retro_microphone_params` describing the desired configuration,
+    or :obj:`None` to use the frontend's defaults.
+:return: A :class:`.c_void_ptr` to a :class:`retro_microphone` handle on success,
+    or :obj:`None` if a microphone could not be opened.
+
+.. note::
+    Microphones are inactive by default;
+    a returned handle must be enabled with :c:type:`retro_set_mic_state_t`
+    before it will yield samples.
+
+Corresponds to :c:type:`retro_open_mic_t` in ``libretro.h``.
+"""
 
 retro_close_mic_t = TypedFunctionPointer[None, [TypedPointer[retro_microphone]]]
-"""Closes an open microphone."""
+"""
+Close an open microphone and release its resources.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+After this returns, the handle must not be used again.
+
+:param microphone: Pointer to the :class:`retro_microphone` handle to close.
+    If :obj:`None`, this function does nothing.
+
+Corresponds to :c:type:`retro_close_mic_t` in ``libretro.h``.
+"""
 
 retro_get_mic_params_t = TypedFunctionPointer[
     c_bool, [TypedPointer[retro_microphone], TypedPointer[retro_microphone_params]]
 ]
-"""Retrieves the effective parameters of an open microphone."""
+"""
+Retrieve the configured parameters of an open microphone.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+The returned parameters may differ from those originally requested
+depending on driver and device support.
+
+:param microphone: Pointer to the :class:`retro_microphone` whose parameters will be queried.
+:param params: Pointer to a :class:`retro_microphone_params` that will be filled in.
+:return: :obj:`True` on success, :obj:`False` if either argument is invalid.
+
+Corresponds to :c:type:`retro_get_mic_params_t` in ``libretro.h``.
+"""
 
 retro_set_mic_state_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_microphone], CBoolArg]]
-"""Enables or disables an open microphone."""
+"""
+Enable or disable an open microphone.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+A disabled microphone will not produce samples
+and has minimal performance impact.
+
+:param microphone: Pointer to the :class:`retro_microphone` whose state will change.
+:param state: :obj:`True` to enable the microphone, :obj:`False` to pause it.
+:return: :obj:`True` if the state was successfully set,
+    :obj:`False` if ``microphone`` is invalid or there was an error.
+
+Corresponds to :c:type:`retro_set_mic_state_t` in ``libretro.h``.
+"""
 
 retro_get_mic_state_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_microphone]]]
-"""Returns whether an open microphone is currently enabled."""
+"""
+Return whether an open microphone is currently enabled.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param microphone: Pointer to the :class:`retro_microphone` to query.
+:return: :obj:`True` if ``microphone`` is valid and active, :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_get_mic_state_t` in ``libretro.h``.
+"""
 
 retro_read_mic_t = TypedFunctionPointer[
     c_int, [TypedPointer[retro_microphone], TypedPointer[c_int16], CIntArg[c_size_t]]
 ]
-"""Reads audio samples from an open microphone."""
+"""
+Read captured audio samples from an open microphone.
+
+Registered by the :term:`frontend` and called by the :term:`core`,
+which must do so every frame while the microphone is enabled.
+
+:param microphone: Pointer to the :class:`retro_microphone` to read from.
+:param samples: Pointer to a buffer of signed 16-bit mono samples that will be filled.
+:param num_samples: Capacity of ``samples``, in samples (not bytes).
+:return: The number of samples actually written to ``samples``,
+    or ``-1`` if the microphone is disabled,
+    the audio driver is paused,
+    or there was an error.
+
+Corresponds to :c:type:`retro_read_mic_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

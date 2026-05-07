@@ -28,7 +28,13 @@ RETRO_DEVICE_POINTER = 6
 
 retro_input_poll_t = TypedFunctionPointer[None, []]
 """
-Called by the :term:`core` once per frame to poll input devices.
+Poll input devices for the current frame.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+at least once per :c:func:`retro_run` to refresh cached input state
+before any calls to :c:type:`retro_input_state_t`.
+
+Corresponds to :c:type:`retro_input_poll_t` in ``libretro.h``.
 
 .. seealso::
     :attr:`.InputDriver.poll`
@@ -42,7 +48,23 @@ retro_input_state_t = TypedFunctionPointer[
     c_int16, [CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_uint]]
 ]
 """
-Called by the :term:`core` to query the state of a specific type of input.
+Query the state of a specific input on a controller.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to read the most recently polled input.
+
+:param port: Index of the controller :term:`port` to query.
+:param device: One of the :class:`InputDevice` constants identifying the abstract device type.
+    The value is masked with :data:`RETRO_DEVICE_MASK`.
+:param index: Sub-index whose meaning depends on ``device``
+    (e.g. an analog stick index).
+:param id: Identifier of the specific input to read,
+    such as one of the ``RETRO_DEVICE_ID_*`` constants.
+:return: The current input value;
+    semantics depend on ``device`` and ``id``,
+    and ``0`` is returned for unsupported combinations.
+
+Corresponds to :c:type:`retro_input_state_t` in ``libretro.h``.
 
 .. seealso::
     :attr:`.InputDriver.state`

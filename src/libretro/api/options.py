@@ -20,7 +20,20 @@ RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
 
 
 retro_core_options_update_display_callback_t = TypedFunctionPointer[c_bool, []]
-"""Called when the frontend should re-check option visibility."""
+"""
+Recompute the visibility of dynamic core options.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+to ask the core to update which options should be shown or hidden,
+typically by calling :data:`.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY` for each one.
+All core options are visible by default.
+
+:return: :obj:`True` if any core option's visibility was adjusted
+    since the last call to this function,
+    :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_core_options_update_display_callback_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

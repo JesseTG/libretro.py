@@ -38,10 +38,39 @@ RETRO_SENSOR_ILLUMINANCE = 6
 retro_set_sensor_state_t = TypedFunctionPointer[
     c_bool, [CIntArg[c_uint], CIntArg[retro_sensor_action], CIntArg[c_uint]]
 ]
-"""Enables or disables a sensor for a given port."""
+"""
+Adjust the state of a sensor on a controller.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to enable or disable a particular sensor and request an update rate.
+Cores should only enable sensors while they are actively in use,
+since sensors can drain the host device's battery.
+
+:param port: Index of the controller :term:`port` whose sensor will be addressed.
+:param action: A :class:`SensorAction` describing which sensor to enable or disable.
+:param rate: Desired sensor update rate, in Hz.
+    Treated as a hint; the actual rate may differ depending on the device.
+:return: :obj:`True` if the sensor state was successfully adjusted,
+    :obj:`False` otherwise (most commonly because the sensor is unavailable).
+
+Corresponds to :c:type:`retro_set_sensor_state_t` in ``libretro.h``.
+"""
 
 retro_sensor_get_input_t = TypedFunctionPointer[c_float, [CIntArg[c_uint], CIntArg[c_uint]]]
-"""Reads a sensor value for a given port and sensor ID."""
+"""
+Return the current value reported by a sensor.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param port: Index of the controller :term:`port` whose sensor will be queried.
+:param id: A :class:`Sensor` value that selects the sensor reading
+    (e.g. an accelerometer axis or the illuminance sensor).
+:return: The current sensor value;
+    semantics depend on ``id``,
+    and ``0.0`` is returned for invalid arguments.
+
+Corresponds to :c:type:`retro_sensor_get_input_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

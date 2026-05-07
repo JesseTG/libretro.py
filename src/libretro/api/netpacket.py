@@ -20,32 +20,116 @@ RETRO_NETPACKET_BROADCAST = 0xFFFF
 retro_netpacket_send_t = TypedFunctionPointer[
     None, [CIntArg[c_int], c_void_ptr, CIntArg[c_size_t], CIntArg[c_uint16], CBoolArg]
 ]
-"""Sends a network packet to a client."""
+"""
+Send a network packet to one or all connected players.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+A single packet may carry up to 64 KB of data.
+
+:param flags: A bitmask of :class:`.NetpacketFlags` values
+    that controls reliability, sequencing, and flushing.
+:param buf: A :class:`.c_void_ptr` to the packet data,
+    or :obj:`None` (combined with ``len`` of ``0``) to flush previously buffered packets.
+:param len: Length of the data in ``buf``, in bytes.
+:param client_id: Recipient player's client ID,
+    or :data:`BROADCAST` to send to every connected player.
+
+Corresponds to :c:type:`retro_netpacket_send_t` in ``libretro.h``.
+"""
 
 retro_netpacket_receive_t = TypedFunctionPointer[
     None, [c_void_ptr, CIntArg[c_size_t], CIntArg[c_uint16]]
 ]
-"""Called when a network packet is received."""
+"""
+Deliver a packet received from another player to the core.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+when a packet arrives from another player.
+
+:param buf: A :class:`.c_void_ptr` to the received packet data.
+:param len: Length of the packet in ``buf``, in bytes.
+:param client_id: Client ID of the player that sent the packet.
+
+Corresponds to :c:type:`retro_netpacket_receive_t` in ``libretro.h``.
+"""
 
 retro_netpacket_stop_t = TypedFunctionPointer[None, []]
-"""Called when the network session is stopped."""
+"""
+Notify the core that the multiplayer session has ended.
+
+Registered by the :term:`core` and called by the :term:`frontend`.
+After this call returns, the function pointers passed to
+:c:type:`retro_netpacket_start_t` are no longer valid.
+
+Corresponds to :c:type:`retro_netpacket_stop_t` in ``libretro.h``.
+"""
 
 retro_netpacket_poll_t = TypedFunctionPointer[None, []]
-"""Called to poll for network events."""
+"""
+Allow the core to send packets between calls to :c:func:`retro_run`.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+once per frame to update the multiplayer session.
+
+Corresponds to :c:type:`retro_netpacket_poll_t` in ``libretro.h``.
+"""
 
 retro_netpacket_poll_receive_t = TypedFunctionPointer[None, []]
-"""Called to poll for received packets."""
+"""
+Drain any pending incoming packets without waiting for the end of the frame.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to receive packets immediately rather than waiting for the next frame.
+
+Corresponds to :c:type:`retro_netpacket_poll_receive_t` in ``libretro.h``.
+"""
 
 retro_netpacket_connected_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint16]]]
-"""Called when a client connects. Returns ``True`` to accept."""
+"""
+Notify the host's core that a new player has connected.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+on the host side only.
+The core may reject the new player by returning :obj:`False`.
+
+:param client_id: Client ID of the newly-connected player.
+:return: :obj:`True` to accept the connection,
+    :obj:`False` to drop the player.
+
+Corresponds to :c:type:`retro_netpacket_connected_t` in ``libretro.h``.
+"""
 
 retro_netpacket_disconnected_t = TypedFunctionPointer[None, [CIntArg[c_uint16]]]
-"""Called when a client disconnects."""
+"""
+Notify the host's core that a player has disconnected.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+on the host side only.
+
+:param client_id: Client ID of the player that disconnected.
+
+Corresponds to :c:type:`retro_netpacket_disconnected_t` in ``libretro.h``.
+"""
 
 retro_netpacket_start_t = TypedFunctionPointer[
     None, [CIntArg[c_uint16], retro_netpacket_send_t, retro_netpacket_poll_receive_t]
 ]
-"""Called to start the network session with a client ID, send function, and poll function."""
+"""
+Notify the core that a multiplayer session has started.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+once the local player has joined the session.
+The core should retain ``send_fn`` (and optionally ``poll_receive_fn``)
+for use until :c:type:`retro_netpacket_stop_t` is called.
+
+:param client_id: Local player's client ID;
+    ``0`` if the local player is the host.
+:param send_fn: A :c:type:`retro_netpacket_send_t` that the core uses to send packets.
+:param poll_receive_fn: A :c:type:`retro_netpacket_poll_receive_t`
+    that the core uses for synchronous receives.
+
+Corresponds to :c:type:`retro_netpacket_start_t` in ``libretro.h``.
+"""
 
 
 class NetpacketFlags(IntFlag):

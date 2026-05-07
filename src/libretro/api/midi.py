@@ -18,19 +18,63 @@ from dataclasses import dataclass
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_midi_input_enabled_t = TypedFunctionPointer[c_bool, []]
-"""Returns whether MIDI input is enabled."""
+"""
+Return whether MIDI input is currently enabled.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:return: :obj:`True` if MIDI input is enabled.
+
+Corresponds to :c:type:`retro_midi_input_enabled_t` in ``libretro.h``.
+"""
 
 retro_midi_output_enabled_t = TypedFunctionPointer[c_bool, []]
-"""Returns whether MIDI output is enabled."""
+"""
+Return whether MIDI output is currently enabled.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:return: :obj:`True` if MIDI output is enabled.
+
+Corresponds to :c:type:`retro_midi_output_enabled_t` in ``libretro.h``.
+"""
 
 retro_midi_read_t = TypedFunctionPointer[c_bool, [TypedPointer[c_uint8]]]
-"""Reads a byte from the MIDI input stream."""
+"""
+Read a single byte from the MIDI input stream.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param byte: Pointer to a :class:`~ctypes.c_uint8` that receives the input byte.
+:return: :obj:`True` if a byte was successfully read,
+    :obj:`False` if MIDI input is disabled or ``byte`` is :obj:`None`.
+
+Corresponds to :c:type:`retro_midi_read_t` in ``libretro.h``.
+"""
 
 retro_midi_write_t = TypedFunctionPointer[c_bool, [CIntArg[c_uint8], CIntArg[c_uint32]]]
-"""Writes a byte to the MIDI output stream with a delta time."""
+"""
+Write a single byte to the MIDI output stream.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param byte: The byte to write.
+:param delta_time: Time elapsed since the previous write, in microseconds.
+:return: :obj:`True` if ``byte`` was written, :obj:`False` otherwise.
+
+Corresponds to :c:type:`retro_midi_write_t` in ``libretro.h``.
+"""
 
 retro_midi_flush_t = TypedFunctionPointer[c_bool, []]
-"""Flushes the MIDI output stream."""
+"""
+Flush previously-written MIDI output.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:return: :obj:`True` if the output was successfully flushed.
+
+Corresponds to :c:type:`retro_midi_flush_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

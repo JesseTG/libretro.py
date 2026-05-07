@@ -17,7 +17,16 @@ from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_set_led_state_t = TypedFunctionPointer[None, [CIntArg[c_int], CIntArg[c_int]]]
 """
-Called by the :class:`.Core` to set the state of an LED.
+Set the state of an LED on the host device.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to enable or disable an indicator LED.
+
+:param led: Index of the LED whose state will be changed.
+:param state: New state of the LED;
+    nonzero to enable, zero to disable.
+
+Corresponds to :c:type:`retro_set_led_state_t` in ``libretro.h``.
 
 .. seealso::
     :attr:`.LedDriver.set_led_state`

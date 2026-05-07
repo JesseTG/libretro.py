@@ -211,73 +211,274 @@ class VfsFileAccess(IntFlag):
 
 
 retro_vfs_get_path_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_file_handle]]]
-"""Returns the path of an open file handle."""
+"""
+Return the path that was used to open a VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to an open :class:`retro_vfs_file_handle`.
+:return: The path that was used to open ``stream``, as a :obj:`bytes` string.
+    The string is owned by the frontend and must not be modified.
+
+Corresponds to :c:type:`retro_vfs_get_path_t` in ``libretro.h``.
+"""
 
 retro_vfs_open_t = TypedFunctionPointer[
     TypedPointer[retro_vfs_file_handle], [CStringArg, CIntArg[c_uint], CIntArg[c_uint]]
 ]
-"""Opens a file with the given path, mode, and hints."""
+"""
+Open a file for reading, writing, or both.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param path: The path of the file to open.
+:param mode: A bitmask of :class:`VfsFileAccess` flags.
+:param hints: A bitmask of :class:`VfsFileAccessHint` flags.
+:return: A :class:`.c_void_ptr` to a new :class:`retro_vfs_file_handle` on success,
+    or :obj:`None` on failure (including when ``path`` names a directory).
+
+Corresponds to :c:type:`retro_vfs_open_t` in ``libretro.h``.
+"""
 
 retro_vfs_close_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
-"""Closes an open file handle."""
+"""
+Close an open VFS file and release its resources.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+After this returns the handle is no longer valid.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to close.
+:return: ``0`` on success, ``-1`` on failure or if ``stream`` is :obj:`None`.
+
+Corresponds to :c:type:`retro_vfs_close_t` in ``libretro.h``.
+"""
 
 retro_vfs_size_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
-"""Returns the size of an open file."""
+"""
+Return the size of an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to query.
+:return: The size of the file in bytes, or ``-1`` on error.
+
+Corresponds to :c:type:`retro_vfs_size_t` in ``libretro.h``.
+"""
 
 retro_vfs_truncate_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64]]
 ]
-"""Truncates an open file to the given length."""
+"""
+Set the length of an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+Shorter ``length`` values discard the trailing bytes;
+longer values pad with platform-defined contents.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to truncate.
+:param length: New length of the file, in bytes.
+:return: ``0`` on success, ``-1`` on failure.
+
+Corresponds to :c:type:`retro_vfs_truncate_t` in ``libretro.h``.
+"""
 
 retro_vfs_tell_t = TypedFunctionPointer[c_int64, [TypedPointer[retro_vfs_file_handle]]]
-"""Returns the current position in an open file."""
+"""
+Return the current read/write position of an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to query.
+:return: The current stream position in bytes, or ``-1`` on error.
+
+Corresponds to :c:type:`retro_vfs_tell_t` in ``libretro.h``.
+"""
 
 retro_vfs_seek_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], CIntArg[c_int64], CIntArg[c_int]]
 ]
-"""Seeks to a position in an open file."""
+"""
+Set the read/write position of an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to seek.
+:param offset: New offset in bytes, relative to ``seek_position``.
+:param seek_position: A :class:`VfsSeekPosition` indicating the seek origin.
+:return: The resulting stream position, or ``-1`` on error.
+
+Corresponds to :c:type:`retro_vfs_seek_t` in ``libretro.h``.
+"""
 
 retro_vfs_read_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
 ]
-"""Reads data from an open file."""
+"""
+Read data from an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to read from.
+:param s: A :class:`.c_void_ptr` to the buffer that will receive the data.
+:param len: Maximum number of bytes to read.
+:return: The number of bytes actually read, or ``-1`` on error.
+
+Corresponds to :c:type:`retro_vfs_read_t` in ``libretro.h``.
+"""
 
 retro_vfs_write_t = TypedFunctionPointer[
     c_int64, [TypedPointer[retro_vfs_file_handle], c_void_ptr, CIntArg[c_uint64]]
 ]
-"""Writes data to an open file."""
+"""
+Write data to an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to write to.
+:param s: A :class:`.c_void_ptr` to the buffer of bytes to write.
+:param len: Number of bytes to write from ``s``.
+:return: The number of bytes actually written, or ``-1`` on error.
+
+Corresponds to :c:type:`retro_vfs_write_t` in ``libretro.h``.
+"""
 
 retro_vfs_flush_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_file_handle]]]
-"""Flushes pending writes to an open file."""
+"""
+Flush pending writes for an open VFS file.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param stream: Pointer to the :class:`retro_vfs_file_handle` to flush.
+:return: ``0`` on success, ``-1`` on failure.
+
+Corresponds to :c:type:`retro_vfs_flush_t` in ``libretro.h``.
+"""
 
 retro_vfs_remove_t = TypedFunctionPointer[c_int, [CStringArg]]
-"""Removes a file at the given path."""
+"""
+Delete the file at the given path.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param path: Path of the file to delete.
+:return: ``0`` on success, ``-1`` on failure.
+
+Corresponds to :c:type:`retro_vfs_remove_t` in ``libretro.h``.
+"""
 
 retro_vfs_rename_t = TypedFunctionPointer[c_int, [CStringArg, CStringArg]]
-"""Renames a file from one path to another."""
+"""
+Rename a file from one path to another.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param old_path: Path to an existing file.
+:param new_path: Destination path; must not refer to an existing file.
+:return: ``0`` on success, ``-1`` on failure.
+
+Corresponds to :c:type:`retro_vfs_rename_t` in ``libretro.h``.
+"""
 
 retro_vfs_stat_t = TypedFunctionPointer[c_int, [CStringArg, TypedPointer[c_int32]]]
-"""Stats a path and returns flags and optionally the file size."""
+"""
+Get information about a file at the given path.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param path: Path of the file to query.
+:param size: Pointer to an :class:`~ctypes.c_int32` that receives the file's size in bytes,
+    or :obj:`None` to ignore the size.
+:return: A bitmask of :class:`VfsStat` flags,
+    or ``0`` if ``path`` does not refer to a valid file.
+
+Corresponds to :c:type:`retro_vfs_stat_t` in ``libretro.h``.
+"""
 
 retro_vfs_mkdir_t = TypedFunctionPointer[c_int, [CStringArg]]
-"""Creates a directory at the given path."""
+"""
+Create a directory at the given path.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param dir: Path of the directory to create.
+:return: A :class:`VfsMkdirResult` value;
+    ``0`` if the directory was created,
+    ``-2`` if it already exists,
+    or ``-1`` for any other error.
+
+Corresponds to :c:type:`retro_vfs_mkdir_t` in ``libretro.h``.
+"""
 
 retro_vfs_opendir_t = TypedFunctionPointer[
     TypedPointer[retro_vfs_dir_handle], [CStringArg, CBoolArg]
 ]
-"""Opens a directory for iteration."""
+"""
+Open a directory so its contents can be enumerated.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param dir: Path to an existing directory.
+:param include_hidden: :obj:`True` to include hidden files in the listing.
+    The exact semantics depend on the platform.
+:return: A :class:`.c_void_ptr` to a new :class:`retro_vfs_dir_handle` on success,
+    or :obj:`None` on failure.
+
+Corresponds to :c:type:`retro_vfs_opendir_t` in ``libretro.h``.
+"""
 
 retro_vfs_readdir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
-"""Advances the directory iterator to the next entry."""
+"""
+Advance to the next directory entry.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param dirstream: Pointer to the :class:`retro_vfs_dir_handle` to advance.
+:return: :obj:`True` if a new entry is available,
+    :obj:`False` if no more entries remain.
+
+Corresponds to :c:type:`retro_vfs_readdir_t` in ``libretro.h``.
+"""
 
 retro_vfs_dirent_get_name_t = TypedFunctionPointer[c_char_p, [TypedPointer[retro_vfs_dir_handle]]]
-"""Returns the name of the current directory entry."""
+"""
+Return the filename of the current directory entry.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+The returned pointer is valid until the next call to :c:type:`retro_vfs_readdir_t`
+or :c:type:`retro_vfs_closedir_t` on this handle.
+
+:param dirstream: Pointer to the :class:`retro_vfs_dir_handle` to query.
+:return: The current entry's filename as a :obj:`bytes` string,
+    or :obj:`None` on error.
+
+Corresponds to :c:type:`retro_vfs_dirent_get_name_t` in ``libretro.h``.
+"""
 
 retro_vfs_dirent_is_dir_t = TypedFunctionPointer[c_bool, [TypedPointer[retro_vfs_dir_handle]]]
-"""Returns whether the current directory entry is a subdirectory."""
+"""
+Return whether the current directory entry is itself a directory.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:param dirstream: Pointer to the :class:`retro_vfs_dir_handle` to query.
+:return: :obj:`True` if the current entry names a subdirectory,
+    :obj:`False` otherwise or on error.
+
+Corresponds to :c:type:`retro_vfs_dirent_is_dir_t` in ``libretro.h``.
+"""
 
 retro_vfs_closedir_t = TypedFunctionPointer[c_int, [TypedPointer[retro_vfs_dir_handle]]]
-"""Closes an open directory handle."""
+"""
+Close an open VFS directory handle.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+After this returns the handle is no longer valid.
+
+:param dirstream: Pointer to the :class:`retro_vfs_dir_handle` to close.
+:return: ``0`` on success, ``-1`` on failure.
+
+Corresponds to :c:type:`retro_vfs_closedir_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

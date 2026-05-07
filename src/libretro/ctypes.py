@@ -154,9 +154,17 @@ class c_void_ptr(c_void_p):
 
 if TYPE_CHECKING:
     type CBoolArg = ConvertibleToPrimitive[c_bool, bool]
+    """A type that can be used as an argument for a C :c:type:`c_bool` parameter."""
+
     type CIntArg[T: CUint | CInt] = ConvertibleToPrimitive[T, int] | SupportsInt
+    """A type that can be used as an argument for a C integer parameter."""
+
     type CFloatArg[T: CReal] = ConvertibleToPrimitive[T, float] | SupportsFloat
+    """A type that can be used as an argument for a C floating-point parameter."""
+
     type CStringArg = ConvertibleToPrimitive[c_char_p, bytes] | SupportsBytes
+    """A type that can be used as an argument for a C :c:type:`char *` parameter."""
+
     type Pointer[T: _CDataType] = _Pointer[T]
 
     class TypedFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
@@ -165,9 +173,9 @@ if TYPE_CHECKING:
 
         Defined inside ``if TYPE_CHECKING:``;
         at runtime this name resolves to a plain
-        :func:`ctypes.CFUNCTYPE` factory (see the ``else:`` branch below).
+        :func:`ctypes.CFUNCTYPE` factory (see the :keyword:`else` branch below).
         Exists so static analyzers can infer concrete return types
-        (``bool``, ``int``, ``float``, ``bytes``, etc.)
+        (:class:`bool`, :class:`int``, :class:`float`, :class:`bytes`, etc.)
         from the ctypes return-type parameter ``R``.
         """
 
@@ -217,9 +225,9 @@ if TYPE_CHECKING:
 
         Defined inside ``if TYPE_CHECKING:``;
         at runtime this name resolves to plain :class:`ctypes.Array`
-        (see the ``else:`` branch below).
+        (see the :keyword:`else` branch below).
         Exists so static analyzers can refine the element type
-        returned by indexing and iteration based on the ctypes element type ``T``.
+        returned by indexing and iteration based on the :mod:`ctypes` element type ``T``.
         """
 
         @property
@@ -354,9 +362,9 @@ if TYPE_CHECKING:
 
         Defined inside ``if TYPE_CHECKING:``;
         at runtime this name resolves to a plain
-        :func:`ctypes.POINTER` factory (see the ``else:`` branch below).
+        :func:`ctypes.POINTER` factory (see the :keyword:`else` branch below).
         Exists so static analyzers can refine the value type
-        returned by indexing based on the ctypes referent type ``T``.
+        returned by indexing based on the :mod:`ctypes` referent type ``T``.
         """
 
         @overload

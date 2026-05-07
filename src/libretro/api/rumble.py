@@ -30,7 +30,19 @@ retro_set_rumble_state_t = TypedFunctionPointer[
     c_bool, [CIntArg[c_uint], CIntArg[retro_rumble_effect], CIntArg[c_uint16]]
 ]
 """
-Sets the rumble state for the controller assigned to a given input port.
+Set the rumble intensity for one motor of a controller.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+Each controller has independent strong and weak motors;
+setting one does not override the other.
+
+:param port: Index of the controller :term:`port` to address.
+:param effect: A :class:`RumbleEffect` selecting the strong or weak motor.
+:param strength: Desired motor intensity, in the range ``[0, 0xFFFF]``.
+:return: :obj:`True` if the rumble state was honored,
+    :obj:`False` if the controller does not support rumble.
+
+Corresponds to :c:type:`retro_set_rumble_state_t` in ``libretro.h``.
 
 .. seealso::
 

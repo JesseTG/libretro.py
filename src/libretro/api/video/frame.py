@@ -26,7 +26,28 @@ RETRO_MEMORY_TYPE_CACHED = 1 << 0
 retro_video_refresh_t = TypedFunctionPointer[
     None, [c_void_ptr, CIntArg[c_uint], CIntArg[c_uint], CIntArg[c_size_t]]
 ]
-"""Video refresh callback. Called with (data, width, height, pitch)."""
+"""
+Render a single video frame.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+once per :c:func:`retro_run` to deliver a frame of pixel data.
+Passing :obj:`None` (or the value of :data:`HW_FRAME_BUFFER_VALID` for hardware rendering)
+for ``data`` indicates that the frontend should reuse the previous frame.
+
+:param data: A :class:`.c_void_ptr` to the framebuffer.
+    The pixel format is the one most recently set with
+    :data:`.RETRO_ENVIRONMENT_SET_PIXEL_FORMAT`,
+    defaulting to :attr:`.PixelFormat.RGB1555`.
+:param width: Width of the frame, in pixels.
+:param height: Height of the frame, in pixels.
+:param pitch: Length of one row in ``data``, in bytes.
+
+.. note::
+    For best performance the framebuffer should be packed
+    (i.e. ``pitch == width * bytes_per_pixel``).
+
+Corresponds to :c:type:`retro_video_refresh_t` in ``libretro.h``.
+"""
 
 
 class PixelFormat(IntEnum):

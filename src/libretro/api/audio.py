@@ -21,31 +21,40 @@ from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointe
 
 retro_audio_sample_t = TypedFunctionPointer[None, [CIntArg[c_int16], CIntArg[c_int16]]]
 """
-Called by the core to render a single stereo audio frame.
+Render a single stereo audio frame.
 
-Corresponds to :c:type:`retro_audio_sample_t`.
+Called by the :term:`core` to push one signed 16-bit sample per channel to the frontend.
 
-.. seealso ::
+:param left: Signed 16-bit sample for the left channel.
+:param right: Signed 16-bit sample for the right channel.
+
+Corresponds to :c:type:`retro_audio_sample_t` in ``libretro.h``.
+
+.. seealso::
 
     :meth:`.Core.set_audio_sample`
         The method that exposes this callback to cores.
 
     :meth:`.AudioDriver.sample`
         The method that implements this callback in libretro.py.
-
 """
 
 retro_audio_sample_batch_t = TypedFunctionPointer[
     c_size_t, [TypedPointer[c_int16], CIntArg[c_size_t]]
 ]
 """
-Called by the core to render multiple stereo audio frames at once.
+Render multiple stereo audio frames at once.
 
-The buffer should contain interleaved left/right channel samples, i.e. [L, R, L, R, ...].
+Called by the :term:`core` to push a buffer of interleaved
+signed 16-bit left/right samples (i.e. ``[L, R, L, R, ...]``) to the frontend.
 
-Corresponds to :c:type:`retro_audio_sample_batch_t`.
+:param data: Pointer to a buffer of interleaved signed 16-bit samples.
+:param frames: Number of stereo frames in ``data`` (i.e. half the number of samples).
+:return: The number of frames that were processed by the frontend.
 
-.. seealso ::
+Corresponds to :c:type:`retro_audio_sample_batch_t` in ``libretro.h``.
+
+.. seealso::
 
     :meth:`.Core.set_audio_sample_batch`
         The method that exposes this callback to cores.
@@ -56,12 +65,20 @@ Corresponds to :c:type:`retro_audio_sample_batch_t`.
 
 retro_audio_callback_t = TypedFunctionPointer[None, []]
 """
-Registered by the core so that libretro.py can request audio samples from it,
-possibly on a separate thread.
+Render audio samples on demand.
 
-Corresponds to :c:type:`retro_audio_callback_t`.
+Registered by the :term:`core` and called by the :term:`frontend`
+when it is ready to receive audio output;
+the core should respond by pushing samples through
+:c:type:`retro_audio_sample_t` or :c:type:`retro_audio_sample_batch_t`.
 
-.. seealso ::
+.. warning::
+    The frontend may invoke this callback from any thread,
+    so its implementation must be thread-safe.
+
+Corresponds to :c:type:`retro_audio_callback_t` in ``libretro.h``.
+
+.. seealso::
 
     :meth:`.AudioDriver.callback`
         The suggested entry point for this registered callback in libretro.py.
@@ -69,12 +86,17 @@ Corresponds to :c:type:`retro_audio_callback_t`.
 
 retro_audio_set_state_callback_t = TypedFunctionPointer[None, [CBoolArg]]
 """
-Registered by the core so that libretro.py
-can tell it to start or stop rendering audio.
+Notify the core that audio rendering should start or stop.
 
-Corresponds to :c:type:`retro_audio_set_state_callback_t`.
+Registered by the :term:`core` and called by the :term:`frontend`
+to indicate whether the audio driver is currently active.
 
-.. seealso ::
+:param enabled: :obj:`True` if the frontend's audio driver is active and ready to receive samples,
+    :obj:`False` if it is paused.
+
+Corresponds to :c:type:`retro_audio_set_state_callback_t` in ``libretro.h``.
+
+.. seealso::
 
     :meth:`.AudioDriver.set_state`
         The suggested entry point for this registered callback in libretro.py.
@@ -84,12 +106,21 @@ retro_audio_buffer_status_callback_t = TypedFunctionPointer[
     None, [CBoolArg, CIntArg[c_uint], CBoolArg]
 ]
 """
-Registered by the core so that libretro.py can inform the core
-about the active :class:`.AudioDriver`'s buffer occupancy and underrun status.
+Report the frontend's audio buffer occupancy to the core.
 
-Corresponds to :c:type:`retro_audio_buffer_status_callback_t`.
+Registered by the :term:`core` and called by the :term:`frontend`
+right before each frame so the core can react to impending buffer underruns
+(for example, by skipping a frame).
 
-.. seealso ::
+:param active: :obj:`True` if the frontend's audio buffer is currently in use,
+    :obj:`False` if audio is disabled.
+:param occupancy: Audio buffer occupancy as a percentage in the range ``[0, 100]``.
+:param underrun_likely: :obj:`True` if the frontend expects an audio buffer
+    underrun on the next frame.
+
+Corresponds to :c:type:`retro_audio_buffer_status_callback_t` in ``libretro.h``.
+
+.. seealso::
 
     :meth:`.AudioDriver.report_buffer_status`
         The suggested entry point for this registered callback in libretro.py.

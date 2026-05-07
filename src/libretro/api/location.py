@@ -12,13 +12,39 @@ from dataclasses import dataclass
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_location_set_interval_t = TypedFunctionPointer[None, [CIntArg[c_uint], CIntArg[c_uint]]]
-"""Sets the location polling interval and distance threshold."""
+"""
+Set the desired update rate for the location service.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to hint how often it would like new location updates.
+Some platforms may honor only one of the two parameters.
+
+:param interval_ms: Desired period between updates, in milliseconds.
+:param interval_distance: Desired distance between updates, in meters.
+
+Corresponds to :c:type:`retro_location_set_interval_t` in ``libretro.h``.
+"""
 
 retro_location_start_t = TypedFunctionPointer[c_bool, []]
-"""Starts location services. Returns :obj:`True` on success."""
+"""
+Start listening to the host device's location service.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+:return: :obj:`True` if location services were successfully started,
+    :obj:`False` if they are unavailable or the frontend lacks permission.
+
+Corresponds to :c:type:`retro_location_start_t` in ``libretro.h``.
+"""
 
 retro_location_stop_t = TypedFunctionPointer[None, []]
-"""Stops location services."""
+"""
+Stop listening to the host device's location service.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+Corresponds to :c:type:`retro_location_stop_t` in ``libretro.h``.
+"""
 
 retro_location_get_position_t = TypedFunctionPointer[
     c_bool,
@@ -29,10 +55,31 @@ retro_location_get_position_t = TypedFunctionPointer[
         TypedPointer[c_double],
     ],
 ]
-"""Retrieves the current geographic position (lat, lon, horiz accuracy, vert accuracy)."""
+"""
+Return the device's most recent geographic position.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+Each output parameter is set to ``0.0`` if no change has occurred
+since the last call.
+
+:param lat: Pointer to a :class:`~ctypes.c_double` that receives the latitude, in degrees.
+:param lon: Pointer to a :class:`~ctypes.c_double` that receives the longitude, in degrees.
+:param horiz_accuracy: Pointer to a :class:`~ctypes.c_double` that receives the horizontal accuracy.
+:param vert_accuracy: Pointer to a :class:`~ctypes.c_double` that receives the vertical accuracy.
+:return: :obj:`True` on success.
+
+Corresponds to :c:type:`retro_location_get_position_t` in ``libretro.h``.
+"""
 
 retro_location_lifetime_status_t = TypedFunctionPointer[None, []]
-"""Called when location services are initialized or deinitialized."""
+"""
+Notify the core that the location service has been initialized or deinitialized.
+
+Registered by the :term:`core` and called by the :term:`frontend`
+when the location service starts or stops.
+
+Corresponds to :c:type:`retro_location_lifetime_status_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)

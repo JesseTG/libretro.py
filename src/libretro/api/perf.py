@@ -133,25 +133,92 @@ class retro_perf_counter(Structure):
 
 
 retro_perf_get_time_usec_t = TypedFunctionPointer[retro_time_t, []]
-"""Returns the current time in microseconds."""
+"""
+Return the current system time in microseconds.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+The frontend should use the most accurate timer available on the platform.
+
+:return: The current time, in microseconds.
+
+Corresponds to :c:type:`retro_perf_get_time_usec_t` in ``libretro.h``.
+"""
 
 retro_perf_get_counter_t = TypedFunctionPointer[retro_perf_tick_t, []]
-"""Returns the current performance counter value."""
+"""
+Return the number of ticks elapsed since some unspecified epoch.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+The exact meaning of a tick depends on the platform
+(typically nanoseconds or CPU cycles).
+
+:return: The current tick count.
+
+Corresponds to :c:type:`retro_perf_get_counter_t` in ``libretro.h``.
+"""
 
 retro_get_cpu_features_t = TypedFunctionPointer[c_uint64, []]
-"""Returns a bitmask of :class:`CpuFeatures`."""
+"""
+Return a bitmask of detected CPU features.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+to dispatch CPU-specific code paths at runtime.
+
+:return: A bitmask of :class:`CpuFeatures` flags.
+
+Corresponds to :c:type:`retro_get_cpu_features_t` in ``libretro.h``.
+"""
 
 retro_perf_log_t = TypedFunctionPointer[None, []]
-"""Logs all registered performance counters."""
+"""
+Log or display the state of every registered performance counter.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+The exact presentation is up to the frontend.
+
+Corresponds to :c:type:`retro_perf_log_t` in ``libretro.h``.
+"""
 
 retro_perf_register_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
-"""Registers a performance counter for tracking."""
+"""
+Register a performance counter with the frontend.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+once per counter, before the counter is started or stopped.
+
+:param counter: Pointer to a :class:`retro_perf_counter` to register.
+    Its :attr:`~retro_perf_counter.ident` field must be set;
+    all other fields must be zero or :obj:`False`.
+
+Corresponds to :c:type:`retro_perf_register_t` in ``libretro.h``.
+"""
 
 retro_perf_start_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
-"""Starts timing a performance counter."""
+"""
+Start timing a registered performance counter.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+right before the code being measured.
+
+:param counter: Pointer to a :class:`retro_perf_counter` that has been
+    registered with :c:type:`retro_perf_register_t`.
+
+Corresponds to :c:type:`retro_perf_start_t` in ``libretro.h``.
+"""
 
 retro_perf_stop_t = TypedFunctionPointer[None, [TypedPointer[retro_perf_counter]]]
-"""Stops timing a performance counter."""
+"""
+Stop timing a registered performance counter.
+
+Registered by the :term:`frontend` and called by the :term:`core`
+right after the code being measured;
+the elapsed time is added to the counter's :attr:`~retro_perf_counter.total`.
+
+:param counter: Pointer to the same :class:`retro_perf_counter`
+    that was previously passed to :c:type:`retro_perf_start_t`.
+
+Corresponds to :c:type:`retro_perf_stop_t` in ``libretro.h``.
+"""
 
 
 @dataclass(init=False, slots=True)
