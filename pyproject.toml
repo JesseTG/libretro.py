@@ -49,10 +49,10 @@ dev = [
     "libretro.py[build]"
 ]
 docs = [
-    'Sphinx == 7.*',
-    'sphinx-autobuild == 2024.*',
+    'Sphinx == 9.1.0',
+    'sphinx-autobuild == 2025.8.25',
     'sphinx-copybutton == 0.5.2',
-    'furo',
+    'furo == 2025.12.19',
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [
