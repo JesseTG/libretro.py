@@ -20,6 +20,7 @@ Ease of use, flexibility, and complete API support are top priorities.
    guide/start
    guide/index
    api/index
+   glossary
 
 
 Indices and tables
