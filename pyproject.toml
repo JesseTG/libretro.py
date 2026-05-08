@@ -57,6 +57,7 @@ docs = [
     # Need to use this commit because the most recent release
     # is old and won't work with our version of Sphinx
     'sphinxcontrib-prettyspecialmethods@git+https://github.com/sphinx-contrib/prettyspecialmethods#egg=38fb1b',
+    'sphinx-autodoc-typehints == 3.10.0',
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [

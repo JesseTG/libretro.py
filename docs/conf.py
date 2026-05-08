@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
     "sphinxcontrib.prettyspecialmethods",
 ]
 
@@ -35,6 +36,7 @@ html_static_path = ["_static"]
 
 # -- Options for autodoc extension -------------------------------------------
 
+autodoc_typehints = "none"
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
 set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
 autodoc_class_signature = "separated"  # Separate class and constructor signatures
