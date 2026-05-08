@@ -43,8 +43,6 @@ and the driver interfaces that handle them.
       - Not supported
     * - :attr:`~.EnvironmentCall.SET_HW_RENDER`
       - :meth:`.VideoDriver.set_context`
-    * - :attr:`~.EnvironmentCall.SET_HW_RENDER_EXPERIMENTAL`
-      - Not supported
     * - :attr:`~.EnvironmentCall.GET_VARIABLE`
       - :meth:`.OptionDriver.get_variable`
     * - :attr:`~.EnvironmentCall.SET_VARIABLES`
