@@ -1,7 +1,7 @@
 Supported Environment Calls
 ===========================
 
-This page lists the :term:`environment call`s supported by libretro.py
+This page lists the :term:`environment call`\s supported by libretro.py
 and the driver interfaces that handle them.
 
 .. note::
