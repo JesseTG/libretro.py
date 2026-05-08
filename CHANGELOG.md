@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `bandit`, `black`, and `isort` in favor of `ruff`.
 - Simplify `justfile` recipes to `ruff`'s consolidated features.
 
+### Fixed
+
+- `retro_framebuffer.__deepcopy__` now copies the entire frame buffer.
+
 ### Removed
 
 - **BREAKING:** Remove `SocketNetpacketDriver`.
