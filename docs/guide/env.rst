@@ -1,8 +1,18 @@
 Supported Environment Calls
 ===========================
 
-This page lists the environment calls supported by libretro.py
+This page lists the :term:`environment call`s supported by libretro.py
 and the driver interfaces that handle them.
+
+.. note::
+  The presence of an envcall on this table *only*
+  implies that it has a :term:`driver` protocol
+  and at least one implementation that's usable for testing.
+
+  This does *not* mean that the driver uses actual hardware resources;
+  it just means that the driver is able to convince the :term:`core`
+  that it does.
+
 
 .. list-table::
     :header-rows: 1
