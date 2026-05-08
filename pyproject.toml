@@ -53,6 +53,10 @@ docs = [
     'sphinx-autobuild == 2025.8.25',
     'sphinx-copybutton == 0.5.2',
     'furo == 2025.12.19',
+
+    # Need to use this commit because the most recent release
+    # is old and won't work with our version of Sphinx
+    'sphinxcontrib-prettyspecialmethods@git+https://github.com/sphinx-contrib/prettyspecialmethods#egg=38fb1b',
 ]
 doc = ["libretro.py[docs]"] # Alias for the docs extra
 opengl = [

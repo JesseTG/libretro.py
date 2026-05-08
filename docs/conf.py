@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.prettyspecialmethods",
 ]
 
 templates_path = ["_templates"]
@@ -39,7 +40,7 @@ set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_t
 autodoc_class_signature = "separated"  # Separate class and constructor signatures
 autodoc_default_options = {
     "member-order": "bysource",
-    "special-members": "__init__",  # Don't document any __dunder__ methods except these
+    "special-members": "__init__,__call__,__getitem__,__setitem__,__delitem__,__iter__,__enter__,__exit__,__deepcopy__,__copy__,__len__,__contains__,__del__",  # Don't document any __dunder__ methods except these
     "undoc-members": True,  # Generate documentation for members without docstrings
     "inherited-members": "Protocol,int",  # Don't show inherited members from these classes
     "show-inheritance": True,  # Show the base class(es) of a class
