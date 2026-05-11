@@ -1,10 +1,10 @@
 """Test scenario that loads, initializes, then deinitializes a libretro core."""
 
-import typer
+from typer.main import get_command
 
 import libretro
 
-from ._common import CoreArg
+from ._common import CoreArg, prepare
 
 
 def main(core: CoreArg):
@@ -19,5 +19,8 @@ def main(core: CoreArg):
         pass
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

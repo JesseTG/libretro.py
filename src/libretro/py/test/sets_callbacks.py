@@ -1,8 +1,8 @@
 """Test scenario that loads a libretro core and registers the basic ``retro_set_*`` callbacks."""
 
-import typer
+from typer.main import get_command
 
-from ._common import CoreArg
+from ._common import CoreArg, prepare
 
 
 def main(libretro: CoreArg):
@@ -19,5 +19,8 @@ def main(libretro: CoreArg):
     libretro.set_environment(lambda _cmd, _data: False)
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

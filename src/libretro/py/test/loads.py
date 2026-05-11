@@ -1,8 +1,8 @@
 """Test scenario that verifies a libretro core can be loaded and exposes the required symbols."""
 
-import typer
+from typer.main import get_command
 
-from ._common import CoreArg
+from ._common import CoreArg, prepare
 
 
 # noinspection PyUnusedLocal
@@ -18,5 +18,8 @@ def main(libretro: CoreArg):
     # If it fails, an exception will be raised.
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

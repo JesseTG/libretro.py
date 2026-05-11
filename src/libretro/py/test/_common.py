@@ -1,10 +1,11 @@
 import re
+from collections.abc import Callable
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 from click import BadArgumentUsage, FileError
-from typer import Argument, Option
+from typer import Argument, Option, Typer
 
 from libretro import DEFAULT_DRIVER_MAP, Core, HardwareContext
 
@@ -158,6 +159,15 @@ WindowOption = Annotated[
     ),
 ]
 
+
+def prepare(
+    function: Callable[..., Any],
+) -> Typer:
+    app = Typer(add_completion=False)
+    app.command()(function)
+    return app
+
+
 __all__ = [
     "CoreArg",
     "VerboseOption",
@@ -168,4 +178,5 @@ __all__ = [
     "VideoDriverOption",
     "SoftwareVideoDriverType",
     "WindowOption",
+    "prepare",
 ]

@@ -1,8 +1,8 @@
 """Test scenario that loads a libretro core and prints its reported system information."""
 
-import typer
+from typer.main import get_command
 
-from ._common import CoreArg
+from ._common import CoreArg, prepare
 
 
 def main(libretro: CoreArg):
@@ -25,5 +25,8 @@ def main(libretro: CoreArg):
     print("valid_extensions:", "NULL" if valid_extensions is None else valid_extensions.decode())
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

@@ -2,10 +2,10 @@
 
 from typing import Annotated
 
-import typer
 from typer import Option
+from typer.main import get_command
 
-from ._common import CoreArg
+from ._common import CoreArg, prepare
 
 
 def main(libretro: CoreArg, api_version: Annotated[int, Option(min=0)] = 1):
@@ -19,5 +19,8 @@ def main(libretro: CoreArg, api_version: Annotated[int, Option(min=0)] = 1):
         raise ValueError(f"Core version mismatch: expected {api_version}, got {core_version}")
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

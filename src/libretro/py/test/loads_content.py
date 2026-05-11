@@ -1,10 +1,10 @@
 """Test scenario that loads a libretro core together with zero or more content files."""
 
-import typer
+from typer.main import get_command
 
 from libretro import Content, SessionBuilder, SubsystemContent
 
-from ._common import ContentArg, CoreArg, SubsystemOption
+from ._common import ContentArg, CoreArg, SubsystemOption, prepare
 
 
 def main(
@@ -38,5 +38,8 @@ def main(
         pass
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

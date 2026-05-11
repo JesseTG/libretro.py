@@ -1,6 +1,6 @@
 """Test scenario that loads a libretro core, registers default drivers, and runs frames."""
 
-import typer
+from typer.main import get_command
 
 from libretro import (
     DEFAULT_DRIVER_MAP,
@@ -20,6 +20,7 @@ from ._common import (
     SubsystemOption,
     VideoDriverOption,
     WindowOption,
+    prepare,
 )
 
 _EMPTY = []
@@ -104,5 +105,8 @@ def main(
             session.run()
 
 
+app = prepare(main)
+command = get_command(app)
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()
