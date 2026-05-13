@@ -25,7 +25,7 @@ though any core will work.
 Getting Started
 ---------------
 
-We'll use the provided ``libretro.py.test.runs`` script to run the core.
+We'll use the provided ``libretro.py.runs`` script to run the core.
 Make sure that you've installed the ``cli`` extra when you installed libretro.py.
 This script is a simple way to run a core for fixed length of time.
 
@@ -52,13 +52,13 @@ and configure it like so:
     expects a specific working directory.
 
 :guilabel:`Command-line Arguments`
-    Enter the following: :samp:`-m libretro.py.test.runs {path-to-core} {path-to-content} -Omupen64plus-rdp-plugin=gliden64 -n600 --window`
+    Enter the following: :samp:`-m libretro.py.runs {path-to-core} {path-to-content} -Omupen64plus-rdp-plugin=gliden64 -n600 --window`
 
     Let's break this down:
 
-    :samp:`-m libretro.py.test.runs`
+    :samp:`-m libretro.py.runs`
         Using Python's ``-m`` flag will run the given module as a script,
-        in this case the ``libretro.py.test.runs`` module
+        in this case the ``libretro.py.runs`` module
         included with libretro.py.
 
     :samp:`{path-to-core}`
@@ -101,7 +101,7 @@ and configure it like so:
         This flag tells ``libretro.py`` to create a window for the core to render to.
         This is necessary for RenderDoc to capture the frame.
 
-    Run ``python -m libretro.py.test.runs --help`` for more details about available flags.
+    Run ``python -m libretro.py.runs --help`` for more details about available flags.
 
 **Environment Variables**
     You can leave this blank
