@@ -40,7 +40,6 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
 keep_warnings = True
 
 # -- Options for HTML output -------------------------------------------------
