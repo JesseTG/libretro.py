@@ -1,4 +1,4 @@
-"""Test scenario that loads, initializes, then deinitializes a libretro core."""
+"""Initialize then deinitialize a :term:`core` without loading content or running frames."""
 
 from typer.main import get_command
 

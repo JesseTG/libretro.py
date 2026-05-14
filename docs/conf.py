@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinxcontrib.prettyspecialmethods",
+    "sphinx_click",
 ]
 
 templates_path = ["_templates"]

@@ -1,4 +1,4 @@
-"""Test scenario that loads a libretro core together with zero or more content files."""
+"""Load zero or more content files into a :term:`core` without running any frames."""
 
 from typer.main import get_command
 

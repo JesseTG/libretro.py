@@ -1,4 +1,4 @@
-"""Test scenario that loads a core and validates its reported API version."""
+"""Validate a :term:`core`'s API version."""
 
 from typing import Annotated
 

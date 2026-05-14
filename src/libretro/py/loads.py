@@ -1,4 +1,4 @@
-"""Test scenario that verifies a libretro core can be loaded and exposes the required symbols."""
+"""Load a :term:`core` into memory without calling any of its functions."""
 
 from typer.main import get_command
 

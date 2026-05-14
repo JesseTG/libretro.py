@@ -1,4 +1,4 @@
-"""Test scenario that loads a libretro core and prints its reported system information."""
+"""Prints the info returned by a :term:`core`'s ``retro_get_system_info``."""
 
 from typer.main import get_command
 

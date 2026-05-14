@@ -1,4 +1,4 @@
-"""Test scenario that loads a libretro core, registers default drivers, and runs frames."""
+"""Run a :term:`core` with content for a fixed number of frames."""
 
 from typer.main import get_command
 
@@ -23,15 +23,13 @@ from ._common import (
     prepare,
 )
 
-_EMPTY = []
-
 
 def main(
     libretro: CoreArg,
     subsystem: SubsystemOption = None,
-    content_paths: ContentArg = (),
+    content_paths: ContentArg = None,
     frames: FrameCountOption = 60,
-    options: CoreOptionsOption = (),
+    options: CoreOptionsOption = None,
     software_video: VideoDriverOption = SoftwareVideoDriverType.DEFAULT,  # type: ignore[assignment]
     windowed: WindowOption = False,
 ):

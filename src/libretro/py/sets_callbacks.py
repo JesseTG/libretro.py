@@ -1,4 +1,4 @@
-"""Test scenario that loads a libretro core and registers the basic ``retro_set_*`` callbacks."""
+"""Validate that a :term:`core` registers libretro's main ``retro_set_*`` callbacks."""
 
 from typer.main import get_command
 

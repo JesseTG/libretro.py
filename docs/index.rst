@@ -26,6 +26,7 @@ Ease of use, flexibility, and complete API support are top priorities.
 
 .. include:: api.rst
 
+.. include:: cli.rst
 
 Indices and tables
 ==================

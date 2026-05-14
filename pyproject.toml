@@ -41,7 +41,7 @@ build = [
     'pre-commit == 3.7.*',
 ]
 cli = [
-    'typer == 0.12.5',
+    'typer == 0.25.1',
 ]
 dev = [
     'pyright == 1.1.*',
@@ -52,6 +52,9 @@ docs = [
     'Sphinx == 9.1.0',
     'sphinx-autobuild == 2025.8.25',
     'sphinx-copybutton == 0.5.2',
+
+    # Need this fix for https://github.com/click-contrib/sphinx-click/issues/159
+    "sphinx-click@git+https://github.com/dionhaefner/sphinx-click#egg=82fed75",
     'furo == 2025.12.19',
 
     # Need to use this commit because the most recent release
