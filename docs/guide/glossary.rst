@@ -12,7 +12,11 @@ This page defines important terms that are used throughout libretro.py's documen
 
         .. note::
             Some libretro frontends link their cores statically due to platform limits.
-            libretro.py isn't one of them -- all cores must be loaded at runtime!
+            libretro.py isn't one of them --
+            all cores must be loaded at runtime!
+
+    content
+        TODO
 
     core
         An application wrapped in a library that exports the :term:`libretro` API.
@@ -73,5 +77,11 @@ This page defines important terms that are used throughout libretro.py's documen
     RetroArch
         RetroArch is the reference implementation of a libretro :term:`frontend`.
         Though it's the most popular, others exist -- including libretro.py!
+
+    ROM
+        TODO
+
+    subsystem
+        TODO
 
 .. _libretro.h: https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro.h

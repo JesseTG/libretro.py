@@ -1,7 +1,7 @@
 libretro.py
 ===========
 
-libretro.py is Python binding for `libretro <https://www.libretro.com>`_  intended for testing cores,
+libretro.py is a Python binding for `libretro <https://www.libretro.com>`_  intended for testing cores,
 but suitable for any purpose.
 Ease of use, flexibility, and complete API support are top priorities.
 
@@ -16,11 +16,15 @@ Ease of use, flexibility, and complete API support are top priorities.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Guides
 
    guide/start
-   guide/index
-   api/index
-   glossary
+   guide/env
+   guide/renderdoc
+   guide/cmake
+   guide/glossary
+
+.. include:: api.rst
 
 
 Indices and tables
