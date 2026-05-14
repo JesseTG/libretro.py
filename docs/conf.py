@@ -7,8 +7,24 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "libretro.py"
-copyright = "2024, Jesse Talavera"
+
 author = "Jesse Talavera"
+copyright = f"2024-%Y {author}"
+# It me
+
+manpages_url = "https://man7.org/linux/man-pages/man{section}/{page}.{section}.html"
+# To allow cross-references to man pages
+
+toc_object_entries_show_parents = "hide"
+# Just show method/field names on the right sidebar instead of the whole name (it looks nicer)
+
+python_display_short_literal_types = True
+# "A" | "B" | "C" looks nicer than Literal["A", "B", "C"]
+
+add_module_names = False
+modindex_common_prefix = ["libretro.", "libretro.api.", "libretro.drivers."]
+# The modules all start with "libretro.something",
+# using the full path everywhere is too verbose
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
