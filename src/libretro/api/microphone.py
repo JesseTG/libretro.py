@@ -28,7 +28,7 @@ class retro_microphone(Structure):
 
     .. note::
 
-        Unlike most other :mod:`ctypes`-wrapped ``struct``s in libretro.py,
+        Unlike most other :mod:`ctypes`-wrapped ``struct``\s in libretro.py,
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.MicrophoneDriver` implementations.
 

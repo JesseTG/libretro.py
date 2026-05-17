@@ -17,7 +17,7 @@ Naming
 
 * All function pointer types and :class:`~.ctypes.Structure` subclasses
   are named exactly the same as their C counterparts.
-* All explicit :c:expr:`enum` types are given ``CamelCase`` names
+* All explicit ``enum`` types are given ``CamelCase`` names
   that match the name of their C counterparts with the common ``RETRO_`` prefix removed.
 * All groups of related ``#define`` constants are given ``CamelCase`` type names
   derived from their common prefix in C.
@@ -50,7 +50,7 @@ The linked documentation provides details, but in a nutshell:
   of the target C integer type when converted to C.
 * C floating-point types are converted to and from Python :class:`float`\s.
 * Python :class:`bytes` objects are converted to and from ``NULL``-terminated :c:expr:`char *`\s.
-* ``NULL`` C pointers of any type are converted to and from :obj:`None`.
+* :c:macro:`NULL` C pointers of any type are converted to and from :obj:`None`.
 * C :c:expr:`bool`\s are converted to and from Python :class:`bool`\s.
 * C :c:expr:`void *` pointers are converted to and from :class:`int`\s.
 * Subclasses of any :mod:`ctypes` primitive are *not* implicitly converted to Python primitives.

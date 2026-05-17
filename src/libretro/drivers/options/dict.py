@@ -386,8 +386,8 @@ class DictOptionDriver(OptionDriver):
 
             :param key: The key of the variable to set
             :param value: The value to set for the variable.
-            str and bytes are accepted,
-            but the value will always be stored as bytes.
+                str and bytes are accepted,
+                but the value will always be stored as bytes.
 
             Values that haven't been registered can be set,
             but will only be exposed to the core
