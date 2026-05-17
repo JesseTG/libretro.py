@@ -225,15 +225,13 @@ class retro_microphone_interface(Structure):
 
         :param interface_version: Must match :const:`INTERFACE_VERSION`.
         """
-        super().__init__(
-            interface_version,
-            open_mic,
-            close_mic,
-            get_params,
-            set_mic_state,
-            get_mic_state,
-            read_mic,
-        )
+        self.interface_version = interface_version
+        self.open_mic = open_mic
+        self.close_mic = close_mic
+        self.get_params = get_params
+        self.set_mic_state = set_mic_state
+        self.get_mic_state = get_mic_state
+        self.read_mic = read_mic
 
     def __deepcopy__(self, _):
         """
