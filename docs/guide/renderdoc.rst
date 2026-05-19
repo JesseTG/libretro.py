@@ -25,7 +25,7 @@ though any core will work.
 Getting Started
 ---------------
 
-We'll use the provided ``libretro.py.runs`` script to run the core.
+We'll use the provided :mod:`libretro.py.runs` script to run the core.
 Make sure that you've installed the ``cli`` extra when you installed libretro.py.
 This script is a simple way to run a core for fixed length of time.
 
@@ -57,12 +57,12 @@ and configure it like so:
     Let's break this down:
 
     :samp:`-m libretro.py.runs`
-        Using Python's ``-m`` flag will run the given module as a script,
-        in this case the ``libretro.py.runs`` module
+        Using Python's :option:`-m` flag will run the given module as a script,
+        in this case the :mod:`libretro.py.runs` module
         included with libretro.py.
 
     :samp:`{path-to-core}`
-        Replace this with the path to the core you're using.
+        Replace this with the path to the :term:`core` you're using.
         For the purpose of this guide, we're using Mupen64Plus-Next;
         on my machine, that's :file:`D:/SteamLibrary/steamapps/common/RetroArch/cores/mupen64plus_next_libretro.dll`.
 
@@ -94,14 +94,14 @@ and configure it like so:
         which is the only graphics API that libretro.py supports at the moment.
 
     :samp:`-n600`
-        The ``-n`` flag tells ``libretro.py`` to run the core for a fixed number of frames.
+        The ``-n`` flag tells libretro.py to run the core for a fixed number of frames.
         In this case, we're running for 600 frames (about 10 seconds).
 
     :samp:`--window`
         This flag tells ``libretro.py`` to create a window for the core to render to.
         This is necessary for RenderDoc to capture the frame.
 
-    Run ``python -m libretro.py.runs --help`` for more details about available flags.
+    See :mod:`here <libretro.py.runs>` for more details about available flags.
 
 **Environment Variables**
     You can leave this blank
@@ -145,7 +145,7 @@ On Windows, this is actually a thin launcher for the system Python installation
 with some environment variables set to point to the virtual environment.
 
 Second, you may need to adjust the :guilabel:`Environment Variables`
-to set :samp:`PYTHONPATH` to include the path to the virtual environment's site-packages directory.
+to set :envvar:`PYTHONPATH` to include the path to the virtual environment's site-packages directory.
 If you're using a local copy of libretro.py (e.g. when contributing or fixing a bug),
 you may also need to include the path to the directory containing libretro.py itself.
 
