@@ -16,7 +16,8 @@ This page defines important terms that are used throughout libretro.py's documen
             all cores must be loaded at runtime!
 
     content
-        TODO
+        The data that's loaded into a :term:`core`,
+        usually a :term:`ROM` containing a game.
 
     core
         An application wrapped in a library that exports the :term:`libretro` API.
@@ -31,7 +32,7 @@ This page defines important terms that are used throughout libretro.py's documen
 
         .. tip::
             libretro.py borrows this idea from :term:`RetroArch`,
-            which uses this term the same way;
+            which uses this term similarly;
             most of its subsystems have multiple implementations
             that can be swapped out at runtime without the :term:`core` noticing.
 
@@ -57,7 +58,8 @@ This page defines important terms that are used throughout libretro.py's documen
     libretro
         A common interface between the :term:`frontend` and the :term:`core`;
         exposing a game or emulator with this interface
-        allows it to benefit from a frontend's supported features.
+        allows it to benefit from a frontend's supported features
+        without the author having to implement it themselves.
         Similar APIs such as `BizHawk <https://bizhawk.org/>`_
         and `Jolly Good <https://jgemu.gitlab.io>`_ exist,
         but these fall outside the scope of libretro.py.
@@ -69,19 +71,45 @@ This page defines important terms that are used throughout libretro.py's documen
         .. seealso::
             `libretro.h`_ on GitHub
 
+    port
+        A "slot" that accepts input from an abstract device like the :term:`RetroPad`.
+        These usually correspond to an emulated platform's controller ports,
+        but not necessarily.
+
     protocol
         Python term for an interface.
         It's convenient to define one as a :class:`~typing.Protocol` subclass,
-        but it's not usually required.
+        but not usually required.
 
     RetroArch
         RetroArch is the reference implementation of a libretro :term:`frontend`.
         Though it's the most popular, others exist -- including libretro.py!
 
+    RetroPad
+    gamepad
+    joypad
+    joystick
+        The abstraction over a gamepad used by libretro.
+        Modeled after a SNES controller with analog triggers and joysticks.
+        All cores that use gamepads specify their input in terms of RetroPad buttons.
+
     ROM
-        TODO
+    ROM image
+    disk image
+    dump
+    ISO
+        A digital backup of a game's **r**\ead-**o**\nly **m**\emory,
+        including all of its code and data.
+        Most :term:`core`\s accept one or more of these as :term:`content`.
+        Sometimes called an ISO or a dump,
+        especially for disk-based media.
+
+        .. note::
+            Although there are technical nuances in how these terms are used,
+            the distinctions aren't relevant to libretro.py unless otherwise noted.
+
 
     subsystem
-        TODO
+        A secondary platform that augments the primary platform a core emulates.
 
 .. _libretro.h: https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro.h
