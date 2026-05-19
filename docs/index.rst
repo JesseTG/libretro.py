@@ -18,10 +18,8 @@ Ease of use, flexibility, and complete API support are top priorities.
    :maxdepth: 1
    :caption: Guides
 
-   guide/start
    guide/env
    guide/renderdoc
-   guide/cmake
    guide/glossary
 
 .. include:: api.rst
