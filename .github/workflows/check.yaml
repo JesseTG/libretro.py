@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Just
-        uses: extractions/setup-just@c26183993cea0054160ffaaa55fab2cad53c12fc # v3.1.0
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
 
       - name: Install Build Requirements
         run: sudo apt-get install libx11-dev
@@ -63,7 +63,7 @@ jobs:
         # Building the docs is only supported with the most recent version of Python
 
       - name: Upload Build
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ matrix.python-version == '3.14' }}
         # Only upload artifacts for the latest Python version,
         # since the package should be the same for all versions
