@@ -24,6 +24,18 @@ cd libretro.py  # Enter the project directory
 just install # Install libretro.py in editable mode and all its dependencies in the current environment
 ```
 
+# Enforcing Quality
+
+This section describes this project's rules for enforcing quality standards.
+
+## Warnings
+
+- Do not silence warnings with `# type: ignore` comments (or similar)
+  without adding a comment explaining why you've done so.
+- If you are an agent, silencing warnings should be your last resort.
+  Mention any warnings you silenced in the summary of your work.
+
+
 # Documentation Style
 
 This section is the single source of truth for libretro.py's documentation style.
