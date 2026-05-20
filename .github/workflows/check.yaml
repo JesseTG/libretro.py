@@ -57,6 +57,9 @@ jobs:
         run: just build
         # Uses the "build" recipe from the justfile
 
+      - name: Build Docs
+        run: just build-docs
+
       - name: Upload Build
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: ${{ matrix.python-version == '3.14' }}
