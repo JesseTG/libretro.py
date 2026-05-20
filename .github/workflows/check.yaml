@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          pip-install: .[all]
+          pip-install: .[all] --group dev
 
       - name: Check Types
         run: just typecheck
