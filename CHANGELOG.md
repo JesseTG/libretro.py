@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added docstrings for most public symbols in `libretro.api`.
+- Added docstrings for most public symbols.
+- Add documentation for the utility modules in `libretro.py`.
 
 ### Changed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `retro_framebuffer.__deepcopy__` now copies the entire frame buffer.
+- Fix `retro_microphone_interface.__init__` raising an error.
 
 ### Removed
 
@@ -32,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The interface isn't finalized,
   and the driver wasn't even implemented.
   It will be readded later.
+- Remove two placeholder guides. Their only content was "TODO".
 
 
 ## [0.7.1] - 2026-04-12
