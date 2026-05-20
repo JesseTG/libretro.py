@@ -157,7 +157,3 @@ reportUnnecessaryComparison = false
 reportUnknownParameterType = true
 reportMissingParameterType = true
 reportDeprecated = "warning"
-
-executionEnvironments = [
-  { root = "src/libretro/py", reportUnknownVariableType = false }
-]
