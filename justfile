@@ -62,7 +62,13 @@ typecheck:
 
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs:
-    sphinx-autobuild --jobs auto --ignore "./docs/api/*" --builder dirhtml --keep-going --watch src docs build/doc
+    sphinx-autobuild --jobs auto --builder dirhtml --keep-going --watch src docs build/doc
+
+build-docs:
+    sphinx-build --jobs auto --builder dirhtml --write-all --fresh-env --nitpicky docs build/doc
+
+doc-coverage:
+    sphinx-build -M coverage -c docs src
 
 # Create a virtual environment
 [group('Getting Started')]
