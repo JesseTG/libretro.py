@@ -21,3 +21,7 @@ dist/
 # RenderDoc Captures and Settings
 *.cap
 *.rdc
+
+# Local Settings
+.claude/settings.local.json
+.vscode
