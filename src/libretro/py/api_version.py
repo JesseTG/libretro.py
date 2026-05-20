@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from typer import Option
+from typer import Option  # pyright: ignore[reportUnknownVariableType]
 from typer.main import get_command
 
 from ._common import CoreArg, prepare

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from click import BadArgumentUsage, FileError
-from typer import Argument, Option, Typer
+from typer import Argument, Option, Typer  # pyright: ignore[reportUnknownVariableType]
 
 from libretro import DEFAULT_DRIVER_MAP, Core, HardwareContext
 
