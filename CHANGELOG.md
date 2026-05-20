@@ -10,12 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
-## [Unreleased]
+## [0.7.2] - 2026-05-20
 
 ### Added
 
 - Added docstrings for most public symbols.
 - Add documentation for the utility modules in `libretro.py`.
+- Add a glossary page for common terms.
+- Add a table of supported environment calls.
 
 ### Changed
 
