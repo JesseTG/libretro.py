@@ -88,7 +88,7 @@ class AudioDriver(Protocol):
         """
         Enable or disables the registered asynchronous audio callback.
 
-        Calls :attr:`retro_audio_callback.set_state` if a callback is registered.
+        Calls :attr:`.retro_audio_callback.set_state` if a callback is registered.
 
         :param enabled: Whether to enable the audio callback.
         """
@@ -100,7 +100,7 @@ class AudioDriver(Protocol):
         """
         Invoke the registered asynchronous audio callback, if any.
 
-        Calls :attr:`retro_audio_callback.callback` if a callback is registered.
+        Calls :attr:`.retro_audio_callback.callback` if a callback is registered.
         """
         callbacks = self.callbacks
         if callbacks and callbacks.callback:

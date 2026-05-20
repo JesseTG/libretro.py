@@ -30,16 +30,16 @@ retro_log_printf_t = TypedFunctionPointer[None, [CIntArg[retro_log_level], CStri
 Log a message at the given severity level.
 
 Registered by the :term:`frontend` and called by the :term:`core`
-to write a :c:func:`printf`-style message to the frontend's log.
+to write a ``printf``-style message to the frontend's log.
 
 :param level: A :class:`.LogLevel` that classifies the severity of the message.
 :param fmt: The format string to log, as a :obj:`bytes`-like object.
 
 .. warning::
-    :c:type:`retro_log_printf_t` normally has :c:func:`printf`-style variadic arguments,
+    :c:type:`retro_log_printf_t` normally has ``printf``-style variadic arguments,
     but :mod:`!ctypes` :python-issue:`doesn't currently support variadic callbacks <135620>`.
 
-    As a workaround, your :class:`.Core` can format log messages with :c:func:`sprintf` or similar,
+    As a workaround, your :class:`.Core` can format log messages with ``sprintf`` or similar,
     then pass the result as the format string.
 
 Corresponds to :c:type:`retro_log_printf_t` in ``libretro.h``.

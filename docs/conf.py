@@ -80,3 +80,9 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "moderngl": ("https://moderngl.readthedocs.io/en/stable", None),
 }
+
+nitpick_ignore_regex = {
+    ("c:.*", "(retro|RETRO)_.+"),
+}
+# We don't have an intersphinx mapping for libretro.h's API docs,
+# so cross-references won't work right now.

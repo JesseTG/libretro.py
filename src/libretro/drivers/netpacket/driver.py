@@ -158,4 +158,4 @@ class NetpacketDriver(Protocol):
         ...
 
 
-__all__ = ["NetpacketDriver"]
+__all__ = ["NetpacketDriver", "ClientID", "LOCAL", "BROADCAST"]

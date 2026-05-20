@@ -25,7 +25,7 @@ Recompute the visibility of dynamic core options.
 
 Registered by the :term:`core` and called by the :term:`frontend`
 to ask the core to update which options should be shown or hidden,
-typically by calling :data:`.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY` for each one.
+typically by calling :data:`~libretro.api.environment.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY` for each one.
 All core options are visible by default.
 
 :return: :obj:`True` if any core option's visibility was adjusted
@@ -135,7 +135,7 @@ class retro_core_option_value(Structure):
 
 
 NUM_CORE_OPTION_VALUES_MAX = RETRO_NUM_CORE_OPTION_VALUES_MAX
-"""Alias for :const:`RETRO_NUM_CORE_OPTION_VALUES_MAX`."""
+"""Alias for :data:`RETRO_NUM_CORE_OPTION_VALUES_MAX`."""
 
 CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 """Fixed-size array type for :class:`retro_core_option_value` entries."""
@@ -422,6 +422,7 @@ class retro_core_options_update_display_callback(Structure):
 
 
 __all__ = [
+    "RETRO_NUM_CORE_OPTION_VALUES_MAX",
     "retro_variable",
     "retro_core_option_display",
     "retro_core_option_value",

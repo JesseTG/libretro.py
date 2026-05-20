@@ -14,7 +14,7 @@ Opaque function pointer returned by :c:type:`retro_get_proc_address_t`.
 
 Despite this declaration, the underlying function may have any signature;
 use :func:`ctypes.cast` to convert it to a :class:`~ctypes.CFUNCTYPE`
-or :class:`.TypedFunctionPointer` with the correct prototype before invoking it.
+or :class:`~libretro.ctypes.TypedFunctionPointer` with the correct prototype before invoking it.
 
 .. danger::
 
@@ -34,7 +34,7 @@ Registered by the :term:`core` and called by the :term:`frontend`
 to access libretro extensions implemented by the core.
 
 :param sym: The symbol name to look up, as a :obj:`bytes`-like object.
-:return: A :class:`.c_void_ptr` to the matching :c:type:`retro_proc_address_t`,
+:return: A :class:`~libretro.ctypes.c_void_ptr` to the matching :c:type:`retro_proc_address_t`,
     or :obj:`None` if the core does not export a function with that name.
 
 .. note::

@@ -329,7 +329,7 @@ class SessionBuilder:
                 if not supported by the core, this will raise an error in :meth:`build`.
                 Note that ``retro_load_game`` **will** be called.
 
-            :class:`~collections.abc.Callable` () -> :data:`.Content` | :class:`.SubsystemContent` | :obj:`None`
+            :class:`~collections.abc.Callable` () -> :type:`.Content` | :class:`.SubsystemContent` | :obj:`None`
                 Zero-argument function that returns one of the above.
                 Will be called in :meth:`build`.
 
@@ -412,14 +412,14 @@ class SessionBuilder:
 
             :class:`~collections.abc.Generator`, :class:`~collections.abc.Iterable`, :class:`~collections.abc.Iterator`
                 Will be wrapped in an :class:`.IterableInputDriver`
-                that yields :class:`.InputState` values.
+                that yields :class:`.InputPollResult` values.
 
             :data:`.DEFAULT`
                 Will use an :class:`.IterableInputDriver` with its default configuration.
 
             :class:`~collections.abc.Callable` () -> :class:`.InputDriver` | iterable
                 Zero-argument function that returns either an :class:`.InputDriver`
-                or an iterable/iterator/generator of :class:`.InputState` values.
+                or an iterable/iterator/generator of :class:`.InputPollResult` values.
                 Will be called in :meth:`build`.
 
         :return: This :class:`SessionBuilder` object.

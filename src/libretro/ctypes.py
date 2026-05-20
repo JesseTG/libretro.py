@@ -163,15 +163,15 @@ if TYPE_CHECKING:
     """A type that can be used as an argument for a C floating-point parameter."""
 
     type CStringArg = ConvertibleToPrimitive[c_char_p, bytes] | SupportsBytes
-    """A type that can be used as an argument for a C :c:type:`char *` parameter."""
+    """A type that can be used as an argument for a C ``char *`` parameter."""
 
     type Pointer[T: _CDataType] = _Pointer[T]
 
     class TypedFunctionPointer[R: _CDataType | None, **P](CFuncPtr):
         """
-        Typing-only refinement of :class:`ctypes.CFUNCTYPE` parameterized by return and parameter types.
+        Typing-only refinement of :func:`ctypes.CFUNCTYPE` parameterized by return and parameter types.
 
-        Defined inside ``if TYPE_CHECKING:``;
+        Defined inside a :attr:`typing.TYPE_CHECKING` block;
         at runtime this name resolves to a plain
         :func:`ctypes.CFUNCTYPE` factory (see the :keyword:`else` branch below).
         Exists so static analyzers can infer concrete return types
@@ -451,6 +451,7 @@ else:
     TypedArray = Array
 
 __all__ = (
+    "AsParameter",
     "ConvertibleTo",
     "CBoolArg",
     "CFloatArg",
@@ -460,4 +461,5 @@ __all__ = (
     "Pointer",
     "TypedPointer",
     "TypedArray",
+    "c_void_ptr",
 )

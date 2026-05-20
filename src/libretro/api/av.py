@@ -44,7 +44,7 @@ class Region(IntEnum):
 
 class AvEnableFlags(IntFlag, boundary=CONFORM):
     """
-    Bit flags that denote whether the loaded :class:`Core`
+    Bit flags that denote whether the loaded :term:`core`
     should render audio and/or video frames.
 
     .. tip::
@@ -59,14 +59,14 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
 
     VIDEO = RETRO_AV_ENABLE_VIDEO
     """
-    If not set, the :class:`.Core` can safely skip rendering the next video frame.
+    If not set, the :term:`core` can safely skip rendering the next video frame.
 
     Corresponds to :c:macro:`RETRO_AV_ENABLE_VIDEO`.
     """
 
     AUDIO = RETRO_AV_ENABLE_AUDIO
     """
-    If not set, the :class:`.Core` can safely skip rendering the next audio frame.
+    If not set, the :term:`core` can safely skip rendering the next audio frame.
 
     Corresponds to :c:macro:`RETRO_AV_ENABLE_AUDIO`.
     """
@@ -85,7 +85,7 @@ class AvEnableFlags(IntFlag, boundary=CONFORM):
 
     HARD_DISABLE_AUDIO = RETRO_AV_ENABLE_HARD_DISABLE_AUDIO
     """
-    If set, the :class:`.Core` can safely skip rendering audio frames
+    If set, the :term:`core` can safely skip rendering audio frames
     for the entire duration of its execution.
 
     Corresponds to :c:macro:`RETRO_AV_ENABLE_HARD_DISABLE_AUDIO`.
@@ -232,14 +232,14 @@ class retro_system_timing(Structure):
 
     fps: float
     """
-    The :class:`.Core`'s video refresh rate in frames per second.
+    The :term:`core`'s video refresh rate in frames per second.
 
     Assigned values will be converted to a C :c:expr:`double`.
     """
 
     sample_rate: float
     """
-    The :class:`.Core`'s audio output rate in Hz.
+    The :term:`core`'s audio output rate in Hz.
 
     Assigned values will be converted to a C :c:expr:`double`.
     """

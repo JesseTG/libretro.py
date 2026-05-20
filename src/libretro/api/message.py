@@ -113,7 +113,7 @@ class retro_message_ext(Structure):
     """
     A value from -1 to 100 representing task progress. -1 for indefinite.
 
-    Assigned values are bitwise-masked to fit into a :c:type:`uint8_t`.
+    Assigned values are bitwise-masked to fit into a ``uint8_t``.
     """
 
     _fields_ = (
@@ -148,4 +148,11 @@ class retro_message_ext(Structure):
         )
 
 
-__all__ = ["MessageTarget", "MessageType", "retro_message", "retro_message_ext"]
+__all__ = [
+    "MessageTarget",
+    "MessageType",
+    "retro_message",
+    "retro_message_ext",
+    "retro_message_target",
+    "retro_message_type",
+]

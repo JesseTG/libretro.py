@@ -158,7 +158,7 @@ class retro_game_info(Structure):
     """
     Size of the content data in bytes.
 
-    Assigned values are bitwise-masked to fit into a :c:expr:`size_t`.
+    Assigned values are bitwise-masked to fit into a ``size_t``.
     """
 
     meta: bytes | None
@@ -955,7 +955,7 @@ class retro_game_info_ext(Structure):
     """
     Size of the content data in bytes.
 
-    Assigned values are bitwise-masked to fit into a :c:expr:`size_t`.
+    Assigned values are bitwise-masked to fit into a ``size_t``.
     """
 
     file_in_archive: bool

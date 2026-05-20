@@ -485,8 +485,9 @@ to perform tasks that don't have a dedicated entry point in libretro,
 such as querying frontend capabilities or registering structured data.
 
 :param cmd: One of the :class:`.EnvironmentCall` constants (possibly OR'd
-    with :data:`.RETRO_ENVIRONMENT_EXPERIMENTAL` or :data:`.RETRO_ENVIRONMENT_PRIVATE`).
-:param data: A :class:`.c_void_ptr` to the environment-call-specific input or output buffer,
+    with :data:`~libretro.api.environment.RETRO_ENVIRONMENT_EXPERIMENTAL`
+    or :data:`~libretro.api.environment.RETRO_ENVIRONMENT_PRIVATE`).
+:param data: A :class:`~libretro.ctypes.c_void_ptr` to the environment-call-specific input or output buffer,
     or :obj:`None` if the call doesn't take any data.
 :return: :obj:`True` if the environment call was recognized and (where applicable) succeeded,
     :obj:`False` if the frontend doesn't recognize ``cmd`` or rejected the request.

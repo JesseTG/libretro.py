@@ -56,7 +56,7 @@ class RumbleState:
 
 class DictRumbleDriver(RumbleDriver):
     """
-    A :class:`RumbleDriver` implementation that
+    A :class:`.RumbleDriver` implementation that
     stores rumble state in a dictionary.
     """
 

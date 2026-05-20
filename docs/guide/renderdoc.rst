@@ -7,7 +7,7 @@ Capturing a Graphics Frame with RenderDoc
 
 RenderDoc_ is a frame debugger that provides detailed information about
 the API calls and pipeline state that produced a frame.
-It supports all major graphics APIs,
+It supports all major graphics APIs
 and can be used in any application that creates a window.
 This guide walks you through using RenderDoc to capture a frame from a libretro core
 running in libretro.py.
@@ -136,16 +136,19 @@ Using a Virtual Environment
 Using libretro.py through a virtual environment to capture frames is supported,
 but may require a few extra steps depending on your platform.
 The following recommendations come from my own experience
-using RenderDoc and libretro.py on Windows.
+using RenderDoc and libretro.py on Windows,
+but may apply to other platforms as well.
 
-First, you may need to set the :guilabel:`Executable Path` to the Python executable
+You may need to do one or both of the following:
+
+1. Set the :guilabel:`Executable Path` to the Python executable
 from which your virtual environment is derived,
 **not** the executable in the virtual environment itself.
 On Windows, this is actually a thin launcher for the system Python installation
 with some environment variables set to point to the virtual environment.
 
-Second, you may need to adjust the :guilabel:`Environment Variables`
-to set :envvar:`PYTHONPATH` to include the path to the virtual environment's site-packages directory.
+2. Add :envvar:`PYTHONPATH` to the :guilabel:`Environment Variables` field,
+set to the location of the virtual environment's :file:`site-packages` directory.
 If you're using a local copy of libretro.py (e.g. when contributing or fixing a bug),
 you may also need to include the path to the directory containing libretro.py itself.
 

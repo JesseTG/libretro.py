@@ -1,5 +1,5 @@
 """
-Thin :class:`ctypes` wrapper around a libretro core's exported ``retro_*`` functions.
+Thin :mod:`ctypes` wrapper around a libretro :term:`core`'s exported ``retro_*`` functions.
 
 .. seealso::
 

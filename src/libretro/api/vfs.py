@@ -234,7 +234,7 @@ Registered by the :term:`frontend` and called by the :term:`core`.
 :param path: The path of the file to open.
 :param mode: A bitmask of :class:`VfsFileAccess` flags.
 :param hints: A bitmask of :class:`VfsFileAccessHint` flags.
-:return: A :class:`.c_void_ptr` to a new :class:`retro_vfs_file_handle` on success,
+:return: A :class:`~libretro.ctypes.c_void_ptr` to a new :class:`retro_vfs_file_handle` on success,
     or :obj:`None` on failure (including when ``path`` names a directory).
 
 Corresponds to :c:type:`retro_vfs_open_t` in ``libretro.h``.
@@ -319,7 +319,7 @@ Read data from an open VFS file.
 Registered by the :term:`frontend` and called by the :term:`core`.
 
 :param stream: Pointer to the :class:`retro_vfs_file_handle` to read from.
-:param s: A :class:`.c_void_ptr` to the buffer that will receive the data.
+:param s: A :class:`~libretro.ctypes.c_void_ptr` to the buffer that will receive the data.
 :param len: Maximum number of bytes to read.
 :return: The number of bytes actually read, or ``-1`` on error.
 
@@ -335,7 +335,7 @@ Write data to an open VFS file.
 Registered by the :term:`frontend` and called by the :term:`core`.
 
 :param stream: Pointer to the :class:`retro_vfs_file_handle` to write to.
-:param s: A :class:`.c_void_ptr` to the buffer of bytes to write.
+:param s: A :class:`~libretro.ctypes.c_void_ptr` to the buffer of bytes to write.
 :param len: Number of bytes to write from ``s``.
 :return: The number of bytes actually written, or ``-1`` on error.
 
@@ -420,7 +420,7 @@ Registered by the :term:`frontend` and called by the :term:`core`.
 :param dir: Path to an existing directory.
 :param include_hidden: :obj:`True` to include hidden files in the listing.
     The exact semantics depend on the platform.
-:return: A :class:`.c_void_ptr` to a new :class:`retro_vfs_dir_handle` on success,
+:return: A :class:`~libretro.ctypes.c_void_ptr` to a new :class:`retro_vfs_dir_handle` on success,
     or :obj:`None` on failure.
 
 Corresponds to :c:type:`retro_vfs_opendir_t` in ``libretro.h``.

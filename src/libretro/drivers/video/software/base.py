@@ -31,7 +31,7 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @override
     @final
     def supported_contexts(self) -> Set[Literal[HardwareContext.NONE]]:
-        """:return: A set containing only :attr:`HardwareContext.NONE`."""
+        """:return: A set containing only :attr:`.HardwareContext.NONE`."""
         return _EMPTY
 
     @property
@@ -39,10 +39,10 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def active_context(self) -> Literal[HardwareContext.NONE]:
         """
-        Always returns :attr:`HardwareContext.NONE`,
+        Always returns :attr:`.HardwareContext.NONE`,
         as software-rendered drivers lack a hardware context.
 
-        :return: :attr:`HardwareContext.NONE`.
+        :return: :attr:`.HardwareContext.NONE`.
         """
         return HardwareContext.NONE
 

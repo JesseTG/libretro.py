@@ -59,6 +59,7 @@ class Direction(Enum):
     DOWN = auto()
 
     def matches_direction(self, other: DeviceIdJoypad | Key | DeviceIdLightgun) -> bool:
+        """Return :obj:`True` if the given device input matches this direction."""
         match (self, other):
             case (
                 Direction.RIGHT,
@@ -83,6 +84,8 @@ class Direction(Enum):
 
 @dataclass(frozen=True, slots=True)
 class PortState:
+    """Aggregation of all input device state for a given :term:`port`."""
+
     joypad: JoypadState | None = None
     mouse: MouseState | None = None
     keyboard: KeyboardState | None = None
@@ -107,6 +110,7 @@ class PortState:
     def __getitem__(self, item: Literal[InputDevice.POINTER]) -> PointerState | None: ...
 
     def __getitem__(self, item: InputDevice | int) -> DeviceState | None:
+        """Return the state of a particular device on this port."""
         match item:
             case InputDevice.NONE:
                 return None
@@ -566,6 +570,8 @@ class IterableInputDriver(InputDriver):
 
 __all__ = [
     "IterableInputDriver",
+    "Direction",
+    "PortState",
     "InputPollResult",
     "InputStateSource",
     "InputStateIterator",

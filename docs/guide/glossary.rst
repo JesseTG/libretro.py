@@ -82,7 +82,8 @@ This page defines important terms that are used throughout libretro.py's documen
         but not usually required.
 
     RetroArch
-        RetroArch is the reference implementation of a libretro :term:`frontend`.
+        `RetroArch <https://retroarch.com>`_ is the canonical example ("reference implementation")
+        of a libretro :term:`frontend`.
         Though it's the most popular, others exist -- including libretro.py!
 
     RetroPad
@@ -110,6 +111,14 @@ This page defines important terms that are used throughout libretro.py's documen
 
 
     subsystem
-        A secondary platform that augments the primary platform a core emulates.
+        A secondary platform that augments a core's primary emulated hardware.
+
+    virtual environment
+    venv
+        A project-scoped installation of Python and various packages.
+        Useful for developing a project with multiple versions of Python at once.
+        Think of it like Python's equivalent of :file:`node_modules`.
+
+        .. hint:: Not related to :term:`environment call`\s.
 
 .. _libretro.h: https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro.h

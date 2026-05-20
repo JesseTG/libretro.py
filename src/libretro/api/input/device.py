@@ -55,7 +55,7 @@ to read the most recently polled input.
 
 :param port: Index of the controller :term:`port` to query.
 :param device: One of the :class:`InputDevice` constants identifying the abstract device type.
-    The value is masked with :data:`RETRO_DEVICE_MASK`.
+    The value is masked with ``RETRO_DEVICE_MASK``.
 :param index: Sub-index whose meaning depends on ``device``
     (e.g. an analog stick index).
 :param id: Identifier of the specific input to read,
@@ -80,6 +80,7 @@ RETRO_DEVICE_MASK = (1 << RETRO_DEVICE_TYPE_SHIFT) - 1
 
 
 def RETRO_DEVICE_SUBCLASS(base: int, id: int) -> int:
+    """Generate an ID for a libretro input device subclass."""
     return ((id + 1) << RETRO_DEVICE_TYPE_SHIFT) | base
 
 
@@ -283,6 +284,7 @@ class InputDeviceState:
 __all__ = [
     "InputDeviceFlag",
     "InputDevice",
+    "RETRO_DEVICE_SUBCLASS",
     "retro_input_poll_t",
     "retro_input_state_t",
     "retro_input_descriptor",

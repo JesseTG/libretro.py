@@ -16,7 +16,7 @@ RETRO_MICROPHONE_INTERFACE_VERSION = 1
 """The current version of the microphone interface."""
 
 INTERFACE_VERSION = RETRO_MICROPHONE_INTERFACE_VERSION
-"""Alias for :const:`RETRO_MICROPHONE_INTERFACE_VERSION`."""
+"""Alias for :data:`RETRO_MICROPHONE_INTERFACE_VERSION`."""
 
 
 @dataclass(init=False, slots=True)
@@ -82,7 +82,7 @@ Registered by the :term:`frontend` and called by the :term:`core`.
 
 :param params: Pointer to a :class:`retro_microphone_params` describing the desired configuration,
     or :obj:`None` to use the frontend's defaults.
-:return: A :class:`.c_void_ptr` to a :class:`retro_microphone` handle on success,
+:return: A :class:`~libretro.ctypes.c_void_ptr` to a :class:`retro_microphone` handle on success,
     or :obj:`None` if a microphone could not be opened.
 
 .. note::
@@ -254,6 +254,7 @@ class retro_microphone_interface(Structure):
 
 
 __all__ = [
+    "RETRO_MICROPHONE_INTERFACE_VERSION",
     "INTERFACE_VERSION",
     "retro_microphone",
     "retro_microphone_params",

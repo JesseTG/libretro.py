@@ -67,10 +67,10 @@ class VideoDriver(Protocol):
                 Contains pixel data in the format given by :attr:`pixel_format`.
                 Should be read-only.
 
-            :attr:`FrameBufferSpecial.DUPE`
+            :attr:`.FrameBufferSpecial.DUPE`
                 If the frontend should re-render the previous frame.
 
-            :attr:`FrameBufferSpecial.HARDWARE`
+            :attr:`.FrameBufferSpecial.HARDWARE`
                 If the frontend should render the frame
                 using the active graphics API context.
 
@@ -83,7 +83,7 @@ class VideoDriver(Protocol):
 
         .. note::
 
-            Corresponds to :type:`.retro_video_refresh_t`.
+            Corresponds to :data:`.retro_video_refresh_t`.
         """
         ...
 
@@ -466,4 +466,5 @@ __all__ = [
     "VideoDriver",
     "FrameBufferSpecial",
     "Screenshot",
+    "UnsupportedContextError",
 ]

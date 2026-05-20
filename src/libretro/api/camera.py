@@ -76,7 +76,7 @@ when a new camera frame is available in system memory,
 with the top-left corner of the image as the first pixel.
 
 :param buffer: Pointer to the camera's most recent video frame,
-    with one ``XRGB8888`` pixel per :c:type:`uint32_t`.
+    with one ``XRGB8888`` pixel per ``uint32_t``.
 :param width: Width of the frame, in pixels.
 :param height: Height of the frame, in pixels.
 :param pitch: Length of one row in ``buffer``, in bytes.
@@ -161,7 +161,7 @@ class retro_camera_callback(Structure):
     """
     Bitmask of requested :class:`CameraCapabilities`.
 
-    Assigned values will be bitwise-masked to fit into a :c:type:`uint64_t`.
+    Assigned values will be bitwise-masked to fit into a ``uint64_t``.
 
     .. seealso:: :attr:`.CameraDriver.caps`
     """

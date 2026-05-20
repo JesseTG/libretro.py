@@ -18,6 +18,8 @@ MidiGenerator = Callable[[], MidiIterator]
 
 
 class MidiWrite(NamedTuple):
+    """A record of a MIDI write event from the core."""
+
     byte: int
     delta_time: int
 
@@ -75,7 +77,7 @@ class GeneratorMidiDriver(MidiDriver):
 
     @property
     def output(self) -> Sequence[MidiWrite]:
-        """The buffered :class:`MidiWrite` events produced by the core, in send order."""
+        """The buffered :class:`.MidiWrite` events produced by the core, in send order."""
         return self._output
 
     @override
@@ -110,4 +112,4 @@ class GeneratorMidiDriver(MidiDriver):
         return True
 
 
-__all__ = ["GeneratorMidiDriver"]
+__all__ = ["GeneratorMidiDriver", "MidiWrite", "MidiIterator", "MidiGenerator"]

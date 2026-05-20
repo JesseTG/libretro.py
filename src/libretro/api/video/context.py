@@ -136,7 +136,7 @@ Return the current frontend-managed hardware framebuffer object.
 Registered by the :term:`frontend` and called by the :term:`core`
 to obtain the framebuffer it should render into for the current frame.
 
-:return: An opaque :class:`~ctypes.c_uintptr` identifying the framebuffer
+:return: An opaque :class:`~.libretro.ctypes.c_uintptr` identifying the framebuffer
     (typically an OpenGL FBO ID).
     The value may change from frame to frame.
 
@@ -155,7 +155,7 @@ Registered by the :term:`frontend` and called by the :term:`core`
 to obtain entry points such as ``glClear`` or other GPU API functions.
 
 :param sym: Name of the symbol to look up, as a :obj:`bytes`-like object.
-:return: A :class:`.c_void_ptr` to the requested function,
+:return: A :class:`~libretro.ctypes.c_void_ptr` to the requested function,
     or :obj:`None` if the symbol could not be resolved.
 
 .. note::

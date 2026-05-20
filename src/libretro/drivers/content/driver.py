@@ -90,8 +90,8 @@ class ContentDriver(Protocol):
             - A :class:`zipfile.Path` object representing a file within a ZIP archive.
             - A :class:`str` or a :class:`~os.PathLike` object representing a file path.
               The loaded content will not be part of a subsystem.
-              If :attr:`~libretro.api.content.retro_system_info.needs_fullpath` is :obj:`False`
-              and no override for this extension defines :attr:`need_fullpath` as :obj:`True`,
+              If :attr:`.retro_system_info.need_fullpath` is :obj:`False`
+              and no override for this extension defines :attr:`.ContentAttributes.need_fullpath` as :obj:`True`,
               the driver will load the content as a file.
               Otherwise, the path will be provided to the core without opening the file.
             - A :class:`bytes`, :class:`bytearray`, :class:`memoryview`, or :class:`Buffer` object that represents content data.
@@ -103,7 +103,8 @@ class ContentDriver(Protocol):
         :raises FileNotFoundError: If ``content`` is a path to a non-existent file.
         :raises ContentError: If loading :obj:`None` and the core requires content,
             or if ``content`` is a :class:`.retro_game_info`
-            whose attributes are inconsistent with :attr:`needs_fullpath` and :attr:`block_extract`.
+            whose attributes are inconsistent with
+            :attr:`~.retro_system_info.need_fullpath` and :attr:`~.retro_system_info.block_extract`.
         :raises RuntimeError: If called before :attr:`system_info` is set.
         :return: A context manager that yields a tuple containing the subsystem info and a sequence of loaded content files.
             Non-persistent content files will be closed when the context manager exits.

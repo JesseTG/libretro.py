@@ -31,12 +31,12 @@ Render a single video frame.
 
 Registered by the :term:`frontend` and called by the :term:`core`
 once per :c:func:`retro_run` to deliver a frame of pixel data.
-Passing :obj:`None` (or the value of :data:`HW_FRAME_BUFFER_VALID` for hardware rendering)
+Passing :obj:`None` (or the value of :data:`~libretro.api.video.HW_FRAME_BUFFER_VALID` for hardware rendering)
 for ``data`` indicates that the frontend should reuse the previous frame.
 
-:param data: A :class:`.c_void_ptr` to the framebuffer.
+:param data: A :class:`~libretro.ctypes.c_void_ptr` to the framebuffer.
     The pixel format is the one most recently set with
-    :data:`.RETRO_ENVIRONMENT_SET_PIXEL_FORMAT`,
+    :data:`~libretro.api.environment.RETRO_ENVIRONMENT_SET_PIXEL_FORMAT`,
     defaulting to :attr:`.PixelFormat.RGB1555`.
 :param width: Width of the frame, in pixels.
 :param height: Height of the frame, in pixels.

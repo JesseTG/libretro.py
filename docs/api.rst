@@ -8,8 +8,8 @@ API Reference
 
    libretro.api
    libretro.builder
-   libretro.compat
    libretro.core
+   libretro.ctypes
    libretro.drivers
    libretro.error
    libretro.session

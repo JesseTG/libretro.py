@@ -86,7 +86,7 @@ class EnvironmentDriver(Protocol):
         Dispatch an environment call from the core.
 
         Implementations route ``cmd`` to the appropriate ``_<env_call_name>``
-        helper (e.g. :meth:`_get_variable` for ``RETRO_ENVIRONMENT_GET_VARIABLE``)
+        helper (e.g. ``_get_variable`` for ``RETRO_ENVIRONMENT_GET_VARIABLE``)
         and return :obj:`True` if the call was handled successfully.
 
         :param cmd: The ``RETRO_ENVIRONMENT_*`` command identifier.
@@ -171,7 +171,7 @@ class EnvironmentDriver(Protocol):
         Return the current input state for a given device control.
 
         :param port: The input port being queried.
-        :param device: The :data:`RETRO_DEVICE_*` device class.
+        :param device: The ``RETRO_DEVICE_*`` device class.
         :param index: The sub-device index (e.g. analog stick number).
         :param id: The button or axis identifier within the device class.
         :return: The control's current state, encoded per libretro's input conventions.

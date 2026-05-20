@@ -73,6 +73,7 @@ class PortState:
     illuminance: SensorState = field(default_factory=SensorState)
 
     def __getitem__(self, item: Sensor | SensorType) -> SensorState:
+        """Return the state of a particular sensor on this port."""
         match item:
             case (
                 Sensor.ACCELEROMETER_X
@@ -126,7 +127,7 @@ class IterableSensorDriver(SensorDriver):
                 The fields on the yielded object will be used
                 as each port's sensor readings.
 
-            :class:`~collections.abc.Sequence` [ :class:`.PortInput` | :class:`.AccelerometerInput` | :class:`.GyroscopeInput` | :class:`.IlluminanceInput` ]
+            :class:`~collections.abc.Sequence` [ :class:`.PortInput` | :class:`.Vector3` | :class:`float` | :obj:`None` ]
                 Each element in the sequence will be used
                 for its corresponding port's sensor readings
                 based on the aforementioned rules.
@@ -258,6 +259,7 @@ __all__ = [
     "Vector3",
     "SensorState",
     "PortInput",
+    "PortState",
     "SensorPollResult",
     "SensorStateIterator",
     "SensorStateIterable",

@@ -34,23 +34,23 @@ The linked documentation provides details, but in a nutshell:
 * Python objects are implicitly converted to equivalent C data types when:
     * Assigned to a :class:`~ctypes.Structure` field, or;
     * Stored as an element in an appropriately-typed :class:`~ctypes.Array`, or;
-    * Assigned as the target of a :class:`~ctypes._Pointer` (or equivalent :class:`.TypedPointer`), or;
+    * Assigned as the target of a :class:`~ctypes._Pointer` (or equivalent :class:`~libretro.ctypes.TypedPointer`), or;
     * Passed as an argument to a C function defined with :func:`~ctypes.CFUNCTYPE`
-      (or the equivalent :class:`.TypedFunctionPointer`).
+      (or the equivalent :class:`~libretro.ctypes.TypedFunctionPointer`).
 * C data types are implicitly converted to equivalent :mod:`ctypes` objects or Python primitives when:
     * Accessed as a field of a :class:`~ctypes.Structure`, or;
     * Accessed as an element of an :class:`~ctypes.Array`, or;
-    * Accessed as the target of a :class:`~ctypes._Pointer` (or equivalent :class:`.TypedPointer`), or;
+    * Accessed as the target of a :class:`~ctypes._Pointer` (or equivalent :class:`~libretro.ctypes.TypedPointer`), or;
     * Returned as the result of a C function defined with :func:`~ctypes.CFUNCTYPE`
-      (or the equivalent :class:`.TypedFunctionPointer`).
-* Python classes that implement :class:`.AsParameter`
+      (or the equivalent :class:`~libretro.ctypes.TypedFunctionPointer`).
+* Python classes that implement :class:`~libretro.ctypes.AsParameter`
   can be implicitly converted to C data types when passed to :func:`~ctypes.CFUNCTYPE`-defined functions.
 * C integers are converted to Python :class:`int`\s regardless of their size or signedness.
 * Python :class:`int`\s are masked to fit the size and signedness
   of the target C integer type when converted to C.
 * C floating-point types are converted to and from Python :class:`float`\s.
 * Python :class:`bytes` objects are converted to and from ``NULL``-terminated :c:expr:`char *`\s.
-* :c:macro:`NULL` C pointers of any type are converted to and from :obj:`None`.
+* ``NULL`` C pointers of any type are converted to and from :obj:`None`.
 * C :c:expr:`bool`\s are converted to and from Python :class:`bool`\s.
 * C :c:expr:`void *` pointers are converted to and from :class:`int`\s.
 * Subclasses of any :mod:`ctypes` primitive are *not* implicitly converted to Python primitives.

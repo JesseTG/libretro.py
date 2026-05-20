@@ -34,10 +34,10 @@ class LogDriver(Protocol):
         Corresponds to :c:type:`retro_log_printf_t`.
 
         .. warning::
-            :c:type:`retro_log_printf_t` normally has :c:func:`printf`-style variadic arguments,
+            :c:type:`retro_log_printf_t` normally has ``printf``-style variadic arguments,
             but :mod:`!ctypes` :python-issue:`doesn't currently support variadic callbacks <135620>`.
 
-            As a workaround, your :class:`.Core` can format log messages with :c:func:`sprintf` or similar,
+            As a workaround, your :class:`.Core` can format log messages with ``sprintf`` or similar,
             then pass it as the format string.
 
         :param level: The severity of the message.

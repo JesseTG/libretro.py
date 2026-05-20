@@ -28,7 +28,7 @@ A single packet may carry up to 64 KB of data.
 
 :param flags: A bitmask of :class:`.NetpacketFlags` values
     that controls reliability, sequencing, and flushing.
-:param buf: A :class:`.c_void_ptr` to the packet data,
+:param buf: A :class:`~libretro.ctypes.c_void_ptr` to the packet data,
     or :obj:`None` (combined with ``len`` of ``0``) to flush previously buffered packets.
 :param len: Length of the data in ``buf``, in bytes.
 :param client_id: Recipient player's client ID,
@@ -46,7 +46,7 @@ Deliver a packet received from another player to the core.
 Registered by the :term:`core` and called by the :term:`frontend`
 when a packet arrives from another player.
 
-:param buf: A :class:`.c_void_ptr` to the received packet data.
+:param buf: A :class:`~libretro.ctypes.c_void_ptr` to the received packet data.
 :param len: Length of the packet in ``buf``, in bytes.
 :param client_id: Client ID of the player that sent the packet.
 
@@ -217,6 +217,7 @@ __all__ = [
     "retro_netpacket_receive_t",
     "retro_netpacket_stop_t",
     "retro_netpacket_poll_t",
+    "retro_netpacket_poll_receive_t",
     "retro_netpacket_connected_t",
     "retro_netpacket_disconnected_t",
     "NetpacketFlags",
