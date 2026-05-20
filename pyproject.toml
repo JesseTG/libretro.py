@@ -46,7 +46,7 @@ cli = [
 dev = [
     'pyright == 1.1.*',
     "ruff == 0.15.*",
-    "libretro.py[build]"
+    "libretro.py[build,docs]"
 ]
 docs = [
     'Sphinx == 9.1.0',
