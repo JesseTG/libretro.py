@@ -18,9 +18,11 @@ sphinx:
 
 python:
   install:
-    - method: pip
+    - method: uv
+      command: sync
       path: .
-      extra_requirements:
-        - cli
+      groups:
         - docs
+      extras:
+        - cli
         - opengl-window

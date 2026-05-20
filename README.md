@@ -61,8 +61,6 @@ add one or more of the following extras to the `install` command:
 
 - **`cli`:** Test scripts that don't rely on the nuances of any particular core.
   Use these to simplify your own core's test process.
-- **`dev`:** Assorted tools used to help develop libretro.py.
-  Required if contributing to libretro.py.
 - **`opengl`:** Support for the built-in OpenGL video driver.
   Required if testing a core's OpenGL support.
 - **`opengl-window`:** Same as the `opengl` extra,
@@ -74,7 +72,7 @@ For example, if you want to submit an improvement to the OpenGL video driver,
 you would install libretro.py like so:
 
 ```bash
-pip install libretro.py[opengl,dev]
+pip install -e .[opengl] --group dev
 ```
 
 And if you just want to test your libretro core's OpenGL support:

@@ -33,21 +33,7 @@ dependencies = [
     "typing_extensions == 4.*; python_version < '3.13'",
 ]
 
-[project.optional-dependencies]
-build = [
-    'build == 1.4.2',
-    'setuptools>=82.0.1',
-    'twine == 6.2.0',
-    'pre-commit == 3.7.*',
-]
-cli = [
-    'typer == 0.25.1',
-]
-dev = [
-    'pyright == 1.1.*',
-    "ruff == 0.15.*",
-    "libretro.py[build,docs]"
-]
+[dependency-groups]
 docs = [
     'Sphinx == 9.1.0',
     'sphinx-autobuild == 2025.8.25',
@@ -62,7 +48,31 @@ docs = [
     'sphinxcontrib-prettyspecialmethods@git+https://github.com/sphinx-contrib/prettyspecialmethods#egg=38fb1b',
     'sphinx-autodoc-typehints == 3.10.2',
 ]
-doc = ["libretro.py[docs]"] # Alias for the docs extra
+# Alias for "docs" because I'd always mix them up
+doc = [
+    {include-group = "docs"}
+]
+build = [
+    'build == 1.4.2',
+    'setuptools>=82.0.1',
+    'twine == 6.2.0',
+    'pre-commit == 3.7.*',
+]
+lint = [
+    'pyright == 1.1.*',
+    "ruff == 0.15.*",
+]
+dev = [
+    {include-group = "docs"},
+    {include-group = "build"},
+    {include-group = "lint"}
+]
+
+[project.optional-dependencies]
+
+cli = [
+    'typer == 0.25.1',
+]
 opengl = [
     'moderngl[headless] >= 5.12',
     'PyOpenGL == 3.1.*',

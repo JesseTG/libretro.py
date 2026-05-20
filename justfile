@@ -51,7 +51,7 @@ fix: format
 # Install libretro.py locally, including all optional dependencies, and set up pre-commit hooks
 [group('Getting Started')]
 install:
-    pip install --editable ".[all]"
+    pip install --editable ".[all]" --group dev
     pre-commit install
 
 # Type-check libretro.py
