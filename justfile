@@ -58,7 +58,7 @@ install:
 [group('Linting')]
 typecheck:
     pyright --version
-    pyright --project .
+    pyright --verbose --project .
 
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs:
