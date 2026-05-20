@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `bandit`, `black`, and `isort` in favor of `ruff`.
 - Simplify `justfile` recipes to `ruff`'s consolidated features.
 - **BREAKING:** Moved scripts in `libretro.py.test` to `libretro.py`.
+- **BREAKING:** Changed `Screenshot` and `SubsystemContent` to a `dataclass`.
 
 ### Fixed
 

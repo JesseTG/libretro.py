@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Set
+from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -27,14 +28,20 @@ class FrameBufferSpecial(Enum):
     HARDWARE = -1
 
 
-class Screenshot(NamedTuple):
+@dataclass(frozen=True)
+class Screenshot:
     """A snapshot of the most recently rendered video frame."""
 
     data: memoryview
+    """Buffer containing pixels."""
     width: int
+    """Width of the screenshot in pixels."""
     height: int
+    """Height of the screenshot in pixels."""
     rotation: Rotation
+    """Angle of the screenshot's rotation."""
     pixel_format: PixelFormat
+    """Pixel format of the screenshot."""
 
 
 class UnsupportedContextError(RuntimeError):

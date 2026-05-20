@@ -28,7 +28,7 @@ from ctypes import (
 from dataclasses import dataclass
 from os import PathLike
 from types import MappingProxyType
-from typing import NamedTuple, overload, override
+from typing import overload, override
 from zipfile import Path as ZipPath
 
 from libretro.api._utils import (
@@ -231,7 +231,8 @@ type Content = ContentPath | ContentData | retro_game_info
 """Any of the supported ways to provide content to a core."""
 
 
-class SubsystemContent(NamedTuple):
+@dataclass(frozen=True)
+class SubsystemContent:
     """
     Content for a subsystem, pairing a game type with a sequence of content items.
 
