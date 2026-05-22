@@ -16,7 +16,6 @@ dist/
 
 # Cython extensions
 *.so
-*.c
 
 # RenderDoc Captures and Settings
 *.cap

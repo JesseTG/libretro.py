@@ -12,4 +12,5 @@ API Reference
    libretro.ctypes
    libretro.drivers
    libretro.error
+   libretro.samples
    libretro.session

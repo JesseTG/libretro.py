@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Games/Entertainment",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Testing",
@@ -54,7 +55,6 @@ doc = [
 ]
 build = [
     'build == 1.4.2',
-    'setuptools>=82.0.1',
     'twine == 6.2.0',
     'pre-commit == 3.7.*',
 ]
@@ -62,10 +62,19 @@ lint = [
     'pyright == 1.1.*',
     "ruff == 0.15.*",
 ]
+test = [
+    "pytest == 9.0.3",
+    "pytest-isolated == 0.4.4",
+    "Pillow == 12.2.0",
+    "numpy == 2.4.6",
+    "hypothesis == 6.152.9",
+    "pytest_assert_type == 0.1.5",
+]
 dev = [
     {include-group = "docs"},
     {include-group = "build"},
-    {include-group = "lint"}
+    {include-group = "lint"},
+    {include-group = "test"},
 ]
 
 [project.optional-dependencies]
@@ -90,15 +99,30 @@ Repository = "https://github.com/JesseTG/libretro.py"
 Changelog = "https://github.com/JesseTG/libretro.py/blob/master/CHANGELOG.md"
 
 [build-system]
-requires = [
-    "build == 1.4.2",
-    "setuptools>=82.0.1",
-    "twine == 6.2.0",
-]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.20"
+build-dir = "build/{wheel_tag}"
+# Cores are plain shared libraries with no Python ABI dependency, so a single
+# wheel works across every CPython interpreter on the same platform.
+wheel.py-api = "py3"
+wheel.packages = ["src/libretro"]
+sdist.include = ["CHANGELOG.md", "cmake/**", "cores/**", "CMakeLists.txt"]
+sdist.exclude = ["build/**", ".venv/**", "venv-*/**", ".thx/**"]
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "CHANGELOG.md"
+regex = '## \[(?P<value>\d+\.\d+\.\d+)\]'
+
+# Pure-Python fallback: if CMake configure/build fails (no toolchain, unsupported
+# platform), produce a wheel without sample cores rather than failing the install.
+[[tool.scikit-build.overrides]]
+if.failed = true
+wheel.cmake = false
 
 [tool.ruff]
 line-length = 99
@@ -136,8 +160,22 @@ ignore = [
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F403"] # "from module import *" is common for __init__.py files
 "src/libretro/api/input/**" = ["E741"] # Some input-related libretro.h symbols are single-letter (minus prefixes)
-"setup.py" = ["D100"]
 "docs/conf.py" = ["D100"]
+"tests/**" = ["D"] # test modules don't require docstrings
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+testpaths = ["tests"]
+markers = [
+    "isolated: run the test in a fresh subprocess (provided by pytest-isolated)",
+    "opengl: requires the libretro.py[opengl] extra and a working GL context",
+    "slow: long-running; excluded from PR CI by default",
+]
 
 [tool.pyright]
 exclude = [
@@ -152,6 +190,7 @@ exclude = [
 ]
 include = [
     "src/libretro/**",
+    "tests/**",
     "docs/*.py",
 ]
 typeCheckingMode = "strict"
