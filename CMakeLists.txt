@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
+message(STATUS "Using CMake ${CMAKE_VERSION} from ${CMAKE_COMMAND}")
 project(libretro_py_cores
     LANGUAGES C CXX
     DESCRIPTION "Sample libretro cores for the libretro.py test suite"
