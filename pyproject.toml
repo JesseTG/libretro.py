@@ -123,6 +123,9 @@ regex = '## \[(?P<value>\d+\.\d+\.\d+)\]'
 [[tool.scikit-build.overrides]]
 if.failed = true
 wheel.cmake = false
+[tool.scikit-build.cmake.define]
+ZLIB_USE_STATIC_LIBS = true
+
 
 [tool.ruff]
 line-length = 99
