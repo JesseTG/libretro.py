@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Added a test suite for libretro.py.
+  _All future pull requests must pass the test suite, and preferably provide new tests._
+- Build sample cores to use for the test suite,
+  including both built-in cores and samples from [libretro-samples](https://github.com/libretro/libretro-samples).
+- Expose all sample cores through the new `libretro.samples` package.
+  They can be imported as `Core` objects
+  (but won't be loaded before you do so).
+
+
 ## [0.7.2] - 2026-05-20
 
 ### Added
