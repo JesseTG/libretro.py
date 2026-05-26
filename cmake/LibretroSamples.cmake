@@ -128,7 +128,7 @@ include(CheckIncludeFile)
 set(CMAKE_REQUIRED_QUIET TRUE)
 check_include_file("GL/glext.h" LIBRETRO_PY_HAVE_GL_GLEXT_H)
 
-if(OpenGL_FOUND AND LIBRETRO_PY_HAVE_GL_GLEXT_H)
+if(OpenGL_FOUND)
     set(_gl_root "${_lrs_src}/video/opengl")
 
     # Each fixed-function / shader sample has its own ``glsym/`` directory
@@ -143,7 +143,7 @@ if(OpenGL_FOUND AND LIBRETRO_PY_HAVE_GL_GLEXT_H)
         INCLUDES
             "${_gl_root}/libretro_test_gl_fixedfunction"
             "${_gl_root}/libretro_test_gl_fixedfunction/glsym"
-        COMPILE_DEFINITIONS ${_lrs_common_defs} HAVE_OPENGL CORE
+        COMPILE_DEFINITIONS ${_lrs_common_defs} HAVE_OPENGL
         LIBS OpenGL::GL
     )
 
@@ -161,6 +161,8 @@ if(OpenGL_FOUND AND LIBRETRO_PY_HAVE_GL_GLEXT_H)
         LIBS OpenGL::GL
     )
 
+    # Need ZLIB for the PNG library that this sample uses
+    find_package(ZLIB)
     # The compute-shaders sample is C++ and vendors its own ``glm/``,
     # ``gl/``, ``rpng/`` and ``app/`` helper layers. Every ``.cpp`` under
     # ``libretro/``, ``app/``, ``gl/`` and ``rpng/`` participates.
@@ -170,7 +172,7 @@ if(OpenGL_FOUND AND LIBRETRO_PY_HAVE_GL_GLEXT_H)
         "${_gl_cs}/libretro/*.cpp"
         "${_gl_cs}/app/*.cpp"
         "${_gl_cs}/gl/*.cpp"
-        "${_gl_cs}/rpng/*.cpp"
+        "${_gl_cs}/rpng/*.c"
         "${_gl_cs}/glsym/glsym_gl.c"
         "${_gl_cs}/glsym/rglgen.c"
     )
@@ -187,7 +189,7 @@ if(OpenGL_FOUND AND LIBRETRO_PY_HAVE_GL_GLEXT_H)
             "${_gl_cs}/glsym"
             "${_gl_cs}/glm"
         COMPILE_DEFINITIONS ${_lrs_common_defs} HAVE_OPENGL CORE GL_GLEXT_PROTOTYPES
-        LIBS OpenGL::GL
+        LIBS OpenGL::GL ZLIB::ZLIB
     )
 else()
     if(NOT OpenGL_FOUND)
