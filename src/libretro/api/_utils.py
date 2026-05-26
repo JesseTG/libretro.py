@@ -40,13 +40,13 @@ MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 
 def address[T: _CDataType](
-    ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | None,
+    ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | bytes | None,
 ) -> int:
     """
     Return the address of the given pointer as an integer.
     If the input is already an integer, return it as-is.
 
-    :param ptr: A pointer, a C function pointer, an integer address, or :obj:`None`.
+    :param ptr: A pointer, a C function pointer, an :class:`int` address, :class:`bytes`, or :obj:`None`.
     :return: The address of the pointer as an integer, or 0 if ``ptr`` is :obj:`None` or a ``NULL`` pointer.
     :raises ValueError: If ``ptr`` is an integer but not a valid pointer address.
     :raises TypeError: If ``ptr`` is not one of the expected types.
@@ -58,6 +58,8 @@ def address[T: _CDataType](
             return ptr
         case int():
             raise ValueError(f"Expected an int between 0 and {MAX_POINTER_VALUE}, got {ptr}")
+        case bytes():
+            return cast(c_char_p(ptr), c_void_p).value or 0
         case c_void_p():
             return ptr.value or 0
         case c_char_p() | _Pointer() | CFuncPtr():
