@@ -65,6 +65,8 @@ autodoc_default_options = {
     "members": True,
 }
 autosummary_generate = True
+typehints_use_signature = True  # show parameter types in signature
+typehints_use_signature_return = True  # show return type in signature
 
 # -- Options for extlinks extension ------------------------------------------
 
