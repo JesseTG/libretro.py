@@ -171,6 +171,8 @@ ignore = [
 minversion = "8.0"
 addopts = [
     "-ra",
+    "-n",
+    "auto",
     "--strict-markers",
     "--strict-config",
     "--doctest-modules",
