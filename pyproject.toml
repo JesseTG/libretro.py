@@ -174,8 +174,9 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--doctest-modules",
+    "--doctest-glob=*.rst"
 ]
-testpaths = ["tests"]
+testpaths = ["tests", "src"]
 markers = [
     "isolated: run the test in a fresh subprocess (provided by pytest-isolated)",
     "opengl: requires the libretro.py[opengl] extra and a working GL context",
