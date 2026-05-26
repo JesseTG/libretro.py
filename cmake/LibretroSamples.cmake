@@ -5,9 +5,9 @@
 
 include(FetchContent)
 
-set(LIBRETRO_SAMPLES_GIT_REPOSITORY "https://github.com/libretro/libretro-samples.git"
+set(LIBRETRO_SAMPLES_GIT_REPOSITORY "https://github.com/JesseTG/libretro-samples"
     CACHE STRING "URL of the libretro-samples repository to fetch")
-set(LIBRETRO_SAMPLES_GIT_TAG "bce193bc1b8c9a3da43b2ead0158a69e28b37ed8"
+set(LIBRETRO_SAMPLES_GIT_TAG "948bba54c6828994809d103814b395fc6395032f"
     CACHE STRING "Commit/tag of libretro-samples to fetch")
 
 FetchContent_Declare(libretro_samples
