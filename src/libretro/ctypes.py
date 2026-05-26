@@ -3,6 +3,87 @@ Type annotations for :mod:`ctypes` behavior that is documented but missing from 
 
 Most of these definitions fall back to standard :mod:`ctypes` types at runtime;
 this allows them to be used as drop-in replacements for the standard types in function signatures.
+
+The subscripted helpers — :class:`TypedPointer`, :class:`TypedArray`,
+:class:`TypedFunctionPointer`, :class:`Pointer` — are TYPE_CHECKING-only
+refinements that erase to plain :mod:`ctypes` factories at runtime;
+their docstrings therefore live on this module so they remain discoverable
+through ``python -m pytest --doctest-modules src/libretro``.
+
+Indexing a pointer to a primitive integer type yields a Python :class:`int`,
+exactly as :func:`ctypes.POINTER` does — the subscript on
+:class:`TypedPointer` resolves to the cached :func:`ctypes.POINTER` factory
+so the two are interchangeable at runtime:
+
+>>> from ctypes import POINTER, c_int, cast
+>>> from libretro.ctypes import TypedPointer
+>>> arr = (c_int * 3)(10, 20, 30)
+>>> p = cast(arr, TypedPointer[c_int])
+>>> p[0], p[2]
+(10, 30)
+>>> p[0] = 99
+>>> arr[0]
+99
+
+Pointers to :class:`~ctypes.Structure` types return the struct directly on
+indexing, with no implicit conversion to an address:
+
+>>> from ctypes import Structure
+>>> class Pt(Structure):
+...     _fields_ = (("x", c_int), ("y", c_int))
+>>> pts = (Pt * 2)(Pt(7, 8), Pt(13, 21))
+>>> pp = cast(pts, TypedPointer[Pt])
+>>> pp[1].x, pp[1].y
+(13, 21)
+
+The runtime :class:`Pointer` alias is the same factory as
+:func:`ctypes.POINTER`, which caches per-element-type:
+
+>>> from libretro.ctypes import Pointer
+>>> Pointer[c_int] is POINTER(c_int)
+True
+
+:class:`TypedArray` is :class:`ctypes.Array` at runtime, so the standard
+``ctype * N`` construction is the way to instantiate one. Iteration and
+slicing then yield Python primitives, matching the conversions
+:mod:`ctypes` documents:
+
+>>> from ctypes import Array
+>>> from libretro.ctypes import TypedArray
+>>> TypedArray is Array
+True
+>>> a = (c_int * 4)(1, 2, 3, 4)
+>>> isinstance(a, TypedArray)
+True
+>>> list(a)
+[1, 2, 3, 4]
+>>> a[1:3]
+[2, 3]
+
+A :class:`TypedFunctionPointer` is decorated as if :func:`ctypes.CFUNCTYPE`
+had been used directly: arguments and return values flow through the same
+implicit :mod:`ctypes` conversions, so an integer return becomes a Python
+:class:`int`, a boolean return becomes a Python :class:`bool`, and a
+``char *`` return becomes :class:`bytes`:
+
+>>> from ctypes import c_bool, c_char_p
+>>> from libretro.ctypes import TypedFunctionPointer
+>>> as_bool = TypedFunctionPointer[c_bool, [c_int]](lambda x: x != 0)
+>>> as_bool(0), as_bool(42)
+(False, True)
+>>> add = TypedFunctionPointer[c_int, [c_int, c_int]](lambda a, b: a + b)
+>>> add(2, 3)
+5
+>>> echo = TypedFunctionPointer[c_char_p, [c_char_p]](lambda s: s)
+>>> echo(b"hello")
+b'hello'
+
+A :class:`TypedFunctionPointer` declared with a :obj:`None` return type
+produces a callable that returns :obj:`None`:
+
+>>> noop = TypedFunctionPointer[None, []](lambda: None)
+>>> noop() is None
+True
 """
 
 # pyright: reportPrivateUsage=false
@@ -93,7 +174,20 @@ CNumber = CInt | CUint | CReal
 class AsParameter[T: _CDataType](Protocol):
     """
     A type that can be converted to a ctypes object
-    with the _as_parameter_ property.
+    with the ``_as_parameter_`` property.
+
+    Any object that implements this protocol may be passed where
+    :mod:`ctypes` expects a primitive C type;
+    the marshalling layer consults ``_as_parameter_`` to obtain the
+    underlying :mod:`ctypes` value:
+
+    >>> from ctypes import CFUNCTYPE, c_int
+    >>> class Boxed:
+    ...     def __init__(self, value):
+    ...         self._as_parameter_ = c_int(value)
+    >>> echo = CFUNCTYPE(c_int, c_int)(lambda x: x)
+    >>> echo(Boxed(42))
+    42
     """
 
     @property
@@ -145,6 +239,18 @@ class c_void_ptr(c_void_p):
     ``void*`` parameters or struct fields to an ``int``.
 
     Use this in function signatures and struct definitions instead of ``c_void_p``.
+    Instances remain :class:`~ctypes.c_void_p` subclasses, with their address
+    rendered in hexadecimal:
+
+    >>> from ctypes import c_void_p
+    >>> from libretro.ctypes import c_void_ptr
+    >>> ptr = c_void_ptr(0x1234)
+    >>> repr(ptr)
+    'c_void_ptr(0x1234)'
+    >>> isinstance(ptr, c_void_p)
+    True
+    >>> ptr.value
+    4660
     """
 
     @override
