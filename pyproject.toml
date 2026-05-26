@@ -172,6 +172,7 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
+    "--doctest-modules",
 ]
 testpaths = ["tests"]
 markers = [
