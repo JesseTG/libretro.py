@@ -174,18 +174,20 @@ Where applicable, structs that logically represent arrays of items (e.g. :class:
 implement :class:`collections.abc.Sequence` to allow indexing and iteration over the items,
 plus ``__setitem__`` to update values. For example:
 
-.. code-block:: python
-
-        from libretro.api import retro_controller_info
-
-        info = retro_controller_info()
-        info.num_descriptions = 2
-        info.descriptions[0] = retro_controller_description(b'Game Pad', 5)
-        info.descriptions[1] = retro_controller_description(b'Analog Stick', 2)
-
-        assert len(info) == 2
-        assert info[0].desc == b'Game Pad'
-        assert info[1].desc == b'Analog Stick'
+>>> from collections.abc import Sequence
+>>> from libretro.api import retro_controller_info
+>>> info = retro_controller_info()
+>>> info.num_types = 2
+>>> info.types[0] = retro_controller_description(b'Game Pad', 5)
+>>> info.types[1] = retro_controller_description(b'Analog Stick', 2)
+>>> isinstance(info, Sequence)
+True
+>>> len(info) == 2
+True
+>>> info[0].desc == b'Game Pad'
+True
+>>> info[1].desc == b'Analog Stick'
+True
 
 .. seealso:: :mod:`libretro.drivers` for driver protocols that use these types.
 """
