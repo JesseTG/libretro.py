@@ -23,6 +23,7 @@ from ctypes import (
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_camera_buffer = c_int
@@ -150,7 +151,7 @@ class CameraCapabilityFlags(IntFlag):
 
 
 @dataclass(init=False, slots=True)
-class retro_camera_callback(Structure):
+class retro_camera_callback(Structure, NullPointerToNoneMixin):
     """
     Interface between the :term:`core` and the :class:`.CameraDriver`.
 

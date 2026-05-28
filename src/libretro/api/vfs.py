@@ -39,7 +39,7 @@ from libretro.ctypes import (
     c_void_ptr,
 )
 
-from ._utils import MemoDict
+from ._utils import MemoDict, NullPointerToNoneMixin
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
@@ -482,7 +482,7 @@ Corresponds to :c:type:`retro_vfs_closedir_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_vfs_interface(Structure):
+class retro_vfs_interface(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_vfs_interface` in ``libretro.h``.
 
@@ -581,7 +581,7 @@ class retro_vfs_interface(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_vfs_interface_info(Structure):
+class retro_vfs_interface_info(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_vfs_interface_info` in ``libretro.h``.
 

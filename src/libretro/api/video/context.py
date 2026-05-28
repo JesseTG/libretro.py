@@ -4,7 +4,7 @@ from ctypes import Structure, c_bool, c_int, c_uint, c_void_p, cast
 from dataclasses import dataclass
 from enum import IntEnum
 
-from libretro.api._utils import c_uintptr
+from libretro.api._utils import NullPointerToNoneMixin, c_uintptr
 from libretro.ctypes import CStringArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_HW_FRAME_BUFFER_VALID = cast((-1), c_void_p)
@@ -167,7 +167,7 @@ Corresponds to :c:type:`retro_hw_get_proc_address_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_hw_render_callback(Structure):
+class retro_hw_render_callback(Structure, NullPointerToNoneMixin):
     """
     Description of the hardware rendering context a core requires,
     with callbacks for reacting to or querying the context.

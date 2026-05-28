@@ -8,6 +8,7 @@ from ctypes import Structure, c_bool, c_char_p, c_int, c_size_t, c_uint16
 from dataclasses import dataclass
 from enum import IntFlag
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, c_void_ptr
 
 RETRO_NETPACKET_UNRELIABLE = 0
@@ -152,7 +153,7 @@ BROADCAST = RETRO_NETPACKET_BROADCAST
 
 
 @dataclass(init=False, slots=True)
-class retro_netpacket_callback(Structure):
+class retro_netpacket_callback(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_netpacket_callback` in ``libretro.h``.
 

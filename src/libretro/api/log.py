@@ -14,6 +14,7 @@ from ctypes import Structure, c_int
 from dataclasses import dataclass
 from enum import IntEnum
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, CStringArg, TypedFunctionPointer
 
 RETRO_LOG_DEBUG = 0
@@ -84,7 +85,7 @@ class LogLevel(IntEnum):
 
 
 @dataclass(init=False, slots=True)
-class retro_log_callback(Structure):
+class retro_log_callback(Structure, NullPointerToNoneMixin):
     """
     Provides the :class:`.Core` with a logging function.
 

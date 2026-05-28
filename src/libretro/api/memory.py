@@ -9,7 +9,7 @@ from typing import overload
 
 from libretro.ctypes import TypedPointer, c_void_ptr
 
-from ._utils import MemoDict, deepcopy_array
+from ._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
 
 RETRO_MEMORY_MASK = 0xFF
 """Mask for extracting the memory type from a memory ID."""
@@ -67,7 +67,7 @@ class MemoryDescriptorFlag(IntFlag):
 
 
 @dataclass(init=False, slots=True)
-class retro_memory_descriptor(Structure):
+class retro_memory_descriptor(Structure, NullPointerToNoneMixin):
     """
     Describes a region of emulated memory.
 
@@ -143,7 +143,7 @@ class retro_memory_descriptor(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_memory_map(Structure):
+class retro_memory_map(Structure, NullPointerToNoneMixin):
     r"""
     A collection of :class:`retro_memory_descriptor`\s
     that define the address space of the :class:`.Core`'s emulated memory.

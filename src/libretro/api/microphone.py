@@ -10,6 +10,7 @@ Allows cores to capture audio input from the host device.
 from ctypes import Structure, c_bool, c_int, c_int16, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
 RETRO_MICROPHONE_INTERFACE_VERSION = 1
@@ -173,7 +174,7 @@ Corresponds to :c:type:`retro_read_mic_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_microphone_interface(Structure):
+class retro_microphone_interface(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_microphone_interface` in ``libretro.h``.
 

@@ -12,7 +12,7 @@ from copy import deepcopy
 from ctypes import POINTER, Array, Structure, c_bool, c_char_p, pointer
 from dataclasses import dataclass
 
-from libretro.api._utils import MemoDict, deepcopy_array
+from libretro.api._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
 from libretro.ctypes import TypedArray, TypedFunctionPointer, TypedPointer
 
 RETRO_NUM_CORE_OPTION_VALUES_MAX = 128
@@ -37,7 +37,7 @@ Corresponds to :c:type:`retro_core_options_update_display_callback_t` in ``libre
 
 
 @dataclass(init=False, slots=True)
-class retro_variable(Structure):
+class retro_variable(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_variable` in ``libretro.h``.
 
@@ -73,7 +73,7 @@ class retro_variable(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_option_display(Structure):
+class retro_core_option_display(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_option_display` in ``libretro.h``.
 
@@ -104,7 +104,7 @@ class retro_core_option_display(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_option_value(Structure):
+class retro_core_option_value(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_option_value` in ``libretro.h``.
 
@@ -142,7 +142,7 @@ CoreOptionArray = retro_core_option_value * RETRO_NUM_CORE_OPTION_VALUES_MAX
 
 
 @dataclass(init=False, slots=True)
-class retro_core_option_definition(Structure):
+class retro_core_option_definition(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_option_definition` in ``libretro.h``.
 
@@ -189,7 +189,7 @@ class retro_core_option_definition(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_options_intl(Structure):
+class retro_core_options_intl(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_options_intl` in ``libretro.h``.
 
@@ -223,7 +223,7 @@ class retro_core_options_intl(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_option_v2_category(Structure):
+class retro_core_option_v2_category(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_option_v2_category` in ``libretro.h``.
 
@@ -257,7 +257,7 @@ class retro_core_option_v2_category(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_option_v2_definition(Structure):
+class retro_core_option_v2_definition(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_option_v2_definition` in ``libretro.h``.
 
@@ -315,7 +315,7 @@ class retro_core_option_v2_definition(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_options_v2(Structure):
+class retro_core_options_v2(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_options_v2` in ``libretro.h``.
 
@@ -349,7 +349,7 @@ class retro_core_options_v2(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_options_v2_intl(Structure):
+class retro_core_options_v2_intl(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_options_v2_intl` in ``libretro.h``.
 
@@ -383,7 +383,7 @@ class retro_core_options_v2_intl(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_core_options_update_display_callback(Structure):
+class retro_core_options_update_display_callback(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_core_options_update_display_callback` in ``libretro.h``.
 

@@ -13,6 +13,7 @@ from ctypes import Structure, c_bool, c_float, c_int, c_uint
 from dataclasses import dataclass
 from enum import IntEnum
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_sensor_action = c_int
@@ -74,7 +75,7 @@ Corresponds to :c:type:`retro_sensor_get_input_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_sensor_interface(Structure):
+class retro_sensor_interface(Structure, NullPointerToNoneMixin):
     """
     Provides functions for managing sensor input.
 

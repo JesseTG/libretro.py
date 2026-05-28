@@ -4,6 +4,7 @@ from ctypes import Structure, c_bool, c_size_t, c_uint
 from dataclasses import dataclass
 from typing import override
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.api.content import retro_game_info
 from libretro.ctypes import (
     CBoolArg,
@@ -170,7 +171,7 @@ Corresponds to :c:type:`retro_get_image_label_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_disk_control_callback(Structure):
+class retro_disk_control_callback(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_disk_control_callback` in ``libretro.h``.
 

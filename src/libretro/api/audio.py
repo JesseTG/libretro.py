@@ -17,6 +17,7 @@ or to be notified of audio buffer status changes.
 from ctypes import Structure, c_int16, c_size_t, c_uint
 from dataclasses import dataclass
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_audio_sample_t = TypedFunctionPointer[None, [CIntArg[c_int16], CIntArg[c_int16]]]
@@ -128,7 +129,7 @@ Corresponds to :c:type:`retro_audio_buffer_status_callback_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_audio_callback(Structure):
+class retro_audio_callback(Structure, NullPointerToNoneMixin):
     """
     Core-registered callbacks for asynchronous audio rendering.
 
@@ -163,7 +164,7 @@ class retro_audio_callback(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_audio_buffer_status_callback(Structure):
+class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
     """
     Core-registered callback for audio buffer status reporting.
 

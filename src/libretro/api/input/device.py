@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
 from typing import NewType, overload
 
-from libretro.api._utils import MemoDict, deepcopy_array
+from libretro.api._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 Port = NewType("Port", int)
@@ -203,7 +203,7 @@ class retro_controller_description(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_controller_info(Structure):
+class retro_controller_info(Structure, NullPointerToNoneMixin):
     r"""
     List of controller types usable by a controller :term:`port`.
 

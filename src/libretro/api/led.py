@@ -13,6 +13,7 @@ Types for allowing :class:`.Core`\s to control LED indicators on the host device
 from ctypes import Structure, c_int
 from dataclasses import dataclass
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, TypedFunctionPointer
 
 retro_set_led_state_t = TypedFunctionPointer[None, [CIntArg[c_int], CIntArg[c_int]]]
@@ -35,7 +36,7 @@ Corresponds to :c:type:`retro_set_led_state_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_led_interface(Structure):
+class retro_led_interface(Structure, NullPointerToNoneMixin):
     r"""
     Defines a callback that :class:`.Core`\s can use
     to control LED indicators on the host device.

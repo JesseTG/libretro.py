@@ -17,6 +17,7 @@ from ctypes import Structure, c_bool, c_char_p, c_int64, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import TypedFunctionPointer, TypedPointer
 
 RETRO_SIMD_SSE = 1 << 0
@@ -222,7 +223,7 @@ Corresponds to :c:type:`retro_perf_stop_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_perf_callback(Structure):
+class retro_perf_callback(Structure, NullPointerToNoneMixin):
     """
     Provides functions for performance profiling and CPU feature detection.
 

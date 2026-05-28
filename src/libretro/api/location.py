@@ -9,6 +9,7 @@ Allows cores to access the host device's geographic location.
 from ctypes import Structure, c_bool, c_double, c_uint
 from dataclasses import dataclass
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_location_set_interval_t = TypedFunctionPointer[None, [CIntArg[c_uint], CIntArg[c_uint]]]
@@ -83,7 +84,7 @@ Corresponds to :c:type:`retro_location_lifetime_status_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_location_callback(Structure):
+class retro_location_callback(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_location_callback` in ``libretro.h``.
 

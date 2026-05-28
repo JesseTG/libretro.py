@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from typing import Literal
 
-from libretro.api._utils import deepcopy_buffer
+from libretro.api._utils import NullPointerToNoneMixin, deepcopy_buffer
 from libretro.ctypes import CIntArg, TypedFunctionPointer, c_void_ptr
 
 retro_pixel_format = c_int
@@ -129,7 +129,7 @@ class MemoryType(IntFlag):
 
 
 @dataclass(init=False, slots=True)
-class retro_framebuffer(Structure):
+class retro_framebuffer(Structure, NullPointerToNoneMixin):
     """
     Corresponds to :c:type:`retro_framebuffer` in ``libretro.h``.
 

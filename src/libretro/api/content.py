@@ -33,6 +33,7 @@ from zipfile import Path as ZipPath
 
 from libretro.api._utils import (
     MemoDict,
+    NullPointerToNoneMixin,
     as_bytes,
     deepcopy_array,
     deepcopy_buffer,
@@ -131,7 +132,7 @@ class retro_system_info(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_game_info(Structure):
+class retro_game_info(Structure, NullPointerToNoneMixin):
     """
     Describes a game that's been loaded and exposed to a :class:`.Core`.
 
@@ -283,7 +284,7 @@ class retro_subsystem_memory_info(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_subsystem_rom_info(Structure):
+class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
     """
     Describes a type of ROM (or other data) that can be used with a subsystem.
 
@@ -418,7 +419,7 @@ class retro_subsystem_rom_info(Structure):
 
 
 @dataclass(init=False, slots=True)
-class retro_subsystem_info(Structure):
+class retro_subsystem_info(Structure, NullPointerToNoneMixin):
     """
     Describes a subsystem that supports loading zero or more content files.
 
@@ -884,7 +885,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
 
 
 @dataclass(init=False, slots=True)
-class retro_game_info_ext(Structure):
+class retro_game_info_ext(Structure, NullPointerToNoneMixin):
     """
     An extended version of :class:`retro_game_info` with additional metadata
     about the content file, including archive and directory information.

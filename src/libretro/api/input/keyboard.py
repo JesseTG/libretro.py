@@ -4,6 +4,7 @@ from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
 from enum import EJECT, IntEnum, IntFlag
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer
 
 from .device import InputDeviceState
@@ -645,7 +646,7 @@ Corresponds to :c:type:`retro_keyboard_event_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_keyboard_callback(Structure):
+class retro_keyboard_callback(Structure, NullPointerToNoneMixin):
     """
     Function registered by a :term:`core` to receive keyboard events.
     Can be invoked directly as a callable.

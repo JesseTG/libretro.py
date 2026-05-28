@@ -15,6 +15,7 @@ Corresponds to :c:type:`retro_midi_interface` in ``libretro.h``.
 from ctypes import Structure, c_bool, c_uint8, c_uint32
 from dataclasses import dataclass
 
+from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
 
 retro_midi_input_enabled_t = TypedFunctionPointer[c_bool, []]
@@ -78,7 +79,7 @@ Corresponds to :c:type:`retro_midi_flush_t` in ``libretro.h``.
 
 
 @dataclass(init=False, slots=True)
-class retro_midi_interface(Structure):
+class retro_midi_interface(Structure, NullPointerToNoneMixin):
     """
     Provides functions for MIDI input/output.
 
