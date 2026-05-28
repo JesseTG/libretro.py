@@ -255,7 +255,7 @@ class c_void_ptr(c_void_p):
 
     @override
     def __repr__(self) -> str:
-        return f"c_void_ptr({self.value:#x})"
+        return f"c_void_ptr({self.value:#x})" if self.value else "c_void_ptr(NULL)"
 
 
 if TYPE_CHECKING:

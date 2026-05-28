@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   They can be imported as `Core` objects
   (but won't be loaded before you do so).
 
+### Fixed
+
+- Fixed an error that would be raised when printing a null `c_void_ptr`.
+
 
 ## [0.7.2] - 2026-05-20
 
