@@ -41,8 +41,8 @@ if TYPE_CHECKING:
 MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
 
-def address[T: _CDataType](
-    ptr: c_void_p | c_char_p | int | _Pointer[T] | CFuncPtr | TypedPointer[T] | bytes | None,
+def address(
+    ptr: c_void_p | c_char_p | int | _Pointer[Any] | CFuncPtr | TypedPointer[Any] | bytes | None,
 ) -> int:
     """
     Return the address of the given pointer as an integer.
