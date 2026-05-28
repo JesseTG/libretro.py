@@ -64,6 +64,87 @@ The linked documentation provides details, but in a nutshell:
 Additional Methods
 ==================
 
+-----------------------------------------
+:deco:`~dataclasses.dataclass` Operations
+-----------------------------------------
+
+All structs are valid :deco:`dataclasses.dataclass`es.
+Unless otherwise noted, they support these operations:
+
+^^^^^^^^^^
+``__eq__``
+^^^^^^^^^^
+
+libretro.py structs can be compared for equality:
+
+>>> from libretro.api import retro_system_timing
+>>> timing = retro_system_timing(fps=60.0, sample_rate=44100)
+>>> timing == retro_system_timing(60, 44100)
+True
+>>> timing == retro_system_timing(59.9, 44100)
+False
+
+.. warning::
+  Most :mod:`ctypes` pointers are only compared for identity, *not* for value!
+  This means that two different pointer objects will always compare nonequal,
+  even if they refer to the same address.
+
+  >>> from ctypes import c_void_p
+  >>> ptr1 = c_void_p(0xdeadbeef)
+  >>> ptr2 = c_void_p(0xdeadbeef) # same address...
+  >>> ptr1 == ptr2
+  False
+  >>> ptr1.value == ptr2.value
+  True
+
+  This goes for :class:`~ctypes.c_void_p`, :class:`~ctypes.c_char_p`,
+  and anything returned by :func:`~ctypes.CFUNCTYPE` and :func:`~ctypes.POINTER`
+  (or the equivalent :class:`.TypedFunctionPointer` and :class:`.TypedPointer`):
+
+  If you want to compare two pointers for equality,
+  :func:`~ctypes.cast` them to :class:`~ctypes.c_void_p`
+  and check their :attr:`~ctypes.c_void_p.value`\s:
+
+  >>> from ctypes import cast, c_char_p
+  >>> ptr1 = c_char_p(0xdeadbeef)
+  >>> ptr2 = c_char_p(0xdeadbeef) # same address going in...
+  >>> addr1 = cast(ptr1, c_void_p).value
+  >>> addr2 = cast(ptr2, c_void_p).value # same address coming out...
+  >>> addr1 == addr2
+  True
+  >>> ptr1 == ptr2 # huh?
+  False
+
+  To stay consistent with :mod:`ctypes`,
+  libretro.py structs that contain pointers will maintain this behavior.
+  This means that **two libretro.py structs that contain pointers will compare as unequal.**
+
+  >>> from ctypes import cast, c_void_p
+  >>> from libretro.api import retro_led_interface, retro_set_led_state_t
+  >>> ptr = retro_set_led_state_t(0xdeadbeef) # pointer to a function at this address
+  >>> iface1 = retro_led_interface(ptr)
+  >>> iface2 = retro_led_interface(ptr)
+  >>> iface1 == iface2 # They're unequal!
+  False
+  >>> addr1 = cast(iface1.set_led_state, c_void_p).value
+  >>> addr2 = cast(iface2.set_led_state, c_void_p).value
+  >>> addr1 == addr2 # But they both point to the same thing!
+  True
+
+  **...with one exception!**
+  Although :mod:`ctypes` pointer objects can be empty
+  (i.e. they can point to ``NULL``),
+  libretro.py will replace them with :obj:`None` when used as struct fields.
+
+  >>> from libretro.api import retro_log_callback
+  >>> log_a = retro_log_callback()
+  >>> log_b = retro_log_callback() # both have a log field initialized to NULL
+  >>> log_a.log # will be None
+  >>> log_a.log == log_b.log
+  True
+  >>> log_a == log_b
+  True
+
 ---------------------
 :func:`copy.deepcopy`
 ---------------------
