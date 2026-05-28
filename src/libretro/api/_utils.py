@@ -29,12 +29,14 @@ from ctypes import (
     sizeof,
 )
 from os import PathLike
-from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, overload, override
 
 from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType, _CVoidConstPLike
+
+    from _typeshed import DataclassInstance
 
 MAX_POINTER_VALUE = (1 << (struct.calcsize("P") * 8)) - 1
 
@@ -102,6 +104,27 @@ def from_zero_terminated[T: _CData](ptr: _Pointer[T] | None) -> Iterator[T]:
         while not is_zeroed(ptr[i]):
             yield ptr[i]
             i += 1
+
+
+class NullPointerToNoneMixin:
+    @override
+    def __getattribute__(self, name: str) -> Any:
+        result = super().__getattribute__(name)
+
+        if isinstance(result, (CFuncPtr, _Pointer, c_void_p)) and address(result) == 0:  # type: ignore
+            # ctypes doesn't implicitly convert NULL pointer objects to None except for bytes/c_char_p
+            return None
+
+        return result  # pyright: ignore[reportUnknownVariableType]
+
+    @override
+    def __setattr__(self: DataclassInstance, name: str, value: Any) -> None:
+        if value is None:
+            if field := self.__dataclass_fields__.get(name):
+                if issubclass(field.default.type, CFuncPtr):
+                    value = field.default.type()
+
+        return super().__setattr__(name, value)
 
 
 MemoDict = dict[int, Any] | None
@@ -263,4 +286,5 @@ __all__ = [
     "memoryview_at",
     "c_uintptr",
     "MAX_POINTER_VALUE",
+    "NullPointerToNoneMixin",
 ]
