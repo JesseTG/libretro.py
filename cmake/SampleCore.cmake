@@ -60,6 +60,12 @@ function(add_sample_core)
         # additionally ensures any RETRO_API-marked symbol is exported even when
         # the macro is misconfigured in a vendored libretro.h copy.
         set_target_properties(${SC_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+        if (MINGW)
+            # Link the static library statically so that the sample core
+            # isn't sensitive to the location and version of the runtime stdlib
+            target_link_options(${SC_NAME} PRIVATE -static-libgcc -static-libstdc++ -static)
+        endif()
     endif()
 
     install(TARGETS ${SC_NAME}
