@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose all sample cores through the new `libretro.samples` package.
   They can be imported as `Core` objects
   (but won't be loaded before you do so).
+- Implement `Sequence` in `retro_memory_map`, `retro_controller_info`,
+  `retro_subsystem_rom_info`, and `retro_subsystem_info`.
 
 ### Fixed
 

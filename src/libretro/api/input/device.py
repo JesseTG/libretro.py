@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from ctypes import POINTER, Structure, c_char_p, c_int16, c_uint
+from collections.abc import Iterator, Sequence
+from ctypes import POINTER, Array, Structure, c_char_p, c_int16, c_uint
 from dataclasses import dataclass
 from enum import CONFORM, IntEnum, IntFlag
 from typing import NewType, overload
 
 from libretro.api._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
-from libretro.ctypes import CIntArg, TypedFunctionPointer, TypedPointer
+from libretro.ctypes import (
+    CIntArg,
+    TypedArray,
+    TypedFunctionPointer,
+    TypedPointer,
+)
 
 Port = NewType("Port", int)
 """
@@ -211,6 +217,20 @@ class retro_controller_info(Structure, NullPointerToNoneMixin):
     to access individual :class:`.retro_controller_description`\s.
 
     Corresponds to :c:type:`retro_controller_info` in ``libretro.h``.
+
+    Iterating an instance yields each :class:`.retro_controller_description`
+    in turn:
+
+    >>> from libretro.api import retro_controller_description, retro_controller_info
+    >>> descs = (retro_controller_description * 2)(
+    ...     retro_controller_description(b'Game Pad', 5),
+    ...     retro_controller_description(b'Analog Stick', 2),
+    ... )
+    >>> info = retro_controller_info(descs, 2)
+    >>> len(info)
+    2
+    >>> [d.desc for d in info]
+    [b'Game Pad', b'Analog Stick']
     """
 
     types: TypedPointer[retro_controller_description] | None
@@ -223,6 +243,45 @@ class retro_controller_info(Structure, NullPointerToNoneMixin):
         ("types", POINTER(retro_controller_description)),
         ("num_types", c_uint),
     )
+
+    def __init__(
+        self,
+        types: TypedPointer[retro_controller_description]
+        | TypedArray[retro_controller_description]
+        | Sequence[retro_controller_description]
+        | Array[retro_controller_description]
+        | None = None,
+        num_types: CIntArg[c_uint] | None = None,
+    ):
+        """
+        Initialize a :class:`retro_controller_info`.
+
+        When *types* is a :class:`~ctypes.Array`,
+        its address is used to initialize :attr:`types`.
+
+        When *types* is an :class:`~collections.abc.Sequence` (but not a pointer or ),
+        it is converted to a :class:`~ctypes.Array`
+        and *num_types* defaults to its length:
+
+        >>> from libretro.api import retro_controller_description, retro_controller_info
+        >>> descs = [retro_controller_description(b'Game Pad', 1)]
+        >>> info = retro_controller_info(types=descs)
+        >>> len(info)
+        1
+
+        :param types: Array of controller descriptions as a pointer, array, or sequence.
+        :param num_types: Number of controller types;
+            inferred from *types* when it is an array or sequence,
+            and ``0`` when it is a pointer.
+        """
+        if types is not None and not isinstance(types, (TypedPointer, Array)):
+            items = list(types)
+            types = (retro_controller_description * len(items))(*items)
+
+        if num_types is None:
+            num_types = len(types) if isinstance(types, Array) else 0
+
+        super().__init__(types, num_types)
 
     def __deepcopy__(self, memo: MemoDict):
         """
@@ -238,29 +297,39 @@ class retro_controller_info(Structure, NullPointerToNoneMixin):
     def __getitem__(self, index: int) -> retro_controller_description: ...
 
     @overload
-    def __getitem__(
-        self, index: slice[retro_controller_description]
-    ) -> list[retro_controller_description]: ...
+    def __getitem__(self, index: slice[int | None]) -> list[retro_controller_description]: ...
 
-    def __getitem__(self, index: int | slice[retro_controller_description]):
+    def __getitem__(self, index: int | slice[int | None]):
         """
         Return the :class:`.retro_controller_description` at the given index or slice.
 
-        :param index: An integer index or slice object.
-        :return: A single :class:`.retro_controller_description` if ``index`` is an :class:`int`,
-            or a :class:`list` of them if it's a :class:`slice`.
+        Supports negative indexes in the usual Python fashion:
+
+        >>> from libretro.api import retro_controller_description, retro_controller_info
+        >>> descs = (retro_controller_description * 2)(
+        ...     retro_controller_description(b'Game Pad', 1),
+        ...     retro_controller_description(b'Analog Stick', 2),
+        ... )
+        >>> info = retro_controller_info(descs, 2)
+        >>> info[-1].desc
+        b'Analog Stick'
+
+        :param index: An integer index or slice.
         :raises ValueError: If there are no controller types available.
-        :raises IndexError: If ``index`` is out of range.
-        :raises TypeError: If ``index`` isn't an :class:`int` or :class:`slice`.
+        :raises IndexError: If ``index`` is an integer outside ``[-len, len)``.
+        :raises TypeError: If ``index`` is neither an :class:`int` nor a :class:`slice`.
         """
         if not self.types:
             raise ValueError("No controller types available")
 
         match index:
-            case int(i) if 0 <= i < self.num_types:
-                return self.types[i]
             case int(i):
-                raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                n = len(self)
+                if not (-n <= i < n):
+                    raise IndexError(f"Expected {-n} <= index < {n}, got {i}")
+                if i < 0:
+                    i += n
+                return self.types[i]
             case slice() as s:
                 return self.types[s]
             case _:
@@ -273,6 +342,79 @@ class retro_controller_info(Structure, NullPointerToNoneMixin):
         :return: :attr:`num_types`.
         """
         return self.num_types
+
+    def __iter__(self) -> Iterator[retro_controller_description]:
+        """
+        Iterate over the controller descriptions for this port.
+
+        Returns no elements when :attr:`types` is :obj:`None`:
+
+        >>> from libretro.api import retro_controller_info
+        >>> list(retro_controller_info())
+        []
+        """
+        if not self.types:
+            return
+        for i in range(self.num_types):
+            yield self.types[i]
+
+    def __contains__(self, item: object) -> bool:
+        """
+        Test whether ``item`` appears in this sequence.
+
+        :param item: The element to search for.
+        :return: :obj:`True` if found, :obj:`False` otherwise.
+        """
+        return any(v is item or v == item for v in self)
+
+    def __reversed__(self) -> Iterator[retro_controller_description]:
+        """
+        Iterate over the controller descriptions in reverse order.
+
+        Returns no elements when :attr:`types` is :obj:`None`.
+
+        :return: An iterator over the descriptions in reverse order.
+        """
+        if not self.types:
+            return
+        for i in range(self.num_types - 1, -1, -1):
+            yield self.types[i]
+
+    def count(self, value: object) -> int:
+        """
+        Count occurrences of ``value`` in this sequence.
+
+        :param value: The element to count.
+        :return: The number of times ``value`` appears.
+        """
+        return sum(1 for v in self if v is value or v == value)
+
+    def index(self, value: object, start: int = 0, stop: int | None = None) -> int:
+        """
+        Return the index of the first occurrence of ``value``.
+
+        :param value: The element to search for.
+        :param start: Optional start index (inclusive).
+        :param stop: Optional stop index (exclusive).
+        :return: The index of the first match within ``[start, stop)``.
+        :raises ValueError: If ``value`` is not found within the given range.
+        """
+        n = len(self)
+        if start < 0:
+            start = max(n + start, 0)
+        if stop is None:
+            stop = n
+        elif stop < 0:
+            stop = max(n + stop, 0)
+        for i in range(start, min(stop, n)):
+            v = self[i]
+            if v is value or v == value:
+                return i
+        raise ValueError(f"{value!r} is not in sequence")
+
+
+Sequence.register(retro_controller_info)  # type: ignore
+# Sequence.register isn't part of the type stubs
 
 
 class InputDeviceState:

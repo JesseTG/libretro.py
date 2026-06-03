@@ -17,6 +17,7 @@ from collections.abc import Buffer, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from ctypes import (
     POINTER,
+    Array,
     Structure,
     addressof,
     c_bool,
@@ -39,7 +40,14 @@ from libretro.api._utils import (
     deepcopy_buffer,
     mmap_file,
 )
-from libretro.ctypes import TypedPointer, c_void_ptr
+from libretro.ctypes import (
+    CBoolArg,
+    CIntArg,
+    CStringArg,
+    TypedArray,
+    TypedPointer,
+    c_void_ptr,
+)
 
 
 @dataclass(init=False, slots=True)
@@ -203,15 +211,16 @@ class retro_game_info(Structure, NullPointerToNoneMixin):
         including copies of all strings and content data.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_game_info
         >>> info = retro_game_info(path=b'/game.bin')
-        >>> info2 = copy.deepcopy(info)
+        >>> info2 = deepcopy(info)
         >>> info == info2
         True
         >>> info is info2
         False
-        >>> info.data == info2.data
+        >>> addressof(info) == addressof(info2)
         False
         """
         return retro_game_info(
@@ -345,6 +354,56 @@ class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
         ("num_memory", c_uint),
     )
 
+    def __init__(
+        self,
+        desc: CStringArg | None = None,
+        valid_extensions: CStringArg | None = None,
+        need_fullpath: CBoolArg = False,
+        block_extract: CBoolArg = False,
+        required: CBoolArg = False,
+        memory: TypedPointer[retro_subsystem_memory_info]
+        | TypedArray[retro_subsystem_memory_info]
+        | Array[retro_subsystem_memory_info]
+        | Sequence[retro_subsystem_memory_info]
+        | None = None,
+        num_memory: CIntArg[c_uint] | None = None,
+    ):
+        """
+        Initialize a :class:`retro_subsystem_rom_info`.
+
+        When *memory* is an :class:`~collections.abc.Iterable` (but not a pointer or array),
+        it is converted to a :class:`~ctypes.Array`
+        and *num_memory* defaults to its length:
+
+        >>> from libretro.api import retro_subsystem_memory_info, retro_subsystem_rom_info
+        >>> mems = [retro_subsystem_memory_info(extension=b'srm', type=0x100)]
+        >>> rom = retro_subsystem_rom_info(memory=mems)
+        >>> len(rom)
+        1
+
+        When *memory* is a pointer,
+        *num_memory* defaults to ``0``
+        because pointer length cannot be inferred.
+
+        :param desc: Human-readable description of the content type.
+        :param valid_extensions: Pipe-delimited accepted file extensions.
+        :param need_fullpath: Whether the content driver should supply only a path.
+        :param block_extract: Whether compressed archives should not be extracted.
+        :param required: Whether this ROM is required for the subsystem.
+        :param memory: Array of memory descriptors as a pointer, array, or iterable.
+        :param num_memory: Number of memory descriptors;
+            inferred from *memory* when it is an array or iterable,
+            and ``0`` when it is a pointer.
+        """
+        if memory is not None and not isinstance(memory, (TypedPointer, Array)):
+            items = list(memory)
+            memory = (retro_subsystem_memory_info * len(items))(*items)
+        if num_memory is None:
+            num_memory = len(memory) if isinstance(memory, Array) else 0
+        super().__init__(
+            desc, valid_extensions, need_fullpath, block_extract, required, memory, num_memory
+        )
+
     def __len__(self):
         """
         Return :attr:`num_memory`.
@@ -369,16 +428,32 @@ class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
         Return a :class:`retro_subsystem_memory_info` at the given index,
         or a list of them if a slice is provided.
 
+        Supports negative indexes in the usual Python fashion:
+
+        >>> from libretro.api import retro_subsystem_memory_info, retro_subsystem_rom_info
+        >>> mems = (retro_subsystem_memory_info * 2)(
+        ...     retro_subsystem_memory_info(extension=b'srm'),
+        ...     retro_subsystem_memory_info(extension=b'sav'),
+        ... )
+        >>> rom = retro_subsystem_rom_info(memory=mems, num_memory=2)
+        >>> rom[-1].extension
+        b'sav'
+
+        :param index: An integer index or slice.
         :raises ValueError: If :attr:`memory` is :obj:`None`.
-        :raises IndexError: If ``index`` is out of the range given by :attr:`num_memory`.
+        :raises IndexError: If ``index`` is an integer outside ``[-len, len)``.
+        :raises TypeError: If ``index`` is neither an :class:`int` nor a :class:`slice`.
         """
         if not self.memory:
             raise ValueError("No subsystem ROM memory types available")
 
         match index:
             case int(i):
-                if not (0 <= i < self.num_memory):
-                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                n = len(self)
+                if not (-n <= i < n):
+                    raise IndexError(f"Expected {-n} <= index < {n}, got {i}")
+                if i < 0:
+                    i += n
                 return self.memory[i]
 
             case slice() as s:
@@ -386,6 +461,75 @@ class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
 
             case _:
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
+
+    def __iter__(self) -> Iterator[retro_subsystem_memory_info]:
+        """
+        Iterate over the memory descriptors for this ROM type.
+
+        Returns no elements when :attr:`memory` is :obj:`None`:
+
+        >>> from libretro.api import retro_subsystem_rom_info
+        >>> list(retro_subsystem_rom_info())
+        []
+        """
+        if not self.memory:
+            return
+        for i in range(self.num_memory):
+            yield self.memory[i]
+
+    def __contains__(self, item: object) -> bool:
+        """
+        Test whether ``item`` appears in this sequence.
+
+        :param item: The element to search for.
+        :return: :obj:`True` if found, :obj:`False` otherwise.
+        """
+        return any(v is item or v == item for v in self)
+
+    def __reversed__(self) -> Iterator[retro_subsystem_memory_info]:
+        """
+        Iterate over the memory descriptors in reverse order.
+
+        Returns no elements when :attr:`memory` is :obj:`None`.
+
+        :return: An iterator over the descriptors in reverse order.
+        """
+        if not self.memory:
+            return
+        for i in range(self.num_memory - 1, -1, -1):
+            yield self.memory[i]
+
+    def count(self, value: object) -> int:
+        """
+        Count occurrences of ``value`` in this sequence.
+
+        :param value: The element to count.
+        :return: The number of times ``value`` appears.
+        """
+        return sum(1 for v in self if v is value or v == value)
+
+    def index(self, value: object, start: int = 0, stop: int | None = None) -> int:
+        """
+        Return the index of the first occurrence of ``value``.
+
+        :param value: The element to search for.
+        :param start: Optional start index (inclusive).
+        :param stop: Optional stop index (exclusive).
+        :return: The index of the first match within ``[start, stop)``.
+        :raises ValueError: If ``value`` is not found within the given range.
+        """
+        n = len(self)
+        if start < 0:
+            start = max(n + start, 0)
+        if stop is None:
+            stop = n
+        elif stop < 0:
+            stop = max(n + stop, 0)
+        for i in range(start, min(stop, n)):
+            v = self[i]
+            if v is value or v == value:
+                return i
+        raise ValueError(f"{value!r} is not in sequence")
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
@@ -418,12 +562,29 @@ class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
             yield from self.valid_extensions.split(b"|")
 
 
+Sequence.register(retro_subsystem_rom_info)  # type: ignore
+
+
 @dataclass(init=False, slots=True)
 class retro_subsystem_info(Structure, NullPointerToNoneMixin):
     """
     Describes a subsystem that supports loading zero or more content files.
 
     Corresponds to :c:type:`retro_subsystem_info` in ``libretro.h``.
+
+    Iterating an instance yields each :class:`.retro_subsystem_rom_info`
+    in :attr:`roms`:
+
+    >>> from libretro.api import retro_subsystem_info, retro_subsystem_rom_info
+    >>> roms = (retro_subsystem_rom_info * 2)(
+    ...     retro_subsystem_rom_info(desc=b'BIOS'),
+    ...     retro_subsystem_rom_info(desc=b'Cartridge'),
+    ... )
+    >>> info = retro_subsystem_info(b'My Subsystem', b'mysub', roms, 2, 0)
+    >>> len(info)
+    2
+    >>> [r.desc for r in info]
+    [b'BIOS', b'Cartridge']
     """
 
     desc: bytes | None
@@ -463,6 +624,45 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
         ("id", c_uint),
     )
 
+    def __init__(
+        self,
+        desc: CStringArg | None = None,
+        ident: CStringArg | None = None,
+        roms: TypedPointer[retro_subsystem_rom_info]
+        | Array[retro_subsystem_rom_info]
+        | Sequence[retro_subsystem_rom_info]
+        | None = None,
+        num_roms: CIntArg[c_uint] | None = None,
+        id: CIntArg[c_uint] = 0,
+    ):
+        """
+        Initialize a :class:`retro_subsystem_info`.
+
+        When *roms* is an :class:`~collections.abc.Sequence` (but not a pointer or array),
+        it is converted to a :class:`~ctypes.Array`
+        and *num_roms* defaults to its length:
+
+        >>> from libretro.api import retro_subsystem_info, retro_subsystem_rom_info
+        >>> roms = [retro_subsystem_rom_info(desc=b'BIOS'), retro_subsystem_rom_info(desc=b'Cart')]
+        >>> sub = retro_subsystem_info(roms=roms)
+        >>> len(sub)
+        2
+
+        :param desc: Human-readable description of the subsystem.
+        :param ident: Short identifier for the subsystem.
+        :param roms: Array of ROM info structures as a pointer, array, or iterable.
+        :param num_roms: Number of ROM info structures;
+            inferred from *roms* when it is an array or iterable,
+            and ``0`` when it is a pointer.
+        :param id: Unique identifier for this subsystem.
+        """
+        if roms is not None and not isinstance(roms, (TypedPointer, Array)):
+            items = list(roms)
+            roms = (retro_subsystem_rom_info * len(items))(*items)
+        if num_roms is None:
+            num_roms = len(roms) if isinstance(roms, Array) else 0
+        super().__init__(desc, ident, roms, num_roms, id)
+
     def __len__(self):
         """Return :attr:`num_roms`."""
         return int(self.num_roms)
@@ -471,27 +671,41 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
     def __getitem__(self, index: int) -> retro_subsystem_rom_info: ...
 
     @overload
-    def __getitem__(
-        self, index: slice[retro_subsystem_rom_info]
-    ) -> list[retro_subsystem_rom_info]: ...
+    def __getitem__(self, index: slice[int | None]) -> list[retro_subsystem_rom_info]: ...
 
     def __getitem__(
-        self, index: int | slice[retro_subsystem_rom_info]
+        self, index: int | slice[int | None]
     ) -> retro_subsystem_rom_info | list[retro_subsystem_rom_info]:
         """
         Return a :class:`retro_subsystem_rom_info` at the given index,
         or a list of them if a slice is provided.
 
+        Supports negative indexes in the usual Python fashion:
+
+        >>> from libretro.api import retro_subsystem_info, retro_subsystem_rom_info
+        >>> roms = (retro_subsystem_rom_info * 2)(
+        ...     retro_subsystem_rom_info(desc=b'BIOS'),
+        ...     retro_subsystem_rom_info(desc=b'Cart'),
+        ... )
+        >>> sub = retro_subsystem_info(roms=roms)
+        >>> sub[-1].desc
+        b'Cart'
+
+        :param index: An integer index or slice.
         :raises ValueError: If :attr:`roms` is :obj:`None`.
-        :raises IndexError: If ``index`` is out of range.
+        :raises IndexError: If ``index`` is an integer outside ``[-len, len)``.
+        :raises TypeError: If ``index`` is neither an :class:`int` nor a :class:`slice`.
         """
         if not self.roms:
             raise ValueError("No subsystem ROM types available")
 
         match index:
             case int(i):
-                if not (0 <= i < self.num_roms):
-                    raise IndexError(f"Expected 0 <= index < {len(self)}, got {i}")
+                n = len(self)
+                if not (-n <= i < n):
+                    raise IndexError(f"Expected {-n} <= index < {n}, got {i}")
+                if i < 0:
+                    i += n
                 return self.roms[i]
 
             case slice() as s:
@@ -499,6 +713,75 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
 
             case _:
                 raise TypeError(f"Expected an int or slice index, got {type(index).__name__}")
+
+    def __iter__(self) -> Iterator[retro_subsystem_rom_info]:
+        """
+        Iterate over the ROM types in this subsystem.
+
+        Returns no elements when :attr:`roms` is :obj:`None`:
+
+        >>> from libretro.api import retro_subsystem_info
+        >>> list(retro_subsystem_info())
+        []
+        """
+        if not self.roms:
+            return
+        for i in range(self.num_roms):
+            yield self.roms[i]
+
+    def __contains__(self, item: object) -> bool:
+        """
+        Test whether ``item`` appears in this sequence.
+
+        :param item: The element to search for.
+        :return: :obj:`True` if found, :obj:`False` otherwise.
+        """
+        return any(v is item or v == item for v in self)
+
+    def __reversed__(self) -> Iterator[retro_subsystem_rom_info]:
+        """
+        Iterate over the ROM types in reverse order.
+
+        Returns no elements when :attr:`roms` is :obj:`None`.
+
+        :return: An iterator over the ROM types in reverse order.
+        """
+        if not self.roms:
+            return
+        for i in range(self.num_roms - 1, -1, -1):
+            yield self.roms[i]
+
+    def count(self, value: object) -> int:
+        """
+        Count occurrences of ``value`` in this sequence.
+
+        :param value: The element to count.
+        :return: The number of times ``value`` appears.
+        """
+        return sum(1 for v in self if v is value or v == value)
+
+    def index(self, value: object, start: int = 0, stop: int | None = None) -> int:
+        """
+        Return the index of the first occurrence of ``value``.
+
+        :param value: The element to search for.
+        :param start: Optional start index (inclusive).
+        :param stop: Optional stop index (exclusive).
+        :return: The index of the first match within ``[start, stop)``.
+        :raises ValueError: If ``value`` is not found within the given range.
+        """
+        n = len(self)
+        if start < 0:
+            start = max(n + start, 0)
+        if stop is None:
+            stop = n
+        elif stop < 0:
+            stop = max(n + stop, 0)
+        for i in range(start, min(stop, n)):
+            v = self[i]
+            if v is value or v == value:
+                return i
+        raise ValueError(f"{value!r} is not in sequence")
 
     def __deepcopy__(self, memo: MemoDict = None):
         """
@@ -561,6 +844,10 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
                 return info
 
         raise KeyError(f"Subsystem ROM with extension {ext!r} not found")
+
+
+Sequence.register(retro_subsystem_info)  # type: ignore
+# Sequence.register isn't part of the type stubs
 
 
 class Subsystems(Sequence[retro_subsystem_info]):

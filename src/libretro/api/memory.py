@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from ctypes import POINTER, Structure, c_char_p, c_size_t, c_uint, c_uint64
+from collections.abc import Iterator, Sequence
+from ctypes import POINTER, Array, Structure, c_char_p, c_size_t, c_uint, c_uint64
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import overload
 
-from libretro.ctypes import TypedPointer, c_void_ptr
+from libretro.ctypes import CIntArg, TypedArray, TypedPointer, c_void_ptr
 
 from ._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
 
@@ -50,7 +51,7 @@ class MemoryDescriptorFlag(IntFlag):
     >>> MemoryDescriptorFlag.CONST
     <MemoryDescriptorFlag.CONST: 1>
     >>> MemoryDescriptorFlag.BIGENDIAN | MemoryDescriptorFlag.SAVE_RAM
-    <MemoryDescriptorFlag.SAVE_RAM|BIGENDIAN: 10>
+    <MemoryDescriptorFlag.BIGENDIAN|SAVE_RAM: 10>
     """
 
     CONST = RETRO_MEMDESC_CONST
@@ -150,10 +151,21 @@ class retro_memory_map(Structure, NullPointerToNoneMixin):
 
     Corresponds to :c:type:`retro_memory_map` in ``libretro.h``.
 
-    >>> from libretro.api import retro_memory_map
-    >>> m = retro_memory_map()
-    >>> len(m)
+    Empty maps have length ``0``;
+    populating :attr:`descriptors` lets the map be iterated like a sequence:
+
+    >>> from libretro.api import retro_memory_descriptor, retro_memory_map
+    >>> len(retro_memory_map())
     0
+    >>> descs = (retro_memory_descriptor * 2)(
+    ...     retro_memory_descriptor(start=0,       len=0x10000),
+    ...     retro_memory_descriptor(start=0x10000, len=0x20000),
+    ... )
+    >>> m = retro_memory_map(descs, 2)
+    >>> len(m)
+    2
+    >>> [d.len for d in m]
+    [65536, 131072]
     """
 
     descriptors: TypedPointer[retro_memory_descriptor] | None
@@ -165,6 +177,40 @@ class retro_memory_map(Structure, NullPointerToNoneMixin):
         ("descriptors", POINTER(retro_memory_descriptor)),
         ("num_descriptors", c_uint),
     )
+
+    def __init__(
+        self,
+        descriptors: TypedPointer[retro_memory_descriptor]
+        | TypedArray[retro_memory_descriptor]
+        | Array[retro_memory_descriptor]
+        | Sequence[retro_memory_descriptor]
+        | None = None,
+        num_descriptors: CIntArg[c_uint] | None = None,
+    ):
+        """
+        Initialize a :class:`retro_memory_map`.
+
+        When *descriptors* is an :class:`~collections.abc.Sequence` (but not a pointer or array),
+        it is converted to a :class:`~ctypes.Array`
+        and *num_descriptors* defaults to its length:
+
+        >>> from libretro.api import retro_memory_descriptor, retro_memory_map
+        >>> descs = [retro_memory_descriptor(start=0, len=0x8000)]
+        >>> m = retro_memory_map(descriptors=descs)
+        >>> len(m)
+        1
+
+        :param descriptors: Array of memory descriptors as a pointer, array, or iterable.
+        :param num_descriptors: Number of descriptors;
+            inferred from *descriptors* when it is an array or iterable,
+            and ``0`` when it is a pointer.
+        """
+        if descriptors is not None and not isinstance(descriptors, (TypedPointer, Array)):
+            items = list(descriptors)
+            descriptors = (retro_memory_descriptor * len(items))(*items)
+        if num_descriptors is None:
+            num_descriptors = len(descriptors) if isinstance(descriptors, Array) else 0
+        super().__init__(descriptors, num_descriptors)
 
     def __len__(self):
         """
@@ -188,20 +234,107 @@ class retro_memory_map(Structure, NullPointerToNoneMixin):
         """
         Return a descriptor by index or a list of descriptors by slice.
 
-        :param item: An integer index or slice.
-        :returns: A single :class:`retro_memory_descriptor` or a list of them.
-        :raises IndexError: If the index is out of range.
-        :raises RuntimeError: If no descriptors are available.
-        """
-        if isinstance(item, int):
-            if item < 0 or item >= self.num_descriptors:
-                raise IndexError(f"Expected 0 <= index < {self.num_descriptors}, got {item}")
-        # TODO: Validate the slice (not just the start and stop, but also the step)
+        Supports negative indexes in the usual Python fashion:
 
+        >>> from libretro.api import retro_memory_descriptor, retro_memory_map
+        >>> descs = (retro_memory_descriptor * 2)(
+        ...     retro_memory_descriptor(start=0x0000, len=0x1000),
+        ...     retro_memory_descriptor(start=0x1000, len=0x2000),
+        ... )
+        >>> m = retro_memory_map(descs, 2)
+        >>> m[-1].start
+        4096
+
+        :param item: An integer index or slice.
+        :return: A single :class:`retro_memory_descriptor` or a list of them.
+        :raises RuntimeError: If :attr:`descriptors` is :obj:`None`.
+        :raises IndexError: If ``item`` is an integer outside ``[-len, len)``.
+        :raises TypeError: If ``item`` is neither an :class:`int` nor a :class:`slice`.
+        """
         if not self.descriptors:
             raise RuntimeError("Memory map has no descriptors")
 
-        return self.descriptors[item]
+        match item:
+            case int(i):
+                n = len(self)
+                if not (-n <= i < n):
+                    raise IndexError(f"Expected {-n} <= index < {n}, got {i}")
+                if i < 0:
+                    i += n
+                return self.descriptors[i]
+            case slice() as s:
+                return self.descriptors[s]
+            case _:
+                raise TypeError(f"Expected an int or slice, got {type(item).__name__}")
+
+    def __iter__(self) -> Iterator[retro_memory_descriptor]:
+        """
+        Iterate over the memory descriptors in this map.
+
+        Returns no elements when :attr:`descriptors` is :obj:`None`:
+
+        >>> from libretro.api import retro_memory_map
+        >>> list(retro_memory_map())
+        []
+        """
+        if not self.descriptors:
+            return
+        for i in range(self.num_descriptors):
+            yield self.descriptors[i]
+
+    def __contains__(self, item: object) -> bool:
+        """
+        Test whether ``item`` appears in this sequence.
+
+        :param item: The element to search for.
+        :return: :obj:`True` if found, :obj:`False` otherwise.
+        """
+        return any(v is item or v == item for v in self)
+
+    def __reversed__(self) -> Iterator[retro_memory_descriptor]:
+        """
+        Iterate over the memory descriptors in reverse order.
+
+        Returns no elements when :attr:`descriptors` is :obj:`None`.
+
+        :return: An iterator over the descriptors in reverse order.
+        """
+        if not self.descriptors:
+            return
+        for i in range(self.num_descriptors - 1, -1, -1):
+            yield self.descriptors[i]
+
+    def count(self, value: object) -> int:
+        """
+        Count occurrences of ``value`` in this sequence.
+
+        :param value: The element to count.
+        :return: The number of times ``value`` appears.
+        """
+        return sum(1 for v in self if v is value or v == value)
+
+    def index(self, value: object, start: int = 0, stop: int | None = None) -> int:
+        """
+        Return the index of the first occurrence of ``value``.
+
+        :param value: The element to search for.
+        :param start: Optional start index (inclusive).
+        :param stop: Optional stop index (exclusive).
+        :return: The index of the first match within ``[start, stop)``.
+        :raises ValueError: If ``value`` is not found within the given range.
+        """
+        n = len(self)
+        if start < 0:
+            start = max(n + start, 0)
+        if stop is None:
+            stop = n
+        elif stop < 0:
+            stop = max(n + stop, 0)
+        for i in range(start, min(stop, n)):
+            v = self[i]
+            if v is value or v == value:
+                return i
+        raise ValueError(f"{value!r} is not in sequence")
 
     def __deepcopy__(self, memodict: MemoDict = None):
         """
@@ -218,6 +351,9 @@ class retro_memory_map(Structure, NullPointerToNoneMixin):
             descriptors=deepcopy_array(self.descriptors, self.num_descriptors, memodict),
             num_descriptors=self.num_descriptors,
         )
+
+
+Sequence.register(retro_memory_map)  # type: ignore
 
 
 __all__ = [
