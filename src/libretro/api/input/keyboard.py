@@ -2,7 +2,7 @@
 
 from ctypes import Structure, c_int, c_uint, c_uint16, c_uint32
 from dataclasses import dataclass
-from enum import EJECT, IntEnum, IntFlag
+from enum import IntEnum, IntFlag
 
 from libretro.api._utils import NullPointerToNoneMixin
 from libretro.ctypes import CBoolArg, CIntArg, TypedFunctionPointer
@@ -186,7 +186,7 @@ RETROKMOD_SCROLLOCK = 0x40
 RETROKMOD_DUMMY = 0x7FFFFFFF
 
 
-class Key(IntEnum, boundary=EJECT):
+class Key(IntEnum):
     """
     Enumeration of keyboard key codes.
 

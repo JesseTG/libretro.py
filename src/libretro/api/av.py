@@ -6,7 +6,7 @@ Types to describe the parameters of a core's rendered audio and video.
 
 from ctypes import Structure, c_double, c_float, c_uint
 from dataclasses import dataclass
-from enum import CONFORM, IntEnum, IntFlag
+from enum import IntEnum, IntFlag
 
 RETRO_REGION_NTSC = 0
 RETRO_REGION_PAL = 1
@@ -42,7 +42,7 @@ class Region(IntEnum):
     """Corresponds to :c:macro:`RETRO_REGION_PAL`."""
 
 
-class AvEnableFlags(IntFlag, boundary=CONFORM):
+class AvEnableFlags(IntFlag):
     """
     Bit flags that denote whether the loaded :term:`core`
     should render audio and/or video frames.
