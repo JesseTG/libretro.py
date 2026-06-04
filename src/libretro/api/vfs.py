@@ -71,7 +71,7 @@ class retro_vfs_file_handle(Structure):
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.FileSystemDriver` implementations.
 
-        :class:`.Core`\s should treat instances of this class as opaque handles
+        :term:`Core <core>`\s should treat instances of this class as opaque handles
         and _not_ access or modify its fields directly.
 
 
@@ -140,7 +140,7 @@ class retro_vfs_dir_handle(Structure):
         the fields in this class are not part of libretro.h.
         They are provided as a convenience for :class:`.FileSystemDriver` implementations.
 
-        :class:`.Core`\s should treat instances of this class as opaque handles
+        :term:`Core <core>`\s should treat instances of this class as opaque handles
         and _not_ access or modify its fields directly.
 
     .. seealso::

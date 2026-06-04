@@ -180,7 +180,7 @@ class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
     def __call__(self, active: bool, occupancy: int, underrun_likely: bool) -> None:
         """
         Call :attr:`callback` with the given parameters if non-:obj:`None`,
-        otherwise  does nothing.
+        otherwise does nothing.
 
         :param active: Whether audio is active.
         :param occupancy: The current audio buffer occupancy.
