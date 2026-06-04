@@ -9,6 +9,7 @@ factories that it erases to at runtime.
 
 from __future__ import annotations
 
+import operator
 from ctypes import (
     CFUNCTYPE,
     POINTER,
@@ -25,12 +26,18 @@ from ctypes import (
 )
 
 from libretro.ctypes import (
+    CIntArg,
+    CStringArg,
     Pointer,
     TypedArray,
     TypedFunctionPointer,
     TypedPointer,
     c_void_ptr,
 )
+
+
+def ident[T](t: T) -> T:
+    return t
 
 
 def test_c_void_ptr_is_c_void_p_subclass() -> None:
@@ -41,6 +48,10 @@ def test_c_void_ptr_is_c_void_p_subclass() -> None:
 
 def test_c_void_ptr_repr_uses_hex() -> None:
     assert repr(c_void_ptr(0x1234)) == "c_void_ptr(0x1234)"
+
+
+def test_c_void_ptr_repr_uses_null() -> None:
+    assert repr(c_void_ptr(0)) == "c_void_ptr(NULL)"
 
 
 def test_c_void_ptr_value_round_trips() -> None:
@@ -111,18 +122,18 @@ def test_typed_function_pointer_resolves_to_CFUNCTYPE_at_runtime() -> None:
 
 
 def test_typed_function_pointer_bool_return_converts_to_python_bool() -> None:
-    as_bool = TypedFunctionPointer[c_bool, [c_int]](lambda x: x != 0)
+    as_bool = TypedFunctionPointer[c_bool, [CIntArg[c_int]]](ident)
     assert as_bool(0) is False
     assert as_bool(42) is True
 
 
 def test_typed_function_pointer_int_return_converts_to_python_int() -> None:
-    add = TypedFunctionPointer[c_int, [c_int, c_int]](lambda a, b: a + b)
+    add = TypedFunctionPointer[c_int, [CIntArg[c_int], CIntArg[c_int]]](operator.add)
     assert add(2, 3) == 5
 
 
 def test_typed_function_pointer_bytes_return_converts_to_python_bytes() -> None:
-    echo = TypedFunctionPointer[c_char_p, [c_char_p]](lambda s: s)
+    echo = TypedFunctionPointer[c_char_p, [CStringArg]](ident)
     assert echo(b"hello") == b"hello"
 
 
@@ -138,7 +149,7 @@ def test_as_parameter_protocol_accepts_user_type() -> None:
         def __init__(self, value: int) -> None:
             self._as_parameter_ = c_int(value)
 
-    echo = CFUNCTYPE(c_int, c_int)(lambda x: x)
+    echo = CFUNCTYPE(c_int, c_int)(ident)
     assert echo(Boxed(42)) == 42
     # The Protocol declaration exists for typing; we exercise it
     # structurally rather than via isinstance.

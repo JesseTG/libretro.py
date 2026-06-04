@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
 
 import pytest
 
@@ -52,6 +53,11 @@ def test_retro_memory_descriptor_deepcopy() -> None:
 def test_retro_memory_map_empty_length() -> None:
     m = retro_memory_map()
     assert len(m) == 0
+
+
+def test_retro_memory_map_sequence_protocol() -> None:
+    m = retro_memory_map()
+    assert isinstance(m, Sequence)
 
 
 def test_retro_memory_map_indexing_sequence_protocol() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
 from ctypes import addressof
 
 import pytest
@@ -55,6 +56,11 @@ def test_retro_system_info_extensions_yields_each_ext() -> None:
 def test_retro_system_info_extensions_empty_when_none() -> None:
     info = retro_system_info()
     assert list(info.extensions) == []
+
+
+def test_retro_system_info_extensions_includes_empty() -> None:
+    info = retro_system_info(valid_extensions=b"a|")
+    assert list(info.extensions) == [b"a", b""]
 
 
 def test_retro_system_info_deepcopy_preserves_values() -> None:
@@ -142,6 +148,16 @@ def test_retro_subsystem_rom_info_len_returns_num_memory() -> None:
 
 
 def test_retro_subsystem_info_sequence_protocol() -> None:
+    info = retro_subsystem_info()
+    assert isinstance(info, Sequence)
+
+
+def test_retro_subsystem_rom_info_sequence_protocol() -> None:
+    info = retro_subsystem_rom_info()
+    assert isinstance(info, Sequence)
+
+
+def test_retro_subsystem_info_sequence_operations() -> None:
     roms = (retro_subsystem_rom_info * 2)(
         retro_subsystem_rom_info(desc=b"BIOS"),
         retro_subsystem_rom_info(desc=b"Cartridge"),
@@ -151,6 +167,20 @@ def test_retro_subsystem_info_sequence_protocol() -> None:
     assert info[0].desc == b"BIOS"
     assert info[1].desc == b"Cartridge"
     assert [r.desc for r in info] == [b"BIOS", b"Cartridge"]
+
+
+def test_retro_subsystem_info_accepts_array() -> None:
+    roms = (retro_subsystem_rom_info * 2)(
+        retro_subsystem_rom_info(desc=b"BIOS"),
+        retro_subsystem_rom_info(desc=b"Cartridge"),
+    )
+    info = retro_subsystem_info(b"Super Game Boy", b"sgb", roms, 2, 1)
+    assert address(info.roms) == addressof(roms)
+
+
+def test_retro_subsystem_info_iterating_empty() -> None:
+    info = retro_subsystem_info()
+    assert list(info) == []
 
 
 def test_retro_subsystem_info_index_out_of_range() -> None:

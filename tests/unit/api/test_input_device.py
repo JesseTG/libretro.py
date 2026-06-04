@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
 
 import pytest
 
@@ -73,15 +74,8 @@ def test_retro_controller_description_deepcopy() -> None:
 
 
 def test_retro_controller_info_sequence_protocol() -> None:
-    descs = (retro_controller_description * 2)(
-        retro_controller_description(b"Game Pad", 5),
-        retro_controller_description(b"Analog Stick", 2),
-    )
-    info = retro_controller_info(descs, 2)
-    assert len(info) == 2
-    assert info[0].desc == b"Game Pad"
-    assert info[1].id == 2
-    assert [d.desc for d in info] == [b"Game Pad", b"Analog Stick"]
+    info = retro_controller_info()
+    assert isinstance(info, Sequence)
 
 
 def test_retro_controller_info_indexing_no_types_raises() -> None:

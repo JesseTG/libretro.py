@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from ctypes import addressof
 
 from libretro.api import (
     CameraCapabilities,
@@ -16,8 +17,8 @@ def test_retro_camera_callback_kwarg_init() -> None:
     assert cb.caps == CameraCapabilityFlags.RAW_FRAMEBUFFER
     assert cb.width == 640
     assert cb.height == 480
-    assert not cb.start
-    assert not cb.stop
+    assert cb.start is None
+    assert cb.stop is None
 
 
 def test_retro_camera_callback_default_fields_are_zero_or_null() -> None:
@@ -25,18 +26,19 @@ def test_retro_camera_callback_default_fields_are_zero_or_null() -> None:
     assert cb.caps == 0
     assert cb.width == 0
     assert cb.height == 0
-    assert not cb.start
-    assert not cb.stop
-    assert not cb.frame_raw_framebuffer
-    assert not cb.frame_opengl_texture
-    assert not cb.initialized
-    assert not cb.deinitialized
+    assert cb.start is None
+    assert cb.stop is None
+    assert cb.frame_raw_framebuffer is None
+    assert cb.frame_opengl_texture is None
+    assert cb.initialized is None
+    assert cb.deinitialized is None
 
 
 def test_retro_camera_callback_deepcopy() -> None:
     cb = retro_camera_callback(caps=1, width=640, height=480)
     dup = copy.deepcopy(cb)
     assert dup is not cb
+    assert addressof(dup) != addressof(cb)
     assert dup.caps == cb.caps
     assert dup.width == cb.width
     assert dup.height == cb.height

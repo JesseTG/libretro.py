@@ -24,7 +24,11 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from libretro.api import retro_game_info, retro_message_ext
-from libretro.ctypes import TypedFunctionPointer, TypedPointer
+from libretro.ctypes import CBoolArg, CIntArg, CStringArg, TypedFunctionPointer, TypedPointer
+
+
+def ident[T](t: T) -> T:
+    return t
 
 
 @given(value=st.integers(min_value=-(2**31), max_value=2**31 - 1))
@@ -71,7 +75,9 @@ def test_typed_pointer_float_round_trip(value: float) -> None:
     assert p[0] == c_float(value).value
 
 
-@given(values=st.lists(st.integers(min_value=-(2**31), max_value=2**31 - 1), max_size=64))
+@given(
+    values=st.lists(st.integers(min_value=-(2**31), max_value=2**31 - 1), min_size=1, max_size=64)
+)
 def test_typed_array_int32_iteration_matches_input(values: list[int]) -> None:
     if not values:
         # An empty array can't be constructed from an empty *args list,
@@ -135,7 +141,7 @@ def test_retro_game_info_string_fields_round_trip(
 @given(value=st.integers(min_value=-(2**31), max_value=2**31 - 1))
 def test_typed_function_pointer_int_argument_round_trip(value: int) -> None:
     """Calling a ``TypedFunctionPointer[c_int32, [c_int32]]`` returns its int input."""
-    echo = TypedFunctionPointer[c_int32, [c_int32]](lambda x: x)
+    echo = TypedFunctionPointer[c_int32, [CIntArg[c_int32]]](ident)
     assert echo(value) == value
 
 
@@ -143,14 +149,14 @@ def test_typed_function_pointer_int_argument_round_trip(value: int) -> None:
 def test_typed_function_pointer_bool_argument_round_trip(value: bool) -> None:
     from ctypes import c_bool
 
-    echo = TypedFunctionPointer[c_bool, [c_bool]](lambda x: x)
+    echo = TypedFunctionPointer[c_bool, [CBoolArg]](ident)
     assert echo(value) == value
 
 
 @given(payload=st.binary(min_size=0, max_size=128))
 def test_typed_function_pointer_bytes_argument_round_trip(payload: bytes) -> None:
     """``c_char_p`` arguments survive a round-trip through a CFUNCTYPE callback."""
-    echo = TypedFunctionPointer[c_char_p, [c_char_p]](lambda s: s)
+    echo = TypedFunctionPointer[c_char_p, [CStringArg]](ident)
     # NULL bytes truncate C strings; only verify up to the first NUL.
     expected = payload.split(b"\x00", 1)[0] if b"\x00" in payload else payload
     result = echo(payload)
