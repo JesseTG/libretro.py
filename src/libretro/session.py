@@ -80,30 +80,7 @@ class Session[
     _Timing: TimingDriver | None,
     _Mic: MicrophoneDriver | None,
     _Power: PowerDriver | None,
-](
-    CompositeEnvironmentDriver[
-        _Audio,
-        _Input,
-        _Video,
-        _Content,
-        _Message,
-        _Option,
-        _Path,
-        _Rumble,
-        _Sensor,
-        _Camera,
-        _Log,
-        _Perf,
-        _Location,
-        _User,
-        _Vfs,
-        _Led,
-        _Midi,
-        _Timing,
-        _Mic,
-        _Power,
-    ]
-):
+](CompositeEnvironmentDriver):
     """
     A configured libretro core paired with the drivers that satisfy its environment calls.
 

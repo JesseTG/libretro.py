@@ -76,28 +76,7 @@ _return_on_raise = DictEnvironmentDriver.return_on_raise
 # since the base implementation of environment() in DictEnvironmentDriver does so.
 
 
-class CompositeEnvironmentDriver[
-    _Audio: AudioDriver,
-    _Input: InputDriver,
-    _Video: VideoDriver,
-    _Content: ContentDriver | None,
-    _Message: MessageDriver | None,
-    _Option: OptionDriver | None,
-    _Path: PathDriver | None,
-    _Rumble: RumbleDriver | None,
-    _Sensor: SensorDriver | None,
-    _Camera: CameraDriver | None,
-    _Log: LogDriver | None,
-    _Perf: PerfDriver | None,
-    _Location: LocationDriver | None,
-    _User: UserDriver | None,
-    _Vfs: FileSystemDriver | None,
-    _Led: LedDriver | None,
-    _Midi: MidiDriver | None,
-    _Timing: TimingDriver | None,
-    _Mic: MicrophoneDriver | None,
-    _Power: PowerDriver | None,
-](DefaultEnvironmentDriver):
+class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     """
     :class:`.EnvironmentDriver` that composes individual feature drivers into one dispatcher.
 
@@ -110,32 +89,32 @@ class CompositeEnvironmentDriver[
     def __init__(
         self,
         /,
-        audio: _Audio,
-        input: _Input,
-        video: _Video,
-        content: _Content = None,
+        audio: AudioDriver,
+        input: InputDriver,
+        video: VideoDriver,
+        content: ContentDriver | None = None,
         overscan: bool | None = None,
-        message: _Message = None,
-        options: _Option = None,
-        path: _Path = None,
-        rumble: _Rumble = None,
-        sensor: _Sensor = None,
-        camera: _Camera = None,
-        log: _Log = None,
-        perf: _Perf = None,
-        location: _Location = None,
-        user: _User = None,
-        vfs: _Vfs = None,
-        led: _Led = None,
+        message: MessageDriver | None = None,
+        options: OptionDriver | None = None,
+        path: PathDriver | None = None,
+        rumble: RumbleDriver | None = None,
+        sensor: SensorDriver | None = None,
+        camera: CameraDriver | None = None,
+        log: LogDriver | None = None,
+        perf: PerfDriver | None = None,
+        location: LocationDriver | None = None,
+        user: UserDriver | None = None,
+        vfs: FileSystemDriver | None = None,
+        led: LedDriver | None = None,
         av_enable: AvEnableFlags | None = None,
-        midi: _Midi = None,
-        timing: _Timing = None,
+        midi: MidiDriver | None = None,
+        timing: TimingDriver | None = None,
         preferred_hw: HardwareContext | None = None,
         driver_switch_enable: bool | None = None,
         savestate_context: SavestateContext | None = None,
         jit_capable: bool | None = None,
-        mic: _Mic = None,
-        device_power: _Power = None,
+        mic: MicrophoneDriver | None = None,
+        device_power: PowerDriver | None = None,
     ):
         super().__init__()
         self._audio = audio
@@ -297,52 +276,52 @@ class CompositeEnvironmentDriver[
         self._mic_interface: retro_microphone_interface | None = None
 
     @property
-    def audio(self) -> _Audio:
+    def audio(self) -> AudioDriver:
         """Return the :class:`.AudioDriver` supplied at construction time."""
         return self._audio
 
     @property
-    def input(self) -> _Input:
+    def input(self) -> InputDriver:
         """Return the :class:`.InputDriver` supplied at construction time."""
         return self._input
 
     @property
-    def video(self) -> _Video:
+    def video(self) -> VideoDriver:
         """Return the :class:`.VideoDriver` supplied at construction time."""
         return self._video
 
     @property
-    def content(self) -> _Content:
+    def content(self) -> ContentDriver | None:
         """Return the :class:`.ContentDriver` supplied at construction time, or ``None`` if absent."""
         return self._content
 
     @property
-    def sensor(self) -> _Sensor:
+    def sensor(self) -> SensorDriver | None:
         """Return the :class:`.SensorDriver` supplied at construction time, or ``None`` if absent."""
         return self._sensor
 
     @property
-    def camera(self) -> _Camera:
+    def camera(self) -> CameraDriver | None:
         """Return the :class:`.CameraDriver` supplied at construction time, or ``None`` if absent."""
         return self._camera
 
     @property
-    def user(self) -> _User:
+    def user(self) -> UserDriver | None:
         """Return the :class:`.UserDriver` supplied at construction time, or ``None`` if absent."""
         return self._user
 
     @property
-    def path(self) -> _Path:
+    def path(self) -> PathDriver | None:
         """Return the :class:`.PathDriver` supplied at construction time, or ``None`` if absent."""
         return self._path
 
     @property
-    def timing(self) -> _Timing:
+    def timing(self) -> TimingDriver | None:
         """Return the :class:`.TimingDriver` supplied at construction time, or ``None`` if absent."""
         return self._timing
 
     @property
-    def rumble(self) -> _Rumble:
+    def rumble(self) -> RumbleDriver | None:
         """Return the :class:`.RumbleDriver` supplied at construction time, or ``None`` if absent."""
         return self._rumble
 
@@ -470,7 +449,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def message(self) -> _Message:
+    def message(self) -> MessageDriver | None:
         """Return the :class:`.MessageDriver` supplied at construction time, or ``None`` if absent."""
         return self._message
 
@@ -645,7 +624,7 @@ class CompositeEnvironmentDriver[
         return cast(proc, c_void_p).value or 0
 
     @property
-    def options(self) -> _Option:
+    def options(self) -> OptionDriver | None:
         """Return the :class:`.OptionDriver` supplied at construction time, or ``None`` if absent."""
         return self._options
 
@@ -869,7 +848,7 @@ class CompositeEnvironmentDriver[
             self._camera.stop()
 
     @property
-    def log(self) -> _Log:
+    def log(self) -> LogDriver | None:
         """Return the :class:`.LogDriver` supplied at construction time, or ``None`` if absent."""
         return self._log_driver
 
@@ -893,7 +872,7 @@ class CompositeEnvironmentDriver[
             self._log_driver.log(LogLevel(level), message)
 
     @property
-    def perf(self) -> _Perf:
+    def perf(self) -> PerfDriver | None:
         """Return the :class:`.PerfDriver` supplied at construction time, or ``None`` if absent."""
         return self._perf
 
@@ -961,7 +940,7 @@ class CompositeEnvironmentDriver[
             self._perf.perf_log()
 
     @property
-    def location(self) -> _Location:
+    def location(self) -> LocationDriver | None:
         """Return the :class:`.LocationDriver` supplied at construction time, or ``None`` if absent."""
         return self._location
 
@@ -1356,7 +1335,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def vfs(self) -> _Vfs:
+    def vfs(self) -> FileSystemDriver | None:
         """Return the :class:`.FileSystemDriver` supplied at construction time, or :obj:`None` if absent."""
         return self._vfs
 
@@ -1566,7 +1545,7 @@ class CompositeEnvironmentDriver[
         return self._vfs.closedir(dir[0])
 
     @property
-    def led(self) -> _Led:
+    def led(self) -> LedDriver | None:
         """Return the :class:`.LedDriver` supplied at construction time, or ``None`` if absent."""
         return self._led
 
@@ -2100,7 +2079,7 @@ class CompositeEnvironmentDriver[
         return True
 
     @property
-    def mic(self) -> _Mic:
+    def mic(self) -> MicrophoneDriver | None:
         """Return the :class:`.MicrophoneDriver` supplied at construction time, or ``None`` if absent."""
         return self._mic
 
@@ -2202,7 +2181,7 @@ class CompositeEnvironmentDriver[
         return len(returned_frames)
 
     @property
-    def power(self) -> _Power:
+    def power(self) -> PowerDriver | None:
         """Return the :class:`.PowerDriver` supplied at construction time, or ``None`` if absent."""
         return self._device_power
 
