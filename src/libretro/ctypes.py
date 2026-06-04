@@ -281,7 +281,7 @@ if TYPE_CHECKING:
         at runtime this name resolves to a plain
         :func:`ctypes.CFUNCTYPE` factory (see the :keyword:`else` branch below).
         Exists so static analyzers can infer concrete return types
-        (:class:`bool`, :class:`int``, :class:`float`, :class:`bytes`, etc.)
+        (:class:`bool`, :class:`int`, :class:`float`, :class:`bytes`, etc.)
         from the ctypes return-type parameter ``R``.
         """
 
