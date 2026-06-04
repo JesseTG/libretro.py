@@ -95,6 +95,19 @@ class retro_message_ext(Structure):
     An extended version of :class:`retro_message` with more display options.
 
     Corresponds to :c:type:`retro_message_ext` in ``libretro.h``.
+
+    Numeric fields like :attr:`duration` and :attr:`priority` round-trip
+    through the documented :mod:`ctypes` coercions —
+    the :class:`bytes` :attr:`msg` field likewise survives a deepcopy:
+
+    >>> import copy
+    >>> from libretro.api import retro_message_ext
+    >>> msg = retro_message_ext(msg=b'loaded', duration=2500, priority=100)
+    >>> (msg.msg, msg.duration, msg.priority)
+    (b'loaded', 2500, 100)
+    >>> dup = copy.deepcopy(msg)
+    >>> (dup.msg, dup.duration, dup.priority)
+    (b'loaded', 2500, 100)
     """
 
     msg: bytes | None

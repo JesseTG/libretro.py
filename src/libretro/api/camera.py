@@ -142,8 +142,8 @@ class CameraCapabilityFlags(IntFlag):
     Bitmask of supported camera driver features.
 
     >>> from libretro.api import CameraCapabilityFlags
-    >>> CameraCapabilityFlags.RAW_FRAMEBUFFER | CameraCapabilityFlags.OPENGL_TEXTURE
-    <CameraCapabilityFlags.RAW_FRAMEBUFFER|OPENGL_TEXTURE: 3>
+    >>> CameraCapabilityFlags.OPENGL_TEXTURE | CameraCapabilityFlags.RAW_FRAMEBUFFER
+    <CameraCapabilityFlags.OPENGL_TEXTURE|RAW_FRAMEBUFFER: 3>
     """
 
     OPENGL_TEXTURE = 1 << CameraCapabilities.OPENGL_TEXTURE
@@ -248,13 +248,16 @@ class retro_camera_callback(Structure, NullPointerToNoneMixin):
         Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_camera_callback
         >>> cb = retro_camera_callback(caps=1, width=640, height=480)
-        >>> cb2 = copy.deepcopy(cb)
+        >>> cb2 = deepcopy(cb)
         >>> cb == cb2
         True
         >>> cb is cb2
+        False
+        >>> addressof(cb) == addressof(cb2)
         False
         """
         return retro_camera_callback(

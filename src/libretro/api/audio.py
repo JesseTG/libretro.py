@@ -151,13 +151,14 @@ class retro_audio_callback(Structure, NullPointerToNoneMixin):
         Return a copy of this struct.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_audio_callback
         >>> cb = retro_audio_callback()
-        >>> cb_copy = copy.deepcopy(cb)
-        >>> cb_copy == cb
-        True
-        >>> cb_copy is cb
+        >>> cb_copy = deepcopy(cb)
+        >>> cb is cb_copy
+        False
+        >>> addressof(cb) == addressof(cb_copy)
         False
         """
         return retro_audio_callback(callback=self.callback, set_state=self.set_state)
@@ -187,7 +188,10 @@ class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
 
         >>> from libretro.api import retro_audio_buffer_status_callback
         >>> cb = retro_audio_buffer_status_callback()
-        >>> cb(True, 50, False)  # No-op since callback is None
+        >>> cb(True, 50, False) # No-op since callback is None
+        >>> cb.callback(True, 50, False) # But when calling the function pointer directly...
+        Traceback (most recent call last):
+        TypeError: 'NoneType' object is not callable
         """
         if self.callback:
             self.callback(active, occupancy, underrun_likely)
@@ -197,13 +201,14 @@ class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
         Return a copy of this struct with the same callback.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_audio_buffer_status_callback
         >>> cb = retro_audio_buffer_status_callback()
-        >>> cb_copy = copy.deepcopy(cb)
-        >>> cb_copy == cb
-        True
-        >>> cb_copy is cb
+        >>> cb_copy = deepcopy(cb)
+        >>> cb is cb_copy # They're different Python objects
+        False
+        >>> addressof(cb) == addressof(cb_copy) # And they contain different C buffers
         False
         """
         return retro_audio_buffer_status_callback(callback=self.callback)

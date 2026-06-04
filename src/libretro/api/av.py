@@ -176,13 +176,16 @@ class retro_game_geometry(Structure):
         Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_game_geometry
         >>> geom = retro_game_geometry(base_width=320, base_height=240, max_width=640, max_height=480, aspect_ratio=0.0)
-        >>> geom2 = copy.deepcopy(geom)
-        >>> geom == geom2
+        >>> geom_copy = deepcopy(geom)
+        >>> geom == geom_copy
         True
-        >>> geom is geom2
+        >>> geom is geom_copy
+        False
+        >>> addressof(geom) == addressof(geom_copy)
         False
         """
         return retro_game_geometry(
@@ -254,11 +257,17 @@ class retro_system_timing(Structure):
         Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_system_timing
         >>> timing = retro_system_timing(fps=60.0, sample_rate=44100.0)
-        >>> copy.deepcopy(timing).sample_rate
-        44100.0
+        >>> timing_copy = deepcopy(timing)
+        >>> timing == timing_copy
+        True
+        >>> timing is timing_copy
+        False
+        >>> addressof(timing) == addressof(timing_copy)
+        False
         """
         return retro_system_timing(self.fps, self.sample_rate)
 
@@ -307,14 +316,19 @@ class retro_system_av_info(Structure):
         Return a deep copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_system_av_info, retro_game_geometry, retro_system_timing
         >>> geom = retro_game_geometry(base_width=320, base_height=240, max_width=320, max_height=240)
         >>> timing = retro_system_timing(fps=60.0, sample_rate=32000.0)
         >>> av = retro_system_av_info(geom, timing)
-        >>> av2 = copy.deepcopy(av)
-        >>> av2.timing.sample_rate
-        32000.0
+        >>> av2 = deepcopy(av)
+        >>> av == av2
+        True
+        >>> av is av2
+        False
+        >>> addressof(av) == addressof(av2)
+        False
         """
         return retro_system_av_info(self.geometry, self.timing)
 

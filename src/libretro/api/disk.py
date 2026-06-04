@@ -213,11 +213,15 @@ class retro_disk_control_callback(Structure, NullPointerToNoneMixin):
         Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_disk_control_callback
         >>> cb = retro_disk_control_callback()
-        >>> copy.deepcopy(cb).set_eject_state is None
-        True
+        >>> cb_copy = deepcopy(cb)
+        >>> cb is cb_copy
+        False
+        >>> addressof(cb) == addressof(cb_copy)
+        False
         """
         return retro_disk_control_callback(
             set_eject_state=self.set_eject_state,
@@ -263,11 +267,15 @@ class retro_disk_control_ext_callback(retro_disk_control_callback):
         Return a copy of this object.
         Intended for use with :func:`copy.deepcopy`.
 
-        >>> import copy
+        >>> from copy import deepcopy
+        >>> from ctypes import addressof
         >>> from libretro.api import retro_disk_control_ext_callback
         >>> cb = retro_disk_control_ext_callback()
-        >>> copy.deepcopy(cb).set_initial_image is None
-        True
+        >>> cb_copy = deepcopy(cb)
+        >>> cb is cb_copy
+        False
+        >>> addressof(cb) == addressof(cb_copy)
+        False
         """
         return retro_disk_control_ext_callback(
             set_eject_state=self.set_eject_state,
