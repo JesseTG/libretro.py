@@ -176,10 +176,10 @@ plus ``__setitem__`` to update values. For example:
 
 >>> from collections.abc import Sequence
 >>> from libretro.api import retro_controller_info
->>> info = retro_controller_info()
->>> info.num_types = 2
->>> info.types[0] = retro_controller_description(b'Game Pad', 5)
->>> info.types[1] = retro_controller_description(b'Analog Stick', 2)
+>>> info = retro_controller_info([
+...     retro_controller_description(b'Game Pad'),
+...     retro_controller_description(b'Analog Stick')
+... ])
 >>> isinstance(info, Sequence)
 True
 >>> len(info) == 2
