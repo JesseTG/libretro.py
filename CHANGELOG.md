@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `boundary=EJECT` from `Key` and `AvEnableFlags`
   for consistency with other `IntFlag`s.
 - Make `CompositeEnvironmentDriver` non-generic.
+- Give `ConstantPowerDriver.__init__` a default argument
+  representing a plugged-in host.
 
 ### Fixed
 
