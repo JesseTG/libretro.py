@@ -2,7 +2,7 @@
 
 from typer.main import get_command
 
-from libretro import Content, SessionBuilder, SubsystemContent
+from libretro import Content, Session, SubsystemContent
 
 from ._common import ContentArg, CoreArg, SubsystemOption, prepare
 
@@ -32,9 +32,7 @@ def main(
         case _:
             raise ValueError("Invalid combination of subsystem and content")
 
-    builder = SessionBuilder.defaults(libretro).with_content(content)
-
-    with builder.build() as _:
+    with Session(libretro, content) as _:
         pass
 
 

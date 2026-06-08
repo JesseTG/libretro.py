@@ -1,5 +1,7 @@
 """Run a :term:`core` with content for a fixed number of frames."""
 
+from collections.abc import Mapping
+
 from typer.main import get_command
 
 from libretro import (
@@ -7,7 +9,7 @@ from libretro import (
     Content,
     HardwareContext,
     ModernGlVideoDriver,
-    SessionBuilder,
+    Session,
     SubsystemContent,
 )
 
@@ -52,7 +54,7 @@ def main(
         case _:
             raise ValueError("Invalid combination of subsystem and content")
 
-    core_options: dict[str, str] = (
+    core_options: Mapping[str, str] = (
         {k: v for k, v in (opt.split("=", 1) for opt in options)} if options else dict()
     )
 
@@ -91,14 +93,7 @@ def main(
 
     # TODO: Allow a window to be created for the session
 
-    builder = (
-        SessionBuilder.defaults(libretro)
-        .with_content(content)
-        .with_options(core_options)
-        .with_video(driver_map)
-    )
-
-    with builder.build() as session:
+    with Session(libretro, content, video=driver_map, options=core_options) as session:
         for _ in range(frames):
             session.run()
 

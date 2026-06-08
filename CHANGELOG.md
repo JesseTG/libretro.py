@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `CompositeEnvironmentDriver` non-generic.
 - Give `ConstantPowerDriver.__init__` a default argument
   representing a plugged-in host.
+- Refactor `Session.__init__` to accept arguments
+  matching the `with_` methods of `SessionBuilder`.
 
 ### Fixed
 
