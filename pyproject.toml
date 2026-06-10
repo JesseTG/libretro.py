@@ -5,12 +5,8 @@ description = "A libretro frontend for Python intended for testing cores."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
-authors = [
-    {name = "Jesse Talavera", email = "jesse@jesse.tg"},
-]
-maintainers = [
-    {name = "Jesse Talavera", email = "jesse@jesse.tg"},
-]
+authors = [{ name = "Jesse Talavera", email = "jesse@jesse.tg" }]
+maintainers = [{ name = "Jesse Talavera", email = "jesse@jesse.tg" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -30,9 +26,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 keywords = ["libretro", "retroarch", "emulation", "testing", "retrogaming"]
-dependencies = [
-    "typing_extensions == 4.*; python_version < '3.13'",
-]
+dependencies = ["typing_extensions == 4.*; python_version < '3.13'"]
 
 [dependency-groups]
 docs = [
@@ -50,18 +44,9 @@ docs = [
     'sphinx-autodoc-typehints == 3.10.2',
 ]
 # Alias for "docs" because I'd always mix them up
-doc = [
-    {include-group = "docs"}
-]
-build = [
-    'build == 1.4.2',
-    'twine == 6.2.0',
-    'pre-commit == 3.7.*',
-]
-lint = [
-    'pyright == 1.1.*',
-    "ruff == 0.15.*",
-]
+doc = [{ include-group = "docs" }]
+build = ['build == 1.4.2', 'twine == 6.2.0', 'pre-commit == 3.7.*']
+lint = ['pyright == 1.1.*', "ruff == 0.15.*"]
 test = [
     "pytest == 9.0.3",
     "pytest-xdist == 3.8.0",
@@ -72,10 +57,10 @@ test = [
     "pytest_assert_type == 0.1.5",
 ]
 dev = [
-    {include-group = "docs"},
-    {include-group = "build"},
-    {include-group = "lint"},
-    {include-group = "test"},
+    { include-group = "docs" },
+    { include-group = "build" },
+    { include-group = "lint" },
+    { include-group = "test" },
 ]
 
 [project.optional-dependencies]
@@ -137,9 +122,9 @@ line-length = 99
 # that ruff implements equivalents for
 extend-select = [
     "ARG", # flake8-unused-arguments
-    "D", # pydocstyle
-    "I", # isort
-    "S1", # flake8-bandit (basic security checks)
+    "D",   # pydocstyle
+    "I",   # isort
+    "S1",  # flake8-bandit (basic security checks)
 ]
 
 ignore = [
@@ -156,14 +141,18 @@ ignore = [
     "E117",
     "D206",
     "D300",
-    "Q", # flake8-quotes
+    "Q",      # flake8-quotes
     "COM812",
     "COM819",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
-"__init__.py" = ["F403"] # "from module import *" is common for __init__.py files
-"src/libretro/api/input/**" = ["E741"] # Some input-related libretro.h symbols are single-letter (minus prefixes)
+"__init__.py" = [
+    "F403",
+] # "from module import *" is common for __init__.py files
+"src/libretro/api/input/**" = [
+    "E741",
+] # Some input-related libretro.h symbols are single-letter (minus prefixes)
 "docs/conf.py" = ["D100"]
 "tests/**" = ["D"] # test modules don't require docstrings
 
@@ -184,6 +173,21 @@ markers = [
     "opengl: requires the libretro.py[opengl] extra and a working GL context",
     "slow: long-running; excluded from PR CI by default",
 ]
+required_plugins = ["pytest-assert-type", "hypothesis", "pytest-isolated"]
+norecursedirs = [
+    "_darcs",
+    ".*",
+    "{arch}",
+    "*.egg",
+    "build",
+    "CVS",
+    "dist",
+    "node_modules",
+    "venv",
+    "venv-*",
+    "__pycache__",
+    "*.egg-info",
+]
 
 [tool.pyright]
 exclude = [
@@ -196,11 +200,7 @@ exclude = [
     "docs",
     "build",
 ]
-include = [
-    "src/libretro/**",
-    "tests/**",
-    "docs/*.py",
-]
+include = ["src/libretro/**", "tests/**", "docs/*.py"]
 typeCheckingMode = "strict"
 deprecateTypingAliases = true
 reportImportCycles = true
