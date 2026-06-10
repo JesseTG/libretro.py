@@ -65,18 +65,10 @@ dev = [
 
 [project.optional-dependencies]
 
-cli = [
-    'typer == 0.25.1',
-]
-opengl = [
-    'moderngl[headless] >= 5.12',
-    'PyOpenGL == 3.1.*',
-]
-opengl-window = [
-    'moderngl-window == 3.*',
-    "libretro.py[opengl]"
-]
-all = ["libretro.py[build,cli,dev,docs,opengl,opengl-window]"]
+cli = ['typer == 0.25.1']
+opengl = ['moderngl[headless] >= 5.12', 'PyOpenGL == 3.1.*']
+opengl-window = ['moderngl-window == 3.*', "libretro.py[opengl]"]
+all = ["libretro.py[cli,opengl,opengl-window]"]
 
 [project.urls]
 Homepage = "https://github.com/JesseTG/libretro.py"
@@ -156,17 +148,11 @@ ignore = [
 "docs/conf.py" = ["D100"]
 "tests/**" = ["D"] # test modules don't require docstrings
 
-[tool.pytest.ini_options]
-minversion = "8.0"
-addopts = [
-    "-ra",
-    "-n",
-    "auto",
-    "--strict-markers",
-    "--strict-config",
-    "--doctest-modules",
-    "--doctest-glob=*.rst"
-]
+[tool.pytest]
+minversion = "9.0"
+addopts = ["--doctest-modules", "--doctest-glob=*.rst"]
+strict_markers = true
+strict_config = true
 testpaths = ["tests", "src"]
 markers = [
     "isolated: run the test in a fresh subprocess (provided by pytest-isolated)",
