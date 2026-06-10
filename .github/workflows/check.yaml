@@ -22,9 +22,8 @@ on:
       - dev
 
 jobs:
-  # -- Quality gates that run once per push, regardless of the matrix ------ #
-
   lint:
+    # Runs once per push, since linting doesn't depend on Python version
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -34,11 +33,18 @@ jobs:
         uses: astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b # v4.0.0
 
   typecheck:
+    # Runs once per supported Python language version,
+    # since types can vary by version
+    # (I don't think they can vary by freethreading support)
     name: Type-check
     runs-on: ubuntu-latest
-    # NOTE: If we ever add Direct3D-backed video drivers,
-    # we may want to do type-checking on Windows as well
-    # (to handle both Direct3D APIs and their absence).
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+        # NOTE: If we ever add Direct3D-backed video drivers,
+        # we may want to do type-checking on Windows as well
+        # (to handle both Direct3D APIs and their absence).
     steps:
       - name: Check Out Source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -54,7 +60,7 @@ jobs:
       - name: Install Python and Dependencies
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: "3.14"
+          python-version: "${{ matrix.python-version }}"
           cache: "pip"
           # --no-build-isolation skips the scikit-build-core CMake step;
           # pyright only needs the Python imports.
