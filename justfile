@@ -58,7 +58,12 @@ install:
 [group('Linting')]
 typecheck:
     pyright --version
-    pyright --verbose --project .
+    pyright --project .
+
+# Run the test suite. Extra args are forwarded to pytest, e.g. `just test tests/unit -k message`.
+[group('Testing')]
+test *args:
+    pytest {{ args }}
 
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs:
