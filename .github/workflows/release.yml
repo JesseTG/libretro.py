@@ -72,7 +72,10 @@ jobs:
           # Use the run ID from the input if provided, otherwise use the current run ID
 
           path: dist
-          # Download the artifacts to the `dist` directory
+          # Merge every per-platform `wheel-*` artifact plus the `wheel-pure`
+          # fallback into one ``dist/`` directory.
+          pattern: wheel-*
+          merge-multiple: true
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0

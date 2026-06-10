@@ -65,6 +65,12 @@ typecheck:
 test *args:
     pytest {{ args }}
 
+# Configure and build the sample cores via CMake. Output lands under build/.
+[group('Testing')]
+build-cores build_type="Release":
+    cmake -S . -B build -DCMAKE_BUILD_TYPE={{ build_type }} -DLIBRETRO_PY_BUILD_CORES=ON
+    cmake --build build --config {{ build_type }} --parallel
+
 # Generate the documentation and serve it locally. View it in a web browser.
 serve-docs:
     sphinx-autobuild --jobs auto --builder dirhtml --keep-going --watch src docs build/doc

@@ -22,14 +22,160 @@ on:
       - dev
 
 jobs:
-  check:
-    name: Run Checks
+  # -- Quality gates that run once per push, regardless of the matrix ------ #
+
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Lint
+        uses: astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b # v4.0.0
+
+  typecheck:
+    name: Type-check
+    runs-on: ubuntu-latest
+    # NOTE: If we ever add Direct3D-backed video drivers,
+    # we may want to do type-checking on Windows as well
+    # (to handle both Direct3D APIs and their absence).
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+
+      - name: Install Build Requirements
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: libx11-dev
+
+      - name: Install Python and Dependencies
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.14"
+          cache: "pip"
+          # --no-build-isolation skips the scikit-build-core CMake step;
+          # pyright only needs the Python imports.
+          pip-install: ".[all] --group dev"
+        env:
+          SKBUILD_CMAKE_DEFINE: "LIBRETRO_PY_BUILD_CORES=OFF"
+
+      - name: Run pyright
+        run: just typecheck
+
+  # -- Compile every sample core once per (OS, arch). Reused by `test` ----- #
+
+  build-cores:
+    name: Build cores
     strategy:
       fail-fast: false
       matrix:
-        # Test against multiple Python versions to ensure compatibility
-        python-version: ["3.12", "3.13", "3.14"]
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: macos-13
+            arch: x64
+          - os: macos-14
+            arch: arm64
+          - os: windows-latest
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+    uses: ./.github/workflows/cores.yaml
+    with:
+      os: ${{ matrix.os }}
+      arch: ${{ matrix.arch }}
+
+  # -- Run the test suite against every supported Python on every platform - #
+
+  test:
+    name: Test ${{ matrix.os }} / py${{ matrix.python-version }}
+    needs: build-cores
+    runs-on: ${{ matrix.os }}
+    # Free-threaded variants (the "t" suffix in python-version) are
+    # independent CPython builds; we run them with PYTHON_GIL=0 so any
+    # GIL-required behaviour fails loudly.
+    env:
+      PYTHON_GIL: ${{ endsWith(matrix.python-version, 't') && '0' || '' }}
+    continue-on-error: ${{ matrix.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-13
+          - macos-14
+          - windows-latest
+          - windows-11-arm
+        python-version: ["3.12", "3.13", "3.13t", "3.14", "3.14t"]
+        # Resolve the artifact arch from the OS image name.
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: macos-13
+            arch: x64
+          - os: macos-14
+            arch: arm64
+          - os: windows-latest
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+          # Python 3.15 is still pre-release as of this writing; mark as experimental so the
+          # job's failure doesn't gate the overall workflow.
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.15"
+            experimental: true
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.15t"
+            experimental: true
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Download cores artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cores-${{ matrix.os }}-${{ matrix.arch }}
+          path: src/libretro/samples
+
+      - name: Install Linux build requirements
+        if: startsWith(matrix.os, 'ubuntu')
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: libx11-dev
+
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+          cache: "pip"
+
+      - name: Install project (skipping CMake — cores were prebuilt)
+        env:
+          SKBUILD_CMAKE_DEFINE: "LIBRETRO_PY_BUILD_CORES=OFF"
+        run: |
+          python -m pip install --upgrade pip
+          pip install --editable ".[all]" --group test
+
+      - name: Run pytest
+        run: pytest --color=yes
+
+  # -- Documentation build (Linux + most recent stable Python) ------------- #
+
+  build-docs:
+    name: Build docs
+    runs-on: ubuntu-latest
     steps:
       - name: Check Out Source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -38,36 +184,90 @@ jobs:
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
 
       - name: Install Build Requirements
-        run: sudo apt-get install libx11-dev
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: libx11-dev
 
       - name: Install Python and Dependencies
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.14"
           cache: "pip"
-          pip-install: .[all] --group dev
+          pip-install: ".[all] --group docs"
+        env:
+          SKBUILD_CMAKE_DEFINE: "LIBRETRO_PY_BUILD_CORES=OFF"
 
-      - name: Check Types
-        run: just typecheck
-
-      - name: Lint
-        uses: astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b # v4.0.0
-
-      - name: Build Package
-        run: just build
-        # Uses the "build" recipe from the justfile
-
-      - name: Build Docs
+      - name: Build docs
         run: just build-docs
-        if: ${{ matrix.python-version == '3.14' }}
-        # Building the docs is only supported with the most recent version of Python
 
-      - name: Upload Build
+  # -- Build platform wheels (one per OS/arch) + a pure-Python fallback ---- #
+
+  build-platform-wheels:
+    name: Build wheel (${{ matrix.os }} / ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: macos-13
+            arch: x64
+          - os: macos-14
+            arch: arm64
+          - os: windows-latest
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build wheels with cibuildwheel
+        uses: pypa/cibuildwheel@8d945475ac4b1aac4ae08b2fd27db9917158b6ce # v3.2.1
+        env:
+          # Wheels are ``py3-none-<platform>`` (no Python C-API dependency),
+          # so we only need cibuildwheel to invoke the build backend once.
+          CIBW_BUILD: "cp312-*"
+          # On Linux, cibuildwheel runs builds inside manylinux containers.
+          # Tell cibuildwheel to forward our scikit-build cache hint.
+          CIBW_ENVIRONMENT: "SKBUILD_CMAKE_DEFINE=LIBRETRO_PY_BUILD_CORES=ON"
+
+      - name: Upload wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ matrix.python-version == '3.14' }}
-        # Only upload artifacts for the latest Python version,
-        # since the package should be the same for all versions
         with:
-          archive: false
-          path: dist/libretro_py-*.whl
+          name: wheel-${{ matrix.os }}-${{ matrix.arch }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  build-pure-wheel:
+    name: Build pure-Python fallback wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Install build front-end
+        run: pip install build
+
+      - name: Build pure-Python wheel
+        # ``LIBRETRO_PY_PURE_PYTHON`` triggers a scikit-build-core override
+        # in ``pyproject.toml`` that disables the CMake step entirely so the
+        # resulting wheel is tagged ``py3-none-any``.
+        env:
+          LIBRETRO_PY_PURE_PYTHON: "1"
+        run: python -m build --wheel
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheel-pure
+          path: dist/*-py3-none-any.whl
           if-no-files-found: error

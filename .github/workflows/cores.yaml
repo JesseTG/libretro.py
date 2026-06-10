@@ -1,0 +1,82 @@
+name: Build Sample Cores
+
+# Reusable workflow that builds the libretro sample cores for one
+# (OS, arch) pair and uploads the resulting shared libraries as an
+# artifact named ``cores-${{ inputs.os }}-${{ inputs.arch }}``.
+#
+# The artifact mirrors the on-disk layout that ``libretro.samples`` expects:
+#
+#     libretro/samples/<category>/<name>_libretro.<ext>
+#
+# Downstream jobs (``test``, ``build-wheels``) consume this artifact so the
+# cores are compiled exactly once per (OS, arch) and reused across every
+# Python version in the test matrix.
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: "GitHub Actions runner image (e.g. ubuntu-latest)"
+        type: string
+        required: true
+      arch:
+        description: "Architecture tag used to name the artifact (e.g. x64, arm64)"
+        type: string
+        required: true
+      cmake-build-type:
+        description: "CMake build type (Release or Debug)"
+        type: string
+        default: "Release"
+
+jobs:
+  build:
+    name: Build cores (${{ inputs.os }} / ${{ inputs.arch }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Check Out Source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install ccache (Linux / macOS)
+        if: ${{ !startsWith(inputs.os, 'windows') }}
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: cores-${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.cmake-build-type }}
+          create-symlink: true
+          variant: ${{ runner.os == 'Windows' && 'sccache' || 'ccache' }} # Equivalent to (runner.os == 'Windows') ? 'sccache' : 'ccache'
+          # Using sccache on Windows due to https://github.com/hendrikmuhs/ccache-action/issues/112
+          verbose: 2
+          evict-old-files: job
+
+      - name: Configure CMake
+        shell: bash
+        env:
+          # On Windows we use sccache; on POSIX runners the ccache-action
+          # already placed ccache symlinks in PATH so the compiler launcher
+          # finds it without an explicit path.
+          LIBRETRO_PY_CACHE: ${{ startsWith(inputs.os, 'windows') && 'sccache' || 'ccache' }}
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
+            -DCMAKE_C_COMPILER_LAUNCHER="$LIBRETRO_PY_CACHE" \
+            -DCMAKE_CXX_COMPILER_LAUNCHER="$LIBRETRO_PY_CACHE" \
+            -DLIBRETRO_PY_BUILD_CORES=ON \
+            -DCMAKE_INSTALL_PREFIX="${PWD}/stage"
+
+      - name: Build
+        run: cmake --build build --config ${{ inputs.cmake-build-type }} --parallel
+
+      - name: Install
+        run: cmake --install build --config ${{ inputs.cmake-build-type }}
+
+      - name: Show built cores
+        shell: bash
+        run: |
+          find stage -type f \( -name '*.so' -o -name '*.dll' -o -name '*.dylib' \) | sort
+
+      - name: Upload cores artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cores-${{ inputs.os }}-${{ inputs.arch }}
+          path: stage/libretro/samples/**
+          if-no-files-found: error
+          retention-days: 7
