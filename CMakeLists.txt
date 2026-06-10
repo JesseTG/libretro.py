@@ -19,6 +19,11 @@ set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
+if(APPLE)
+    # Apple's OpenGL deprecation warnings add a lot of noise
+    add_compile_definitions(GL_SILENCE_DEPRECATION=1)
+endif()
+
 option(LIBRETRO_PY_BUILD_CORES "Build sample libretro cores" ON)
 
 include(SampleCore)
