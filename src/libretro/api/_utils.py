@@ -28,13 +28,14 @@ from ctypes import (
     pythonapi,
     sizeof,
 )
+from dataclasses import MISSING, Field
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload, override
 
 from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
-    from ctypes import _CData, _CDataType, _CVoidConstPLike
+    from ctypes import CField, _CData, _CDataType, _CVoidConstPLike
 
     from _typeshed import DataclassInstance
 
@@ -120,9 +121,15 @@ class NullPointerToNoneMixin:
     @override
     def __setattr__(self: DataclassInstance, name: str, value: Any) -> None:
         if value is None:
-            if field := self.__dataclass_fields__.get(name):
-                if issubclass(field.default.type, CFuncPtr):
-                    value = field.default.type()
+            field: Field[CField[_CData, _CData, _CData]] | None = self.__dataclass_fields__.get(
+                name
+            )
+            if field and field.default != MISSING and issubclass(field.default.type, CFuncPtr):
+                # If we're setting a function pointer field to None,
+                # create an empty one instead and use that
+                value = field.default.type()
+            # Don't want to check against CField at runtime,
+            # as it wasn't exposed until Python 3.14
 
         return super().__setattr__(name, value)
 
