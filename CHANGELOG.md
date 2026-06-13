@@ -40,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed all `Structure` subclasses with pointers
   not converting between null pointers and `None`.
 
+### Removed
+
+- **BREAKING:** Remove `SessionBuilder` and `libretro.session`.
+  Use `Session.__init__` instead, as type checkers can preserve the driver type
+  instead of having to rely on the generic driver `Protocol`s.
+
 ## [0.7.2] - 2026-05-20
 
 ### Added
