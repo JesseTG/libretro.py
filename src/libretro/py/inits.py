@@ -13,8 +13,7 @@ def main(core: CoreArg):
     then unloads it without loading content or running frames.
     Exits with 0 if these steps were successful.
     """
-    builder = libretro.builder.defaults(core).with_content_driver(None)
-    with builder.build() as _:
+    with libretro.Session(core, None, content=None) as _:
         # retro_set_*, retro_init, retro_deinit, etc. are called implicitly
         pass
 
