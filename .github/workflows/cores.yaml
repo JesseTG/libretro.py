@@ -54,8 +54,18 @@ jobs:
           # already placed ccache symlinks in PATH so the compiler launcher
           # finds it without an explicit path.
           LIBRETRO_PY_CACHE: ${{ startsWith(inputs.os, 'windows') && 'sccache' || 'ccache' }}
+          # On Windows we build the sample cores with MinGW (GCC) rather than
+          # the default MSVC toolchain. We select the Ninja generator because
+          # the "MinGW Makefiles" generator refuses to run while Git's sh.exe
+          # is on PATH (which it always is on GitHub-hosted runners).
+          LIBRETRO_PY_MINGW: ${{ startsWith(inputs.os, 'windows') && '1' || '' }}
         run: |
+          declare -a generator_args
+          if [[ -n "$LIBRETRO_PY_MINGW" ]]; then
+            generator_args+=(-G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++)
+          fi
           cmake -S . -B build \
+            "${generator_args[@]}" \
             -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
             -DCMAKE_C_COMPILER_LAUNCHER="$LIBRETRO_PY_CACHE" \
             -DCMAKE_CXX_COMPILER_LAUNCHER="$LIBRETRO_PY_CACHE" \
