@@ -22,7 +22,7 @@ set(_lrs_src "${libretro_samples_SOURCE_DIR}")
 
 # Compile definitions that several upstream cores rely on but don't set themselves:
 #   _USE_MATH_DEFINES — makes M_PI etc. visible from <math.h> on MSVC.
-set(_lrs_common_defs _USE_MATH_DEFINES)
+set(_lrs_common_defs _USE_MATH_DEFINES _GNU_SOURCE)
 
 # --- audio/ ---------------------------------------------------------------
 
