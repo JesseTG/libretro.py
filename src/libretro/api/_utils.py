@@ -35,7 +35,14 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, overload, override
 from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
-    from ctypes import CField, _CData, _CDataType, _CVoidConstPLike
+    from ctypes import _CData, _CDataType, _CVoidConstPLike
+
+    if sys.version_info >= (3, 14):
+        from ctypes import CField
+    else:
+        CField = Any
+        # CField wasn't added to ctypes' declarations until Python 3.14,
+        # so any uses of it won't pass type-checking for earlier versions
 
     from _typeshed import DataclassInstance
 
