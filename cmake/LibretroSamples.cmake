@@ -10,6 +10,11 @@ set(LIBRETRO_SAMPLES_GIT_REPOSITORY "https://github.com/JesseTG/libretro-samples
 set(LIBRETRO_SAMPLES_GIT_TAG "948bba54c6828994809d103814b395fc6395032f"
     CACHE STRING "Commit/tag of libretro-samples to fetch")
 
+set(LIBRETRO_SAMPLES_ZLIB_GIT_REPOSITORY "https://github.com/madler/zlib"
+    CACHE STRING "URL of the zlib repository to fetch for samples that need it")
+set(LIBRETRO_SAMPLES_ZLIB_GIT_TAG "v1.3.1"
+    CACHE STRING "Commit/tag of zlib to fetch")
+
 FetchContent_Declare(libretro_samples
     GIT_REPOSITORY "${LIBRETRO_SAMPLES_GIT_REPOSITORY}"
     GIT_TAG        "${LIBRETRO_SAMPLES_GIT_TAG}"
@@ -161,8 +166,22 @@ if(OpenGL_FOUND)
         LIBS OpenGL::GL
     )
 
-    # Need ZLIB for the PNG library that this sample uses
-    find_package(ZLIB)
+    # The compute-shaders sample's vendored rpng/ PNG loader needs zlib.
+    # Rather than rely on a system zlib — which may be missing on CI runners
+    # or developer machines — fetch and build it from source and link it
+    # statically. zlib's CMake build exposes a STATIC ``zlibstatic`` target
+    # whose PUBLIC include dirs cover both the generated ``zconf.h`` and
+    # ``zlib.h``; we alias it to ``ZLIB::ZLIB`` so consumers below can use the
+    # familiar imported-target name.
+    if(NOT TARGET ZLIB::ZLIB)
+        set(ZLIB_BUILD_EXAMPLES OFF)  # We only want the library itself.
+        FetchContent_Declare(zlib
+            GIT_REPOSITORY "${LIBRETRO_SAMPLES_ZLIB_GIT_REPOSITORY}"
+            GIT_TAG        "${LIBRETRO_SAMPLES_ZLIB_GIT_TAG}"
+        )
+        FetchContent_MakeAvailable(zlib)
+        add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    endif()
     # The compute-shaders sample is C++ and vendors its own ``glm/``,
     # ``gl/``, ``rpng/`` and ``app/`` helper layers. Every ``.cpp`` under
     # ``libretro/``, ``app/``, ``gl/`` and ``rpng/`` participates.
