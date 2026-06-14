@@ -30,7 +30,7 @@ on:
 
 jobs:
   build:
-    name: Build cores (${{ inputs.os }} / ${{ inputs.arch }})
+    name: Build cores (${{ inputs.os }}-${{ inputs.arch }})
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check Out Source
