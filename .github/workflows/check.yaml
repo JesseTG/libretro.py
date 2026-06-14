@@ -99,7 +99,7 @@ jobs:
   # -- Run the test suite against every supported Python on every platform - #
 
   test:
-    name: Test ${{ matrix.os }} / py${{ matrix.python-version }}
+    name: Test ${{ matrix.os }}-py${{ matrix.python-version }}
     needs: build-cores
     runs-on: ${{ matrix.os }}
     # Free-threaded variants (the "t" suffix in python-version) are
@@ -208,7 +208,7 @@ jobs:
   # -- Build platform wheels (one per OS/arch) + a pure-Python fallback ---- #
 
   build-platform-wheels:
-    name: Build wheel (${{ matrix.os }} / ${{ matrix.arch }})
+    name: Build wheel (${{ matrix.os }}-${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
