@@ -238,7 +238,7 @@ jobs:
           CIBW_BUILD: "cp312-*"
           # On Linux, cibuildwheel runs builds inside manylinux containers.
           # Tell cibuildwheel to forward our scikit-build cache hint.
-          CIBW_ENVIRONMENT: "SKBUILD_CMAKE_DEFINE=LIBRETRO_PY_BUILD_CORES=ON"
+          CIBW_ENVIRONMENT: 'SKBUILD_CMAKE_DEFINE="LIBRETRO_PY_BUILD_CORES=ON"'
 
       - name: Upload wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
