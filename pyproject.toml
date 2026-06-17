@@ -114,7 +114,7 @@ ZLIB_USE_STATIC_LIBS = true
 
 [tool.cibuildwheel]
 test-requires = "pytest"
-test-command = "pytest"
+test-command = "pytest {project}"
 
 [tool.ruff]
 line-length = 99
