@@ -208,14 +208,14 @@ jobs:
   # -- Build platform wheels (one per OS/arch) + a pure-Python fallback ---- #
 
   build-platform-wheels:
-    name: Build wheel (${{ matrix.os }}-${{ matrix.arch }})
+    name: Build wheel (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.python }})
     strategy:
       fail-fast: false
       matrix:
         python:
-          - "cp312*"
-          - "cp313*"
-          - "cp314*"
+          - "cp312"
+          - "cp313"
+          - "cp314"
         include:
           - os: ubuntu-latest
             arch: x64
@@ -247,14 +247,14 @@ jobs:
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ runner.temp }}/cibw-cache
-          key: cibw-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          key: cibw-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             cibw-${{ runner.os }}-
 
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
-          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_BUILD: "${{ matrix.python }}*"
           # On Linux, cibuildwheel runs builds inside manylinux containers.
           # Tell cibuildwheel to forward our scikit-build cache hint.
           CIBW_ENVIRONMENT_WINDOWS: 'SKBUILD_CMAKE_ARGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"'
@@ -262,7 +262,7 @@ jobs:
       - name: Upload wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: wheel-${{ matrix.os }}-${{ matrix.arch }}
+          name: wheel-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.python }}
           path: wheelhouse/*.whl
           if-no-files-found: error
 
