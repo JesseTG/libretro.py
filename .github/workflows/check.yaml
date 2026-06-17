@@ -231,7 +231,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@8d945475ac4b1aac4ae08b2fd27db9917158b6ce # v3.2.1
+        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
           # Wheels are ``py3-none-<platform>`` (no Python C-API dependency),
           # so we only need cibuildwheel to invoke the build backend once.
