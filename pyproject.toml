@@ -113,7 +113,7 @@ wheel.cmake = false
 ZLIB_USE_STATIC_LIBS = true
 
 [tool.cibuildwheel]
-test-requires = "pytest"
+test-groups = ["test"]
 test-command = "pytest {project}"
 
 [tool.ruff]
