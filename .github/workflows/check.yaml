@@ -212,6 +212,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python:
+          - "cp312*"
+          - "cp313*"
+          - "cp314*"
         include:
           - os: ubuntu-latest
             arch: x64
@@ -250,7 +254,7 @@ jobs:
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
-          CIBW_BUILD: "cp312* cp313* cp314*"
+          CIBW_BUILD: ${{ matrix.python }}
           # On Linux, cibuildwheel runs builds inside manylinux containers.
           # Tell cibuildwheel to forward our scikit-build cache hint.
           CIBW_ENVIRONMENT_WINDOWS: 'SKBUILD_CMAKE_ARGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"'
