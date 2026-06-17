@@ -250,9 +250,7 @@ jobs:
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
-          # Wheels are ``py3-none-<platform>`` (no Python C-API dependency),
-          # so we only need cibuildwheel to invoke the build backend once.
-          CIBW_BUILD: "cp312-*"
+          CIBW_BUILD: "cp312* cp313* cp314*"
           # On Linux, cibuildwheel runs builds inside manylinux containers.
           # Tell cibuildwheel to forward our scikit-build cache hint.
           CIBW_ENVIRONMENT_WINDOWS : 'SKBUILD_CMAKE_DEFINE="CMAKE_C_COMPILER=gcc CMAKE_CXX_COMPILER=g++"'
