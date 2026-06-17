@@ -114,7 +114,7 @@ ZLIB_USE_STATIC_LIBS = true
 
 [tool.cibuildwheel]
 test-groups = ["test"]
-text-extras = ["all"]
+test-extras = ["all"]
 test-command = "pytest {project}"
 
 [tool.ruff]
