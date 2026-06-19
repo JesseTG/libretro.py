@@ -3,6 +3,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -29,15 +31,25 @@ modindex_common_prefix = ["libretro.", "libretro.api.", "libretro.drivers."]
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+_disabled_extensions = {
+    e.strip() for e in os.environ.get("SPHINX_DISABLE_EXTENSIONS", "").split(",") if e.strip()
+}
+# Allow disabling extensions, because some take a while to run
+# and that slows down iteration.
+
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.extlinks",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode",
-    "sphinx_autodoc_typehints",
-    "sphinxcontrib.prettyspecialmethods",
-    "sphinx_click",
+    ext
+    for ext in [
+        "sphinx.ext.autodoc",
+        "sphinx.ext.autosummary",
+        "sphinx.ext.extlinks",
+        "sphinx.ext.intersphinx",
+        "sphinx.ext.viewcode",
+        "sphinx_autodoc_typehints",
+        "sphinxcontrib.prettyspecialmethods",
+        "sphinx_click",
+    ]
+    if ext not in _disabled_extensions
 ]
 
 templates_path = ["_templates"]
