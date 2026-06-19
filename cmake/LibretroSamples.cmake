@@ -10,11 +10,6 @@ set(LIBRETRO_SAMPLES_GIT_REPOSITORY "https://github.com/JesseTG/libretro-samples
 set(LIBRETRO_SAMPLES_GIT_TAG "948bba54c6828994809d103814b395fc6395032f"
     CACHE STRING "Commit/tag of libretro-samples to fetch")
 
-set(LIBRETRO_SAMPLES_ZLIB_GIT_REPOSITORY "https://github.com/madler/zlib"
-    CACHE STRING "URL of the zlib repository to fetch for samples that need it")
-set(LIBRETRO_SAMPLES_ZLIB_GIT_TAG "v1.3.1"
-    CACHE STRING "Commit/tag of zlib to fetch")
-
 FetchContent_Declare(libretro_samples
     GIT_REPOSITORY "${LIBRETRO_SAMPLES_GIT_REPOSITORY}"
     GIT_TAG        "${LIBRETRO_SAMPLES_GIT_TAG}"
@@ -165,55 +160,6 @@ if(OpenGL_FOUND)
         COMPILE_DEFINITIONS ${_lrs_common_defs} HAVE_OPENGL CORE
         LIBS OpenGL::GL
     )
-
-    if (APPLE)
-        message(STATUS "libretro.py: Skipping test_gl_compute_shaders sample since Apple platforms don't support OpenGL 4.3")
-    else()
-        # The compute-shaders sample's vendored rpng/ PNG loader needs zlib.
-        # Rather than rely on a system zlib — which may be missing on CI runners
-        # or developer machines — fetch and build it from source and link it
-        # statically. zlib's CMake build exposes a STATIC ``zlibstatic`` target
-        # whose PUBLIC include dirs cover both the generated ``zconf.h`` and
-        # ``zlib.h``; we alias it to ``ZLIB::ZLIB`` so consumers below can use the
-        # familiar imported-target name.
-        if(NOT TARGET ZLIB::ZLIB)
-            set(ZLIB_BUILD_EXAMPLES OFF)  # We only want the library itself.
-            FetchContent_Declare(zlib
-                GIT_REPOSITORY "${LIBRETRO_SAMPLES_ZLIB_GIT_REPOSITORY}"
-                GIT_TAG        "${LIBRETRO_SAMPLES_ZLIB_GIT_TAG}"
-            )
-            FetchContent_MakeAvailable(zlib)
-            add_library(ZLIB::ZLIB ALIAS zlibstatic)
-        endif()
-        # The compute-shaders sample is C++ and vendors its own ``glm/``,
-        # ``gl/``, ``rpng/`` and ``app/`` helper layers. Every ``.cpp`` under
-        # ``libretro/``, ``app/``, ``gl/`` and ``rpng/`` participates.
-        set(_gl_cs "${_gl_root}/libretro_test_gl_compute_shaders")
-        file(GLOB _gl_cs_sources
-            CONFIGURE_DEPENDS
-            "${_gl_cs}/libretro/*.cpp"
-            "${_gl_cs}/app/*.cpp"
-            "${_gl_cs}/gl/*.cpp"
-            "${_gl_cs}/rpng/*.c"
-            "${_gl_cs}/glsym/glsym_gl.c"
-            "${_gl_cs}/glsym/rglgen.c"
-        )
-        add_sample_core(
-            NAME gl_compute_shaders
-            CATEGORY video
-            SOURCES ${_gl_cs_sources}
-            INCLUDES
-                "${_gl_cs}"
-                "${_gl_cs}/libretro"
-                "${_gl_cs}/app"
-                "${_gl_cs}/gl"
-                "${_gl_cs}/rpng"
-                "${_gl_cs}/glsym"
-                "${_gl_cs}/glm"
-            COMPILE_DEFINITIONS ${_lrs_common_defs} HAVE_OPENGL CORE GL_GLEXT_PROTOTYPES
-            LIBS OpenGL::GL ZLIB::ZLIB
-        )
-    endif()
 else()
     if(NOT OpenGL_FOUND)
         message(STATUS "libretro.py: OpenGL not found; skipping GL sample cores.")

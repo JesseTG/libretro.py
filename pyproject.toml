@@ -109,9 +109,6 @@ wheel.cmake = false
 if.env.LIBRETRO_PY_PURE_PYTHON = true
 wheel.cmake = false
 
-[tool.scikit-build.cmake.define]
-ZLIB_USE_STATIC_LIBS = true
-
 [tool.cibuildwheel]
 test-groups = ["test"]
 test-extras = ["all"]
