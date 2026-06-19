@@ -172,7 +172,8 @@ jobs:
         env:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_BUILD: "${{ matrix.python }}-${{ matrix.platform }}"
-          CIBW_CONFIG_SETTINGS_WINDOWS: 'cmake.args=-GNinja;-DCMAKE_C_COMPILER=gcc;-DCMAKE_CXX_COMPILER=g++'
+          CIBW_CONFIG_SETTINGS: 'cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
+          CIBW_CONFIG_SETTINGS_WINDOWS: 'cmake.args=-GNinja;-DCMAKE_C_COMPILER=gcc;-DCMAKE_CXX_COMPILER=g++;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache'
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
 
       - name: Upload wheel
