@@ -170,6 +170,7 @@ jobs:
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
+          CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_BUILD: "${{ matrix.python }}-${{ matrix.platform }}"
           CIBW_ENVIRONMENT_WINDOWS: 'SKBUILD_CMAKE_ARGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"'
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
