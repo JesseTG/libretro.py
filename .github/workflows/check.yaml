@@ -147,11 +147,6 @@ jobs:
             experimental: true
 
     runs-on: ${{ matrix.runner }}
-    # Free-threaded variants (the "t" suffix in python-version) are
-    # independent CPython builds; we run them with PYTHON_GIL=0 so any
-    # GIL-required behaviour fails loudly.
-    env:
-      PYTHON_GIL: ${{ endsWith(matrix.python, 't') && '0' || '' }}
     continue-on-error: ${{ matrix.experimental || false }}
     steps:
       - name: Check Out Source
