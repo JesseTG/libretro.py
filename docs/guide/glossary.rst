@@ -113,6 +113,11 @@ This page defines important terms that are used throughout libretro.py's documen
     subsystem
         A secondary platform that augments a core's primary emulated hardware.
 
+    VFS
+    virtual file system
+        An abstraction over file system operations.
+        Usually (but not necessarily) a wrapper around real file system calls.
+
     virtual environment
     venv
         A project-scoped installation of Python and various packages.
