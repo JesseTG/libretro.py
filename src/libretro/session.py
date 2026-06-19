@@ -1177,15 +1177,6 @@ class Session(
         system_info = self._core.get_system_info()
         self._raise_pending_exceptions("retro_get_system_info")
 
-        if system_info.library_name is None:
-            raise RuntimeError("Core did not provide a library name")
-
-        if system_info.library_version is None:
-            raise RuntimeError("Core did not provide a library version")
-
-        if system_info.valid_extensions is None:
-            raise RuntimeError("Core did not provide valid extensions")
-
         self._core.init()
         self._raise_pending_exceptions("retro_init")
 
