@@ -71,111 +71,6 @@ jobs:
       - name: Run pyright
         run: just typecheck
 
-  # -- Compile every sample core once per (OS, arch). Reused by `test` ----- #
-
-  build-cores:
-    name: Build cores
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            arch: x64
-          - os: ubuntu-24.04-arm
-            arch: arm64
-          - os: macos-14
-            arch: x64
-          - os: macos-26
-            arch: arm64
-          - os: windows-latest
-            arch: x64
-          - os: windows-11-arm
-            arch: arm64
-    uses: ./.github/workflows/cores.yaml
-    with:
-      os: ${{ matrix.os }}
-      arch: ${{ matrix.arch }}
-
-  # -- Run the test suite against every supported Python on every platform - #
-
-  test:
-    name: Test ${{ matrix.os }}-py-${{ matrix.python-version }}
-    needs: build-cores
-    runs-on: ${{ matrix.os }}
-    # Free-threaded variants (the "t" suffix in python-version) are
-    # independent CPython builds; we run them with PYTHON_GIL=0 so any
-    # GIL-required behaviour fails loudly.
-    env:
-      PYTHON_GIL: ${{ endsWith(matrix.python-version, 't') && '0' || '' }}
-    continue-on-error: ${{ matrix.experimental || false }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - ubuntu-24.04-arm
-          - macos-14
-          - macos-26
-          - windows-latest
-          - windows-11-arm
-        python-version: ["3.12", "3.13", "3.13t", "3.14", "3.14t"]
-        # Resolve the artifact arch from the OS image name.
-        include:
-          - os: ubuntu-latest
-            arch: x64
-          - os: ubuntu-24.04-arm
-            arch: arm64
-          - os: macos-14
-            arch: x64
-          - os: macos-26
-            arch: arm64
-          - os: windows-latest
-            arch: x64
-          - os: windows-11-arm
-            arch: arm64
-          # Python 3.15 is still pre-release as of this writing; mark as experimental so the
-          # job's failure doesn't gate the overall workflow.
-          - os: ubuntu-latest
-            arch: x64
-            python-version: "3.15"
-            experimental: true
-          - os: ubuntu-latest
-            arch: x64
-            python-version: "3.15t"
-            experimental: true
-    steps:
-      - name: Check Out Source
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-
-      - name: Download cores artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: cores-${{ matrix.os }}-${{ matrix.arch }}
-          path: src/libretro/samples
-
-      - name: Install Linux build requirements
-        if: startsWith(matrix.os, 'ubuntu')
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
-        with:
-          packages: libx11-dev
-
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
-          cache: "pip"
-
-      - name: Install project (skipping CMake — cores were prebuilt)
-        env:
-          SKBUILD_CMAKE_DEFINE: "LIBRETRO_PY_BUILD_CORES=OFF"
-        run: |
-          python -m pip install --upgrade pip
-          pip install --editable ".[all]" --group test
-
-      - name: Run pytest
-        run: pytest --color=yes
-
   # -- Documentation build (Linux + most recent stable Python) ------------- #
 
   build-docs:
@@ -208,7 +103,7 @@ jobs:
   # -- Build platform wheels (one per OS/arch) + a pure-Python fallback ---- #
 
   build-platform-wheels:
-    name: Build wheel (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.python }})
+    name: Build wheel (${{ matrix.python }}-${{ matrix.platform }})
     strategy:
       fail-fast: false
       matrix:
@@ -216,20 +111,48 @@ jobs:
           - "cp312"
           - "cp313"
           - "cp314"
+          - "cp314t"
+          - "cp315"
+          - "cp315t"
+        platform:
+          - win_amd64
+          - win_arm64
+          - macosx_x86_64
+          - macosx_arm64
+          - manylinux_x86_64
+          - manylinux_aarch64
         include:
-          - os: ubuntu-latest
-            arch: x64
-          - os: ubuntu-24.04-arm
-            arch: arm64
-          - os: macos-14
-            arch: x64
-          - os: macos-26
-            arch: arm64
-          - os: windows-latest
-            arch: x64
-          - os: windows-11-arm
-            arch: arm64
-    runs-on: ${{ matrix.os }}
+          # Specify the runners for each platform
+          # (GHA will add a "runner" field to the jobs with the given "platform" field)
+          - platform: win_amd64
+            runner: windows-latest
+          - platform: win32
+            runner: windows-latest
+          - platform: win_arm64
+            runner: windows-11-arm
+          - platform: macosx_x86_64
+            runner: macos-14
+          - platform: macosx_arm64
+            runner: macos-26
+          - platform: manylinux_x86_64
+            runner: ubuntu-latest
+          - platform: manylinux_aarch64
+            runner: ubuntu-24.04-arm
+
+          # Allow these jobs to fail, since they're not fully supported yet
+          # (Python 3.15 is in beta as of now)
+          - python: cp315
+            experimental: true
+          - python: cp315t
+            experimental: true
+
+    runs-on: ${{ matrix.runner }}
+    # Free-threaded variants (the "t" suffix in python-version) are
+    # independent CPython builds; we run them with PYTHON_GIL=0 so any
+    # GIL-required behaviour fails loudly.
+    env:
+      PYTHON_GIL: ${{ endsWith(matrix.python, 't') && '0' || '' }}
+    continue-on-error: ${{ matrix.experimental || false }}
     steps:
       - name: Check Out Source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -237,7 +160,7 @@ jobs:
       - name: Install ccache (Linux / macOS)
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: cores-${{ matrix.os }}-${{ matrix.arch }}
+          key: cores-${{ matrix.platform }}
           create-symlink: true
           variant: ${{ runner.os == 'Windows' && 'sccache' || 'ccache' }} # Equivalent to (runner.os == 'Windows') ? 'sccache' : 'ccache'
           # Using sccache on Windows due to https://github.com/hendrikmuhs/ccache-action/issues/112
@@ -254,15 +177,14 @@ jobs:
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
-          CIBW_BUILD: "${{ matrix.python }}*"
-          # On Linux, cibuildwheel runs builds inside manylinux containers.
-          # Tell cibuildwheel to forward our scikit-build cache hint.
+          CIBW_BUILD: "${{ matrix.python }}-${{ matrix.platform }}"
           CIBW_ENVIRONMENT_WINDOWS: 'SKBUILD_CMAKE_ARGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"'
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
+
       - name: Upload wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: wheel-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.python }}
+          name: wheel-${{ matrix.python }}-${{ matrix.platform }}
           path: wheelhouse/*.whl
           if-no-files-found: error
 
