@@ -26,7 +26,7 @@ _NAMES = (
     "software_direct_to_vram",
     "gl_fixedfunction",
     "gl_shaders",
-    "gl_compute_shaders",
+    #    "gl_compute_shaders",
 )
 
 

@@ -23,7 +23,7 @@ ALL_SAMPLE_CORES = [
     ("video", "software_direct_to_vram"),
     ("video", "gl_fixedfunction"),
     ("video", "gl_shaders"),
-    ("video", "gl_compute_shaders"),
+    #    ("video", "gl_compute_shaders"),
     ("custom", "led_test"),
     ("custom", "rumble_test"),
     ("custom", "sensor_test"),
