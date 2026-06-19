@@ -126,8 +126,6 @@ jobs:
           # (GHA will add a "runner" field to the jobs with the given "platform" field)
           - platform: win_amd64
             runner: windows-latest
-          - platform: win32
-            runner: windows-latest
           - platform: win_arm64
             runner: windows-11-arm
           - platform: macosx_x86_64
