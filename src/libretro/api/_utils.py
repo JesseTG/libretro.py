@@ -28,7 +28,6 @@ from ctypes import (
     pythonapi,
     sizeof,
 )
-from dataclasses import MISSING, Field
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload, override
 
@@ -36,13 +35,6 @@ from libretro.ctypes import TypedPointer
 
 if TYPE_CHECKING:
     from ctypes import _CData, _CDataType, _CVoidConstPLike
-
-    if sys.version_info >= (3, 14):
-        from ctypes import CField
-    else:
-        CField = Any
-        # CField wasn't added to ctypes' declarations until Python 3.14,
-        # so any uses of it won't pass type-checking for earlier versions
 
     from _typeshed import DataclassInstance
 
@@ -117,7 +109,7 @@ def from_zero_terminated[T: _CData](ptr: _Pointer[T] | None) -> Iterator[T]:
 class NullPointerToNoneMixin:
     @override
     def __getattribute__(self, name: str) -> Any:
-        result = super().__getattribute__(name)
+        result = object.__getattribute__(self, name)
 
         if isinstance(result, (CFuncPtr, _Pointer, c_void_p)) and address(result) == 0:  # type: ignore
             # ctypes doesn't implicitly convert NULL pointer objects to None except for bytes/c_char_p
@@ -128,17 +120,18 @@ class NullPointerToNoneMixin:
     @override
     def __setattr__(self: DataclassInstance, name: str, value: Any) -> None:
         if value is None:
-            field: Field[CField[_CData, _CData, _CData]] | None = self.__dataclass_fields__.get(
-                name
-            )
-            if field and field.default != MISSING and issubclass(field.default.type, CFuncPtr):
+            if field := self.__dataclass_fields__.get(name):
+                if args := getattr(field.type, "__args__", None):
+                    if issubclass(args[0], CFuncPtr):
+                        value = args[0]()
+
                 # If we're setting a function pointer field to None,
                 # create an empty one instead and use that
-                value = field.default.type()
+
             # Don't want to check against CField at runtime,
             # as it wasn't exposed until Python 3.14
 
-        return super().__setattr__(name, value)
+        return object.__setattr__(self, name, value)
 
 
 MemoDict = dict[int, Any] | None

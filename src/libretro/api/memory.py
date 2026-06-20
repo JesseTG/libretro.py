@@ -210,7 +210,8 @@ class retro_memory_map(Structure, NullPointerToNoneMixin):
             descriptors = (retro_memory_descriptor * len(items))(*items)
         if num_descriptors is None:
             num_descriptors = len(descriptors) if isinstance(descriptors, Array) else 0
-        super().__init__(descriptors, num_descriptors)
+
+        super(retro_memory_map, self).__init__(descriptors, num_descriptors)
 
     def __len__(self):
         """

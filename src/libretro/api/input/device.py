@@ -281,7 +281,7 @@ class retro_controller_info(Structure, NullPointerToNoneMixin):
         if num_types is None:
             num_types = len(types) if isinstance(types, Array) else 0
 
-        super().__init__(types, num_types)
+        super(retro_controller_info, self).__init__(types, num_types)
 
     def __deepcopy__(self, memo: MemoDict):
         """

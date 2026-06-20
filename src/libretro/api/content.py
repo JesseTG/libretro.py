@@ -400,7 +400,8 @@ class retro_subsystem_rom_info(Structure, NullPointerToNoneMixin):
             memory = (retro_subsystem_memory_info * len(items))(*items)
         if num_memory is None:
             num_memory = len(memory) if isinstance(memory, Array) else 0
-        super().__init__(
+
+        super(retro_subsystem_rom_info, self).__init__(
             desc, valid_extensions, need_fullpath, block_extract, required, memory, num_memory
         )
 
@@ -661,7 +662,8 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
             roms = (retro_subsystem_rom_info * len(items))(*items)
         if num_roms is None:
             num_roms = len(roms) if isinstance(roms, Array) else 0
-        super().__init__(desc, ident, roms, num_roms, id)
+
+        super(retro_subsystem_info, self).__init__(desc, ident, roms, num_roms, id)
 
     def __len__(self):
         """Return :attr:`num_roms`."""
