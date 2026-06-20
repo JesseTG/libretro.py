@@ -69,7 +69,7 @@ from .dict import DictEnvironmentDriver
 
 # TODO: Match envcalls even if the experimental flag is unset (but still consider it for ABI differences)
 if TYPE_CHECKING:
-    from ctypes import _CDataType, _CFunctionType  # type: ignore
+    from ctypes import _CDataType, _CFunctionType  # pyright: ignore[reportPrivateUsage]
 
 _return_on_raise = DictEnvironmentDriver.return_on_raise
 # No need to apply this decorator to environment calls,
@@ -117,151 +117,144 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         device_power: PowerDriver | None = None,
     ):
         super().__init__()
+        # isinstance(thing, ThingProtocol) is True if `thing` is itself a class,
+        # so we need to make sure that the argument isn't a type
+        if isinstance(audio, type) or not isinstance(audio, AudioDriver):
+            raise TypeError(f"Expected AudioDriver, got {type(audio).__qualname__}")
         self._audio = audio
-        if not isinstance(self._audio, AudioDriver):
-            raise TypeError(f"Expected AudioDriver, got {type(self._audio).__qualname__}")
 
+        if isinstance(input, type) or not isinstance(input, InputDriver):
+            raise TypeError(f"Expected InputDriver, got {type(input).__qualname__}")
         self._input = input
-        if not isinstance(self._input, InputDriver):
-            raise TypeError(f"Expected InputDriver, got {type(self._input).__qualname__}")
 
+        if isinstance(video, type) or not isinstance(video, VideoDriver):
+            raise TypeError(f"Expected VideoDriver, got {type(video).__qualname__}")
         self._video = video
-        if not isinstance(self._video, VideoDriver):
-            raise TypeError(f"Expected VideoDriver, got {type(self._video).__qualname__}")
 
+        if isinstance(content, type) or (
+            content is not None and not isinstance(content, ContentDriver)
+        ):
+            raise TypeError(f"Expected ContentDriver or None, got {type(content).__qualname__}")
         self._content = content
-        if self._content is not None and not isinstance(self._content, ContentDriver):
-            raise TypeError(
-                f"Expected ContentDriver or None, got {type(self._content).__qualname__}"
-            )
 
+        if overscan is not None and not isinstance(overscan, bool):
+            raise TypeError(f"Expected bool or None, got {type(overscan).__qualname__}")
         self._overscan = overscan
-        if self._overscan is not None and not isinstance(self._overscan, bool):
-            raise TypeError(f"Expected bool or None, got {type(self._overscan).__qualname__}")
 
+        if isinstance(message, type) or (
+            message is not None and not isinstance(message, MessageDriver)
+        ):
+            raise TypeError(f"Expected MesasgeDriver or None, got {type(message).__qualname__}")
         self._message = message
-        if self._message is not None and not isinstance(self._message, MessageDriver):
-            raise TypeError(
-                f"Expected MesasgeDriver or None, got {type(self._message).__qualname__}"
-            )
 
         self.__shutdown = False
         self._performance_level: int | None = None
+
+        if isinstance(path, type) or (path is not None and not isinstance(path, PathDriver)):
+            raise TypeError(f"Expected PathDriver or None, got {type(path).__qualname__}")
         self._path = path
-        if self._path is not None and not isinstance(self._path, PathDriver):
-            raise TypeError(f"Expected PathDriver or None, got {type(self._path).__qualname__}")
 
+        if isinstance(options, type) or (
+            options is not None and not isinstance(options, OptionDriver)
+        ):
+            raise TypeError(f"Expected OptionDriver or None, got {type(options).__qualname__}")
         self._options = options
-        if self._options is not None and not isinstance(self._options, OptionDriver):
-            raise TypeError(
-                f"Expected OptionDriver or None, got {type(self._options).__qualname__}"
-            )
 
+        if isinstance(rumble, type) or (
+            rumble is not None and not isinstance(rumble, RumbleDriver)
+        ):
+            raise TypeError(f"Expected RumbleDriver or None, got {type(rumble).__qualname__}")
         self._rumble = rumble
-        if self._rumble is not None and not isinstance(self._rumble, RumbleDriver):
-            raise TypeError(
-                f"Expected RumbleDriver or None, got {type(self._rumble).__qualname__}"
-            )
 
+        if isinstance(sensor, type) or (
+            sensor is not None and not isinstance(sensor, SensorDriver)
+        ):
+            raise TypeError(f"Expected SensorDriver or None, got {type(sensor).__qualname__}")
         self._sensor = sensor
-        if self._sensor is not None and not isinstance(self._sensor, SensorDriver):
-            raise TypeError(
-                f"Expected SensorDriver or None, got {type(self._sensor).__qualname__}"
-            )
 
+        if isinstance(camera, type) or (
+            camera is not None and not isinstance(camera, CameraDriver)
+        ):
+            raise TypeError(f"Expected CameraDriver or None, got {type(camera).__qualname__}")
         self._camera = camera
-        if self._camera is not None and not isinstance(self._camera, CameraDriver):
-            raise TypeError(
-                f"Expected CameraDriver or None, got {type(self._camera).__qualname__}"
-            )
 
+        if isinstance(log, type) or (log is not None and not isinstance(log, LogDriver)):
+            raise TypeError(f"Expected LogDriver or None, got {type(log).__qualname__}")
         self._log_driver = log
-        if self._log_driver is not None and not isinstance(self._log_driver, LogDriver):
-            raise TypeError(
-                f"Expected LogDriver or None, got {type(self._log_driver).__qualname__}"
-            )
 
+        if isinstance(perf, type) or (perf is not None and not isinstance(perf, PerfDriver)):
+            raise TypeError(f"Expected PerfDriver or None, got {type(perf).__qualname__}")
         self._perf = perf
-        if self._perf is not None and not isinstance(self._perf, PerfDriver):
-            raise TypeError(f"Expected PerfDriver or None, got {type(self._perf).__qualname__}")
 
+        if isinstance(location, type) or (
+            location is not None and not isinstance(location, LocationDriver)
+        ):
+            raise TypeError(f"Expected LocationDriver or None, got {type(location).__qualname__}")
         self._location = location
-        if self._location is not None and not isinstance(self._location, LocationDriver):
-            raise TypeError(
-                f"Expected LocationDriver or None, got {type(self._location).__qualname__}"
-            )
 
         self._proc_address_callback: retro_get_proc_address_interface | None = None
         self._memory_maps: retro_memory_map | None = None
+
+        if isinstance(user, type) or (user is not None and not isinstance(user, UserDriver)):
+            raise TypeError(f"Expected UserDriver or None, got {type(user).__qualname__}")
         self._user = user
-        if self._user is not None and not isinstance(self._user, UserDriver):
-            raise TypeError(f"Expected UserDriver or None, got {type(self._user).__qualname__}")
 
         self._supports_achievements: bool | None = None
         self._serialization_quirks: SerializationQuirks | None = None
+
+        if isinstance(vfs, type) or (vfs is not None and not isinstance(vfs, FileSystemDriver)):
+            raise TypeError(f"Expected FileSystemDriver or None, got {type(vfs).__qualname__}")
         self._vfs = vfs
-        if self._vfs is not None and not isinstance(self._vfs, FileSystemDriver):
-            raise TypeError(
-                f"Expected FileSystemDriver or None, got {type(self._vfs).__qualname__}"
-            )
 
+        if isinstance(led, type) or (led is not None and not isinstance(led, LedDriver)):
+            raise TypeError(f"Expected LedDriver or None, got {type(led).__qualname__}")
         self._led = led
-        if self._led is not None and not isinstance(self._led, LedDriver):
-            raise TypeError(f"Expected LedDriver or None, got {type(self._led).__qualname__}")
 
+        if av_enable is not None and not isinstance(av_enable, AvEnableFlags):
+            raise TypeError(f"Expected AvEnableFlags or None, got {type(av_enable).__qualname__}")
         self._av_enable = av_enable
-        if self._av_enable is not None and not isinstance(self._av_enable, AvEnableFlags):
-            raise TypeError(
-                f"Expected AvEnableFlags or None, got {type(self._av_enable).__qualname__}"
-            )
 
+        if isinstance(midi, type) or (midi is not None and not isinstance(midi, MidiDriver)):
+            raise TypeError(f"Expected MidiDriver or None, got {type(midi).__qualname__}")
         self._midi = midi
-        if self._midi is not None and not isinstance(self._midi, MidiDriver):
-            raise TypeError(f"Expected MidiDriver or None, got {type(self._midi).__qualname__}")
 
+        if isinstance(timing, type) or (
+            timing is not None and not isinstance(timing, TimingDriver)
+        ):
+            raise TypeError(f"Expected TimingDriver or None, got {type(timing).__qualname__}")
         self._timing = timing
-        if self._timing is not None and not isinstance(self._timing, TimingDriver):
-            raise TypeError(
-                f"Expected TimingDriver or None, got {type(self._timing).__qualname__}"
-            )
 
+        if preferred_hw is not None and not isinstance(preferred_hw, HardwareContext):
+            raise TypeError(
+                f"Expected HardwareContext or None, got {type(preferred_hw).__qualname__}"
+            )
         self._preferred_hw = preferred_hw
-        if self._preferred_hw is not None and not isinstance(self._preferred_hw, HardwareContext):
-            raise TypeError(
-                f"Expected HardwareContext or None, got {type(self._preferred_hw).__qualname__}"
-            )
 
+        if driver_switch_enable is not None and not isinstance(driver_switch_enable, bool):
+            raise TypeError(
+                f"Expected bool or None, got {type(driver_switch_enable).__qualname__}"
+            )
         self._driver_switch_enable = driver_switch_enable
-        if self._driver_switch_enable is not None and not isinstance(
-            self._driver_switch_enable, bool
-        ):
-            raise TypeError(
-                f"Expected bool or None, got {type(self._driver_switch_enable).__qualname__}"
-            )
 
+        if savestate_context is not None and not isinstance(savestate_context, SavestateContext):
+            raise TypeError(
+                f"Expected SavestateContext or None, got {type(savestate_context).__qualname__}"
+            )
         self._savestate_context = savestate_context
-        if self._savestate_context is not None and not isinstance(
-            self._savestate_context, SavestateContext
-        ):
-            raise TypeError(
-                f"Expected SavestateContext or None, got {type(self._savestate_context).__qualname__}"
-            )
 
+        if jit_capable is not None and not isinstance(jit_capable, bool):
+            raise TypeError(f"Expected bool or None, got {type(jit_capable).__qualname__}")
         self._jit_capable = jit_capable
-        if self._jit_capable is not None and not isinstance(self._jit_capable, bool):
-            raise TypeError(f"Expected bool or None, got {type(self._jit_capable).__qualname__}")
 
+        if isinstance(mic, type) or (mic is not None and not isinstance(mic, MicrophoneDriver)):
+            raise TypeError(f"Expected MicrophoneDriver or None, got {type(mic).__qualname__}")
         self._mic = mic
-        if self._mic is not None and not isinstance(self._mic, MicrophoneDriver):
-            raise TypeError(
-                f"Expected MicrophoneDriver or None, got {type(self._mic).__qualname__}"
-            )
 
+        if isinstance(device_power, type) or (
+            device_power is not None and not isinstance(device_power, PowerDriver)
+        ):
+            raise TypeError(f"Expected PowerDriver or None, got {type(device_power).__qualname__}")
         self._device_power = device_power
-        if self._device_power is not None and not isinstance(self._device_power, PowerDriver):
-            raise TypeError(
-                f"Expected PowerDriver or None, got {type(self._device_power).__qualname__}"
-            )
 
         self._hw_render_callback: retro_hw_render_callback | None = None
         self._rumble_interface: retro_rumble_interface | None = None

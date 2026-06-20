@@ -132,10 +132,10 @@ type PowerDriverArg[P: PowerDriver | None] = _OptionalArg[P] | retro_device_powe
 
 def _to_audio_driver[A: AudioDriver](audio: AudioDriverArg[A]) -> A:
     match audio:
-        case AudioDriver():
-            return audio
         case Callable():
             return audio()
+        case AudioDriver():
+            return audio
         case _:
             raise TypeError(
                 f"Expected an AudioDriver or a Callable that returns one, got {type(audio)}"
@@ -156,8 +156,6 @@ def _to_input_driver[I: InputDriver](input: InputDriverArg[I]) -> I | IterableIn
     match input:
         case Generator():
             return IterableInputDriver(input)
-        case InputDriver():
-            return input
         case Callable() as func:
             # Either a generator or a driver type;
             def _generate():
@@ -172,6 +170,8 @@ def _to_input_driver[I: InputDriver](input: InputDriverArg[I]) -> I | IterableIn
                         )
 
             return _generate()
+        case InputDriver():
+            return input
         case _:
             raise TypeError(
                 f"Expected InputDriver or a callable that returns one, a callable or iterator that yields InputState, or DEFAULT; got {type(input).__name__}"
@@ -190,8 +190,6 @@ def _to_video_driver[V: VideoDriver](video: VideoDriverArg[V]) -> V | MultiVideo
     match video:
         case Callable():
             return video()
-        case VideoDriver():
-            return video
         case Mapping():
             if HardwareContext.NONE not in video:
                 raise ValueError("A driver for HardwareContext.NONE is required")
@@ -205,6 +203,8 @@ def _to_video_driver[V: VideoDriver](video: VideoDriverArg[V]) -> V | MultiVideo
                 )
 
             return MultiVideoDriver(video)
+        case VideoDriver():
+            return video
         case _:
             raise TypeError(
                 f"Expected a VideoDriver, a callable that returns one, or a map of HardwareContexts to Callables; got {type(video).__name__}"
@@ -342,8 +342,6 @@ def _to_sensor_driver[S: SensorDriver](
     match sensor:
         case Generator() | Iterable() | Iterator():
             return IterableSensorDriver(sensor)
-        case SensorDriver() | None:
-            return sensor
         case Callable() as func:
             # Either a generator or a driver type
             def _generate():
@@ -358,6 +356,8 @@ def _to_sensor_driver[S: SensorDriver](
                         )
 
             return _generate()
+        case SensorDriver() | None:
+            return sensor
         case _:
             raise TypeError(
                 f"Expected SensorDriver or a callable that returns one, a callable or iterator that yields SensorState; got {type(input).__name__}"
@@ -500,10 +500,10 @@ def _to_midi_driver[M: MidiDriver](midi: MidiDriverArg[M]) -> M | None:
 
 def _to_timing_driver[T: TimingDriver](timing: TimingDriverArg[T]) -> T | None:
     match timing:
-        case TimingDriver() | None:
-            return timing
         case Callable():
             return timing()
+        case TimingDriver() | None:
+            return timing
         case _:
             raise TypeError(
                 f"Expected TimingDriver, a callable that returns one, DEFAULT, or None; got {type(timing).__name__}"
