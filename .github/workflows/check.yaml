@@ -172,11 +172,12 @@ jobs:
         env:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
-          CIBW_BUILD: "${{ matrix.python }}-${{ matrix.platform }}"
           CIBW_CONFIG_SETTINGS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
           # TODO: How to ensure the ccache directory in the cibw container is exposed to the host?
           CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER=gcc;-DCMAKE_CXX_COMPILER=g++;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
+        with:
+          only: "${{ matrix.python }}-${{ matrix.platform }}"
 
       - name: Upload wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
