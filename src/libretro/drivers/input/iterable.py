@@ -47,7 +47,9 @@ class Point:
     y: int = 0
 
 
-DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
+type DeviceState = (
+    JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
+)
 
 
 class Direction(Enum):
@@ -135,7 +137,7 @@ class PortState:
 InputPollResult = PortState | DeviceState | Point | Pointer | bool | int | None
 InputStateIterator = Iterator[InputPollResult | Sequence[InputPollResult]]
 InputStateIterable = Iterable[InputPollResult | Sequence[InputPollResult]]
-InputStateGenerator = Callable[[], InputStateIterator]
+type InputStateGenerator = Callable[[], InputStateIterator]
 InputStateSource = InputStateGenerator | InputStateIterable | InputStateIterator
 
 
@@ -147,7 +149,7 @@ class IterableInputDriver(InputDriver):
     making it convenient to script deterministic input sequences for tests.
     """
 
-    _input_generator: InputStateSource | None
+    _input_generator: InputStateSource
     _input_generator_state: InputStateIterator | None
     _input_poll_result: InputPollResult | Sequence[InputPollResult] | None
     _input_descriptors: Sequence[retro_input_descriptor] | None
@@ -159,7 +161,7 @@ class IterableInputDriver(InputDriver):
 
     def __init__(
         self,
-        input_generator: InputStateSource | None = None,
+        input_generator: InputStateSource = (),
         device_capabilities: InputDeviceFlag | None = InputDeviceFlag.ALL,
         bitmasks_supported: bool | None = True,
         max_users: int | None = 8,
@@ -245,22 +247,24 @@ class IterableInputDriver(InputDriver):
     @override
     def poll(self) -> None:
         # TODO: handle cases where the core calls this method multiple times in a frame
-        if self._input_generator:
-            if self._input_generator_state is None:
-                match self._input_generator:
-                    case Callable() as func:
-                        self._input_generator_state = func()
-                    case Iterator() as it:
-                        self._input_generator_state = it
-                    case Iterable() as it:
-                        self._input_generator_state = iter(it)
+        if not self._input_generator:
+            return
 
-            self._input_poll_result = next(self._input_generator_state, None)
+        if self._input_generator_state is None:
+            match self._input_generator:
+                case Callable() as func:
+                    self._input_generator_state = func()
+                case Iterator() as it:
+                    self._input_generator_state = it
+                case Iterable() as it:
+                    self._input_generator_state = iter(it)
 
-            # TODO: Send keyboard callback events
+        self._input_poll_result = next(self._input_generator_state or iter(()), None)
+
+        # TODO: Send keyboard callback events
 
     @override
-    def state(self, port: Port, device: int, index: int, id: int) -> int:
+    def state(self, port: Port, device: InputDevice, index: int, id: int) -> int:
         if not self._input_generator:
             # If there's no input generator, all states will default to 0
             return 0
