@@ -62,10 +62,10 @@ class TempDirPathDriver(PathDriver):
                 self._libretro = corepath.encode()
             case bytes() | None:
                 self._libretro = corepath
-            case PathLike():
-                self._libretro = fsencode(corepath)
             case Core():
                 self._libretro = corepath.path.encode()
+            case PathLike():
+                self._libretro = fsencode(corepath)
             case _:
                 raise TypeError(
                     f"Expected corepath to be a str, bytes, PathLike, Core, or None; got {corepath!r}"
