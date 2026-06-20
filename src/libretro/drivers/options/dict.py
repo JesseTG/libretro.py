@@ -12,7 +12,7 @@ from collections.abc import Collection, Iterator, Mapping, MutableMapping
 from copy import deepcopy
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Literal, override
+from typing import override
 
 from libretro.api._utils import as_bytes, from_zero_terminated
 from libretro.api.options import (
@@ -52,7 +52,7 @@ class DictOptionDriver(OptionDriver):
             The protocol this class implements.
     """
 
-    _version: Literal[0, 1, 2]
+    _version: int
     _options: dict[bytes, _Option]
     _categories_supported: bool
     _variables_dirty: bool
@@ -168,7 +168,7 @@ class DictOptionDriver(OptionDriver):
 
     @property
     @override
-    def version(self) -> Literal[0, 1, 2]:
+    def version(self) -> int:
         return self._version
 
     @override
