@@ -171,11 +171,11 @@ jobs:
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
-          CIBW_BEFORE_ALL_LINUX: apt-get install -y ccache
+          CIBW_BEFORE_ALL_LINUX: yum install -y ccache
           CIBW_BUILD: "${{ matrix.python }}-${{ matrix.platform }}"
-          CIBW_CONFIG_SETTINGS: 'cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
+          CIBW_CONFIG_SETTINGS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
           # TODO: How to ensure the ccache directory in the cibw container is exposed to the host?
-          CIBW_CONFIG_SETTINGS_WINDOWS: 'cmake.args=-GNinja;-DCMAKE_C_COMPILER=gcc;-DCMAKE_CXX_COMPILER=g++;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache'
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER=gcc;-DCMAKE_CXX_COMPILER=g++;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
 
       - name: Upload wheel
