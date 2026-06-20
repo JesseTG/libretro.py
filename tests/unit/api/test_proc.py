@@ -26,7 +26,9 @@ def test_retro_get_proc_address_interface_call_rejects_non_str_bytes() -> None:
     # this verifies the failure path; non-str/bytes args would also be
     # rejected if get_proc_address were set.
     with pytest.raises(ValueError):
-        iface(42)  # pyright: ignore[reportArgumentType]
+        iface(42)  # type: ignore
+        # We're testing the error-handling behavior,
+        # so no need for the type checker to bother us
 
 
 def test_retro_get_proc_address_interface_deepcopy() -> None:
