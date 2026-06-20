@@ -50,14 +50,14 @@ class InputDriver(Protocol):
         ...
 
     @abstractmethod
-    def state(self, port: Port, device: InputDevice, index: int, _id: int) -> int:
+    def state(self, port: Port, device: InputDevice, index: int, id: int) -> int:
         """
         Return the current state of a single input control.
 
         :param port: The input port being queried.
         :param device: The input device class registered to ``port``.
         :param index: Sub-device index (e.g. analog stick number).
-        :param _id: Button or axis identifier within the device class.
+        :param id: Button or axis identifier within the device class.
         :return: The control's current state, encoded per libretro's input conventions.
 
         .. seealso::
