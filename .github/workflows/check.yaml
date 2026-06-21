@@ -171,6 +171,7 @@ jobs:
 
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        continue-on-error: ${{ matrix.experimental || false }}
         env:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
