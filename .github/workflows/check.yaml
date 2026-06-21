@@ -143,6 +143,8 @@ jobs:
             experimental: true
           - python: cp315t
             experimental: true
+          - platform: win_arm64
+            experimental: true
 
     runs-on: ${{ matrix.runner }}
     continue-on-error: ${{ matrix.experimental || false }}
