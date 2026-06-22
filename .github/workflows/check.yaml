@@ -143,7 +143,7 @@ jobs:
             experimental: true
           - python: cp315t
             experimental: true
-          # Haven't figured out how to ensure that cibuildwheel picks the correct compiler
+          # Haven't figured out how to install GCC for ARM on the windows-11-arm runner
           # (The current CMake args for Windows picks the x64 compiler, which isn't what I want)
           - platform: win_arm64
             experimental: true
@@ -180,7 +180,6 @@ jobs:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_ARCHS: native
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
-          CIBW_BEFORE_ALL_WINDOWS: pacman -S mingw-w64-clang-aarch64-gcc-compat
           CIBW_CONFIG_SETTINGS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
           CIBW_ENVIRONMENT_LINUX: ${{ env.CIBW_ENVIRONMENT_LINUX }} PATH=/usr/local/bin:/usr/lib/ccache:$PATH CCACHE_DIR=/host${{ github.workspace }}/.ccache CCACHE_CONFIGPATH=/host/home/runner/.config/ccache/ccache.conf
           CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
