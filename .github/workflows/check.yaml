@@ -180,9 +180,10 @@ jobs:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_ARCHS: native
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
+          CIBW_BEFORE_ALL_WINDOWS: pacman -S mingw-w64-clang-aarch64-gcc-compat
           CIBW_CONFIG_SETTINGS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
           CIBW_ENVIRONMENT_LINUX: ${{ env.CIBW_ENVIRONMENT_LINUX }} PATH=/usr/local/bin:/usr/lib/ccache:$PATH CCACHE_DIR=/host${{ github.workspace }}/.ccache CCACHE_CONFIGPATH=/host/home/runner/.config/ccache/ccache.conf
-          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER=${{ env.CC }};-DCMAKE_CXX_COMPILER=${{ env.CXX }};-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
         with:
           only: "${{ matrix.python }}-${{ matrix.platform }}"
