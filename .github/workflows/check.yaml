@@ -112,11 +112,13 @@ jobs:
           - "cp313"
           - "cp314"
           - "cp314t"
-          - "cp315"
-          - "cp315t"
+          # TODO: Enable these once Python 3.15 is finalized
+          # - "cp315"
+          # - "cp315t"
         platform:
           - win_amd64
-          - win_arm64
+          # TODO: Produce win_arm64 builds
+          # - win_arm64
           - macosx_x86_64
           - macosx_arm64
           - manylinux_x86_64
@@ -126,8 +128,8 @@ jobs:
           # (GHA will add a "runner" field to the jobs with the given "platform" field)
           - platform: win_amd64
             runner: windows-latest
-          - platform: win_arm64
-            runner: windows-11-arm
+          # - platform: win_arm64
+          #   runner: windows-11-arm
           - platform: macosx_x86_64
             runner: macos-26-intel
           - platform: macosx_arm64
@@ -139,17 +141,18 @@ jobs:
 
           # Allow these jobs to fail, since they're not fully supported yet
           # (Python 3.15 is in beta as of now)
-          - python: cp315
-            experimental: true
-          - python: cp315t
-            experimental: true
+          # TODO: Enable these once Python 3.15 is finalized
+          # - python: cp315
+          #   experimental: true
+          # - python: cp315t
+          #   experimental: true
           # Haven't figured out how to install GCC for ARM on the windows-11-arm runner
           # (The current CMake args for Windows picks the x64 compiler, which isn't what I want)
-          - platform: win_arm64
-            experimental: true
+          # - platform: win_arm64
+          #   experimental: true
 
     runs-on: ${{ matrix.runner }}
-    continue-on-error: ${{ matrix.experimental || false }}
+    # continue-on-error: ${{ matrix.experimental || false }}
     steps:
       - name: Check Out Source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -188,11 +191,11 @@ jobs:
 
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
-        continue-on-error: ${{ matrix.experimental || false }}
+        # continue-on-error: ${{ matrix.experimental || false }}
         env:
           CC: "${{ matrix.platform == 'win_arm64' && 'aarch64-w64-mingw32-gcc' || 'gcc' }}"
           CXX: "${{ matrix.platform == 'win_arm64' && 'aarch64-w64-mingw32-g++' || 'g++' }}"
-          CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
+          # CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_ARCHS: native
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
           # FETCHCONTENT_BASE_DIR points CMake at the cached ``.fetchcontent``
