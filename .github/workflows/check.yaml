@@ -171,6 +171,18 @@ jobs:
           restore-keys: |
             cibw-${{ runner.os }}-
 
+      # Persist the repositories that CMake's FetchContent pulls in
+      # (libretro-common and libretro-samples) so they aren't re-cloned on
+      # every wheel build. The sources are platform-specific build artifacts
+      # under ``.fetchcontent``, but the clone itself is keyed only on the
+      # pinned commits, so all Python versions for a platform share one cache.
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ github.workspace }}/.fetchcontent
+          key: fetchcontent-${{ matrix.platform }}-${{ hashFiles('cmake/LibretroCommon.cmake', 'cmake/LibretroSamples.cmake') }}
+          restore-keys: |
+            fetchcontent-${{ matrix.platform }}-
+
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         continue-on-error: ${{ matrix.experimental || false }}
@@ -180,9 +192,14 @@ jobs:
           CIBW_ENABLE: ${{ matrix.experimental && 'cpython-prerelease' || '' }}
           CIBW_ARCHS: native
           CIBW_BEFORE_ALL_LINUX: yum install -y ccache libjpeg-turbo-devel
-          CIBW_CONFIG_SETTINGS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+          # FETCHCONTENT_BASE_DIR points CMake at the cached ``.fetchcontent``
+          # directory so FetchContent reuses the already-cloned dependencies.
+          # On Linux the build runs in the manylinux container, which sees the
+          # workspace under ``/host``; macOS and Windows build natively.
+          CIBW_CONFIG_SETTINGS_LINUX: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DFETCHCONTENT_BASE_DIR=/host${{ github.workspace }}/.fetchcontent"
+          CIBW_CONFIG_SETTINGS_MACOS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DFETCHCONTENT_BASE_DIR=${{ github.workspace }}/.fetchcontent"
           CIBW_ENVIRONMENT_LINUX: ${{ env.CIBW_ENVIRONMENT_LINUX }} PATH=/usr/local/bin:/usr/lib/ccache:$PATH CCACHE_DIR=/host${{ github.workspace }}/.ccache CCACHE_CONFIGPATH=/host/home/runner/.config/ccache/ccache.conf
-          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache;-DFETCHCONTENT_BASE_DIR=${{ github.workspace }}/.fetchcontent"
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
         with:
           only: "${{ matrix.python }}-${{ matrix.platform }}"
