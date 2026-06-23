@@ -78,6 +78,7 @@ jobs:
           merge-multiple: true
 
       - name: List Artifacts
+        working-directory: dist
         run: ls -hal
 
       - name: Publish to PyPI
