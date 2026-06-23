@@ -68,7 +68,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Token required to download artifacts from other workflows in this run
 
-          run-id: '${{ inputs.run-id || github.event.workflow_run.id }}'
+          run-id: "${{ inputs.run-id || github.event.workflow_run.id }}"
           # Use the run ID from the input if provided, otherwise use the current run ID
 
           path: dist
@@ -76,6 +76,9 @@ jobs:
           # fallback into one ``dist/`` directory.
           pattern: wheel-*
           merge-multiple: true
+
+      - name: List Artifacts
+        run: ls *.zip | xargs -I {} stat {}
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
