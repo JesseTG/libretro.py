@@ -35,7 +35,6 @@ This section describes this project's rules for enforcing quality standards.
 - If you are an agent, silencing warnings should be your last resort.
   Mention any warnings you silenced in the summary of your work.
 
-
 # Documentation Style
 
 This section is the single source of truth for libretro.py's documentation style.
@@ -73,14 +72,14 @@ so don't assume knowledge of advanced techniques in either language.
   treated as the primary subject for our purposes.
 - When a Python symbol mirrors a C symbol,
   add a single short sentence of the form
-  *"Corresponds to* :c:type:`retro_audio_callback` *in libretro.h."*
+  _"Corresponds to_ :c:type:`retro_audio_callback` _in libretro.h."_
 - Don't fabricate C counterparts for purely Python-side abstractions
   such as `Session` or driver protocol classes.
 
 ## Syntax and Rendering
 
 - All docstrings and narrative guides in [`docs/guide/`](docs/guide/) use reStructuredText, suitable for Sphinx.
-- Use admonition **directives** — `.. note::`, `.. warning::`, `.. important::`, `.. seealso::` -  for callouts.
+- Use admonition **directives** — `.. note::`, `.. warning::`, `.. important::`, `.. seealso::` - for callouts.
   Never use field-list aliases like `:note:`, `:warning:`, or `:value:`;
   Sphinx renders these as raw field labels rather than admonitions.
 - Write `.. seealso::` with no space before the `::`.
@@ -121,7 +120,6 @@ so don't assume knowledge of advanced techniques in either language.
 - Use the [Sphinx C domain](https://www.sphinx-doc.org/en/master/usage/domains/c.html)
   when referring to symbols defined in `libretro.h`.
 
-
 ## Module Docstrings
 
 - Every public module starts with a one-sentence summary of its purpose,
@@ -150,7 +148,7 @@ so don't assume knowledge of advanced techniques in either language.
   include a `.. seealso::` to the corresponding `libretro.api.*` module.
 - For :class:`ctypes.Structure` subclasses that mirror libretro.h,
   include a `.. seealso::` to the corresponding `:c:type:`
-  and a short *"Corresponds to … in libretro.h."* line.
+  and a short _"Corresponds to … in libretro.h."_ line.
 - Document `__init__` parameters in the `__init__` docstring,
   not in the class docstring.
   Sphinx is configured with `autodoc_class_signature = "separated"`,
@@ -159,7 +157,7 @@ so don't assume knowledge of advanced techniques in either language.
 ## Method and Function Docstrings
 
 - Write summaries for method and function docstrings as a one-sentence summary
-  in the imperative mood (*"Render a single..."*, not *"Renders a single..."*).
+  in the imperative mood (_"Render a single..."_, not _"Renders a single..."_).
 - An optional short paragraph describing libretro semantics —
   when the frontend would call this method,
   which libretro phase it belongs to,
