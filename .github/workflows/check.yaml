@@ -191,6 +191,15 @@ jobs:
           restore-keys: |
             fetchcontent-${{ matrix.platform }}-
 
+      # ``${{ github.workspace }}`` uses backslashes on Windows, which get
+      # consumed as escape sequences by the time cibuildwheel forwards
+      # ``FETCHCONTENT_BASE_DIR`` to the build (e.g. ``D:\a\...`` becomes
+      # ``D:a...``). CMake/MSVC accept forward slashes, so normalise here.
+      # No-op on Linux/macOS, where the path already uses forward slashes.
+      - name: Compute a forward-slash workspace path
+        shell: bash
+        run: echo "WORKSPACE_FWD=${GITHUB_WORKSPACE//\\//}" >> "$GITHUB_ENV"
+
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         # continue-on-error: ${{ matrix.experimental || false }}
@@ -207,7 +216,7 @@ jobs:
           CIBW_CONFIG_SETTINGS_LINUX: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DFETCHCONTENT_BASE_DIR=/host${{ github.workspace }}/.fetchcontent"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=ccache;-DCMAKE_CXX_COMPILER_LAUNCHER=ccache;-DFETCHCONTENT_BASE_DIR=${{ github.workspace }}/.fetchcontent"
           CIBW_ENVIRONMENT_LINUX: ${{ env.CIBW_ENVIRONMENT_LINUX }} PATH=/usr/local/bin:/usr/lib/ccache:$PATH CCACHE_DIR=/host${{ github.workspace }}/.ccache CCACHE_CONFIGPATH=/host/home/runner/.config/ccache/ccache.conf
-          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache;-DFETCHCONTENT_BASE_DIR=${{ github.workspace }}/.fetchcontent"
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.args=-GNinja;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache;-DFETCHCONTENT_BASE_DIR=${{ env.WORKSPACE_FWD }}/.fetchcontent"
           CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
         with:
           only: "${{ matrix.python }}-${{ matrix.platform }}"
