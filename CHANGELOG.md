@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement `Sequence` in `retro_memory_map`, `retro_controller_info`,
   `retro_subsystem_rom_info`, and `retro_subsystem_info`.
 
-## Changed
+### Changed
 
 - Removed `boundary=EJECT` from `Key` and `AvEnableFlags`
   for consistency with other `IntFlag`s.
