@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Remove stray references to `SessionBuilder` from the documentation.
+
 ## [0.8.1] - 2026-06-22
 
 ### Fixed

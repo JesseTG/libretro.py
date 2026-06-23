@@ -1,11 +1,4 @@
-"""
-High-level harness that drives a :class:`.Core` through its libretro lifecycle.
-
-.. seealso::
-
-    :mod:`libretro.builder`
-        The :class:`.SessionBuilder` factory used to construct a configured :class:`.Session`.
-"""
+"""High-level harness that drives a :class:`.Core` through its libretro lifecycle."""
 
 import warnings
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
@@ -617,11 +610,6 @@ class Session(
     entering it loads the core (and game, if any) and wires up callbacks;
     exiting it unloads the game and deinitializes the core.
     Each constructor argument selects which driver implementation to use for one libretro subsystem.
-
-    .. seealso::
-
-        :class:`.SessionBuilder`
-            Fluent builder that constructs a :class:`Session` with sensible defaults.
     """
 
     _audio: _Audio
@@ -684,8 +672,6 @@ class Session(
         that is wrapped in a sensible default driver.
         Optional drivers also accept :obj:`None`
         to leave the corresponding subsystem unavailable to the core.
-        The defaults documented below match those of the equivalent
-        :class:`.SessionBuilder` ``with_`` methods.
 
         :param core: The core to load. May be one of the following:
 

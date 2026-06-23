@@ -75,7 +75,7 @@ so don't assume knowledge of advanced techniques in either language.
   add a single short sentence of the form
   *"Corresponds to* :c:type:`retro_audio_callback` *in libretro.h."*
 - Don't fabricate C counterparts for purely Python-side abstractions
-  such as :class:`.Session`, :class:`.SessionBuilder`, or driver protocol classes.
+  such as `Session` or driver protocol classes.
 
 ## Syntax and Rendering
 

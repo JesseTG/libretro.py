@@ -7,7 +7,6 @@ API Reference
    :recursive:
 
    libretro.api
-   libretro.builder
    libretro.core
    libretro.ctypes
    libretro.drivers
