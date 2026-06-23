@@ -74,7 +74,7 @@ jobs:
           path: dist
           # Merge every per-platform `wheel-*` artifact plus the `wheel-pure`
           # fallback into one ``dist/`` directory.
-          pattern: wheel-*
+          pattern: "*.whl"
           merge-multiple: true
 
       - name: List Artifacts
