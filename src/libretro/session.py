@@ -687,6 +687,7 @@ class Session(
         :param game: The content to load, managed by the configured ``content`` driver
             and passed to ``retro_load_game`` (or ``retro_load_game_special``).
             May be one of the following:
+
             :class:`str`, :class:`~os.PathLike`
                 A single content file, loaded without enabling a subsystem.
 

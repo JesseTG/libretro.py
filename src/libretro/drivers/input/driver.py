@@ -44,7 +44,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :data:`~libretro.api.input.retro_input_poll_t`
+            :data:`~libretro.api.input.device.retro_input_poll_t`
                 The C function pointer type whose signature this method implements.
         """
         ...
@@ -62,7 +62,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :data:`~libretro.api.input.retro_input_state_t`
+            :data:`~libretro.api.input.device.retro_input_state_t`
                 The C function pointer type whose signature this method implements.
         """
         ...
@@ -81,7 +81,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :class:`~libretro.api.input.retro_input_descriptor`
+            :class:`~libretro.api.input.device.retro_input_descriptor`
                 The C struct that this attribute holds.
         """
         ...
@@ -107,7 +107,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :class:`~libretro.api.input.retro_keyboard_callback`
+            :class:`~libretro.api.input.keyboard.retro_keyboard_callback`
                 The C struct registered by the core that contains this callback.
         """
         ...
@@ -149,7 +149,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :class:`~libretro.api.input.InputDeviceFlag`
+            :class:`~libretro.api.input.device.InputDeviceFlag`
                 The bit flags that compose this bitmask.
         """
         ...
@@ -180,7 +180,7 @@ class InputDriver(Protocol):
 
         .. seealso::
 
-            :class:`~libretro.api.input.retro_controller_description`
+            :class:`~libretro.api.input.device.retro_controller_description`
                 The C struct that this attribute holds.
         """
         ...

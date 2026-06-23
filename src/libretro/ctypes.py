@@ -234,11 +234,11 @@ class _CTypeDeclaration:
 
 class c_void_ptr(c_void_p):
     """
-    A trivial subclass of ``c_void_p`` that solely exists to
-    prevent ``ctypes`` from implicitly converting
-    ``void*`` parameters or struct fields to an ``int``.
+    A trivial subclass of :class:`~ctypes.c_void_p` that solely exists to
+    prevent :mod:`ctypes` from implicitly converting
+    ``void*`` parameters or struct fields to an :class:`int`.
 
-    Use this in function signatures and struct definitions instead of ``c_void_p``.
+    Use this in function signatures and struct definitions instead of :class:`~ctypes.c_void_p`.
     Instances remain :class:`~ctypes.c_void_p` subclasses, with their address
     rendered in hexadecimal:
 

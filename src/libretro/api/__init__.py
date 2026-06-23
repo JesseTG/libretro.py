@@ -8,6 +8,7 @@ their equivalents in ``libretro.h``.
 Although these types are primarily meant to be used with
 the drivers in :mod:`libretro.drivers`,
 they do not depend on any driver protocols or implementations.
+You can use them independently of libretro.py's drivers.
 
 They follow these conventions unless otherwise stated:
 
@@ -65,10 +66,10 @@ Additional Methods
 ==================
 
 -----------------------------------------
-:deco:`~dataclasses.dataclass` Operations
+Dataclass Operations
 -----------------------------------------
 
-All structs are valid :deco:`dataclasses.dataclass`es.
+All structs are valid :func:`dataclasses <dataclasses.dataclass>`.
 Unless otherwise noted, they support these operations:
 
 ^^^^^^^^^^
@@ -102,8 +103,8 @@ False
   (or the equivalent :class:`.TypedFunctionPointer` and :class:`.TypedPointer`):
 
   If you want to compare two pointers for equality,
-  :func:`~ctypes.cast` them to :class:`~ctypes.c_void_p`
-  and check their :attr:`~ctypes.c_void_p.value`\s:
+  :func:`~ctypes.cast` them  to :class:`~ctypes.c_void_p`
+  and check their :attr:`~_SimpleCData.value`\s:
 
   >>> from ctypes import cast, c_char_p
   >>> ptr1 = c_char_p(0xdeadbeef)

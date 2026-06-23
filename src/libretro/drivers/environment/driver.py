@@ -115,7 +115,7 @@ class EnvironmentDriver(Protocol):
 
         .. seealso::
 
-            :data:`~libretro.api.video.retro_video_refresh_t`
+            :data:`~libretro.api.video.frame.retro_video_refresh_t`
                 The C function pointer type whose signature this method implements.
         """
         ...
@@ -160,7 +160,7 @@ class EnvironmentDriver(Protocol):
 
         .. seealso::
 
-            :data:`~libretro.api.input.retro_input_poll_t`
+            :data:`~libretro.api.input.device.retro_input_poll_t`
                 The C function pointer type whose signature this method implements.
         """
         ...
@@ -178,7 +178,7 @@ class EnvironmentDriver(Protocol):
 
         .. seealso::
 
-            :data:`~libretro.api.input.retro_input_state_t`
+            :data:`~libretro.api.input.device.retro_input_state_t`
                 The C function pointer type whose signature this method implements.
         """
         ...

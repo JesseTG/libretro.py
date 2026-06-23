@@ -90,7 +90,7 @@ class VideoDriver(Protocol):
 
         .. note::
 
-            Corresponds to :data:`.retro_video_refresh_t`.
+            Corresponds to :data:`~libretro.api.video.frame.retro_video_refresh_t`.
         """
         ...
 

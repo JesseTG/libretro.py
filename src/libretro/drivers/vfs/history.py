@@ -186,7 +186,7 @@ class CloseDir:
     result: int
 
 
-VfsOperation = (
+type VfsOperation = (
     GetPath
     | Open
     | Close
@@ -213,7 +213,7 @@ class HistoryFileSystemDriver(FileSystemDriver):
     """
     :class:`.FileSystemDriver` that wraps another and records every call made through it.
 
-    Each recorded call is appended to :attr:`history` as a :data:`.VfsOperation` instance,
+    Each recorded call is appended to :attr:`history` as a :type:`.VfsOperation` instance,
     making it easy to assert against the exact sequence of VFS operations a core performed.
     """
 
