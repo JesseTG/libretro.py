@@ -167,7 +167,8 @@ jobs:
           verbose: 2
           evict-old-files: job
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Cache cibuildwheel Tooling
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ runner.temp }}/cibw-cache
           # This cache holds cibuildwheel's downloaded CPython interpreters,
@@ -182,7 +183,8 @@ jobs:
       # every wheel build. The sources are platform-specific build artifacts
       # under ``.fetchcontent``, but the clone itself is keyed only on the
       # pinned commits, so all Python versions for a platform share one cache.
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Cache Fetched C Dependencies
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ github.workspace }}/.fetchcontent
           key: fetchcontent-${{ matrix.platform }}-${{ hashFiles('cmake/LibretroCommon.cmake', 'cmake/LibretroSamples.cmake') }}
