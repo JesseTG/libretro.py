@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Remove stray references to `SessionBuilder` from the documentation.
+- Fix a `TypeError` raised by `IterableInputDriver.state` on Python 3.13,
+  where the `DeviceState` `type` alias made the `InputPollResult` union
+  unusable with `isinstance`.
+  ([#28](https://github.com/JesseTG/libretro.py/issues/28))
+  Thanks to [@jonko0493](https://github.com/jonko0493) for reporting this!
 
 ## [0.8.1] - 2026-06-22
 

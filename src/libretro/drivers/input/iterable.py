@@ -47,9 +47,8 @@ class Point:
     y: int = 0
 
 
-type DeviceState = (
-    JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
-)
+# NOTE: Not a type alias because DeviceState needs to be used in `isinstance` checks
+DeviceState = JoypadState | MouseState | KeyboardState | LightGunState | AnalogState | PointerState
 
 
 class Direction(Enum):
