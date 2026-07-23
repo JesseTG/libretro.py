@@ -16,6 +16,8 @@ import typing
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import (
+    POINTER,
+    addressof,
     c_bool,
     c_char_p,
     c_double,
@@ -1261,7 +1263,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             # This video driver doesn't provide (or need) a hardware render interface
             return False
 
-        interface[0] = driver_interface
+        # The data is a retro_hw_render_interface **;
+        # write the address of the driver's (long-lived) interface struct into it
+        cast(interface, POINTER(c_void_p))[0] = addressof(driver_interface)
         return True
 
     @property
@@ -1288,7 +1292,25 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_hw_render_context_negotiation_interface(
         self, interface: TypedPointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
-        return False  # TODO: Implement
+        if not interface:
+            raise ValueError(
+                "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE doesn't accept NULL"
+            )
+
+        iface: retro_hw_render_context_negotiation_interface = interface[0]
+        if iface.interface_type == ContextNegotiationInterfaceType.VULKAN:
+            # Reinterpret the core's struct as the full Vulkan negotiation interface
+            iface = cast(interface, POINTER(retro_hw_render_context_negotiation_interface_vulkan))[
+                0
+            ]
+
+        try:
+            self._video.context_negotiation_interface = iface
+        except NotImplementedError:
+            # The video driver doesn't support context negotiation
+            return False
+
+        return True
 
     @property
     def serialization_quirks(self) -> SerializationQuirks | None:
@@ -2038,7 +2060,22 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _get_hw_render_context_negotiation_interface_support(
         self, support: TypedPointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
-        return False  # TODO: Implement
+        if not support:
+            raise ValueError(
+                "RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT "
+                "doesn't accept NULL"
+            )
+
+        if (
+            support[0].interface_type == ContextNegotiationInterfaceType.VULKAN
+            and HardwareContext.VULKAN in self._video.supported_contexts
+        ):
+            support[
+                0
+            ].interface_version = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION
+            return True
+
+        return False
 
     @property
     def jit_capable(self) -> bool | None:

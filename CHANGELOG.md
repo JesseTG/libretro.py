@@ -10,6 +10,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Added `VulkanVideoDriver`, a headless Vulkan video driver
+  implementing the full `retro_hw_render_interface_vulkan` (version 5)
+  and the Vulkan context negotiation interface,
+  enabling Vulkan-only cores (e.g. Azahar) to run under libretro.py.
+  Requires the new `libretro.py[vulkan]` extra
+  and a Vulkan loader (MoltenVK on macOS).
+- Added ctypes bindings for the types in `libretro_vulkan.h`
+  to `libretro.api.video`.
+- Implemented `RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE`
+  and `RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`,
+  and added a `context_negotiation_interface` property to `VideoDriver`.
+
+### Fixed
+
+- Fixed `RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE` writing the interface struct
+  by value instead of writing a pointer to it.
+
 ## [0.8.2] - 2026-07-14
 
 ### Fixed

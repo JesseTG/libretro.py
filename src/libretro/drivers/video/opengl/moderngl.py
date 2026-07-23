@@ -62,6 +62,7 @@ from libretro.api.video import (
     Rotation,
     retro_framebuffer,
     retro_hw_render_callback,
+    retro_hw_render_context_negotiation_interface,
     retro_hw_render_interface,
 )
 
@@ -758,6 +759,21 @@ class ModernGlVideoDriver(VideoDriver):
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         # libretro doesn't define one of these for OpenGL, so no need
         return None
+
+    @property
+    @override
+    def context_negotiation_interface(
+        self,
+    ) -> retro_hw_render_context_negotiation_interface | None:
+        return None
+
+    @context_negotiation_interface.setter
+    @override
+    def context_negotiation_interface(
+        self, interface: retro_hw_render_context_negotiation_interface | None
+    ) -> None:
+        # libretro doesn't define a negotiation interface for OpenGL, so no need
+        raise NotImplementedError("Context negotiation is not supported by the OpenGL driver")
 
     def __get_framebuffer_size(self) -> tuple[int, int]:
         assert self._context is not None
