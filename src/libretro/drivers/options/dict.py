@@ -33,6 +33,24 @@ from .driver import OptionDriver
 _SET_VARS = re.compile(rb"(?P<desc>[^;]+); (?P<values>.+)")
 
 
+def _default_value(definition: retro_core_option_v2_definition) -> bytes:
+    """
+    Return an option definition's default value.
+
+    libretro.h treats a ``NULL`` ``default_value``
+    as meaning the first entry in ``values`` is the default.
+    """
+    value = definition.default_value
+    if value is not None:
+        return value
+
+    for v in definition.values:
+        if v.value is not None:
+            return v.value
+
+    raise ValueError(f"Option {definition.key!r} has no values")
+
+
 @dataclass
 class _Option:
     value: bytes
@@ -113,10 +131,7 @@ class DictOptionDriver(OptionDriver):
         if key not in self._options:
             # If this option exists but hasn't been set yet,
             # return the default value and save it to the dict
-            value = self._options_us[key].default_value
-            assert value is not None, (
-                f"Option {key!r} has no default value, it should've been filtered out when initializing"
-            )
+            value = _default_value(self._options_us[key])
             self._options[key] = _Option(value=value, visible=True)
             return value
 
@@ -128,10 +143,7 @@ class DictOptionDriver(OptionDriver):
             # Return the default value if the current value isn't in the definition,
             # but don't actually change the value in the dict
             # (RetroArch does this to handle cases like updated options)
-            value = self._options_us[key].default_value
-            assert value is not None, (
-                f"Option {key!r} has no default value, it should've been filtered out when initializing"
-            )
+            value = _default_value(self._options_us[key])
 
         return value
 
@@ -246,10 +258,7 @@ class DictOptionDriver(OptionDriver):
         else:
             # If this option exists but hasn't been set yet,
             # return the default value and save it to the dict
-            value = self._options_us[key].default_value
-            assert value is not None, (
-                f"Option {key!r} has no default value, it should've been filtered out when initializing"
-            )
+            value = _default_value(self._options_us[key])
             self._options[key] = _Option(value=value, visible=visible)
 
     @override

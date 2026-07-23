@@ -30,6 +30,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE` writing the interface struct
   by value instead of writing a pointer to it.
+- Fixed `RETRO_ENVIRONMENT_GET_PERF_INTERFACE` crashing
+  by passing bound methods instead of function-pointer instances
+  to the `retro_perf_callback` struct (affected e.g. Beetle PSX HW).
+- Fixed VFS file opens failing for the `WRITE | UPDATE_EXISTING` access mode
+  (affected e.g. Flycast).
+- Fixed core options without an explicit default value tripping an assertion;
+  libretro.h treats the first value as the default (affected e.g. Mupen64Plus-Next).
+- Sample cores now build with the `.dylib` suffix on macOS,
+  matching what `libretro.samples` expects to load.
+- `Session` now tears down an active hardware rendering context
+  (calling the core's `context_destroy`) between `retro_unload_game`
+  and `retro_deinit`, like RetroArch does;
+  some cores otherwise release GPU resources in exit-time destructors
+  that call frontend callbacks after the interpreter has finalized.
+- `MultiVideoDriver` now shuts down the outgoing video driver
+  (including its hardware context) when switching drivers at runtime.
 
 ## [0.8.2] - 2026-07-14
 

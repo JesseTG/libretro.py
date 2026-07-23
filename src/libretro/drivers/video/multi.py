@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
 from types import MappingProxyType
 from typing import final, override
+from warnings import warn
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -205,6 +206,20 @@ class MultiVideoDriver(VideoDriver):
             old_driver = self._current
             self._current = driver
 
+            if old_driver is not None and old_driver.active_context != HardwareContext.NONE:
+                # Let the outgoing driver notify the core (context_destroy)
+                # and release its resources while the core is still loaded,
+                # before the new driver's context_reset fires
+                try:
+                    old_driver.set_context(
+                        retro_hw_render_callback(context_type=HardwareContext.NONE)
+                    )
+                    old_driver.reinit()
+                except Exception as e:
+                    warn(f"Couldn't shut down the outgoing video driver: {e}")
+
+            del old_driver
+
             if self._context_negotiation is not None:
                 try:
                     driver.context_negotiation_interface = self._context_negotiation
@@ -220,7 +235,6 @@ class MultiVideoDriver(VideoDriver):
                 driver.system_av_info = system_av_info
                 # No need to call driver.reinit(); setting the system AV info should do that
 
-            del old_driver
             # TODO: If initializing the new driver fails, keep the old one
 
         self._next_hw_context = None

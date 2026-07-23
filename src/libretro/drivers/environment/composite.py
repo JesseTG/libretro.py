@@ -881,13 +881,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         if not self._perf_callback:
             self._perf_callback = retro_perf_callback(
-                get_time_usec=self._get_time_usec,
-                get_cpu_features=self._get_cpu_features,
-                get_perf_counter=self._get_perf_counter,
-                perf_register=self._perf_register,
-                perf_start=self._perf_start,
-                perf_stop=self._perf_stop,
-                perf_log=self._perf_log,
+                get_time_usec=retro_perf_get_time_usec_t(self._get_time_usec),
+                get_cpu_features=retro_get_cpu_features_t(self._get_cpu_features),
+                get_perf_counter=retro_perf_get_counter_t(self._get_perf_counter),
+                perf_register=retro_perf_register_t(self._perf_register),
+                perf_start=retro_perf_start_t(self._perf_start),
+                perf_stop=retro_perf_stop_t(self._perf_stop),
+                perf_log=retro_perf_log_t(self._perf_log),
             )
 
         interface[0] = self._perf_callback

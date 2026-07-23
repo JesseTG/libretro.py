@@ -51,6 +51,7 @@ from libretro.api.video import (
     VkApplicationInfo,
     VkPhysicalDeviceFeatures,
     retro_framebuffer,
+    retro_hw_context_reset_t,
     retro_hw_render_callback,
     retro_hw_render_context_negotiation_interface,
     retro_hw_render_context_negotiation_interface_vulkan,
@@ -75,23 +76,60 @@ from ..software import ArrayVideoDriver
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.VULKAN))
 
 _VK_API_VERSION_1_1 = (1 << 22) | (1 << 12)
+_VK_FORMAT_R5G6B5_UNORM_PACK16 = 4
+_VK_FORMAT_B5G6R5_UNORM_PACK16 = 5
+_VK_FORMAT_A1R5G5B5_UNORM_PACK16 = 8
 _VK_FORMAT_R8G8B8A8_UNORM = 37
 _VK_FORMAT_R8G8B8A8_SRGB = 43
 _VK_FORMAT_B8G8R8A8_UNORM = 44
 _VK_FORMAT_B8G8R8A8_SRGB = 50
+_VK_FORMAT_A2R10G10B10_UNORM_PACK32 = 58
+_VK_FORMAT_A2B10G10R10_UNORM_PACK32 = 64
 
-# Formats whose texels are four bytes and can be captured with a plain buffer copy,
-# mapped to True if the byte order is R, G, B, A (False for B, G, R, A).
-_CAPTURABLE_FORMATS: dict[int, bool] = {
-    _VK_FORMAT_R8G8B8A8_UNORM: True,
-    _VK_FORMAT_R8G8B8A8_SRGB: True,
-    _VK_FORMAT_B8G8R8A8_UNORM: False,
-    _VK_FORMAT_B8G8R8A8_SRGB: False,
+# Formats the capture path can copy and convert to RGBA bytes,
+# mapped to their texel size in bytes.
+# (Beetle PSX HW scans out A1R5G5B5 when dithering is enabled;
+# Dolphin scans out A2B10G10R10.)
+_CAPTURABLE_FORMATS: dict[int, int] = {
+    _VK_FORMAT_R8G8B8A8_UNORM: 4,
+    _VK_FORMAT_R8G8B8A8_SRGB: 4,
+    _VK_FORMAT_B8G8R8A8_UNORM: 4,
+    _VK_FORMAT_B8G8R8A8_SRGB: 4,
+    _VK_FORMAT_A2R10G10B10_UNORM_PACK32: 4,
+    _VK_FORMAT_A2B10G10R10_UNORM_PACK32: 4,
+    _VK_FORMAT_R5G6B5_UNORM_PACK16: 2,
+    _VK_FORMAT_B5G6R5_UNORM_PACK16: 2,
+    _VK_FORMAT_A1R5G5B5_UNORM_PACK16: 2,
 }
 
 _LOADER_NAMES = ("libvulkan.so.1", "vulkan-1.dll", "libvulkan.dylib", "libvulkan.1.dylib")
 
+_VK_KHR_SURFACE = "VK_KHR_surface"
+_VK_EXT_HEADLESS_SURFACE = "VK_EXT_headless_surface"
+
 _PFN_GetInstanceProcAddr = CFUNCTYPE(c_void_p, c_void_p, c_char_p)
+
+
+def _wanted_instance_extensions(available: set[str]) -> tuple[list[str], int]:
+    """Return the instance extensions this driver enables (of those available), plus create flags."""
+    extensions: list[str] = []
+    flags = 0
+    if vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME in available:
+        extensions.append(vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
+        flags |= vk.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+
+    if vk.VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME in available:
+        extensions.append(vk.VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)
+
+    if _VK_KHR_SURFACE in available:
+        # Some cores (e.g. PPSSPP) assume create_device receives a real surface
+        # and query surface support during queue selection;
+        # a headless surface satisfies them without a window
+        extensions.append(_VK_KHR_SURFACE)
+        if _VK_EXT_HEADLESS_SURFACE in available:
+            extensions.append(_VK_EXT_HEADLESS_SURFACE)
+
+    return extensions, flags
 
 
 class _VkInstanceCreateInfo(Structure):
@@ -144,6 +182,80 @@ def _load_loader() -> ctypes.CDLL:
         "install the Vulkan SDK or (on macOS) MoltenVK, "
         "and ensure it's on the dynamic library search path"
     )
+
+
+_RGBA_LUTS: dict[int, list[bytes]] = {}
+
+
+def _pack16_lut(vk_format: int) -> list[bytes]:
+    """Return (and cache) a 65536-entry texel-to-RGBA lookup table for a 16-bit format."""
+    lut = _RGBA_LUTS.get(vk_format)
+    if lut is not None:
+        return lut
+
+    def expand5(v: int) -> int:
+        return (v << 3) | (v >> 2)
+
+    def expand6(v: int) -> int:
+        return (v << 2) | (v >> 4)
+
+    entries = []
+    for texel in range(0x10000):
+        match vk_format:
+            case _ if vk_format == _VK_FORMAT_R5G6B5_UNORM_PACK16:
+                r = expand5(texel >> 11)
+                g = expand6((texel >> 5) & 0x3F)
+                b = expand5(texel & 0x1F)
+            case _ if vk_format == _VK_FORMAT_B5G6R5_UNORM_PACK16:
+                b = expand5(texel >> 11)
+                g = expand6((texel >> 5) & 0x3F)
+                r = expand5(texel & 0x1F)
+            case _:  # A1R5G5B5
+                r = expand5((texel >> 10) & 0x1F)
+                g = expand5((texel >> 5) & 0x1F)
+                b = expand5(texel & 0x1F)
+        entries.append(bytes((r, g, b, 255)))
+
+    _RGBA_LUTS[vk_format] = entries
+    return entries
+
+
+def _to_rgba32(pixels: bytearray, vk_format: int) -> bytearray:
+    """Convert captured texels in a supported format to R, G, B, A byte order."""
+    match _CAPTURABLE_FORMATS[vk_format]:
+        case 2:
+            lut = _pack16_lut(vk_format)
+            texels = memoryview(pixels).cast("H")
+            return bytearray(b"".join(map(lut.__getitem__, texels)))
+        case _ if vk_format in (
+            _VK_FORMAT_A2R10G10B10_UNORM_PACK32,
+            _VK_FORMAT_A2B10G10R10_UNORM_PACK32,
+        ):
+            rgba = bytearray(len(pixels))
+            red_first = vk_format == _VK_FORMAT_A2B10G10R10_UNORM_PACK32
+            i = 0
+            for texel in memoryview(pixels).cast("I"):
+                low = (texel & 0x3FF) >> 2
+                mid = (texel >> 10 & 0x3FF) >> 2
+                high = (texel >> 20 & 0x3FF) >> 2
+                if red_first:
+                    rgba[i] = low
+                    rgba[i + 2] = high
+                else:
+                    rgba[i] = high
+                    rgba[i + 2] = low
+                rgba[i + 1] = mid
+                rgba[i + 3] = 255
+                i += 4
+
+            return rgba
+        case _:
+            rgba = bytearray(pixels)
+            if vk_format in (_VK_FORMAT_B8G8R8A8_UNORM, _VK_FORMAT_B8G8R8A8_SRGB):
+                # B, G, R, A: swap the red and blue channels
+                rgba[0::4], rgba[2::4] = rgba[2::4], rgba[0::4]
+
+            return rgba
 
 
 def _rotate_rgba32(
@@ -224,6 +336,7 @@ class VulkanVideoDriver(VideoDriver):
 
         self._software = ArrayVideoDriver()
         self._callback = retro_hw_render_callback(context_type=HardwareContext.NONE)
+        self._pending_context_destroy: retro_hw_context_reset_t | None = None
         self._active = HardwareContext.NONE
         self._needs_reinit = True
         self._negotiation: retro_hw_render_context_negotiation_interface_vulkan | None = None
@@ -237,6 +350,7 @@ class VulkanVideoDriver(VideoDriver):
         self._device = None
         self._queue = None
         self._queue_family = 0
+        self._surface_raw = 0
         self._core_created_device = False
         self._negotiation_used = False
 
@@ -305,10 +419,12 @@ class VulkanVideoDriver(VideoDriver):
         if self._software.system_av_info is None:
             raise RuntimeError("Cannot reinitialize video driver without system AV info from core")
 
-        had_context = self._interface is not None
-        if had_context and self._callback.context_destroy:
-            self._callback.context_destroy()
+        if self._interface is not None:
+            context_destroy = self._pending_context_destroy or self._callback.context_destroy
+            if context_destroy:
+                context_destroy()
 
+        self._pending_context_destroy = None
         self.__destroy_vulkan()
 
         if self._active == HardwareContext.VULKAN:
@@ -344,6 +460,11 @@ class VulkanVideoDriver(VideoDriver):
             raise UnsupportedContextError(
                 f"VulkanVideoDriver only supports NONE and VULKAN contexts, got {context_type}"
             )
+
+        if self._interface is not None:
+            # Keep the active context's destroy callback so the next reinit
+            # can still notify the core, even though the new callback replaces it
+            self._pending_context_destroy = self._callback.context_destroy
 
         self._callback = deepcopy(callback)
         self._active = context_type
@@ -471,11 +592,7 @@ class VulkanVideoDriver(VideoDriver):
             return None
 
         pixels, width, height, vk_format = self._hw_frame
-        rgba = bytearray(pixels)
-        if not _CAPTURABLE_FORMATS.get(vk_format, True):
-            # B, G, R, A: swap the red and blue channels
-            rgba[0::4], rgba[2::4] = rgba[2::4], rgba[0::4]
-
+        rgba = _to_rgba32(pixels, vk_format)
         rgba[3::4] = b"\xff" * (width * height)  # Screenshots are opaque
 
         rotation = self._software.rotation
@@ -496,10 +613,46 @@ class VulkanVideoDriver(VideoDriver):
         assert gipa_addr is not None
 
         self.__create_instance(gipa_addr)
+        self.__create_surface()
         self.__select_gpu()
         self.__create_device(gipa_addr)
         self.__create_capture_resources()
         self.__build_interface(gipa_addr)
+
+    def __create_surface(self) -> None:
+        """
+        Create a headless surface for cores whose device negotiation
+        assumes one exists (they may query surface support during queue selection).
+        Leaves the surface at 0 when ``VK_EXT_headless_surface`` isn't available.
+        """
+        self._surface_raw = 0
+        try:
+            create: Any = vk.vkGetInstanceProcAddr(self._instance, "vkCreateHeadlessSurfaceEXT")
+        except Exception:
+            return
+
+        if create is None:
+            return
+
+        try:
+            surface = create(self._instance, vk.VkHeadlessSurfaceCreateInfoEXT(), None)
+        except Exception as e:
+            warn(f"Couldn't create a headless surface: {e}")
+            return
+
+        self._surface_raw = int(ffi.cast("uint64_t", surface))
+
+    def __destroy_surface(self) -> None:
+        if not self._surface_raw or self._instance is None:
+            return
+
+        try:
+            destroy = vk.vkGetInstanceProcAddr(self._instance, "vkDestroySurfaceKHR")
+            destroy(self._instance, ffi.cast("VkSurfaceKHR", self._surface_raw), None)
+        except Exception as e:
+            warn(f"Couldn't destroy the headless surface: {e}")
+
+        self._surface_raw = 0
 
     def __create_instance(self, gipa_addr: int) -> None:
         negotiation = self._negotiation
@@ -522,15 +675,10 @@ class VulkanVideoDriver(VideoDriver):
                 engine_name = app_info.pEngineName or engine_name
                 api_version = max(api_version, app_info.apiVersion)
 
-        available = {ext.extensionName for ext in vk.vkEnumerateInstanceExtensionProperties(None)}
-        extensions: list[str] = []
-        flags = 0
-        if vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME in available:
-            extensions.append(vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
-            flags |= vk.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
-
-        if vk.VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME in available:
-            extensions.append(vk.VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)
+        available: set[str] = {
+            str(ext.extensionName) for ext in vk.vkEnumerateInstanceExtensionProperties(None)
+        }
+        extensions, flags = _wanted_instance_extensions(available)
 
         if (
             negotiation is not None
@@ -567,7 +715,9 @@ class VulkanVideoDriver(VideoDriver):
     ) -> int:
         self._negotiation_used = True
 
-        available = {ext.extensionName for ext in vk.vkEnumerateInstanceExtensionProperties(None)}
+        available: set[str] = {
+            str(ext.extensionName) for ext in vk.vkEnumerateInstanceExtensionProperties(None)
+        }
 
         def _create_instance_wrapper(_opaque: int | None, create_info_ptr: int | None) -> int:
             try:
@@ -582,11 +732,9 @@ class VulkanVideoDriver(VideoDriver):
                 layers = [
                     info.ppEnabledLayerNames[i].decode() for i in range(info.enabledLayerCount)
                 ]
-                flags = info.flags
-                if vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME in available:
-                    if vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME not in extensions:
-                        extensions.append(vk.VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
-                    flags |= vk.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+                wanted, wanted_flags = _wanted_instance_extensions(available)
+                extensions.extend(ext for ext in wanted if ext not in extensions)
+                flags = info.flags | wanted_flags
 
                 app_info = (
                     ffi.cast("VkApplicationInfo *", ctypes.addressof(info.pApplicationInfo[0]))
@@ -673,7 +821,7 @@ class VulkanVideoDriver(VideoDriver):
             byref(context),
             _raw(self._instance),
             _raw(self._gpu),
-            0,  # No surface; this driver is headless
+            self._surface_raw,  # A headless surface (or 0 if unavailable)
             gipa_addr,
             None,
             0,
@@ -747,7 +895,7 @@ class VulkanVideoDriver(VideoDriver):
             byref(context),
             _raw(self._instance),
             _raw(self._gpu),
-            0,  # No surface; this driver is headless
+            self._surface_raw,  # A headless surface (or 0 if unavailable)
             gipa_addr,
             wrapper,
             None,
@@ -756,7 +904,13 @@ class VulkanVideoDriver(VideoDriver):
             # Retry allowing the core to pick the physical device itself
             context = retro_vulkan_context()
             ok = negotiation.create_device2(
-                byref(context), _raw(self._instance), 0, 0, gipa_addr, wrapper, None
+                byref(context),
+                _raw(self._instance),
+                0,
+                self._surface_raw,
+                gipa_addr,
+                wrapper,
+                None,
             )
 
         if not ok:
@@ -875,8 +1029,10 @@ class VulkanVideoDriver(VideoDriver):
         self.__submit_capture()
 
         assert self._staging_map is not None
-        # vkMapMemory in the vulkan package returns an ffi.buffer over the mapping
-        pixels = bytearray(self._staging_map)
+        # vkMapMemory in the vulkan package returns an ffi.buffer over the mapping;
+        # the staging buffer is sized for 4-byte texels, so slice off what this
+        # frame's (possibly smaller) texel size actually filled
+        pixels = bytearray(self._staging_map[: width * height * _CAPTURABLE_FORMATS[vk_format]])
         self._hw_frame = (pixels, width, height, vk_format)
         self._last_frame_hw = True
         self.__consume_frame_state()
@@ -1161,6 +1317,7 @@ class VulkanVideoDriver(VideoDriver):
             self._queue = None
 
         if self._instance is not None:
+            self.__destroy_surface()
             vk.vkDestroyInstance(self._instance, None)
             self._instance = None
             self._gpu = None

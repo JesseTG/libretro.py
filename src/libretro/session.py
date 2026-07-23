@@ -19,6 +19,7 @@ from libretro.api import (
     SubsystemContent,
     ThrottleMode,
     retro_device_power,
+    retro_hw_render_callback,
     retro_subsystem_info,
     retro_system_av_info,
     retro_system_content_info_override,
@@ -1218,6 +1219,23 @@ class Session(
         if self._content is not None:
             self._core.unload_game()
             self._raise_pending_exceptions("retro_unload_game")
+
+        if self._video.active_context != HardwareContext.NONE:
+            # Tear down the hardware context (calling the core's context_destroy)
+            # while the core is still loaded, like RetroArch does on shutdown.
+            # Some cores (e.g. mupen64plus-next with paraLLEl-RDP) otherwise
+            # release their GPU resources in exit-time destructors,
+            # calling frontend callbacks after the interpreter has finalized.
+            # This must happen after retro_unload_game:
+            # cores may stop their background GPU threads there (e.g. Azahar),
+            # and destroying the Vulkan device under a live thread crashes.
+            try:
+                self._video.set_context(
+                    retro_hw_render_callback(context_type=HardwareContext.NONE)
+                )
+                self._video.reinit()
+            except Exception as e:
+                warnings.warn(f"Couldn't tear down the hardware rendering context: {e}")
 
         self._core.deinit()
         self._raise_pending_exceptions("retro_deinit")
