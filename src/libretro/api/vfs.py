@@ -187,6 +187,7 @@ class VfsFileAccess(IntFlag):
     UPDATE_EXISTING = RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING
 
     READ_WRITE_EXISTING = READ_WRITE | UPDATE_EXISTING
+    WRITE_EXISTING = WRITE | UPDATE_EXISTING
 
     @property
     def open_flag(self) -> Literal["rb", "wb", "w+b", "r+b"]:
@@ -205,6 +206,10 @@ class VfsFileAccess(IntFlag):
             case VfsFileAccess.READ_WRITE:
                 return "w+b"
             case VfsFileAccess.READ_WRITE_EXISTING:
+                return "r+b"
+            case VfsFileAccess.WRITE_EXISTING:
+                # Write-only without truncation; Python has no such mode,
+                # so the closest match is read-write without truncation
                 return "r+b"
             case _:
                 raise ValueError(f"Invalid VfsFileAccess: {self}")

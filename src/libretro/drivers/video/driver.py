@@ -17,6 +17,7 @@ from libretro.api.video import (
     Rotation,
     retro_framebuffer,
     retro_hw_render_callback,
+    retro_hw_render_context_negotiation_interface,
     retro_hw_render_interface,
 )
 
@@ -131,6 +132,25 @@ class VideoDriver(Protocol):
 
             The purpose of :attr:`.retro_hw_render_callback.cache_context`
             is to tell libretro.py to do its best to avoid calling this method.
+        """
+        ...
+
+    @abstractmethod
+    def destroy_hw_context(self) -> None:
+        """
+        Call the core's registered :attr:`.retro_hw_render_callback.context_destroy`
+        (if a hardware context is active)
+        without releasing this driver's own graphics resources.
+
+        RetroArch does the same immediately before ``retro_unload_game``:
+        the core releases its GPU resources while it is still loaded,
+        but the frontend's device outlives it,
+        since cores may still have background threads
+        finishing GPU work until ``retro_unload_game`` stops them.
+
+        Calling :meth:`~.VideoDriver.reinit` afterwards
+        will not invoke ``context_destroy`` a second time.
+        No-op for drivers (or contexts) without hardware rendering.
         """
         ...
 
@@ -430,6 +450,36 @@ class VideoDriver(Protocol):
             Corresponds to ``RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE``.
         """
         ...
+
+    @property
+    @abstractmethod
+    def context_negotiation_interface(
+        self,
+    ) -> retro_hw_render_context_negotiation_interface | None:
+        """
+        The context negotiation interface most recently registered by the core,
+        or :obj:`None` if the core hasn't registered one
+        (or if this driver doesn't support negotiation).
+
+        Drivers that support negotiation should keep the registered interface
+        and honor it the next time the context is (re)initialized.
+
+        :raise NotImplementedError: If setting this property
+            on a :class:`.VideoDriver` that doesn't support context negotiation.
+        :raise TypeError: If setting a value that isn't a
+            :class:`.retro_hw_render_context_negotiation_interface` or :obj:`None`.
+
+        .. note::
+
+            Corresponds to ``RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE``.
+        """
+        ...
+
+    @context_negotiation_interface.setter
+    @abstractmethod
+    def context_negotiation_interface(
+        self, interface: retro_hw_render_context_negotiation_interface | None
+    ) -> None: ...
 
     @property
     @abstractmethod

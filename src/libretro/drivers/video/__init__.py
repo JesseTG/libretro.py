@@ -17,3 +17,8 @@ try:
     from .opengl import *
 except ImportError:
     pass
+
+try:
+    from .vulkan import *
+except (ImportError, OSError):
+    pass

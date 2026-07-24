@@ -62,6 +62,7 @@ from libretro.api.video import (
     Rotation,
     retro_framebuffer,
     retro_hw_render_callback,
+    retro_hw_render_context_negotiation_interface,
     retro_hw_render_interface,
 )
 
@@ -252,6 +253,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._pixel_format = PixelFormat.RGB1555
         self._system_av_info: retro_system_av_info | None = None
         self._shared = False
+        self._context_destroyed = False
         self._context: Context | None = None
         self._shader_program: moderngl.Program | None = None
         self._vao: VertexArray | None = None
@@ -455,13 +457,15 @@ class ModernGlVideoDriver(VideoDriver):
         # TODO: Honor cache_context; try to avoid reinitializing the context
         if self._context:
             self._context.clear_errors()
-            if self._callback and self._callback.context_destroy:
+            if self._callback and self._callback.context_destroy and not self._context_destroyed:
                 # If the core wants to clean up before the context is destroyed...
                 with self._context.debug_scope(
                     "libretro.ModernGlVideoDriver.reinit.context_destroy"
                 ):
                     self._callback.context_destroy()
                     _warn_unhandled_gl_errors()
+
+            self._context_destroyed = False
 
             if self._window:
                 self._window.destroy()
@@ -758,6 +762,30 @@ class ModernGlVideoDriver(VideoDriver):
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         # libretro doesn't define one of these for OpenGL, so no need
         return None
+
+    @override
+    def destroy_hw_context(self) -> None:
+        if self._context and self._callback and self._callback.context_destroy:
+            with self._context.debug_scope("libretro.ModernGlVideoDriver.destroy_hw_context"):
+                self._callback.context_destroy()
+                _warn_unhandled_gl_errors()
+
+            self._context_destroyed = True
+
+    @property
+    @override
+    def context_negotiation_interface(
+        self,
+    ) -> retro_hw_render_context_negotiation_interface | None:
+        return None
+
+    @context_negotiation_interface.setter
+    @override
+    def context_negotiation_interface(
+        self, interface: retro_hw_render_context_negotiation_interface | None
+    ) -> None:
+        # libretro doesn't define a negotiation interface for OpenGL, so no need
+        raise NotImplementedError("Context negotiation is not supported by the OpenGL driver")
 
     def __get_framebuffer_size(self) -> tuple[int, int]:
         assert self._context is not None

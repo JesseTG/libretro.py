@@ -19,6 +19,7 @@ Ease of use, flexibility, and complete API support are top priorities.
    :caption: Guides
 
    guide/env
+   guide/vulkan
    guide/renderdoc
    guide/glossary
 

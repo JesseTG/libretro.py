@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Set
 from copy import deepcopy
 from types import MappingProxyType
 from typing import final, override
+from warnings import warn
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
@@ -18,6 +19,7 @@ from libretro.api.video import (
     Rotation,
     retro_framebuffer,
     retro_hw_render_callback,
+    retro_hw_render_context_negotiation_interface,
     retro_hw_render_interface,
 )
 
@@ -38,6 +40,13 @@ try:
 except ImportError:
     ModernGlVideoDriver = None
 
+try:
+    from libretro.drivers.video.vulkan import VulkanVideoDriver
+
+    _default_driver_map[HardwareContext.VULKAN] = VulkanVideoDriver
+except (ImportError, OSError):
+    VulkanVideoDriver = None
+
 DEFAULT_DRIVER_MAP: DriverMap = MappingProxyType(_default_driver_map)
 """
 The default mapping from context types to :class:`.VideoDriver` constructors.
@@ -49,6 +58,11 @@ They are as follows:
 
 :attr:`~.HardwareContext.OPENGL_CORE`, :attr:`~.HardwareContext.OPENGL`
     Mapped to :class:`.ModernGlVideoDriver` if :py:mod:`moderngl` is installed, absent if not.
+
+:attr:`~.HardwareContext.VULKAN`
+    Mapped to :class:`~libretro.drivers.video.vulkan.driver.VulkanVideoDriver`
+    if the :py:mod:`vulkan` package
+    and a Vulkan loader library are installed, absent if not.
 
 :class:`.VideoDriver` s for other graphics APIs have not yet been implemented.
 """
@@ -109,6 +123,7 @@ class MultiVideoDriver(VideoDriver):
         self._callback = retro_hw_render_callback(context_type=HardwareContext.NONE)
         self._shared_context = False
         self._next_hw_context: HardwareContext | None = HardwareContext.NONE
+        self._context_negotiation: retro_hw_render_context_negotiation_interface | None = None
 
     @override
     def refresh(
@@ -191,6 +206,26 @@ class MultiVideoDriver(VideoDriver):
             old_driver = self._current
             self._current = driver
 
+            if old_driver is not None and old_driver.active_context != HardwareContext.NONE:
+                # Let the outgoing driver notify the core (context_destroy)
+                # and release its resources while the core is still loaded,
+                # before the new driver's context_reset fires
+                try:
+                    old_driver.set_context(
+                        retro_hw_render_callback(context_type=HardwareContext.NONE)
+                    )
+                    old_driver.reinit()
+                except Exception as e:
+                    warn(f"Couldn't shut down the outgoing video driver: {e}")
+
+            del old_driver
+
+            if self._context_negotiation is not None:
+                try:
+                    driver.context_negotiation_interface = self._context_negotiation
+                except NotImplementedError:
+                    pass  # This driver doesn't negotiate contexts; that's okay
+
             # Must set the callback before setting the system AV info,
             # as setting the system AV info reinitializes the video driver immediately
             # and that requires calling the core-provided callbacks
@@ -200,7 +235,6 @@ class MultiVideoDriver(VideoDriver):
                 driver.system_av_info = system_av_info
                 # No need to call driver.reinit(); setting the system AV info should do that
 
-            del old_driver
             # TODO: If initializing the new driver fails, keep the old one
 
         self._next_hw_context = None
@@ -365,6 +399,39 @@ class MultiVideoDriver(VideoDriver):
             return self._current.hw_render_interface
 
         return None
+
+    @override
+    def destroy_hw_context(self) -> None:
+        if self._current is not None:
+            self._current.destroy_hw_context()
+
+    @property
+    @override
+    def context_negotiation_interface(
+        self,
+    ) -> retro_hw_render_context_negotiation_interface | None:
+        return self._context_negotiation
+
+    @context_negotiation_interface.setter
+    @override
+    def context_negotiation_interface(
+        self, interface: retro_hw_render_context_negotiation_interface | None
+    ) -> None:
+        if interface is not None and not isinstance(
+            interface, retro_hw_render_context_negotiation_interface
+        ):
+            raise TypeError(
+                "Expected a retro_hw_render_context_negotiation_interface or None, "
+                f"got {type(interface).__name__}"
+            )
+
+        self._context_negotiation = interface
+
+        if self._current is not None:
+            try:
+                self._current.context_negotiation_interface = interface
+            except NotImplementedError:
+                pass  # The active driver doesn't negotiate contexts; that's okay
 
     @property
     @override

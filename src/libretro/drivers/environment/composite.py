@@ -16,6 +16,8 @@ import typing
 from collections.abc import Sequence
 from copy import deepcopy
 from ctypes import (
+    POINTER,
+    addressof,
     c_bool,
     c_char_p,
     c_double,
@@ -323,8 +325,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
         # Handle the constants and their equivalent ints, just to be safe
         match data.value:
-            case 0:
+            case 0 | None:
                 # Passing NULL to retro_video_refresh_t means "redraw the frame"
+                # (ctypes exposes a NULL void pointer's value as None)
                 self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
             case int(i) if i == MAX_POINTER_VALUE:
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
@@ -879,13 +882,13 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         if not self._perf_callback:
             self._perf_callback = retro_perf_callback(
-                get_time_usec=self._get_time_usec,
-                get_cpu_features=self._get_cpu_features,
-                get_perf_counter=self._get_perf_counter,
-                perf_register=self._perf_register,
-                perf_start=self._perf_start,
-                perf_stop=self._perf_stop,
-                perf_log=self._perf_log,
+                get_time_usec=retro_perf_get_time_usec_t(self._get_time_usec),
+                get_cpu_features=retro_get_cpu_features_t(self._get_cpu_features),
+                get_perf_counter=retro_perf_get_counter_t(self._get_perf_counter),
+                perf_register=retro_perf_register_t(self._perf_register),
+                perf_start=retro_perf_start_t(self._perf_start),
+                perf_stop=retro_perf_stop_t(self._perf_stop),
+                perf_log=retro_perf_log_t(self._perf_log),
             )
 
         interface[0] = self._perf_callback
@@ -1261,7 +1264,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
             # This video driver doesn't provide (or need) a hardware render interface
             return False
 
-        interface[0] = driver_interface
+        # The data is a retro_hw_render_interface **;
+        # write the address of the driver's (long-lived) interface struct into it
+        cast(interface, POINTER(c_void_p))[0] = addressof(driver_interface)
         return True
 
     @property
@@ -1288,7 +1293,25 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _set_hw_render_context_negotiation_interface(
         self, interface: TypedPointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
-        return False  # TODO: Implement
+        if not interface:
+            raise ValueError(
+                "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE doesn't accept NULL"
+            )
+
+        iface: retro_hw_render_context_negotiation_interface = interface[0]
+        if iface.interface_type == ContextNegotiationInterfaceType.VULKAN:
+            # Reinterpret the core's struct as the full Vulkan negotiation interface
+            iface = cast(interface, POINTER(retro_hw_render_context_negotiation_interface_vulkan))[
+                0
+            ]
+
+        try:
+            self._video.context_negotiation_interface = iface
+        except NotImplementedError:
+            # The video driver doesn't support context negotiation
+            return False
+
+        return True
 
     @property
     def serialization_quirks(self) -> SerializationQuirks | None:
@@ -1435,7 +1458,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._vfs is None or not file or whence not in VfsSeekPosition:
             return -1
 
-        return self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
+        result = self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
+
+        # libretro.h documents that seek returns the new position,
+        # but RetroArch's implementation returns fseek's result (0 on success)
+        # for ordinary buffered files, and cores (e.g. PPSSPP) are written
+        # against that behavior: they treat any non-zero return as an error.
+        # Match RetroArch; a core that wants the position uses tell.
+        return 0 if result >= 0 else -1
 
     @_return_on_raise(-1)
     def _vfs_read(
@@ -2038,7 +2068,22 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def _get_hw_render_context_negotiation_interface_support(
         self, support: TypedPointer[retro_hw_render_context_negotiation_interface]
     ) -> bool:
-        return False  # TODO: Implement
+        if not support:
+            raise ValueError(
+                "RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT "
+                "doesn't accept NULL"
+            )
+
+        if (
+            support[0].interface_type == ContextNegotiationInterfaceType.VULKAN
+            and HardwareContext.VULKAN in self._video.supported_contexts
+        ):
+            support[
+                0
+            ].interface_version = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION
+            return True
+
+        return False
 
     @property
     def jit_capable(self) -> bool | None:
