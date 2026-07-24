@@ -325,8 +325,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
         # Handle the constants and their equivalent ints, just to be safe
         match data.value:
-            case 0:
+            case 0 | None:
                 # Passing NULL to retro_video_refresh_t means "redraw the frame"
+                # (ctypes exposes a NULL void pointer's value as None)
                 self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
             case int(i) if i == MAX_POINTER_VALUE:
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
@@ -1457,7 +1458,14 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._vfs is None or not file or whence not in VfsSeekPosition:
             return -1
 
-        return self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
+        result = self._vfs.seek(file[0], offset, VfsSeekPosition(whence))
+
+        # libretro.h documents that seek returns the new position,
+        # but RetroArch's implementation returns fseek's result (0 on success)
+        # for ordinary buffered files, and cores (e.g. PPSSPP) are written
+        # against that behavior: they treat any non-zero return as an error.
+        # Match RetroArch; a core that wants the position uses tell.
+        return 0 if result >= 0 else -1
 
     @_return_on_raise(-1)
     def _vfs_read(

@@ -62,6 +62,11 @@ class SoftwareVideoDriver(VideoDriver, ABC):
                 "Software-rendered drivers only support HardwareContext.NONE"
             )
 
+    @override
+    @final
+    def destroy_hw_context(self) -> None:
+        """No-op: software-rendered drivers have no hardware context to destroy."""
+
     @property
     @override
     @final

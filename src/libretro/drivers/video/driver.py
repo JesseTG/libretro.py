@@ -135,6 +135,25 @@ class VideoDriver(Protocol):
         """
         ...
 
+    @abstractmethod
+    def destroy_hw_context(self) -> None:
+        """
+        Call the core's registered :attr:`.retro_hw_render_callback.context_destroy`
+        (if a hardware context is active)
+        without releasing this driver's own graphics resources.
+
+        RetroArch does the same immediately before ``retro_unload_game``:
+        the core releases its GPU resources while it is still loaded,
+        but the frontend's device outlives it,
+        since cores may still have background threads
+        finishing GPU work until ``retro_unload_game`` stops them.
+
+        Calling :meth:`~.VideoDriver.reinit` afterwards
+        will not invoke ``context_destroy`` a second time.
+        No-op for drivers (or contexts) without hardware rendering.
+        """
+        ...
+
     @property
     @abstractmethod
     def supported_contexts(self) -> Set[HardwareContext]:

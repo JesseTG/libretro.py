@@ -400,6 +400,11 @@ class MultiVideoDriver(VideoDriver):
 
         return None
 
+    @override
+    def destroy_hw_context(self) -> None:
+        if self._current is not None:
+            self._current.destroy_hw_context()
+
     @property
     @override
     def context_negotiation_interface(

@@ -1216,19 +1216,30 @@ class Session(
 
         :return: :obj:`True` if a :class:`.CoreShutDownException` should be suppressed.
         """
+        if self._video.active_context != HardwareContext.NONE:
+            # Call the core's context_destroy immediately before retro_unload_game,
+            # like RetroArch's core_unload_game does; cores expect their emulated
+            # system to still exist at that point (e.g. SwanStation, PPSSPP).
+            # Some cores (e.g. mupen64plus-next with paraLLEl-RDP) otherwise
+            # release their GPU resources in exit-time destructors,
+            # calling frontend callbacks after the interpreter has finalized.
+            try:
+                self._video.destroy_hw_context()
+            except Exception as e:
+                warnings.warn(f"Couldn't destroy the hardware rendering context: {e}")
+
         if self._content is not None:
             self._core.unload_game()
             self._raise_pending_exceptions("retro_unload_game")
 
+        self._core.deinit()
+        self._raise_pending_exceptions("retro_deinit")
+
         if self._video.active_context != HardwareContext.NONE:
-            # Tear down the hardware context (calling the core's context_destroy)
-            # while the core is still loaded, like RetroArch does on shutdown.
-            # Some cores (e.g. mupen64plus-next with paraLLEl-RDP) otherwise
-            # release their GPU resources in exit-time destructors,
-            # calling frontend callbacks after the interpreter has finalized.
-            # This must happen after retro_unload_game:
-            # cores may stop their background GPU threads there (e.g. Azahar),
-            # and destroying the Vulkan device under a live thread crashes.
+            # Release the video driver's own GPU resources only now:
+            # unlike context_destroy, this must wait until the core is gone,
+            # because cores may have background threads submitting GPU work
+            # until retro_unload_game/retro_deinit stop them (e.g. Azahar).
             try:
                 self._video.set_context(
                     retro_hw_render_callback(context_type=HardwareContext.NONE)
@@ -1236,9 +1247,6 @@ class Session(
                 self._video.reinit()
             except Exception as e:
                 warnings.warn(f"Couldn't tear down the hardware rendering context: {e}")
-
-        self._core.deinit()
-        self._raise_pending_exceptions("retro_deinit")
 
         del self._core
         self._is_exited = True

@@ -170,6 +170,37 @@ def _raw(handle) -> int:
     return int(ffi.cast("uintptr_t", handle))
 
 
+# Interface structs whose Python callbacks have been replaced with native stubs;
+# kept alive forever because cores may hold the pointer in exit-time destructors
+_RETIRED_INTERFACES: list[retro_hw_render_interface_vulkan] = []
+
+
+def _retire_interface(interface: retro_hw_render_interface_vulkan) -> None:
+    """
+    Replace an interface's Python callbacks with a harmless native function
+    and keep the struct alive for the rest of the process.
+
+    Some cores (e.g. mupen64plus-next's paraLLEl-RDP runtime) hold onto the
+    interface pointer in objects destroyed at process exit, calling
+    ``lock_queue``/``wait_sync_index`` after the Python interpreter has
+    finalized — which would crash if they still pointed at ctypes closures.
+    ``free`` is a safe stand-in: every callback receives this driver's
+    ``handle``, which is ``NULL``, and ``free(NULL)`` is a no-op.
+    """
+    libc = ctypes.CDLL(None)
+    noop = ctypes.cast(libc.free, c_void_p).value
+    assert noop is not None
+    interface.set_image = ctypes.cast(noop, retro_vulkan_set_image_t)
+    interface.get_sync_index = ctypes.cast(noop, retro_vulkan_get_sync_index_t)
+    interface.get_sync_index_mask = ctypes.cast(noop, retro_vulkan_get_sync_index_mask_t)
+    interface.set_command_buffers = ctypes.cast(noop, retro_vulkan_set_command_buffers_t)
+    interface.wait_sync_index = ctypes.cast(noop, retro_vulkan_wait_sync_index_t)
+    interface.lock_queue = ctypes.cast(noop, retro_vulkan_lock_queue_t)
+    interface.unlock_queue = ctypes.cast(noop, retro_vulkan_unlock_queue_t)
+    interface.set_signal_semaphore = ctypes.cast(noop, retro_vulkan_set_signal_semaphore_t)
+    _RETIRED_INTERFACES.append(interface)
+
+
 def _load_loader() -> ctypes.CDLL:
     for name in _LOADER_NAMES:
         try:
@@ -530,6 +561,22 @@ class VulkanVideoDriver(VideoDriver):
         self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
         return self._software.get_software_framebuffer(width, height, flags)
+
+    @override
+    def destroy_hw_context(self) -> None:
+        if self._interface is None:
+            return
+
+        context_destroy = self._pending_context_destroy or self._callback.context_destroy
+        self._pending_context_destroy = None
+        if context_destroy:
+            context_destroy()
+
+        # The next reinit must not call context_destroy again.
+        # This must happen *after* the call above:
+        # ctypes function-pointer fields are views into the struct's memory,
+        # so nulling the field first would also null the captured value.
+        self._callback.context_destroy = None
 
     @property
     @override
@@ -1321,6 +1368,9 @@ class VulkanVideoDriver(VideoDriver):
             vk.vkDestroyInstance(self._instance, None)
             self._instance = None
             self._gpu = None
+
+        if self._interface is not None:
+            _retire_interface(self._interface)
 
         self._interface = None
         self._interface_refs = None

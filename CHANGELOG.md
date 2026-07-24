@@ -35,17 +35,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the `retro_perf_callback` struct (affected e.g. Beetle PSX HW).
 - Fixed VFS file opens failing for the `WRITE | UPDATE_EXISTING` access mode
   (affected e.g. Flycast).
+- The VFS `seek` handler now returns 0 on success instead of the new position.
+  libretro.h documents returning the position,
+  but RetroArch returns 0 for ordinary buffered files
+  and cores are written against that behavior
+  (PPSSPP treats any non-zero return as an error,
+  making every file appear empty under a spec-conforming frontend).
 - Fixed core options without an explicit default value tripping an assertion;
   libretro.h treats the first value as the default (affected e.g. Mupen64Plus-Next).
 - Sample cores now build with the `.dylib` suffix on macOS,
   matching what `libretro.samples` expects to load.
-- `Session` now tears down an active hardware rendering context
-  (calling the core's `context_destroy`) between `retro_unload_game`
-  and `retro_deinit`, like RetroArch does;
-  some cores otherwise release GPU resources in exit-time destructors
-  that call frontend callbacks after the interpreter has finalized.
+- Added `VideoDriver.destroy_hw_context()`,
+  which calls the core's `context_destroy` without releasing
+  the driver's own graphics resources.
+  `Session` now calls it immediately before `retro_unload_game`
+  (matching RetroArch's `core_unload_game`),
+  then releases the video driver's GPU resources after `retro_deinit`,
+  because cores may have background threads submitting GPU work
+  until unload stops them.
+  Fixes crashes on session teardown with SwanStation, PPSSPP,
+  mupen64plus-next (paraLLEl-RDP), and Azahar.
 - `MultiVideoDriver` now shuts down the outgoing video driver
   (including its hardware context) when switching drivers at runtime.
+- `VulkanVideoDriver` now permanently retains retired render-interface structs
+  with their callbacks replaced by a native no-op,
+  because some cores keep the interface pointer
+  in objects destroyed at process exit.
+- Fixed `retro_video_refresh_t` rejecting NULL frame duping:
+  ctypes exposes a NULL pointer's value as `None`, not 0
+  (affected e.g. SwanStation).
 
 ## [0.8.2] - 2026-07-14
 
