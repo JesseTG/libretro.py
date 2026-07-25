@@ -1,5 +1,6 @@
 # The vulkan package is untyped CFFI; see the note in the driver module.
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false
+# These tests also assert on the driver's private frame-path state.
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportPrivateUsage=false
 # pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false
 
 from ctypes import byref
@@ -82,10 +83,47 @@ def test_software_frame_screenshot():
     frame = bytearray(b"\x00\x00\xff\x00" * (WIDTH * HEIGHT))
     driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 4)
 
+    # Software frames go through a VkImage, like the GL driver's texture upload
+    assert driver._last_frame_hw
+
     shot = driver.screenshot()
     assert shot is not None
     assert (shot.width, shot.height) == (WIDTH, HEIGHT)
     assert bytes(shot.data[:4]) == b"\xff\x00\x00\xff"
+
+
+def test_software_frame_with_padded_pitch():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.system_av_info = _av_info()
+
+    pitch = WIDTH * 4 + 32  # Rows padded past the visible width
+    frame = bytearray(pitch * HEIGHT)
+    for y in range(HEIGHT):
+        frame[y * pitch : y * pitch + WIDTH * 4] = b"\x00\xff\x00\x00" * WIDTH  # Green
+    driver.refresh(memoryview(frame), WIDTH, HEIGHT, pitch)
+
+    assert driver._last_frame_hw
+    shot = driver.screenshot()
+    assert shot is not None
+    assert bytes(shot.data[:4]) == b"\x00\xff\x00\xff"
+    end = (WIDTH * HEIGHT - 1) * 4
+    assert bytes(shot.data[end : end + 4]) == b"\x00\xff\x00\xff"
+
+
+def test_software_frame_rgb565():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.RGB565
+    driver.system_av_info = _av_info()
+
+    # Pure blue in RGB565 is 0x001F (little-endian bytes 1F 00)
+    frame = bytearray(b"\x1f\x00" * (WIDTH * HEIGHT))
+    driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 2)
+
+    assert driver._last_frame_hw
+    shot = driver.screenshot()
+    assert shot is not None
+    assert bytes(shot.data[:4]) == b"\x00\x00\xff\xff"
 
 
 def _init_hw_driver() -> tuple[VulkanVideoDriver, list[int]]:

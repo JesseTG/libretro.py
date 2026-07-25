@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a Vulkan loader (MoltenVK on macOS).
 - Added ctypes bindings for the types in `libretro_vulkan.h`
   to `libretro.api.video`.
+- `VulkanVideoDriver` uploads software-rendered frames to a `VkImage`
+  and reads them back through its capture path,
+  mirroring the OpenGL driver's texture upload;
+  it falls back to CPU-side frames when Vulkan is unavailable
+  or the pixel format has no direct Vulkan equivalent.
 - Implemented `RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE`
   and `RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`,
   and added a `context_negotiation_interface` property to `VideoDriver`.

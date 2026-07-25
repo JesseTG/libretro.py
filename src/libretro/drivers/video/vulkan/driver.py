@@ -102,6 +102,13 @@ _CAPTURABLE_FORMATS: dict[int, int] = {
     _VK_FORMAT_A1R5G5B5_UNORM_PACK16: 2,
 }
 
+# libretro software pixel formats that map directly onto a Vulkan format
+_PIXEL_FORMAT_TO_VK: dict[PixelFormat, int] = {
+    PixelFormat.XRGB8888: _VK_FORMAT_B8G8R8A8_UNORM,
+    PixelFormat.RGB565: _VK_FORMAT_R5G6B5_UNORM_PACK16,
+    PixelFormat.RGB1555: _VK_FORMAT_A1R5G5B5_UNORM_PACK16,
+}
+
 _LOADER_NAMES = ("libvulkan.so.1", "vulkan-1.dll", "libvulkan.dylib", "libvulkan.1.dylib")
 
 _VK_KHR_SURFACE = "VK_KHR_surface"
@@ -386,6 +393,9 @@ class VulkanVideoDriver(VideoDriver):
         self._negotiation_used = False
 
         # Frontend capture resources
+        self._sw_image = None
+        self._sw_image_memory = None
+        self._sw_image_key: tuple[int, int, int] | None = None
         self._command_pool = None
         self._command_buffer = None
         self._fence = None
@@ -432,8 +442,13 @@ class VulkanVideoDriver(VideoDriver):
                     self._software.refresh(data, width, height, pitch)
 
             case memoryview():
-                self._software.refresh(data, width, height, pitch)
-                self._last_frame_hw = False
+                if self._device is not None and self.__refresh_software_vulkan(
+                    data, width, height, pitch
+                ):
+                    self._last_frame_hw = True
+                else:
+                    self._software.refresh(data, width, height, pitch)
+                    self._last_frame_hw = False
 
             case _:
                 raise TypeError(
@@ -459,11 +474,19 @@ class VulkanVideoDriver(VideoDriver):
         self.__destroy_vulkan()
 
         if self._active == HardwareContext.VULKAN:
-            self.__init_vulkan()
+            self.__init_vulkan(hardware=True)
             self._needs_reinit = False
             if self._callback.context_reset:
                 self._callback.context_reset()
         else:
+            try:
+                # Like the OpenGL driver, software-rendered frames still go
+                # through the graphics API: they're uploaded to a VkImage
+                # and read back through the same capture path
+                self.__init_vulkan(hardware=False)
+            except Exception as e:
+                warn(f"Couldn't initialize Vulkan for software rendering, using CPU frames: {e}")
+
             self._needs_reinit = False
 
     @property
@@ -654,17 +677,20 @@ class VulkanVideoDriver(VideoDriver):
             self._software.pixel_format,
         )
 
-    def __init_vulkan(self) -> None:
+    def __init_vulkan(self, *, hardware: bool) -> None:
         self._loader = _load_loader()
         gipa_addr = ctypes.cast(self._loader.vkGetInstanceProcAddr, c_void_p).value
         assert gipa_addr is not None
 
         self.__create_instance(gipa_addr)
-        self.__create_surface()
+        if hardware:
+            self.__create_surface()
+
         self.__select_gpu()
         self.__create_device(gipa_addr)
         self.__create_capture_resources()
-        self.__build_interface(gipa_addr)
+        if hardware:
+            self.__build_interface(gipa_addr)
 
     def __create_surface(self) -> None:
         """
@@ -702,7 +728,9 @@ class VulkanVideoDriver(VideoDriver):
         self._surface_raw = 0
 
     def __create_instance(self, gipa_addr: int) -> None:
-        negotiation = self._negotiation
+        # The negotiation interface only applies when the core requested
+        # a Vulkan context; in software mode this driver renders privately
+        negotiation = self._negotiation if self._active == HardwareContext.VULKAN else None
         app_name = b"libretro.py"
         engine_name = b"libretro.py"
         # Vulkan cores put a full VK_MAKE_VERSION value in version_major
@@ -826,7 +854,7 @@ class VulkanVideoDriver(VideoDriver):
             self._gpu = gpus[self._gpu_index]
 
     def __create_device(self, gipa_addr: int) -> None:
-        negotiation = self._negotiation
+        negotiation = self._negotiation if self._active == HardwareContext.VULKAN else None
         self._core_created_device = False
 
         if negotiation is not None:
@@ -1024,7 +1052,7 @@ class VulkanVideoDriver(VideoDriver):
             self._device,
             vk.VkBufferCreateInfo(
                 size=size,
-                usage=vk.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                usage=vk.VK_BUFFER_USAGE_TRANSFER_DST_BIT | vk.VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 sharingMode=vk.VK_SHARING_MODE_EXCLUSIVE,
             ),
             None,
@@ -1083,6 +1111,179 @@ class VulkanVideoDriver(VideoDriver):
         self._hw_frame = (pixels, width, height, vk_format)
         self._last_frame_hw = True
         self.__consume_frame_state()
+
+    def __ensure_software_image(self, width: int, height: int, vk_format: int) -> None:
+        if self._sw_image_key == (width, height, vk_format):
+            return
+
+        self.__destroy_software_image()
+
+        image_info = vk.VkImageCreateInfo(
+            imageType=vk.VK_IMAGE_TYPE_2D,
+            format=vk_format,
+            extent=vk.VkExtent3D(width, height, 1),
+            mipLevels=1,
+            arrayLayers=1,
+            samples=vk.VK_SAMPLE_COUNT_1_BIT,
+            tiling=vk.VK_IMAGE_TILING_OPTIMAL,
+            usage=vk.VK_IMAGE_USAGE_TRANSFER_DST_BIT | vk.VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+            sharingMode=vk.VK_SHARING_MODE_EXCLUSIVE,
+            initialLayout=vk.VK_IMAGE_LAYOUT_UNDEFINED,
+        )
+        self._sw_image = vk.vkCreateImage(self._device, image_info, None)
+        reqs: Any = vk.vkGetImageMemoryRequirements(self._device, self._sw_image)
+        mem_props: Any = vk.vkGetPhysicalDeviceMemoryProperties(self._gpu)
+        try:
+            type_index = next(
+                i
+                for i in range(mem_props.memoryTypeCount)
+                if (reqs.memoryTypeBits >> i) & 1
+                and mem_props.memoryTypes[i].propertyFlags & vk.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        except StopIteration:
+            raise RuntimeError("No device-local Vulkan memory type available")
+
+        self._sw_image_memory = vk.vkAllocateMemory(
+            self._device,
+            vk.VkMemoryAllocateInfo(allocationSize=reqs.size, memoryTypeIndex=type_index),
+            None,
+        )
+        vk.vkBindImageMemory(self._device, self._sw_image, self._sw_image_memory, 0)
+        self._sw_image_key = (width, height, vk_format)
+
+    def __destroy_software_image(self) -> None:
+        if self._device is None:
+            return
+
+        if self._sw_image is not None:
+            vk.vkDestroyImage(self._device, self._sw_image, None)
+            self._sw_image = None
+
+        if self._sw_image_memory is not None:
+            vk.vkFreeMemory(self._device, self._sw_image_memory, None)
+            self._sw_image_memory = None
+
+        self._sw_image_key = None
+
+    def __refresh_software_vulkan(
+        self, data: memoryview, width: int, height: int, pitch: int
+    ) -> bool:
+        """
+        Upload a software-rendered frame to a :c:type:`VkImage` and read it back
+        through the capture path, like the OpenGL driver's texture upload.
+
+        :return: :obj:`True` if the frame went through Vulkan,
+            :obj:`False` if the pixel format has no direct Vulkan equivalent
+            (the caller falls back to CPU frames).
+        """
+        vk_format = _PIXEL_FORMAT_TO_VK.get(self._software.pixel_format)
+        if vk_format is None:
+            return False
+
+        texel_size = _CAPTURABLE_FORMATS[vk_format]
+        row_bytes = width * texel_size
+
+        self.__ensure_staging_buffer(width, height)
+        assert self._staging_map is not None
+        if pitch == row_bytes:
+            self._staging_map[: height * row_bytes] = bytes(data[: height * row_bytes])
+        else:
+            for y in range(height):
+                row = data[y * pitch : y * pitch + row_bytes]
+                self._staging_map[y * row_bytes : (y + 1) * row_bytes] = bytes(row)
+
+        self.__ensure_software_image(width, height, vk_format)
+        self.__record_software_frame(width, height)
+        self.__submit_capture()
+
+        pixels = bytearray(self._staging_map[: height * row_bytes])
+        self._hw_frame = (pixels, width, height, vk_format)
+        return True
+
+    def __record_software_frame(self, width: int, height: int) -> None:
+        subresource = vk.VkImageSubresourceRange(vk.VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
+        layers = vk.VkImageSubresourceLayers(
+            aspectMask=vk.VK_IMAGE_ASPECT_COLOR_BIT, mipLevel=0, baseArrayLayer=0, layerCount=1
+        )
+        region = vk.VkBufferImageCopy(
+            bufferOffset=0,
+            bufferRowLength=0,
+            bufferImageHeight=0,
+            imageSubresource=layers,
+            imageOffset=vk.VkOffset3D(0, 0, 0),
+            imageExtent=vk.VkExtent3D(width, height, 1),
+        )
+
+        cmd = self._command_buffer
+        vk.vkResetCommandBuffer(cmd, 0)
+        vk.vkBeginCommandBuffer(
+            cmd, vk.VkCommandBufferBeginInfo(flags=vk.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
+        )
+
+        to_dst = vk.VkImageMemoryBarrier(
+            srcAccessMask=0,
+            dstAccessMask=vk.VK_ACCESS_TRANSFER_WRITE_BIT,
+            oldLayout=vk.VK_IMAGE_LAYOUT_UNDEFINED,
+            newLayout=vk.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            srcQueueFamilyIndex=vk.VK_QUEUE_FAMILY_IGNORED,
+            dstQueueFamilyIndex=vk.VK_QUEUE_FAMILY_IGNORED,
+            image=self._sw_image,
+            subresourceRange=subresource,
+        )
+        vk.vkCmdPipelineBarrier(
+            cmd,
+            vk.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            vk.VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0,
+            None,
+            0,
+            None,
+            1,
+            [to_dst],
+        )
+        vk.vkCmdCopyBufferToImage(
+            cmd,
+            self._staging_buffer,
+            self._sw_image,
+            vk.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            [region],
+        )
+        # The image barrier also orders the buffer accesses:
+        # the read-back below only has a write-after-read hazard on the buffer,
+        # which an execution dependency is enough for
+        to_src = vk.VkImageMemoryBarrier(
+            srcAccessMask=vk.VK_ACCESS_TRANSFER_WRITE_BIT,
+            dstAccessMask=vk.VK_ACCESS_TRANSFER_READ_BIT,
+            oldLayout=vk.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            newLayout=vk.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            srcQueueFamilyIndex=vk.VK_QUEUE_FAMILY_IGNORED,
+            dstQueueFamilyIndex=vk.VK_QUEUE_FAMILY_IGNORED,
+            image=self._sw_image,
+            subresourceRange=subresource,
+        )
+        vk.vkCmdPipelineBarrier(
+            cmd,
+            vk.VK_PIPELINE_STAGE_TRANSFER_BIT,
+            vk.VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0,
+            None,
+            0,
+            None,
+            1,
+            [to_src],
+        )
+        vk.vkCmdCopyImageToBuffer(
+            cmd,
+            self._sw_image,
+            vk.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            self._staging_buffer,
+            1,
+            [region],
+        )
+        vk.vkEndCommandBuffer(cmd)
 
     def __record_capture(
         self, image_raw: int, layout: int, base_mip: int, base_layer: int, width: int, height: int
@@ -1339,6 +1540,7 @@ class VulkanVideoDriver(VideoDriver):
                     warn(f"vkDeviceWaitIdle failed during teardown: {e}")
 
             self.__destroy_staging_buffer()
+            self.__destroy_software_image()
 
             if self._fence is not None:
                 vk.vkDestroyFence(self._device, self._fence, None)
