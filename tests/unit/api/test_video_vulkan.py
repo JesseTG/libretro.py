@@ -1,8 +1,10 @@
 # ctypes Structure field descriptors expose .offset at runtime,
 # which pyright can't see through the dataclass-style annotations.
 # pyright: reportUnknownMemberType=false, reportAttributeAccessIssue=false
+# pyright: reportOptionalMemberAccess=false
 
-from ctypes import sizeof
+from copy import deepcopy
+from ctypes import addressof, sizeof
 
 from libretro.api.video import (
     RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
@@ -19,8 +21,7 @@ from libretro.api.video import (
 )
 
 # Reference values computed on a 64-bit platform from the C headers
-# (vulkan_core.h 1.4.341 and libretro_vulkan.h negotiation v2);
-# see docs/superpowers/plans/2026-07-23-vulkan-video-driver.md, Task 1.
+# (vulkan_core.h 1.4.341 and libretro_vulkan.h negotiation v2).
 
 
 def test_version_constants():
@@ -93,3 +94,51 @@ def test_physical_device_features_field_count_and_names():
     assert fields[0][0] == "robustBufferAccess"
     assert fields[-1][0] == "inheritedQueries"
     assert fields[20][0] == "textureCompressionETC2"
+
+
+def test_null_function_pointers_read_as_none():
+    iface = retro_hw_render_interface_vulkan()
+    assert iface.handle is None
+    assert iface.set_image is None
+    assert iface.get_sync_index is None
+    assert iface.set_signal_semaphore is None
+
+    negotiation = retro_hw_render_context_negotiation_interface_vulkan()
+    assert negotiation.get_application_info is None
+    assert negotiation.create_device is None
+    assert negotiation.create_device2 is None
+
+
+def test_null_context_handles_read_as_none():
+    context = retro_vulkan_context()
+    assert context.gpu is None
+    assert context.device is None
+    assert context.queue is None
+    assert context.presentation_queue is None
+
+
+def test_component_mapping_deepcopy():
+    mapping = VkComponentMapping(r=1, g=2, b=3, a=4)
+    copied = deepcopy(mapping)
+    assert copied is not mapping
+    assert addressof(copied) != addressof(mapping)
+    assert (copied.r, copied.g, copied.b, copied.a) == (1, 2, 3, 4)
+
+
+def test_subresource_range_deepcopy():
+    subresource = VkImageSubresourceRange(
+        aspectMask=1, baseMipLevel=2, levelCount=3, baseArrayLayer=4, layerCount=5
+    )
+    copied = deepcopy(subresource)
+    assert addressof(copied) != addressof(subresource)
+    assert copied.aspectMask == 1
+    assert copied.layerCount == 5
+
+
+def test_physical_device_features_deepcopy():
+    features = VkPhysicalDeviceFeatures(robustBufferAccess=1, inheritedQueries=1)
+    copied = deepcopy(features)
+    assert addressof(copied) != addressof(features)
+    assert copied.robustBufferAccess == 1
+    assert copied.inheritedQueries == 1
+    assert copied.geometryShader == 0

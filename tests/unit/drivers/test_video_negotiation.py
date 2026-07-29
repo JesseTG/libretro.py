@@ -70,9 +70,13 @@ def test_composite_accepts_interface_with_multi_driver():
 
 
 def test_negotiation_support_reports_version_for_vulkan_capable_driver():
-    # A driver map claiming Vulkan support is enough for the env call
+    # The version comes from the driver that serves the interface type,
+    # even before the core has requested a Vulkan context
+    pytest.importorskip("vulkan", reason="the libretro.py[vulkan] extra is not installed")
+    from libretro.drivers.video.vulkan import VulkanVideoDriver
+
     driver = MultiVideoDriver(
-        {HardwareContext.NONE: ArrayVideoDriver, HardwareContext.VULKAN: ArrayVideoDriver}
+        {HardwareContext.NONE: ArrayVideoDriver, HardwareContext.VULKAN: VulkanVideoDriver}
     )
     env = _composite(driver)
     query = retro_hw_render_context_negotiation_interface(
@@ -83,6 +87,27 @@ def test_negotiation_support_reports_version_for_vulkan_capable_driver():
 
     assert env._get_hw_render_context_negotiation_interface_support(ptr) is True
     assert query.interface_version == 2
+
+
+def test_negotiation_support_reports_configured_driver_version():
+    pytest.importorskip("vulkan", reason="the libretro.py[vulkan] extra is not installed")
+    from libretro.drivers.video.vulkan import VulkanVideoDriver
+
+    driver = MultiVideoDriver(
+        {
+            HardwareContext.NONE: ArrayVideoDriver,
+            HardwareContext.VULKAN: lambda: VulkanVideoDriver(negotiation_version=1),
+        }
+    )
+    env = _composite(driver)
+    query = retro_hw_render_context_negotiation_interface(
+        interface_type=ContextNegotiationInterfaceType.VULKAN,
+        interface_version=0,
+    )
+    ptr = cast(pointer(query), POINTER(retro_hw_render_context_negotiation_interface))
+
+    assert env._get_hw_render_context_negotiation_interface_support(ptr) is True
+    assert query.interface_version == 1
 
 
 def test_vulkan_driver_registered_when_available():

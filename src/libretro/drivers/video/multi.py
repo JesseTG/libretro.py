@@ -13,6 +13,7 @@ from warnings import warn
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
+    ContextNegotiationInterfaceType,
     HardwareContext,
     MemoryAccess,
     PixelFormat,
@@ -27,6 +28,11 @@ from .driver import FrameBufferSpecial, Screenshot, UnsupportedContextError, Vid
 from .software import ArrayVideoDriver
 
 DriverMap = Mapping[HardwareContext, Callable[[], VideoDriver]]
+
+# The hardware context that serves each negotiation interface type
+_NEGOTIATION_CONTEXTS: dict[ContextNegotiationInterfaceType, HardwareContext] = {
+    ContextNegotiationInterfaceType.VULKAN: HardwareContext.VULKAN,
+}
 
 _default_driver_map: dict[HardwareContext, Callable[[], VideoDriver]] = {
     HardwareContext.NONE: ArrayVideoDriver
@@ -432,6 +438,25 @@ class MultiVideoDriver(VideoDriver):
                 self._current.context_negotiation_interface = interface
             except NotImplementedError:
                 pass  # The active driver doesn't negotiate contexts; that's okay
+
+    @override
+    def context_negotiation_version(
+        self, interface_type: ContextNegotiationInterfaceType
+    ) -> int | None:
+        if self._current is not None:
+            version = self._current.context_negotiation_version(interface_type)
+            if version is not None:
+                return version
+
+        # Cores query negotiation support before requesting their context,
+        # so the driver that would serve this interface type
+        # may not have been instantiated yet; ask a throwaway instance
+        context = _NEGOTIATION_CONTEXTS.get(interface_type)
+        factory = self._drivers.get(context) if context is not None else None
+        if factory is None:
+            return None
+
+        return factory().context_negotiation_version(interface_type)
 
     @property
     @override

@@ -11,6 +11,7 @@ from typing import Protocol, runtime_checkable
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
+    ContextNegotiationInterfaceType,
     HardwareContext,
     MemoryAccess,
     PixelFormat,
@@ -480,6 +481,27 @@ class VideoDriver(Protocol):
     def context_negotiation_interface(
         self, interface: retro_hw_render_context_negotiation_interface | None
     ) -> None: ...
+
+    def context_negotiation_version(
+        self,
+        interface_type: ContextNegotiationInterfaceType,  # noqa: ARG002
+    ) -> int | None:
+        """
+        Return the version of the given context negotiation interface type
+        that this driver exposes to cores,
+        or :obj:`None` if the driver doesn't support that interface type.
+
+        Not abstract; drivers without context negotiation support
+        inherit this default implementation, which always returns :obj:`None`.
+
+        :param interface_type: The negotiation interface type the core asked about.
+
+        .. note::
+
+            Corresponds to
+            ``RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT``.
+        """
+        return None
 
     @property
     @abstractmethod

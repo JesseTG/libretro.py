@@ -10,42 +10,37 @@ into host memory so that :meth:`.VulkanVideoDriver.screenshot` works,
 mirroring the offscreen default of :class:`.ModernGlVideoDriver`.
 """
 
-# The vulkan package is untyped CFFI, so the "unknown type" family of checks
-# reports every use of it; relax those (and only those) for this module.
-# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false
-# pyright: reportUnknownVariableType=false, reportUnknownParameterType=false
-# pyright: reportMissingParameterType=false, reportMissingTypeStubs=false
-
 from __future__ import annotations
 
 import ctypes
 import threading
-from collections.abc import Set
+from collections.abc import Callable, Set
 from contextlib import suppress
 from copy import deepcopy
 from ctypes import (
-    CFUNCTYPE,
     POINTER,
     Structure,
     byref,
     c_char_p,
     c_int,
     c_uint32,
+    c_uint64,
     c_void_p,
 )
+from dataclasses import dataclass
 from typing import Any, final, override
 from warnings import warn
-
-import vulkan as vk
-from vulkan import ffi
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
 from libretro.api.proc import retro_proc_address_t
 from libretro.api.video import (
+    RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
     RETRO_HW_RENDER_INTERFACE_VULKAN_VERSION,
+    ContextNegotiationInterfaceType,
     HardwareContext,
     HardwareRenderInterfaceType,
     MemoryAccess,
+    MemoryType,
     PixelFormat,
     Rotation,
     VkApplicationInfo,
@@ -69,9 +64,10 @@ from libretro.api.video import (
     retro_vulkan_unlock_queue_t,
     retro_vulkan_wait_sync_index_t,
 )
+from libretro.ctypes import CStringArg, TypedFunctionPointer, TypedPointer, c_void_ptr
 
 from ..driver import FrameBufferSpecial, Screenshot, UnsupportedContextError, VideoDriver
-from ..software import ArrayVideoDriver
+from ._typing import CBuffer, CData, ffi, vk
 
 _CONTEXTS = frozenset((HardwareContext.NONE, HardwareContext.VULKAN))
 
@@ -114,7 +110,7 @@ _LOADER_NAMES = ("libvulkan.so.1", "vulkan-1.dll", "libvulkan.dylib", "libvulkan
 _VK_KHR_SURFACE = "VK_KHR_surface"
 _VK_EXT_HEADLESS_SURFACE = "VK_EXT_headless_surface"
 
-_PFN_GetInstanceProcAddr = CFUNCTYPE(c_void_p, c_void_p, c_char_p)
+_PFN_GetInstanceProcAddr = TypedFunctionPointer[c_void_ptr, [c_void_ptr, CStringArg]]
 
 
 def _wanted_instance_extensions(available: set[str]) -> tuple[list[str], int]:
@@ -139,8 +135,18 @@ def _wanted_instance_extensions(available: set[str]) -> tuple[list[str], int]:
     return extensions, flags
 
 
+@dataclass(init=False)
 class _VkInstanceCreateInfo(Structure):
     # Only used to read the create info a core passes to the create_instance wrapper
+    sType: int
+    pNext: int | None
+    flags: int
+    pApplicationInfo: TypedPointer[VkApplicationInfo]
+    enabledLayerCount: int
+    ppEnabledLayerNames: TypedPointer[c_char_p]
+    enabledExtensionCount: int
+    ppEnabledExtensionNames: TypedPointer[c_char_p]
+
     _fields_ = (
         ("sType", c_int),
         ("pNext", c_void_p),
@@ -153,8 +159,20 @@ class _VkInstanceCreateInfo(Structure):
     )
 
 
+@dataclass(init=False)
 class _VkDeviceCreateInfo(Structure):
     # Only used to read the create info a core passes to the create_device wrapper
+    sType: int
+    pNext: int | None
+    flags: int
+    queueCreateInfoCount: int
+    pQueueCreateInfos: int | None
+    enabledLayerCount: int
+    ppEnabledLayerNames: TypedPointer[c_char_p]
+    enabledExtensionCount: int
+    ppEnabledExtensionNames: TypedPointer[c_char_p]
+    pEnabledFeatures: TypedPointer[VkPhysicalDeviceFeatures]
+
     _fields_ = (
         ("sType", c_int),
         ("pNext", c_void_p),
@@ -169,12 +187,23 @@ class _VkDeviceCreateInfo(Structure):
     )
 
 
-def _raw(handle) -> int:
+def _raw(handle: CData | None) -> int:
     """Return the integer value of a CFFI Vulkan handle (0 for None)."""
     if handle is None:
         return 0
 
     return int(ffi.cast("uintptr_t", handle))
+
+
+def _addr(handle: c_void_p | int | None) -> int:
+    """Return the address held by a ctypes pointer object or integer (0 for None)."""
+    match handle:
+        case None:
+            return 0
+        case int():
+            return handle
+        case _:
+            return handle.value or 0
 
 
 # Interface structs whose Python callbacks have been replaced with native stubs;
@@ -237,7 +266,7 @@ def _pack16_lut(vk_format: int) -> list[bytes]:
     def expand6(v: int) -> int:
         return (v << 2) | (v >> 4)
 
-    entries = []
+    entries: list[bytes] = []
     for texel in range(0x10000):
         match vk_format:
             case _ if vk_format == _VK_FORMAT_R5G6B5_UNORM_PACK16:
@@ -346,11 +375,21 @@ class VulkanVideoDriver(VideoDriver):
     and pass it to the driver with ``set_image``;
     the driver copies the visible region into host memory each frame,
     which backs :meth:`~.VulkanVideoDriver.screenshot`.
-    Software-rendered frames are supported as well,
-    with the same semantics as :class:`.ArrayVideoDriver`.
+    Software-rendered frames also go through Vulkan:
+    they're uploaded to a :c:type:`VkImage`
+    and read back through the same capture path.
+    If Vulkan can't be initialized, this driver fails
+    rather than falling back to CPU rendering;
+    wrap it in another :class:`.VideoDriver` if you need fallback behavior.
     """
 
-    def __init__(self, *, sync_indices: int = 2, gpu_index: int = 0):
+    def __init__(
+        self,
+        *,
+        sync_indices: int = 2,
+        gpu_index: int = 0,
+        negotiation_version: int = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
+    ):
         """
         Initialize the driver without creating any Vulkan objects;
         those are created in :meth:`~.VulkanVideoDriver.reinit`.
@@ -359,9 +398,13 @@ class VulkanVideoDriver(VideoDriver):
             reported through ``get_sync_index_mask``.
         :param gpu_index: The index of the physical device to use,
             in the order reported by :c:func:`vkEnumeratePhysicalDevices`.
+        :param negotiation_version: The version of the Vulkan context negotiation
+            interface that this driver exposes and honors.
+            Lower it to test a core against version 1 frontends.
 
         :raises ValueError: If ``sync_indices`` is not between 1 and 32,
-            or if ``gpu_index`` is negative.
+            if ``gpu_index`` is negative,
+            or if ``negotiation_version`` is not a supported version.
         """
         if not (1 <= sync_indices <= 32):
             raise ValueError(f"Expected 1 <= sync_indices <= 32, got {sync_indices}")
@@ -369,10 +412,24 @@ class VulkanVideoDriver(VideoDriver):
         if gpu_index < 0:
             raise ValueError(f"Expected a non-negative gpu_index, got {gpu_index}")
 
+        if not (
+            1
+            <= negotiation_version
+            <= RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION
+        ):
+            raise ValueError(
+                "Expected 1 <= negotiation_version <= "
+                f"{RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION}, "
+                f"got {negotiation_version}"
+            )
+
         self._sync_index_count = sync_indices
         self._gpu_index = gpu_index
+        self._negotiation_version = negotiation_version
 
-        self._software = ArrayVideoDriver()
+        self._pixel_format = PixelFormat.RGB1555
+        self._rotation = Rotation.NONE
+        self._system_av_info: retro_system_av_info | None = None
         self._callback = retro_hw_render_callback(context_type=HardwareContext.NONE)
         self._pending_context_destroy: retro_hw_context_reset_t | None = None
         self._active = HardwareContext.NONE
@@ -383,26 +440,27 @@ class VulkanVideoDriver(VideoDriver):
         self._loader: ctypes.CDLL | None = None
 
         # CFFI handles for the live context (None when no Vulkan context is active)
-        self._instance = None
-        self._gpu = None
-        self._device = None
-        self._queue = None
+        self._instance: CData | None = None
+        self._gpu: CData | None = None
+        self._device: CData | None = None
+        self._queue: CData | None = None
         self._queue_family = 0
         self._surface_raw = 0
         self._core_created_device = False
         self._negotiation_used = False
 
         # Frontend capture resources
-        self._sw_image = None
-        self._sw_image_memory = None
+        self._sw_image: CData | None = None
+        self._sw_image_memory: CData | None = None
         self._sw_image_key: tuple[int, int, int] | None = None
-        self._command_pool = None
-        self._command_buffer = None
-        self._fence = None
-        self._staging_buffer = None
-        self._staging_memory = None
-        self._staging_map = None
+        self._command_pool: CData | None = None
+        self._command_buffer: CData | None = None
+        self._fence: CData | None = None
+        self._staging_buffer: CData | None = None
+        self._staging_memory: CData | None = None
+        self._staging_map: CBuffer | None = None
         self._staging_dims: tuple[int, int] | None = None
+        self._staging_cached = False
 
         # Per-frame state provided by the core through the render interface
         self._sync_index = 0
@@ -412,9 +470,8 @@ class VulkanVideoDriver(VideoDriver):
         self._core_command_buffers: list[int] = []
         self._signal_semaphore: int = 0
 
-        # The most recent captured hardware frame: (pixels, width, height, vk_format)
+        # The most recent captured frame: (pixels, width, height, vk_format)
         self._hw_frame: tuple[bytearray, int, int, int] | None = None
-        self._last_frame_hw = False
         self._warned_no_image = False
         self._warned_format: int | None = None
 
@@ -436,19 +493,13 @@ class VulkanVideoDriver(VideoDriver):
                 self.__refresh_hardware(width, height)
 
             case FrameBufferSpecial.DUPE:
-                if self._last_frame_hw:
+                # Keep the previous frame; a hardware context still needs
+                # its per-frame semaphore and sync index bookkeeping
+                if self._interface is not None:
                     self.__finish_frame()
-                else:
-                    self._software.refresh(data, width, height, pitch)
 
             case memoryview():
-                if self._device is not None and self.__refresh_software_vulkan(
-                    data, width, height, pitch
-                ):
-                    self._last_frame_hw = True
-                else:
-                    self._software.refresh(data, width, height, pitch)
-                    self._last_frame_hw = False
+                self.__refresh_software(data, width, height, pitch)
 
             case _:
                 raise TypeError(
@@ -462,7 +513,7 @@ class VulkanVideoDriver(VideoDriver):
 
     @override
     def reinit(self) -> None:
-        if self._software.system_av_info is None:
+        if self._system_av_info is None:
             raise RuntimeError("Cannot reinitialize video driver without system AV info from core")
 
         if self._interface is not None:
@@ -479,14 +530,12 @@ class VulkanVideoDriver(VideoDriver):
             if self._callback.context_reset:
                 self._callback.context_reset()
         else:
-            try:
-                # Like the OpenGL driver, software-rendered frames still go
-                # through the graphics API: they're uploaded to a VkImage
-                # and read back through the same capture path
-                self.__init_vulkan(hardware=False)
-            except Exception as e:
-                warn(f"Couldn't initialize Vulkan for software rendering, using CPU frames: {e}")
-
+            # Like the OpenGL driver, software-rendered frames still go
+            # through the graphics API: they're uploaded to a VkImage
+            # and read back through the same capture path.
+            # If Vulkan can't be initialized, the error propagates to the core;
+            # this driver exists to test Vulkan and never falls back to CPU frames.
+            self.__init_vulkan(hardware=False)
             self._needs_reinit = False
 
     @property
@@ -536,12 +585,18 @@ class VulkanVideoDriver(VideoDriver):
     @property
     @override
     def rotation(self) -> Rotation:
-        return self._software.rotation
+        return self._rotation
 
     @rotation.setter
     @override
     def rotation(self, rotation: Rotation) -> None:
-        self._software.rotation = rotation
+        if not isinstance(rotation, Rotation):
+            raise TypeError(f"Expected a Rotation, got {type(rotation).__name__}")
+
+        if rotation not in Rotation:
+            raise ValueError(f"Invalid rotation: {rotation}")
+
+        self._rotation = rotation
 
     @property
     @override
@@ -551,39 +606,90 @@ class VulkanVideoDriver(VideoDriver):
     @property
     @override
     def pixel_format(self) -> PixelFormat:
-        return self._software.pixel_format
+        return self._pixel_format
 
     @pixel_format.setter
     @override
     def pixel_format(self, format: PixelFormat) -> None:
-        self._software.pixel_format = format
+        if not isinstance(format, PixelFormat):
+            raise TypeError(f"Expected a PixelFormat, got {type(format).__name__}")
+
+        if format not in PixelFormat:
+            raise ValueError(f"Invalid pixel format: {format}")
+
+        self._pixel_format = format
 
     @property
     @override
     def system_av_info(self) -> retro_system_av_info | None:
-        return self._software.system_av_info
+        return deepcopy(self._system_av_info) if self._system_av_info else None
 
     @system_av_info.setter
     @override
     def system_av_info(self, av_info: retro_system_av_info) -> None:
-        self._software.system_av_info = av_info
+        if not isinstance(av_info, retro_system_av_info):
+            raise TypeError(f"Expected a retro_system_av_info, got {type(av_info).__name__}")
+
+        self._system_av_info = deepcopy(av_info)
         self.reinit()
 
     @property
     @override
     def geometry(self) -> retro_game_geometry | None:
-        return self._software.geometry
+        if not self._system_av_info:
+            return None
+
+        geometry = deepcopy(self._system_av_info.geometry)
+        if self._hw_frame is not None:
+            # Report the size of the Vulkan buffer that holds the latest frame;
+            # hardware-rendered cores may render at a different resolution
+            # than their declared base dimensions
+            _, width, height, _ = self._hw_frame
+            geometry.base_width = width
+            geometry.base_height = height
+
+        return geometry
 
     @geometry.setter
     @override
     def geometry(self, geometry: retro_game_geometry) -> None:
-        self._software.geometry = geometry
+        if not isinstance(geometry, retro_game_geometry):
+            raise TypeError(f"Expected a retro_game_geometry, got {type(geometry).__name__}")
+
+        if not self._system_av_info:
+            raise RuntimeError("Cannot set geometry without system AV info from core")
+
+        self._system_av_info.geometry.base_width = geometry.base_width
+        self._system_av_info.geometry.base_height = geometry.base_height
+        self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio
 
     @override
     def get_software_framebuffer(
         self, width: int, height: int, flags: MemoryAccess
     ) -> retro_framebuffer | None:
-        return self._software.get_software_framebuffer(width, height, flags)
+        if width < 1 or height < 1:
+            raise ValueError(f"Expected a framebuffer of at least 1x1, got {width}x{height}")
+
+        if self._device is None:
+            return None
+
+        vk_format = _PIXEL_FORMAT_TO_VK.get(self._pixel_format)
+        if vk_format is None:
+            return None
+
+        # The staging buffer is host-visible Vulkan memory kept persistently
+        # mapped with vkMapMemory, so the core can render directly into it
+        self.__ensure_staging_buffer(width, height)
+        assert self._staging_map is not None
+        return retro_framebuffer(
+            data=int(ffi.cast("uintptr_t", ffi.from_buffer(self._staging_map))),
+            width=width,
+            height=height,
+            pitch=width * _CAPTURABLE_FORMATS[vk_format],
+            format=self._pixel_format,
+            access_flags=flags,
+            memory_flags=MemoryType.CACHED if self._staging_cached else MemoryType.NONE,
+        )
 
     @override
     def destroy_hw_context(self) -> None:
@@ -638,6 +744,15 @@ class VulkanVideoDriver(VideoDriver):
         assert isinstance(interface, retro_hw_render_context_negotiation_interface_vulkan)
         self._negotiation = interface
 
+    @override
+    def context_negotiation_version(
+        self, interface_type: ContextNegotiationInterfaceType
+    ) -> int | None:
+        if interface_type != ContextNegotiationInterfaceType.VULKAN:
+            return None
+
+        return self._negotiation_version
+
     @property
     @override
     def shared_context(self) -> bool:
@@ -655,9 +770,6 @@ class VulkanVideoDriver(VideoDriver):
 
     @override
     def screenshot(self, prerotate: bool = True) -> Screenshot | None:
-        if not self._last_frame_hw:
-            return self._software.screenshot(prerotate)
-
         if self._hw_frame is None:
             return None
 
@@ -665,17 +777,22 @@ class VulkanVideoDriver(VideoDriver):
         rgba = _to_rgba32(pixels, vk_format)
         rgba[3::4] = b"\xff" * (width * height)  # Screenshots are opaque
 
-        rotation = self._software.rotation
-        rot = rotation if prerotate else Rotation.NONE
+        rot = self._rotation if prerotate else Rotation.NONE
         rgba, out_width, out_height = _rotate_rgba32(rgba, width, height, rot)
 
         return Screenshot(
             memoryview(rgba),
             out_width,
             out_height,
-            rotation,
-            self._software.pixel_format,
+            self._rotation,
+            self._pixel_format,
         )
+
+    def __negotiation_interface_version(
+        self, negotiation: retro_hw_render_context_negotiation_interface_vulkan
+    ) -> int:
+        """Return the negotiation version in effect: the lower of the core's and this driver's."""
+        return min(int(negotiation.interface_version), self._negotiation_version)
 
     def __init_vulkan(self, *, hardware: bool) -> None:
         self._loader = _load_loader()
@@ -700,7 +817,9 @@ class VulkanVideoDriver(VideoDriver):
         """
         self._surface_raw = 0
         try:
-            create: Any = vk.vkGetInstanceProcAddr(self._instance, "vkCreateHeadlessSurfaceEXT")
+            create: Callable[..., Any] | None = vk.vkGetInstanceProcAddr(
+                self._instance, "vkCreateHeadlessSurfaceEXT"
+            )
         except Exception:
             return
 
@@ -721,6 +840,7 @@ class VulkanVideoDriver(VideoDriver):
 
         try:
             destroy = vk.vkGetInstanceProcAddr(self._instance, "vkDestroySurfaceKHR")
+            assert destroy is not None
             destroy(self._instance, ffi.cast("VkSurfaceKHR", self._surface_raw), None)
         except Exception as e:
             warn(f"Couldn't destroy the headless surface: {e}")
@@ -745,7 +865,7 @@ class VulkanVideoDriver(VideoDriver):
         if negotiation is not None and negotiation.get_application_info:
             app_info_ptr = negotiation.get_application_info()
             if app_info_ptr:
-                app_info = app_info_ptr[0]
+                app_info = ctypes.cast(app_info_ptr, POINTER(VkApplicationInfo))[0]
                 app_name = app_info.pApplicationName or app_name
                 engine_name = app_info.pEngineName or engine_name
                 api_version = max(api_version, app_info.apiVersion)
@@ -757,7 +877,7 @@ class VulkanVideoDriver(VideoDriver):
 
         if (
             negotiation is not None
-            and negotiation.interface_version >= 2
+            and self.__negotiation_interface_version(negotiation) >= 2
             and negotiation.create_instance
         ):
             instance_raw = self.__negotiate_instance(negotiation, gipa_addr, api_version)
@@ -794,7 +914,9 @@ class VulkanVideoDriver(VideoDriver):
             str(ext.extensionName) for ext in vk.vkEnumerateInstanceExtensionProperties(None)
         }
 
-        def _create_instance_wrapper(_opaque: int | None, create_info_ptr: int | None) -> int:
+        def _create_instance_wrapper(
+            _opaque: c_void_ptr | None, create_info_ptr: c_void_ptr | None
+        ) -> int:
             try:
                 if not create_info_ptr:
                     return 0
@@ -837,9 +959,17 @@ class VulkanVideoDriver(VideoDriver):
             pEngineName=b"libretro.py",
             apiVersion=api_version,
         )
-        return negotiation.create_instance(gipa_addr, byref(app_info_ctypes), wrapper, None) or 0
+        assert negotiation.create_instance is not None
+        instance = negotiation.create_instance(
+            c_void_ptr(gipa_addr),
+            ctypes.cast(ctypes.pointer(app_info_ctypes), TypedPointer[VkApplicationInfo]),
+            wrapper,
+            c_void_ptr(),
+        )
+        return _addr(instance)
 
     def __select_gpu(self) -> None:
+        assert self._instance is not None
         gpus = vk.vkEnumeratePhysicalDevices(self._instance)
         if not gpus:
             raise RuntimeError("No Vulkan physical devices found")
@@ -858,7 +988,10 @@ class VulkanVideoDriver(VideoDriver):
         self._core_created_device = False
 
         if negotiation is not None:
-            if negotiation.interface_version >= 2 and negotiation.create_device2:
+            if (
+                self.__negotiation_interface_version(negotiation) >= 2
+                and negotiation.create_device2
+            ):
                 if self.__negotiate_device2(negotiation, gipa_addr):
                     return
                 warn("The core's create_device2 failed; falling back")
@@ -874,11 +1007,11 @@ class VulkanVideoDriver(VideoDriver):
         if not context.device or not context.queue:
             return False
 
-        self._device = ffi.cast("VkDevice", context.device)
-        self._queue = ffi.cast("VkQueue", context.queue)
+        self._device = ffi.cast("VkDevice", _addr(context.device))
+        self._queue = ffi.cast("VkQueue", _addr(context.queue))
         self._queue_family = context.queue_family_index
         if context.gpu:
-            self._gpu = ffi.cast("VkPhysicalDevice", context.gpu)
+            self._gpu = ffi.cast("VkPhysicalDevice", _addr(context.gpu))
 
         self._core_created_device = True
         return True
@@ -892,17 +1025,18 @@ class VulkanVideoDriver(VideoDriver):
         context = retro_vulkan_context()
         features = VkPhysicalDeviceFeatures()  # The frontend itself requires no features
 
+        assert negotiation.create_device is not None
         ok = negotiation.create_device(
-            byref(context),
-            _raw(self._instance),
-            _raw(self._gpu),
+            ctypes.cast(ctypes.pointer(context), TypedPointer[retro_vulkan_context]),
+            c_void_ptr(_raw(self._instance)),
+            c_void_ptr(_raw(self._gpu)),
             self._surface_raw,  # A headless surface (or 0 if unavailable)
-            gipa_addr,
-            None,
+            c_void_ptr(gipa_addr),
+            TypedPointer[c_char_p](),
             0,
-            None,
+            TypedPointer[c_char_p](),
             0,
-            byref(features),
+            ctypes.cast(ctypes.pointer(features), TypedPointer[VkPhysicalDeviceFeatures]),
         )
         if not ok:
             return False
@@ -916,12 +1050,15 @@ class VulkanVideoDriver(VideoDriver):
     ) -> bool:
         self._negotiation_used = True
 
+        assert self._gpu is not None
         device_extensions = {
             ext.extensionName for ext in vk.vkEnumerateDeviceExtensionProperties(self._gpu, None)
         }
 
         def _create_device_wrapper(
-            gpu_raw: int | None, _opaque: int | None, create_info_ptr: int | None
+            gpu_raw: c_void_ptr | None,
+            _opaque: c_void_ptr | None,
+            create_info_ptr: c_void_ptr | None,
         ) -> int:
             try:
                 if not create_info_ptr:
@@ -957,7 +1094,7 @@ class VulkanVideoDriver(VideoDriver):
                         ctypes.addressof(info.pEnabledFeatures[0]) if info.pEnabledFeatures else 0,
                     ),
                 )
-                gpu = ffi.cast("VkPhysicalDevice", gpu_raw or 0)
+                gpu = ffi.cast("VkPhysicalDevice", _addr(gpu_raw))
                 return _raw(vk.vkCreateDevice(gpu, create_info, None))
             except Exception as e:
                 warn(f"vkCreateDevice failed in the create_device wrapper: {e}")
@@ -965,27 +1102,28 @@ class VulkanVideoDriver(VideoDriver):
 
         wrapper = retro_vulkan_create_device_wrapper_t(_create_device_wrapper)
 
+        assert negotiation.create_device2 is not None
         context = retro_vulkan_context()
         ok = negotiation.create_device2(
-            byref(context),
-            _raw(self._instance),
-            _raw(self._gpu),
+            ctypes.cast(ctypes.pointer(context), TypedPointer[retro_vulkan_context]),
+            c_void_ptr(_raw(self._instance)),
+            c_void_ptr(_raw(self._gpu)),
             self._surface_raw,  # A headless surface (or 0 if unavailable)
-            gipa_addr,
+            c_void_ptr(gipa_addr),
             wrapper,
-            None,
+            c_void_ptr(),
         )
         if not ok:
             # Retry allowing the core to pick the physical device itself
             context = retro_vulkan_context()
             ok = negotiation.create_device2(
-                byref(context),
-                _raw(self._instance),
-                0,
+                ctypes.cast(ctypes.pointer(context), TypedPointer[retro_vulkan_context]),
+                c_void_ptr(_raw(self._instance)),
+                c_void_ptr(),
                 self._surface_raw,
-                gipa_addr,
+                c_void_ptr(gipa_addr),
                 wrapper,
-                None,
+                c_void_ptr(),
             )
 
         if not ok:
@@ -994,6 +1132,7 @@ class VulkanVideoDriver(VideoDriver):
         return self.__adopt_context(context)
 
     def __create_device_default(self) -> None:
+        assert self._gpu is not None
         families = vk.vkGetPhysicalDeviceQueueFamilyProperties(self._gpu)
         wanted = vk.VK_QUEUE_GRAPHICS_BIT | vk.VK_QUEUE_COMPUTE_BIT
         try:
@@ -1023,6 +1162,7 @@ class VulkanVideoDriver(VideoDriver):
         self._queue_family = family
 
     def __create_capture_resources(self) -> None:
+        assert self._device is not None
         self._command_pool = vk.vkCreateCommandPool(
             self._device,
             vk.VkCommandPoolCreateInfo(
@@ -1046,6 +1186,8 @@ class VulkanVideoDriver(VideoDriver):
             return
 
         self.__destroy_staging_buffer()
+        assert self._device is not None
+        assert self._gpu is not None
 
         size = width * height * 4
         self._staging_buffer = vk.vkCreateBuffer(
@@ -1078,6 +1220,9 @@ class VulkanVideoDriver(VideoDriver):
         vk.vkBindBufferMemory(self._device, self._staging_buffer, self._staging_memory, 0)
         self._staging_map = vk.vkMapMemory(self._device, self._staging_memory, 0, size, 0)
         self._staging_dims = (width, height)
+        self._staging_cached = bool(
+            mem_props.memoryTypes[type_index].propertyFlags & vk.VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+        )
 
     def __refresh_hardware(self, width: int, height: int) -> None:
         if self._interface is None:
@@ -1109,7 +1254,6 @@ class VulkanVideoDriver(VideoDriver):
         # frame's (possibly smaller) texel size actually filled
         pixels = bytearray(self._staging_map[: width * height * _CAPTURABLE_FORMATS[vk_format]])
         self._hw_frame = (pixels, width, height, vk_format)
-        self._last_frame_hw = True
         self.__consume_frame_state()
 
     def __ensure_software_image(self, width: int, height: int, vk_format: int) -> None:
@@ -1117,6 +1261,8 @@ class VulkanVideoDriver(VideoDriver):
             return
 
         self.__destroy_software_image()
+        assert self._device is not None
+        assert self._gpu is not None
 
         image_info = vk.VkImageCreateInfo(
             imageType=vk.VK_IMAGE_TYPE_2D,
@@ -1165,20 +1311,17 @@ class VulkanVideoDriver(VideoDriver):
 
         self._sw_image_key = None
 
-    def __refresh_software_vulkan(
-        self, data: memoryview, width: int, height: int, pitch: int
-    ) -> bool:
+    def __refresh_software(self, data: memoryview, width: int, height: int, pitch: int) -> None:
         """
         Upload a software-rendered frame to a :c:type:`VkImage` and read it back
         through the capture path, like the OpenGL driver's texture upload.
-
-        :return: :obj:`True` if the frame went through Vulkan,
-            :obj:`False` if the pixel format has no direct Vulkan equivalent
-            (the caller falls back to CPU frames).
         """
-        vk_format = _PIXEL_FORMAT_TO_VK.get(self._software.pixel_format)
+        if self._device is None:
+            raise RuntimeError("Vulkan is not initialized; can't upload a software-rendered frame")
+
+        vk_format = _PIXEL_FORMAT_TO_VK.get(self._pixel_format)
         if vk_format is None:
-            return False
+            raise RuntimeError(f"{self._pixel_format} has no Vulkan format equivalent")
 
         texel_size = _CAPTURABLE_FORMATS[vk_format]
         row_bytes = width * texel_size
@@ -1198,9 +1341,11 @@ class VulkanVideoDriver(VideoDriver):
 
         pixels = bytearray(self._staging_map[: height * row_bytes])
         self._hw_frame = (pixels, width, height, vk_format)
-        return True
 
     def __record_software_frame(self, width: int, height: int) -> None:
+        assert self._command_buffer is not None
+        assert self._staging_buffer is not None
+        assert self._sw_image is not None
         subresource = vk.VkImageSubresourceRange(vk.VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
         layers = vk.VkImageSubresourceLayers(
             aspectMask=vk.VK_IMAGE_ASPECT_COLOR_BIT, mipLevel=0, baseArrayLayer=0, layerCount=1
@@ -1288,6 +1433,8 @@ class VulkanVideoDriver(VideoDriver):
     def __record_capture(
         self, image_raw: int, layout: int, base_mip: int, base_layer: int, width: int, height: int
     ) -> None:
+        assert self._command_buffer is not None
+        assert self._staging_buffer is not None
         image = ffi.cast("VkImage", image_raw)
         subresource = vk.VkImageSubresourceRange(
             vk.VK_IMAGE_ASPECT_COLOR_BIT, base_mip, 1, base_layer, 1
@@ -1384,6 +1531,9 @@ class VulkanVideoDriver(VideoDriver):
         # Semaphores from set_image are ignored when the core used set_command_buffers
         wait_semaphores = self._hw_semaphores if not self._core_command_buffers else []
         assert self._command_buffer is not None
+        assert self._device is not None
+        assert self._queue is not None
+        assert self._fence is not None
         command_buffers = [ffi.cast("VkCommandBuffer", raw) for raw in self._core_command_buffers]
         command_buffers.append(self._command_buffer)
         signal_semaphores = (
@@ -1408,6 +1558,8 @@ class VulkanVideoDriver(VideoDriver):
     def __finish_frame(self) -> None:
         """Handle per-frame bookkeeping for frames that don't capture anything."""
         if self._signal_semaphore and self._device is not None:
+            assert self._queue is not None
+            assert self._fence is not None
             # The signal semaphore must be signalled even for duped or skipped frames
             submit = vk.VkSubmitInfo(
                 signalSemaphoreCount=1,
@@ -1429,11 +1581,19 @@ class VulkanVideoDriver(VideoDriver):
 
     def __build_interface(self, gipa_addr: int) -> None:
         get_instance_proc_addr = _PFN_GetInstanceProcAddr(gipa_addr)
-        gdpa_addr = get_instance_proc_addr(_raw(self._instance), b"vkGetDeviceProcAddr")
+        gdpa_addr = get_instance_proc_addr(
+            c_void_ptr(_raw(self._instance)), b"vkGetDeviceProcAddr"
+        )
         if not gdpa_addr:
             raise RuntimeError("vkGetInstanceProcAddr couldn't resolve vkGetDeviceProcAddr")
 
-        def _set_image(_handle, image_ptr, num_semaphores, semaphores, src_queue_family) -> None:
+        def _set_image(
+            _handle: c_void_ptr | None,
+            image_ptr: TypedPointer[retro_vulkan_image] | None,
+            num_semaphores: int,
+            semaphores: TypedPointer[c_uint64] | None,
+            src_queue_family: int,
+        ) -> None:
             if not image_ptr:
                 self._hw_image = None
                 return
@@ -1454,31 +1614,33 @@ class VulkanVideoDriver(VideoDriver):
 
             self._hw_src_queue_family = src_queue_family
 
-        def _get_sync_index(_handle) -> int:
+        def _get_sync_index(_handle: c_void_ptr | None) -> int:
             return self._sync_index
 
-        def _get_sync_index_mask(_handle) -> int:
+        def _get_sync_index_mask(_handle: c_void_ptr | None) -> int:
             return (1 << self._sync_index_count) - 1
 
-        def _set_command_buffers(_handle, num_cmd, cmd) -> None:
+        def _set_command_buffers(_handle: c_void_ptr | None, num_cmd: int, cmd: Any) -> None:
+            # cmd is a POINTER(VkCommandBuffer): an array of void pointers
             if num_cmd and cmd:
-                self._core_command_buffers = [cmd[i] for i in range(num_cmd)]
+                self._core_command_buffers = [_addr(cmd[i]) for i in range(num_cmd)]
             else:
                 self._core_command_buffers = []
 
-        def _wait_sync_index(_handle) -> None:
+        def _wait_sync_index(_handle: c_void_ptr | None) -> None:
             # This driver submits synchronously (each frame waits on a fence),
             # so waiting on the queue covers everything for the current sync index.
             with self._queue_lock:
+                assert self._queue is not None
                 vk.vkQueueWaitIdle(self._queue)
 
-        def _lock_queue(_handle) -> None:
+        def _lock_queue(_handle: c_void_ptr | None) -> None:
             self._queue_lock.acquire()
 
-        def _unlock_queue(_handle) -> None:
+        def _unlock_queue(_handle: c_void_ptr | None) -> None:
             self._queue_lock.release()
 
-        def _set_signal_semaphore(_handle, semaphore) -> None:
+        def _set_signal_semaphore(_handle: c_void_ptr | None, semaphore: int) -> None:
             self._signal_semaphore = semaphore
 
         refs = (
@@ -1518,6 +1680,7 @@ class VulkanVideoDriver(VideoDriver):
             return
 
         if self._staging_map is not None:
+            assert self._staging_memory is not None
             vk.vkUnmapMemory(self._device, self._staging_memory)
             self._staging_map = None
 
@@ -1530,6 +1693,7 @@ class VulkanVideoDriver(VideoDriver):
             self._staging_memory = None
 
         self._staging_dims = None
+        self._staging_cached = False
 
     def __destroy_vulkan(self) -> None:
         if self._device is not None:
@@ -1582,7 +1746,6 @@ class VulkanVideoDriver(VideoDriver):
         self._core_command_buffers = []
         self._signal_semaphore = 0
         self._sync_index = 0
-        self._last_frame_hw = False
         self._core_created_device = False
 
 

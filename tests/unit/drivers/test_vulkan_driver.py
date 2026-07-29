@@ -1,9 +1,13 @@
 # The vulkan package is untyped CFFI; see the note in the driver module.
-# These tests also assert on the driver's private frame-path state.
+# These tests also assert on the driver's private frame-path state,
+# and call the render interface's function pointers the way a C core would
+# (passing NULL handles and byref pointers that the declared types don't admit).
 # pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportPrivateUsage=false
 # pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false
+# pyright: reportArgumentType=false, reportCallIssue=false
+# pyright: reportOptionalCall=false, reportOptionalMemberAccess=false
 
-from ctypes import byref
+from ctypes import byref, c_ubyte
 
 import pytest
 
@@ -17,13 +21,20 @@ from libretro.api.av import (  # noqa: E402
     retro_system_timing,
 )
 from libretro.api.video import (  # noqa: E402
+    ContextNegotiationInterfaceType,
     HardwareContext,
+    MemoryAccess,
     PixelFormat,
+    Rotation,
     VkImageSubresourceRange,
     VkImageViewCreateInfo,
     retro_hw_context_reset_t,
     retro_hw_render_callback,
+    retro_hw_render_context_negotiation_interface_vulkan,
     retro_hw_render_interface_vulkan,
+    retro_vulkan_create_device2_t,
+    retro_vulkan_create_device_t,
+    retro_vulkan_create_instance_t,
     retro_vulkan_image,
 )
 from libretro.drivers.video import FrameBufferSpecial, UnsupportedContextError  # noqa: E402
@@ -84,7 +95,7 @@ def test_software_frame_screenshot():
     driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 4)
 
     # Software frames go through a VkImage, like the GL driver's texture upload
-    assert driver._last_frame_hw
+    assert driver._hw_frame is not None
 
     shot = driver.screenshot()
     assert shot is not None
@@ -103,7 +114,7 @@ def test_software_frame_with_padded_pitch():
         frame[y * pitch : y * pitch + WIDTH * 4] = b"\x00\xff\x00\x00" * WIDTH  # Green
     driver.refresh(memoryview(frame), WIDTH, HEIGHT, pitch)
 
-    assert driver._last_frame_hw
+    assert driver._hw_frame is not None
     shot = driver.screenshot()
     assert shot is not None
     assert bytes(shot.data[:4]) == b"\x00\xff\x00\xff"
@@ -120,7 +131,7 @@ def test_software_frame_rgb565():
     frame = bytearray(b"\x1f\x00" * (WIDTH * HEIGHT))
     driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 2)
 
-    assert driver._last_frame_hw
+    assert driver._hw_frame is not None
     shot = driver.screenshot()
     assert shot is not None
     assert bytes(shot.data[:4]) == b"\x00\x00\xff\xff"
@@ -165,9 +176,10 @@ class _FakeCoreImage:
     """Stands in for a core's Vulkan renderer: clears an image to a color."""
 
     def __init__(self, iface: retro_hw_render_interface_vulkan):
-        self.device = ffi.cast("VkDevice", iface.device)
-        self.gpu = ffi.cast("VkPhysicalDevice", iface.gpu)
-        self.queue = ffi.cast("VkQueue", iface.queue)
+        # Interface handles are c_void_ptr instances; CFFI needs their raw addresses
+        self.device = ffi.cast("VkDevice", iface.device.value)
+        self.gpu = ffi.cast("VkPhysicalDevice", iface.gpu.value)
+        self.queue = ffi.cast("VkQueue", iface.queue.value)
         self.queue_index = iface.queue_index
         self.iface = iface
 
@@ -366,3 +378,153 @@ def test_context_destroy_called_on_teardown():
     driver.set_context(retro_hw_render_callback(context_type=HardwareContext.NONE))
     driver.reinit()
     assert driver.hw_render_interface is None
+
+
+def test_software_dupe_keeps_frame():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.system_av_info = _av_info()
+
+    frame = bytearray(b"\x00\x00\xff\x00" * (WIDTH * HEIGHT))  # Red
+    driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 4)
+    driver.refresh(FrameBufferSpecial.DUPE, WIDTH, HEIGHT, 0)
+
+    shot = driver.screenshot()
+    assert shot is not None
+    assert bytes(shot.data[:4]) == b"\xff\x00\x00\xff"
+
+
+def test_rotation_applies_to_vulkan_frames():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.system_av_info = _av_info()
+    driver.rotation = Rotation.NINETY
+
+    frame = bytearray(b"\x00\x00\xff\x00" * (WIDTH * HEIGHT))
+    driver.refresh(memoryview(frame), WIDTH, HEIGHT, WIDTH * 4)
+
+    shot = driver.screenshot()
+    assert shot is not None
+    assert (shot.width, shot.height) == (HEIGHT, WIDTH)
+    assert shot.rotation == Rotation.NINETY
+
+
+def test_reinit_fails_without_vulkan(monkeypatch: pytest.MonkeyPatch):
+    import libretro.drivers.video.vulkan.driver as driver_module
+
+    def _no_loader():
+        raise RuntimeError("No Vulkan loader for this test")
+
+    monkeypatch.setattr(driver_module, "_load_loader", _no_loader)
+
+    driver = VulkanVideoDriver()
+    with pytest.raises(RuntimeError):
+        driver.system_av_info = _av_info()
+
+
+def test_geometry_reports_rendered_frame_size():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.system_av_info = _av_info()
+
+    geometry = driver.geometry
+    assert geometry is not None
+    assert (geometry.base_width, geometry.base_height) == (WIDTH, HEIGHT)
+
+    half_w, half_h = WIDTH // 2, HEIGHT // 2
+    frame = bytearray(b"\x00\x00\xff\x00" * (half_w * half_h))
+    driver.refresh(memoryview(frame), half_w, half_h, half_w * 4)
+
+    geometry = driver.geometry
+    assert geometry is not None
+    assert (geometry.base_width, geometry.base_height) == (half_w, half_h)
+
+
+def test_get_software_framebuffer_maps_vulkan_memory():
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.system_av_info = _av_info()
+
+    fb = driver.get_software_framebuffer(WIDTH, HEIGHT, MemoryAccess.WRITE | MemoryAccess.READ)
+    assert fb is not None
+    assert fb.data is not None
+    assert fb.format == PixelFormat.XRGB8888
+    assert fb.pitch == WIDTH * 4
+
+    # Render into the mapped Vulkan memory like a core would,
+    # then present it through the ordinary refresh path
+    buf = (c_ubyte * (HEIGHT * fb.pitch)).from_address(fb.data.value)
+    view = memoryview(buf).cast("B")
+    view[:] = b"\x00\xff\x00\x00" * (WIDTH * HEIGHT)  # Green
+    driver.refresh(view, WIDTH, HEIGHT, fb.pitch)
+
+    shot = driver.screenshot()
+    assert shot is not None
+    assert bytes(shot.data[:4]) == b"\x00\xff\x00\xff"
+
+
+def test_negotiation_version_delegated_to_driver():
+    assert (
+        VulkanVideoDriver().context_negotiation_version(ContextNegotiationInterfaceType.VULKAN)
+        == 2
+    )
+
+    driver = VulkanVideoDriver(negotiation_version=1)
+    assert driver.context_negotiation_version(ContextNegotiationInterfaceType.VULKAN) == 1
+
+    with pytest.raises(ValueError):
+        VulkanVideoDriver(negotiation_version=0)
+
+    with pytest.raises(ValueError):
+        VulkanVideoDriver(negotiation_version=3)
+
+
+def _negotiation_recorder(
+    calls: list[str],
+) -> retro_hw_render_context_negotiation_interface_vulkan:
+    """A fake core-side negotiation interface that records calls and always fails."""
+
+    def _create_device(*_args: object) -> bool:
+        calls.append("create_device")
+        return False
+
+    def _create_device2(*_args: object) -> bool:
+        calls.append("create_device2")
+        return False
+
+    def _create_instance(*_args: object) -> int:
+        calls.append("create_instance")
+        return 0
+
+    return retro_hw_render_context_negotiation_interface_vulkan(
+        interface_type=ContextNegotiationInterfaceType.VULKAN,
+        interface_version=2,
+        create_device=retro_vulkan_create_device_t(_create_device),
+        create_instance=retro_vulkan_create_instance_t(_create_instance),
+        create_device2=retro_vulkan_create_device2_t(_create_device2),
+    )
+
+
+def test_v2_negotiation_uses_v2_callbacks():
+    calls: list[str] = []
+    driver = VulkanVideoDriver()
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.set_context(_vulkan_callback())
+    driver.context_negotiation_interface = _negotiation_recorder(calls)
+    driver.system_av_info = _av_info()
+
+    assert "create_instance" in calls
+    assert "create_device2" in calls
+
+
+def test_v1_frontend_skips_v2_negotiation_callbacks():
+    calls: list[str] = []
+    driver = VulkanVideoDriver(negotiation_version=1)
+    driver.pixel_format = PixelFormat.XRGB8888
+    driver.set_context(_vulkan_callback())
+    driver.context_negotiation_interface = _negotiation_recorder(calls)
+    driver.system_av_info = _av_info()
+
+    assert "create_device" in calls
+    assert "create_instance" not in calls
+    assert "create_device2" not in calls

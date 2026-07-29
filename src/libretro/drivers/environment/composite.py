@@ -2074,16 +2074,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
                 "doesn't accept NULL"
             )
 
-        if (
-            support[0].interface_type == ContextNegotiationInterfaceType.VULKAN
-            and HardwareContext.VULKAN in self._video.supported_contexts
-        ):
-            support[
-                0
-            ].interface_version = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION
-            return True
+        try:
+            interface_type = ContextNegotiationInterfaceType(support[0].interface_type)
+        except ValueError:
+            return False
 
-        return False
+        version = self._video.context_negotiation_version(interface_type)
+        if version is None:
+            return False
+
+        support[0].interface_version = version
+        return True
 
     @property
     def jit_capable(self) -> bool | None:

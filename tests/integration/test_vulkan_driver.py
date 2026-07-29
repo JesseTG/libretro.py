@@ -32,7 +32,7 @@ def test_software_core_through_vulkan_driver(load_core: SampleCoreLoader) -> Non
             session.run()
 
         # The frame must have gone through the Vulkan upload path
-        assert driver._last_frame_hw  # noqa: SLF001
+        assert driver._hw_frame is not None  # noqa: SLF001
 
         shot = session.video.screenshot()
         assert shot is not None

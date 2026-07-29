@@ -25,11 +25,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `VulkanVideoDriver` uploads software-rendered frames to a `VkImage`
   and reads them back through its capture path,
   mirroring the OpenGL driver's texture upload;
-  it falls back to CPU-side frames when Vulkan is unavailable
-  or the pixel format has no direct Vulkan equivalent.
+  if Vulkan is unavailable, initialization fails
+  rather than silently falling back to CPU-side frames,
+  since the driver exists to test cores' Vulkan support.
+- `VulkanVideoDriver` implements `RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER`
+  by handing the core a pointer to persistently-mapped host-visible Vulkan memory.
 - Implemented `RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE`
   and `RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`,
   and added a `context_negotiation_interface` property to `VideoDriver`.
+- Added `VideoDriver.context_negotiation_version`,
+  which lets each driver report the negotiation interface version it supports;
+  `VulkanVideoDriver` accepts a `negotiation_version` argument
+  so cores can be tested against the version 1 negotiation interface.
 
 ### Fixed
 
