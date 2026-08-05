@@ -8,10 +8,11 @@ Names exposed by this subpackage:
 * ``gl_fixedfunction`` — legacy OpenGL 1.x fixed-function pipeline.
 * ``gl_shaders`` — OpenGL 2.x core profile with vertex/fragment shaders.
 * ``gl_compute_shaders`` — OpenGL 4.3 compute shader demo (C++).
+* ``vulkan_rendering`` — Vulkan triangle demo using the HW render interface.
 
-OpenGL-backed cores are only present on platforms where the build environment
-included OpenGL headers; on systems without them the core build is skipped
-and lookup raises :class:`ImportError`.
+OpenGL- and Vulkan-backed cores are only present on platforms where the build
+environment included the matching graphics headers; on systems without them
+the core build is skipped and lookup raises :class:`ImportError`.
 
 .. seealso::
 
@@ -27,6 +28,7 @@ _NAMES = (
     "gl_fixedfunction",
     "gl_shaders",
     #    "gl_compute_shaders",
+    "vulkan_rendering",
 )
 
 

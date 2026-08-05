@@ -12,6 +12,7 @@ from collections.abc import Set
 from typing import Literal, final, override
 
 from libretro.api.video.context import HardwareContext, retro_hw_render_callback
+from libretro.api.video.negotiate import retro_hw_render_context_negotiation_interface
 from libretro.api.video.render import retro_hw_render_interface
 
 from ..driver import UnsupportedContextError, VideoDriver
@@ -61,6 +62,11 @@ class SoftwareVideoDriver(VideoDriver, ABC):
                 "Software-rendered drivers only support HardwareContext.NONE"
             )
 
+    @override
+    @final
+    def destroy_hw_context(self) -> None:
+        """No-op: software-rendered drivers have no hardware context to destroy."""
+
     @property
     @override
     @final
@@ -85,6 +91,25 @@ class SoftwareVideoDriver(VideoDriver, ABC):
     @final
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         return None
+
+    @property
+    @override
+    @final
+    def context_negotiation_interface(
+        self,
+    ) -> retro_hw_render_context_negotiation_interface | None:
+        return None
+
+    @context_negotiation_interface.setter
+    @override
+    @final
+    def context_negotiation_interface(
+        self, interface: retro_hw_render_context_negotiation_interface | None
+    ) -> None:
+        # Software-rendered drivers don't create a hardware context to negotiate over
+        raise NotImplementedError(
+            "Context negotiation is not supported by software-rendered drivers"
+        )
 
     @property
     @override

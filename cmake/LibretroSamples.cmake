@@ -169,3 +169,27 @@ else()
             "skipping GL sample cores.")
     endif()
 endif()
+
+# --- video/vulkan/ --------------------------------------------------------
+#
+# The Vulkan core resolves every entry point at runtime through
+# ``get_instance_proc_addr`` (via the upstream ``vulkan_symbol_wrapper``),
+# so only the Vulkan *headers* are needed at build time — no loader library
+# is linked. Skip the core when the headers aren't installed.
+find_package(Vulkan QUIET)
+
+if(Vulkan_INCLUDE_DIRS)
+    add_sample_core(
+        NAME vulkan_rendering
+        CATEGORY video
+        SOURCES
+            "${_lrs_src}/video/vulkan/vk_rendering/libretro-test.c"
+            "${_lrs_src}/video/vulkan/vk_rendering/vulkan_symbol_wrapper.c"
+        INCLUDES
+            "${_lrs_src}/video/vulkan/vk_rendering"
+            ${Vulkan_INCLUDE_DIRS}
+        COMPILE_DEFINITIONS ${_lrs_common_defs} VK_NO_PROTOTYPES
+    )
+else()
+    message(STATUS "libretro.py: Vulkan headers not found; skipping the Vulkan sample core.")
+endif()

@@ -54,6 +54,12 @@ function(add_sample_core)
         OUTPUT_NAME "${SC_NAME}_libretro"
     )
 
+    if(APPLE)
+        # MODULE libraries default to ".so" on macOS,
+        # but frontends (and libretro.samples._loader) expect ".dylib"
+        set_target_properties(${SC_NAME} PROPERTIES SUFFIX ".dylib")
+    endif()
+
     if(WIN32)
         # libretro.h declares the public entry points with __declspec(dllexport),
         # so explicit per-symbol exports already cover the API. Setting this
