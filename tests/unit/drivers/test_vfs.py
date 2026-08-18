@@ -109,7 +109,8 @@ def test_dir_handles_dont_accumulate(
     assert closedir
 
     for _ in range(3):
-        handle = opendir(bytes(tmp_path), True)
+        handle = cast(opendir(bytes(tmp_path), True), TypedPointer[retro_vfs_dir_handle])
+        # TODO: Make TypedFunctionPointers add errcheck handlers to work around ctypes limits
         assert handle
         assert closedir(handle)
 
