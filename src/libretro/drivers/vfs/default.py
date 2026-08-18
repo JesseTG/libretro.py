@@ -163,6 +163,7 @@ class StandardDirectoryHandle(DirectoryHandle):
         self._scandir = os.scandir(path)
         self._dirent: DirEntry[bytes] | None = None
         self._include_hidden = include_hidden
+        self._handle = retro_vfs_dir_handle(id(self), path, include_hidden)
 
     def __del__(self):
         """Close the underlying scan iterator when this handle is garbage-collected."""
@@ -208,6 +209,22 @@ class StandardDirectoryHandle(DirectoryHandle):
             self._scandir = None
 
         return True
+
+    @property
+    def vfs_handle(self) -> retro_vfs_dir_handle:
+        """
+        Return the :class:`.retro_vfs_dir_handle` that represents this directory in the VFS.
+
+        The core identifies this directory by the *address* of the returned struct,
+        so it must be this same object for as long as the directory is open --
+        a struct created anew on each call would be freed
+        as soon as the ``opendir`` callback returned,
+        leaving the core with a dangling pointer
+        and silently truncating its directory listings.
+
+        :return: The opaque VFS handle associated with this directory.
+        """
+        return self._handle
 
 
 class DefaultFileSystemDriver(FileSystemDriver):
@@ -366,9 +383,8 @@ class DefaultFileSystemDriver(FileSystemDriver):
     @override
     def opendir(self, path: bytes, include_hidden: bool) -> retro_vfs_dir_handle | None:
         dir_handle = StandardDirectoryHandle(path, include_hidden)
-        handle = id(dir_handle)
-        self._dir_handles[handle] = dir_handle
-        return retro_vfs_dir_handle(handle, path, include_hidden)
+        self._dir_handles[dir_handle.vfs_handle.id] = dir_handle
+        return dir_handle.vfs_handle
 
     @override
     def readdir(self, dir: retro_vfs_dir_handle) -> bool:

@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Keep the `retro_vfs_dir_handle` associated with a `StandardDirectoryHandle` alive,
+  to prevent hard-to-find undefined behavior when iterating over a directory.
+
 ## [0.8.2] - 2026-07-14
 
 ### Fixed
