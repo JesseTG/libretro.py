@@ -1,11 +1,11 @@
 """
 Type annotations for :mod:`ctypes` behavior that is documented but missing from its type stubs.
 
-Most of these definitions fall back to standard :mod:`ctypes` types at runtime;
-this allows them to be used as drop-in replacements for the standard types in function signatures.
+Most of these definitions fall back to standard :mod:`ctypes` types at runtime,
+so they can be used as drop-in replacements for the standard types in function signatures.
 
 The subscripted helpers — :class:`TypedPointer`, :class:`TypedArray`,
-:class:`TypedFunctionPointer`, :class:`Pointer` — are TYPE_CHECKING-only
+:class:`TypedFunctionPointer`, :class:`Pointer` — are :obj:`TYPE_CHECKING`-only
 refinements that erase to plain :mod:`ctypes` factories at runtime;
 their docstrings therefore live on this module so they remain discoverable
 through ``python -m pytest --doctest-modules src/libretro``.
