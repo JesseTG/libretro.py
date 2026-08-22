@@ -10,14 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
-## [Unreleased]
+## [0.8.4] - 2026-08-22
 
 ### Fixed
 
 - Stop leaking a `bytes` object (and emitting `RuntimeWarning: memory leak in callback function`)
   every time a core calls the VFS `get_path` or `dirent_get_name` callbacks.
-  `CompositeEnvironmentDriver` now hands the core a pointer into a string it keeps alive itself,
-  released when the corresponding handle is closed.
   ([#30](https://github.com/JesseTG/libretro.py/issues/30))
   Thanks to [@yuckyman](https://github.com/yuckyman) for reporting this!
 
