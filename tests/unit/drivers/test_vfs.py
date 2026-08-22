@@ -9,7 +9,8 @@ No core is loaded.
 
 from __future__ import annotations
 
-from ctypes import byref, c_void_p, cast
+import warnings
+from ctypes import CFUNCTYPE, byref, c_void_p, cast
 from pathlib import Path
 
 import pytest
@@ -22,7 +23,14 @@ from libretro import (
     EnvironmentCall,
     IterableInputDriver,
 )
-from libretro.api import retro_vfs_dir_handle, retro_vfs_interface, retro_vfs_interface_info
+from libretro.api import (
+    VfsFileAccess,
+    VfsFileAccessHint,
+    retro_vfs_dir_handle,
+    retro_vfs_file_handle,
+    retro_vfs_interface,
+    retro_vfs_interface_info,
+)
 from libretro.ctypes import TypedPointer
 
 
@@ -115,3 +123,90 @@ def test_dir_handles_dont_accumulate(
         assert closedir(handle)
 
     assert not vfs_driver._dir_handles  # pyright: ignore[reportPrivateUsage]
+
+
+def test_get_path_doesnt_leak(env: CompositeEnvironmentDriver, tmp_path: Path) -> None:
+    """
+    ``get_path`` must not leak a fresh ``bytes`` object on every call.
+
+    A ``ctypes`` callback whose return type is ``c_char_p``
+    has no way of knowing when the core is done with the returned pointer,
+    so if the Python callback returns a ``bytes`` object,
+    ``ctypes`` keeps it alive forever
+    and emits ``RuntimeWarning: memory leak in callback function``.
+    The callback must instead hand back a pointer into a buffer
+    that the frontend keeps alive itself,
+    and that pointer must stay stable for the lifetime of the handle.
+    """
+    path = tmp_path / "file.bin"
+    path.write_bytes(b"\x00" * 16)
+
+    vfs = _get_vfs(env)
+    open = vfs.open
+    get_path = vfs.get_path
+    close = vfs.close
+    assert open is not None
+    assert get_path is not None
+    assert close is not None
+
+    # Call the same function pointer without ctypes' c_char_p conversion,
+    # so we can inspect the raw address the core would see.
+    raw_get_path = cast(get_path, CFUNCTYPE(c_void_p, c_void_p))
+
+    handle = cast(
+        open(bytes(path), VfsFileAccess.READ, VfsFileAccessHint.NONE),
+        TypedPointer[retro_vfs_file_handle],
+    )
+    assert handle
+    address = cast(handle, c_void_p).value
+
+    # The warning is raised inside the ctypes callback,
+    # where "error" would only make it an unraisable exception;
+    # recording is the reliable way to observe it.
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        results = [get_path(handle) for _ in range(5)]
+        addresses = {raw_get_path(address) for _ in range(5)}
+
+    assert not [w for w in caught if issubclass(w.category, RuntimeWarning)]
+    assert results == [bytes(path)] * 5
+    assert len(addresses) == 1
+    assert None not in addresses
+
+    assert close(handle) == 0
+    assert not env._vfs_strings  # pyright: ignore[reportPrivateUsage]
+
+
+def test_dirent_get_name_doesnt_leak(env: CompositeEnvironmentDriver, tmp_path: Path) -> None:
+    """``dirent_get_name`` must not leak a fresh ``bytes`` object on every call."""
+    names = {f"file{i}.bin".encode() for i in range(8)}
+    for name in names:
+        (tmp_path / name.decode()).write_bytes(b"\x00" * 16)
+
+    vfs = _get_vfs(env)
+    opendir = vfs.opendir
+    readdir = vfs.readdir
+    dirent_get_name = vfs.dirent_get_name
+    closedir = vfs.closedir
+    assert opendir is not None
+    assert readdir is not None
+    assert dirent_get_name is not None
+    assert closedir is not None
+
+    handle = cast(opendir(bytes(tmp_path), True), TypedPointer[retro_vfs_dir_handle])
+    assert handle
+
+    seen: list[bytes] = []
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        while readdir(handle):
+            name = dirent_get_name(handle)
+            assert name is not None
+            # Repeated calls for the same entry must agree
+            assert dirent_get_name(handle) == name
+            seen.append(name)
+
+    assert not [w for w in caught if issubclass(w.category, RuntimeWarning)]
+    assert sorted(seen) == sorted(names)
+    assert closedir(handle)
+    assert not env._vfs_strings  # pyright: ignore[reportPrivateUsage]

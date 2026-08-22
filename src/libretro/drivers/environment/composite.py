@@ -264,6 +264,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         self._perf_callback: retro_perf_callback | None = None
         self._location_callback: retro_location_callback | None = None
         self._vfs_interface: retro_vfs_interface | None = None
+        # Strings handed to the core through c_char_p VFS callbacks,
+        # keyed by the address of the file or directory handle they belong to.
+        # ctypes can't know when the core is done with a returned pointer,
+        # so we keep the bytes alive here rather than let ctypes immortalize them.
+        self._vfs_strings: dict[int, bytes] = {}
         self._led_interface: retro_led_interface | None = None
         self._midi_interface: retro_midi_interface | None = None
         self._mic_interface: retro_microphone_interface | None = None
@@ -1382,12 +1387,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         vfs_info.iface = pointer(self._vfs_interface)
         return True
 
-    @_return_on_raise(typing.cast(bytes | None, None))
-    def _vfs_get_path(self, file: TypedPointer[retro_vfs_file_handle]) -> bytes | None:
+    @_return_on_raise(typing.cast(int | None, None))
+    def _vfs_get_path(self, file: TypedPointer[retro_vfs_file_handle]) -> int | None:
         if self._vfs is None or not file:
             return None
 
-        return self._vfs.get_path(file[0])
+        path = self._vfs.get_path(file[0])
+        if path is None:
+            return None
+
+        # See _pin_string for why this returns an address rather than bytes
+        return self._pin_string(cast(file, c_void_p).value or 0, path)
 
     @_return_on_raise(0)
     def _vfs_open(self, path: bytes, mode: int, hints: int):
@@ -1405,7 +1415,11 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._vfs is None or not file:
             return -1
 
-        return 0 if self._vfs.close(file[0]) else -1
+        if not self._vfs.close(file[0]):
+            return -1
+
+        self._vfs_strings.pop(cast(file, c_void_p).value or 0, None)
+        return 0
 
     @_return_on_raise(-1)
     def _vfs_size(self, file: TypedPointer[retro_vfs_file_handle]) -> int:
@@ -1516,12 +1530,17 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
 
         return self._vfs.readdir(dir[0])
 
-    @_return_on_raise(typing.cast(bytes | None, None))
-    def _vfs_dirent_get_name(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bytes | None:
+    @_return_on_raise(typing.cast(int | None, None))
+    def _vfs_dirent_get_name(self, dir: TypedPointer[retro_vfs_dir_handle]) -> int | None:
         if self._vfs is None or not dir:
             return None
 
-        return self._vfs.dirent_get_name(dir[0])
+        name = self._vfs.dirent_get_name(dir[0])
+        if name is None:
+            return None
+
+        # See _pin_string for why this returns an address rather than bytes
+        return self._pin_string(cast(dir, c_void_p).value or 0, name)
 
     @_return_on_raise(False)
     def _vfs_dirent_is_dir(self, dir: TypedPointer[retro_vfs_dir_handle]) -> bool:
@@ -1535,7 +1554,42 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._vfs is None or not dir:
             return False
 
-        return self._vfs.closedir(dir[0])
+        if not self._vfs.closedir(dir[0]):
+            return False
+
+        self._vfs_strings.pop(cast(dir, c_void_p).value or 0, None)
+        return True
+
+    def _pin_string(self, handle: int, value: bytes) -> int:
+        """
+        Keep ``value`` alive on behalf of ``handle`` and return the address of its contents.
+
+        Don't return :class:`bytes` from a C callback that expects a ``char*``,
+        as you're inviting a memory leak.
+        :mod:`ctypes` has to keep it around forever,
+        since it has no way of knowing if the core is done with it.
+        Returning the address as an :class:`int` avoids that,
+        but then we need to keep the string alive ourselves.
+
+        If an equal string is already pinned for ``handle``,
+        that object is kept and its address returned,
+        so the pointer a core receives for a given handle doesn't change
+        until the driver reports a different string.
+        The entry is released when the handle is closed.
+
+        See :issue:`issue 30`
+
+        :param handle: Address of the file or directory handle the string belongs to.
+        :param value: The string to hand to the core.
+        :return: The address of the zero-terminated contents of the retained string.
+        """
+        pinned = self._vfs_strings.get(handle)
+        if pinned is None or pinned != value:
+            self._vfs_strings[handle] = pinned = value
+
+        # c_char_p(bytes) points into the bytes object's own buffer (no copy),
+        # so the address stays valid for as long as the dict holds the object.
+        return cast(c_char_p(pinned), c_void_p).value or 0
 
     @property
     def led(self) -> LedDriver | None:
