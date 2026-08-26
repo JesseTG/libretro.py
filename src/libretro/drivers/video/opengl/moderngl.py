@@ -82,17 +82,39 @@ _POSITION_NORTHWEST = (-1, 1)
 _POSITION_NORTHEAST = (1, 1)
 _POSITION_SOUTHWEST = (-1, -1)
 _POSITION_SOUTHEAST = (1, -1)
-_TEXCOORD_NORTHWEST = (0, 1)
-_TEXCOORD_NORTHEAST = (1, 1)
-_TEXCOORD_SOUTHWEST = (0, 0)
-_TEXCOORD_SOUTHEAST = (1, 0)
 
-_NORTHWEST = _vertex.pack(*_POSITION_NORTHWEST, *_TEXCOORD_NORTHWEST)
-_NORTHEAST = _vertex.pack(*_POSITION_NORTHEAST, *_TEXCOORD_NORTHEAST)
-_SOUTHWEST = _vertex.pack(*_POSITION_SOUTHWEST, *_TEXCOORD_SOUTHWEST)
-_SOUTHEAST = _vertex.pack(*_POSITION_SOUTHEAST, *_TEXCOORD_SOUTHEAST)
+_FULL_TEXCOORD_SCALE = (1.0, 1.0)
+"""Texture coordinate scale for a texture that holds nothing but the frame."""
 
-_VERTEXES = b"".join((_NORTHWEST, _SOUTHWEST, _NORTHEAST, _SOUTHEAST))
+
+def _screen_quad(scale: tuple[float, float] = _FULL_TEXCOORD_SCALE) -> bytes:
+    """
+    Pack the screen quad's vertexes,
+    sampling only the lower-left ``[0, u] x [0, v]`` corner of the bound texture.
+
+    The texture a hardware-rendering core draws into is allocated for its
+    :attr:`~.retro_game_geometry.max_width` by :attr:`~.retro_game_geometry.max_height`
+    geometry, but the core only fills the corner described by the geometry of the
+    frame it just rendered; ``scale`` is the ratio between the two.
+    Sampling the whole texture would shrink the frame by that same ratio
+    and pad it with texels that the core never rendered to.
+
+    :param scale: The fraction of the bound texture that the frame occupies,
+        as ``(horizontal, vertical)``.
+        Both components are 1 for a texture sized to the frame exactly.
+    """
+    u, v = scale
+    return b"".join(
+        (
+            _vertex.pack(*_POSITION_NORTHWEST, 0.0, v),
+            _vertex.pack(*_POSITION_SOUTHWEST, 0.0, 0.0),
+            _vertex.pack(*_POSITION_NORTHEAST, u, v),
+            _vertex.pack(*_POSITION_SOUTHEAST, u, 0.0),
+        )
+    )
+
+
+_VERTEXES = _screen_quad()
 
 _DEFAULT_WINDOW_IMPL = "pyglet"
 _IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
@@ -257,6 +279,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._vao: VertexArray | None = None
         self._vbo: Buffer | None = None
         self._last_size: tuple[int, int] | None = None
+        self._texcoord_scale: tuple[float, float] = _FULL_TEXCOORD_SCALE
         self._rotation: Rotation = Rotation.NONE
 
         # Framebuffer, color, and depth attachments for the "default" framebuffer
@@ -388,14 +411,21 @@ class ModernGlVideoDriver(VideoDriver):
                     )
                     self._context.copy_framebuffer(self._color, self._hw_render_fbo)
                     self._hw_render_color.use()
+                    # This texture is sized for the core's *maximum* geometry,
+                    # but the core only rendered into the corner
+                    # described by *this frame's* geometry.
+                    hw_width, hw_height = cast(tuple[int, int], self._hw_render_color.size)
+                    self.__set_texcoord_scale(width / hw_width, height / hw_height)
                 case memoryview():
                     self.__update_cpu_texture(data, width, height, pitch)
                     assert self._cpu_color is not None, (
                         "CPU-rendered color buffer should have been initialized in reinit() by now"
                     )
                     self._cpu_color.use()
+                    # This texture is allocated at exactly the frame's size,
+                    # so all of it is the frame.
+                    self.__set_texcoord_scale(*_FULL_TEXCOORD_SCALE)
 
-            self._context.viewport = (0, 0, width, height)
             matrix = _create_orthogonal_projection(-1, 1, 1, -1, -1, 1)
             assert self._shader_program is not None, (
                 "Shader program should have been initialized in reinit() by now"
@@ -413,6 +443,15 @@ class ModernGlVideoDriver(VideoDriver):
                 "Color buffer should have been initialized in reinit() by now"
             )
             assert self._vao is not None, "VAO should have been initialized in reinit() by now"
+
+            # A core may resize its output between frames with SET_GEOMETRY,
+            # so aim at the frame that was just handed over
+            # rather than at the geometry this framebuffer was created with.
+            # These belong on the framebuffer and not on the context:
+            # Framebuffer.use() re-applies its own viewport and scissor,
+            # which would undo anything set through Context.viewport here.
+            self._fbo.viewport = (0, 0, width, height)
+            self._fbo.scissor = (0, 0, width, height)
             self._fbo.use()
             self._color.use(1)
 
@@ -566,6 +605,7 @@ class ModernGlVideoDriver(VideoDriver):
             mvp_uniform.write(mvp)
 
             self._vbo = self._context.buffer(_VERTEXES)
+            self._texcoord_scale = _FULL_TEXCOORD_SCALE
             self._vao = self._context.vertex_array(
                 self._shader_program, self._vbo, "vertexCoord", "texCoord"
             )
@@ -624,7 +664,10 @@ class ModernGlVideoDriver(VideoDriver):
         self._system_av_info.geometry.base_width = geometry.base_width
         self._system_av_info.geometry.base_height = geometry.base_height
         self._system_av_info.geometry.aspect_ratio = geometry.aspect_ratio
-        # TODO: Set the OpenGL viewport if necessary
+        # No OpenGL state to update here:
+        # refresh() aims the viewport and scissor at each frame as it arrives,
+        # which covers a resize whether it came through here
+        # or from a core that simply varied its output size.
 
     @property
     @override
@@ -758,6 +801,25 @@ class ModernGlVideoDriver(VideoDriver):
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         # libretro doesn't define one of these for OpenGL, so no need
         return None
+
+    def __set_texcoord_scale(self, u: float, v: float) -> None:
+        """
+        Aim the screen quad at the lower-left ``[0, u] x [0, v]`` corner of the bound texture.
+
+        Rewrites the vertex buffer only when the scale actually changes,
+        which in practice is once per geometry change.
+        See ``_screen_quad`` for where these coordinates come from.
+        """
+        # Clamp, in case a core reports a frame larger than the geometry it declared
+        # or its maximum geometry had to be clipped to fit GL_MAX_TEXTURE_SIZE;
+        # sampling past the edge of the texture would show garbage.
+        scale = (min(u, 1.0), min(v, 1.0))
+        if self._texcoord_scale == scale:
+            return
+
+        assert self._vbo is not None, "VBO should have been initialized in reinit() by now"
+        self._vbo.write(_screen_quad(scale))
+        self._texcoord_scale = scale
 
     def __get_framebuffer_size(self) -> tuple[int, int]:
         assert self._context is not None

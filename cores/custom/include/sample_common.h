@@ -41,6 +41,17 @@
 #define SAMPLE_CORE_HEIGHT 224u
 #endif
 
+/* A core whose output can grow past its nominal size declares a larger
+ * maximum here; frontends size their framebuffers from it. Defaults to the
+ * base size, which is what a fixed-resolution core wants. */
+#ifndef SAMPLE_CORE_MAX_WIDTH
+#define SAMPLE_CORE_MAX_WIDTH SAMPLE_CORE_WIDTH
+#endif
+
+#ifndef SAMPLE_CORE_MAX_HEIGHT
+#define SAMPLE_CORE_MAX_HEIGHT SAMPLE_CORE_HEIGHT
+#endif
+
 #ifndef SAMPLE_CORE_FPS
 #define SAMPLE_CORE_FPS 60.0
 #endif
@@ -75,6 +86,13 @@ struct sample_core_def
     bool (*load_game)(const struct retro_game_info *info);
     void (*unload_game)(void);
     void (*run_frame)(void);
+
+    /* Submit this frame's video instead of the flat software frame that
+     * sample_common.c would otherwise send. Return true if handled.
+     * Hardware-rendering cores need this: they draw into the frontend's
+     * framebuffer and pass RETRO_HW_FRAME_BUFFER_VALID. */
+    bool (*present_video)(void);
+
     size_t (*serialize_size)(void);
     bool (*serialize)(void *data, size_t size);
     bool (*unserialize)(const void *data, size_t size);

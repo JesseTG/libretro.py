@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Added a new `hw_geometry_test` sample core
+  for testing libretro.py's handling of `RETRO_ENVIRONMENT_SET_GEOMETRY`.
+
+### Fixed
+
+- Fix `ModernGlVideoDriver` unconditionally sampling from the full texture allocated for `retro_set_system_av_info`.
+  OpenGL-rendered cores that set the base size with `RETRO_ENVIRONMENT_SET_GEOMETRY`
+  were rendering their output to a small corner.
+- Fix `ModernGlVideoDriver` not rendering portions of a frame
+  after a call to `RETRO_ENVIRONMENT_SET_GEOMETRY` that enlarged the visible area.
+
 ## [0.8.4] - 2026-08-22
 
 ### Fixed

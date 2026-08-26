@@ -49,8 +49,8 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info *info)
     memset(info, 0, sizeof(*info));
     info->geometry.base_width   = SAMPLE_CORE_WIDTH;
     info->geometry.base_height  = SAMPLE_CORE_HEIGHT;
-    info->geometry.max_width    = SAMPLE_CORE_WIDTH;
-    info->geometry.max_height   = SAMPLE_CORE_HEIGHT;
+    info->geometry.max_width    = SAMPLE_CORE_MAX_WIDTH;
+    info->geometry.max_height   = SAMPLE_CORE_MAX_HEIGHT;
     info->geometry.aspect_ratio = 0.0f;
     info->timing.fps            = SAMPLE_CORE_FPS;
     info->timing.sample_rate    = SAMPLE_CORE_SAMPLE_RATE;
@@ -137,12 +137,14 @@ RETRO_API void retro_run(void)
     if (sample_input_poll_cb)
         sample_input_poll_cb();
 
-    memset(sample_framebuffer, 0, sizeof(sample_framebuffer));
-    if (sample_video_cb)
-        sample_video_cb(sample_framebuffer,
-                        SAMPLE_CORE_WIDTH,
-                        SAMPLE_CORE_HEIGHT,
-                        SAMPLE_CORE_WIDTH * sizeof(sample_pixel_t));
+    if (!(sample_core.present_video && sample_core.present_video())) {
+        memset(sample_framebuffer, 0, sizeof(sample_framebuffer));
+        if (sample_video_cb)
+            sample_video_cb(sample_framebuffer,
+                            SAMPLE_CORE_WIDTH,
+                            SAMPLE_CORE_HEIGHT,
+                            SAMPLE_CORE_WIDTH * sizeof(sample_pixel_t));
+    }
 
     sample_frame_count++;
 }

@@ -67,3 +67,21 @@ add_custom_core(NAME language_test)
 add_custom_core(NAME game_info_ext_test)
 add_custom_core(NAME jit_capable_test)
 add_custom_core(NAME hw_shared_context_test)
+
+# --- Hardware-rendering cores (1) ---------------------------------------
+#
+# Declares a maximum geometry 8x its base on both axes and resizes its
+# output as it runs, so a frontend's OpenGL driver has to sample only the
+# part of its render texture that the core drew, and follow the frame size
+# from one frame to the next. Resolves GL entry points through the
+# frontend's get_proc_address, so it needs no GL headers or link libraries.
+
+add_custom_core(
+    NAME hw_geometry_test
+    COMPILE_DEFINITIONS
+        SAMPLE_CORE_WIDTH=64u
+        SAMPLE_CORE_HEIGHT=48u
+        SAMPLE_CORE_MAX_WIDTH=512u
+        SAMPLE_CORE_MAX_HEIGHT=384u
+        SAMPLE_CORE_PIXEL_FORMAT=RETRO_PIXEL_FORMAT_XRGB8888
+)

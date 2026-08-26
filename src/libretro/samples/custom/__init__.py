@@ -41,6 +41,8 @@ _NAMES = (
     "game_info_ext_test",
     "jit_capable_test",
     "hw_shared_context_test",
+    # Hardware-rendering cores
+    "hw_geometry_test",
 )
 
 

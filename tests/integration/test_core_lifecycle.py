@@ -48,6 +48,7 @@ ALL_SAMPLE_CORES = [
     ("custom", "game_info_ext_test"),
     ("custom", "jit_capable_test"),
     ("custom", "hw_shared_context_test"),
+    ("custom", "hw_geometry_test"),
 ]
 
 
