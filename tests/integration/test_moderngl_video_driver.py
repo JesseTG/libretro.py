@@ -11,6 +11,9 @@ that a correct frontend never presents.
 Counting colours in a screenshot is therefore enough to catch a frontend
 that samples the wrong part of its render texture,
 or that keeps drawing through the viewport it started with.
+The quadrants are laid out asymmetrically as well,
+so where each colour lands catches a frontend
+that presents either kind of frame the wrong way up.
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING
 
 import pytest
@@ -46,6 +50,16 @@ pytestmark = pytest.mark.opengl
 _QUADRANTS = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 255))
 _SENTINEL = (255, 0, 255)
 
+# Where each of those quadrants belongs in a screenshot,
+# which runs top-down like a software frame
+# no matter which origin the core rendered with.
+_CORNERS = {
+    "top-left": (0, 0, 255),
+    "top-right": (255, 255, 255),
+    "bottom-left": (255, 0, 0),
+    "bottom-right": (0, 255, 0),
+}
+
 # The core walks four frame sizes, once on the hardware path
 # and once on the software path, so eight frames covers each combination
 # and both switches between the two paths.
@@ -72,6 +86,12 @@ void main() {
 _SHADED_QUADRANTS = ((255, 0, 0), (0, 255, 0), (0, 0, 0), (255, 255, 0))
 
 
+def _pixel_at(pixels: memoryview[int], width: int, x: int, y: int, /) -> tuple[int, int, int]:
+    """Return the RGB triple at ``(x, y)`` of a four-component, top-down frame."""
+    offset = (y * width + x) * 4
+    return (pixels[offset], pixels[offset + 1], pixels[offset + 2])
+
+
 @dataclass(frozen=True)
 class _Frame:
     """One presented frame, reduced to its dimensions and a colour census."""
@@ -81,6 +101,7 @@ class _Frame:
     height: int
     kind: str
     counts: Mapping[tuple[int, int, int], int]
+    corners: Mapping[str, tuple[int, int, int]]
 
     @property
     def pixels(self) -> int:
@@ -127,6 +148,10 @@ def _capture(core: Core, video: ModernGlVideoDriver) -> list[_Frame]:
             pixels = memoryview(screenshot.data).cast("B")
             assert len(pixels) == screenshot.width * screenshot.height * 4
 
+            right = screenshot.width - 1
+            bottom = screenshot.height - 1
+            pixel = partial(_pixel_at, pixels, screenshot.width)
+
             frames.append(
                 _Frame(
                     index=index,
@@ -136,6 +161,12 @@ def _capture(core: Core, video: ModernGlVideoDriver) -> list[_Frame]:
                     counts=Counter(
                         (pixels[i], pixels[i + 1], pixels[i + 2]) for i in range(0, len(pixels), 4)
                     ),
+                    corners={
+                        "top-left": pixel(0, 0),
+                        "top-right": pixel(right, 0),
+                        "bottom-left": pixel(0, bottom),
+                        "bottom-right": pixel(right, bottom),
+                    },
                 )
             )
 
@@ -200,6 +231,28 @@ def test_every_frame_is_four_equal_quadrants(frames: list[_Frame]) -> None:
         assert census == dict.fromkeys(_QUADRANTS, quarter), (
             f"Frame #{frame.index} ({frame.kind}, {frame.width}x{frame.height}) "
             f"is not four equal quadrants: {census}"
+        )
+
+
+def test_every_frame_comes_out_the_right_way_up(frames: list[_Frame]) -> None:
+    """
+    Each frame's quadrants land in the corners the core painted them in.
+
+    Regression test: the driver used to turn every frame over as it drew it,
+    then turn the readback over again only for cores that render in software,
+    so a hardware frame came out upside down on screen
+    and a software frame came out upside down in a screenshot.
+    Which way up a frame sits depends on where it came from --
+    a software frame arrives top row first even from a core that renders in
+    hardware, and a hardware frame sits whichever way up the core said it would --
+    so this checks both of the core's paths.
+
+    Counting colours can't catch this, because a flip preserves the census.
+    """
+    for frame in frames:
+        assert frame.corners == _CORNERS, (
+            f"Frame #{frame.index} ({frame.kind}, {frame.width}x{frame.height}) "
+            f"is not the right way up: {frame.corners}"
         )
 
 

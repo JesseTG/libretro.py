@@ -116,52 +116,18 @@ def _screen_quad(scale: tuple[float, float] = _FULL_TEXCOORD_SCALE) -> bytes:
 
 _VERTEXES = _screen_quad()
 
+_SCREENSHOT_COMPONENTS = 4
+"""Components per pixel read back by :meth:`.ModernGlVideoDriver.screenshot`."""
+
 _DEFAULT_WINDOW_IMPL = "pyglet"
-_IDENTITY_MAT4 = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+
+_MVP_UPRIGHT = array("f", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+"""Draws the bound texture as it stands, for one whose first row is its bottom row."""
+
+_MVP_FLIPPED = array("f", [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+"""Draws the bound texture upside down, for one whose first row is its top row."""
 
 GL_RGBA = 0x1908
-
-
-def _create_orthogonal_projection(
-    left: float,
-    right: float,
-    bottom: float,
-    top: float,
-    near: float,
-    far: float,
-) -> array[float]:
-    rml = right - left
-    tmb = top - bottom
-    fmn = far - near
-
-    A = 2.0 / rml
-    B = 2.0 / tmb
-    C = -2.0 / fmn
-    Tx = -(right + left) / rml
-    Ty = -(top + bottom) / tmb
-    Tz = -(far + near) / fmn
-
-    return array(
-        "f",
-        (
-            A,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            B,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            C,
-            0.0,
-            Tx,
-            Ty,
-            Tz,
-            1.0,
-        ),
-    )
 
 
 def _get_gl_error() -> int:
@@ -280,6 +246,8 @@ class ModernGlVideoDriver(VideoDriver):
         self._vbo: Buffer | None = None
         self._last_size: tuple[int, int] | None = None
         self._texcoord_scale: tuple[float, float] = _FULL_TEXCOORD_SCALE
+        self._mvp_uniform: Uniform | None = None
+        self._flipped: bool | None = None
         self._rotation: Rotation = Rotation.NONE
 
         # Framebuffer, color, and depth attachments for the "default" framebuffer
@@ -416,6 +384,9 @@ class ModernGlVideoDriver(VideoDriver):
                     # described by *this frame's* geometry.
                     hw_width, hw_height = cast(tuple[int, int], self._hw_render_color.size)
                     self.__set_texcoord_scale(width / hw_width, height / hw_height)
+                    # A hardware frame sits in its texture whichever way up
+                    # the core said it would render.
+                    self.__set_flip(not self._callback or not self._callback.bottom_left_origin)
                 case memoryview():
                     self.__update_cpu_texture(data, width, height, pitch)
                     assert self._cpu_color is not None, (
@@ -425,19 +396,13 @@ class ModernGlVideoDriver(VideoDriver):
                     # This texture is allocated at exactly the frame's size,
                     # so all of it is the frame.
                     self.__set_texcoord_scale(*_FULL_TEXCOORD_SCALE)
+                    # A software frame always arrives top row first,
+                    # even from a core that renders in hardware the rest of the time.
+                    self.__set_flip(True)
 
-            matrix = _create_orthogonal_projection(-1, 1, 1, -1, -1, 1)
             assert self._shader_program is not None, (
                 "Shader program should have been initialized in reinit() by now"
             )
-            mvp_uniform = self._shader_program.get("mvp", None)
-
-            assert isinstance(mvp_uniform, Uniform), (
-                "shader should've been verified to have an 'mvp' uniform in reinit() by now"
-            )
-
-            mvp_uniform.write(matrix)
-
             assert self._fbo is not None, "FBO should have been initialized in reinit() by now"
             assert self._color is not None, (
                 "Color buffer should have been initialized in reinit() by now"
@@ -591,18 +556,18 @@ class ModernGlVideoDriver(VideoDriver):
                 fragment_outputs={"pixelColor": 0},
             )
 
-            mvp = array("f", _IDENTITY_MAT4)
-            if not self._callback or not self._callback.bottom_left_origin:
-                # If we're only using software rendering, or if we want the origin at the top-left...
-                mvp[5] = -1  # ...then flip the screen vertically by negating the Y scale
-
             mvp_uniform = self._shader_program.get("mvp", None)
             if not isinstance(mvp_uniform, Uniform):
                 raise RuntimeError(
                     f"Expected shader program to have an 'mvp' uniform, but it was a {type(mvp_uniform).__name__} or not present at all"
                 )
 
-            mvp_uniform.write(mvp)
+            self._mvp_uniform = mvp_uniform
+            # refresh() picks the right one for each frame as it arrives,
+            # but a core whose very first frame is a duplicate never gets there,
+            # so start with the one that frame would most likely have called for.
+            self._flipped = None
+            self.__set_flip(not self._callback or not self._callback.bottom_left_origin)
 
             self._vbo = self._context.buffer(_VERTEXES)
             self._texcoord_scale = _FULL_TEXCOORD_SCALE
@@ -737,37 +702,36 @@ class ModernGlVideoDriver(VideoDriver):
         self._context.clear_errors()
         with self._context.debug_scope("libretro.ModernGlVideoDriver.screenshot"):
             if self._window:
-                frame = self._window.fbo.read(self._last_size, 4)
+                frame = self._window.fbo.read(self._last_size, _SCREENSHOT_COMPONENTS)
             else:
                 if not self._fbo:
                     return None
 
-                frame = self._fbo.read(self._last_size, 4)
+                frame = self._fbo.read(self._last_size, _SCREENSHOT_COMPONENTS)
 
+            self._context.clear_errors()
             if frame is None:
                 return None
 
-            self._context.clear_errors()
-            if not self._callback or not self._callback.bottom_left_origin:
-                # If we're using software rendering or the origin is at the bottom-left...
-                bytes_per_row = self._last_size[0] * self._pixel_format.bytes_per_pixel
-                reversed_frame = array("B", frame)
-                reversed_frame_view = memoryview(reversed_frame)
-                frame_view = memoryview(frame)
-                frame_len = len(frame)
-                for i in range(self._last_size[1]):
-                    # For each row...
-                    start = i * bytes_per_row
-                    end = start + bytes_per_row
-                    reversed_frame_view[start:end] = frame_view[
-                        frame_len - end : frame_len - start
-                    ]
-                    # ...copy row number (height - i) to row i
-
-                frame = reversed_frame_view
+            # Whichever way up the core renders, the framebuffer just read from
+            # holds the frame the right way up: refresh() turns each frame over
+            # as it draws it, if that's what the frame needs.
+            # OpenGL hands back its rows bottom-first, though, and a screenshot runs
+            # top-down like a software frame, so the rows are reversed unconditionally.
+            bytes_per_row = self._last_size[0] * _SCREENSHOT_COMPONENTS
+            reversed_frame = array("B", frame)
+            reversed_frame_view = memoryview(reversed_frame)
+            frame_view = memoryview(frame)
+            frame_len = len(frame)
+            for i in range(self._last_size[1]):
+                # For each row...
+                start = i * bytes_per_row
+                end = start + bytes_per_row
+                reversed_frame_view[start:end] = frame_view[frame_len - end : frame_len - start]
+                # ...copy row number (height - i) to row i
 
             return Screenshot(
-                memoryview(frame),
+                memoryview(reversed_frame_view),
                 self._last_size[0],
                 self._last_size[1],
                 self._rotation,
@@ -801,6 +765,30 @@ class ModernGlVideoDriver(VideoDriver):
     def hw_render_interface(self) -> retro_hw_render_interface | None:
         # libretro doesn't define one of these for OpenGL, so no need
         return None
+
+    def __set_flip(self, flip: bool) -> None:
+        """
+        Choose whether the screen quad turns the bound texture over as it draws it.
+
+        The quad's texture coordinates run bottom-up, like OpenGL's own origin,
+        so a texture whose first row is its *top* row has to be flipped back over.
+        Which of the two applies depends on where the frame came from,
+        not on the driver's configuration:
+        a core that renders in hardware may still hand over software frames
+        (a software menu over a hardware-rendered game does exactly this),
+        and those arrive top row first no matter which origin the core asked for.
+
+        Rewrites the uniform only when the answer actually changes,
+        which in practice is only when a core switches between the two paths.
+        """
+        if self._flipped == flip:
+            return
+
+        assert self._mvp_uniform is not None, (
+            "MVP uniform should have been looked up in reinit() by now"
+        )
+        self._mvp_uniform.write(_MVP_FLIPPED if flip else _MVP_UPRIGHT)
+        self._flipped = flip
 
     def __set_texcoord_scale(self, u: float, v: float) -> None:
         """
