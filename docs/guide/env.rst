@@ -43,6 +43,8 @@ and the driver interfaces that handle them.
       - Not supported
     * - :attr:`~.EnvironmentCall.SET_HW_RENDER`
       - :meth:`.VideoDriver.set_context`
+    * - :attr:`~.EnvironmentCall.SET_HW_RENDER_EXPERIMENTAL`
+      - :meth:`.VideoDriver.set_context`
     * - :attr:`~.EnvironmentCall.GET_VARIABLE`
       - :meth:`.OptionDriver.get_variable`
     * - :attr:`~.EnvironmentCall.SET_VARIABLES`
@@ -100,6 +102,8 @@ and the driver interfaces that handle them.
     * - :attr:`~.EnvironmentCall.SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE`
       - Not supported
     * - :attr:`~.EnvironmentCall.SET_SERIALIZATION_QUIRKS`
+      - :attr:`.CompositeEnvironmentDriver.serialization_quirks`
+    * - :attr:`~.EnvironmentCall.SET_SERIALIZATION_QUIRKS_V1`
       - :attr:`.CompositeEnvironmentDriver.serialization_quirks`
     * - :attr:`~.EnvironmentCall.SET_HW_SHARED_CONTEXT`
       - :attr:`.VideoDriver.shared_context`
@@ -173,3 +177,27 @@ and the driver interfaces that handle them.
       - :attr:`.PathDriver.playlist_dir`
     * - :attr:`~.EnvironmentCall.GET_FILE_BROWSER_START_DIRECTORY`
       - :attr:`.PathDriver.file_browser_start_dir`
+    * - :attr:`~.EnvironmentCall.GET_TARGET_SAMPLE_RATE`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_NETPLAY_CLIENT_INDEX`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.EXEC_MEM_ALLOC`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.EXEC_MEM_FREE`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_AUDIO_SAMPLE_BATCH_FLOAT`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_MEMORY_STATUS`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_SCREEN_10BPC_CAPABLE`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_HDR_PAPER_WHITE_NITS`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_HDR_EXPAND_GAMUT`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_HDR_OUTPUT_MODE`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_HDR_MAX_NITS`
+      - Not supported
+    * - :attr:`~.EnvironmentCall.GET_VFS_AUTHORIZED_LOCATIONS`
+      - Not supported
