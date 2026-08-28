@@ -321,6 +321,9 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.GET_PLAYLIST_DIRECTORY: lambda data: self._get_playlist_directory(
                 cast(data, TypedPointer[c_char_p])
             ),
+            EnvironmentCall.GET_FILE_BROWSER_START_DIRECTORY: lambda data: (
+                self._get_file_browser_start_directory(cast(data, TypedPointer[c_char_p]))
+            ),
         }
 
         super().__init__(envcalls)

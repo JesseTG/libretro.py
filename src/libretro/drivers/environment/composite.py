@@ -2258,5 +2258,18 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         dir[0] = self._path.playlist_dir
         return True
 
+    @override
+    def _get_file_browser_start_directory(self, dir: TypedPointer[c_char_p]) -> bool:
+        if self._path is None or self._path.file_browser_start_dir is None:
+            return False
+
+        if not dir:
+            raise ValueError(
+                "RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY doesn't accept NULL"
+            )
+
+        dir[0] = self._path.file_browser_start_dir
+        return True
+
 
 __all__ = ["CompositeEnvironmentDriver"]

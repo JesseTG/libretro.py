@@ -436,6 +436,9 @@ class EnvironmentDriver(Protocol):
     def _get_playlist_directory(self, dir: TypedPointer[c_char_p]) -> bool:
         return False
 
+    def _get_file_browser_start_directory(self, dir: TypedPointer[c_char_p]) -> bool:
+        return False
+
     # ruff: enable[ARG002]
 
     @staticmethod
