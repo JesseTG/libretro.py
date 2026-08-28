@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Added
+
+- Added `libretro.api.memory.RETRO_MEMORY_ROM`.
+- Added `libretro.api.user.Language.THAI`.
+- Added `retro_audio_sample_batch_float_t` and `retro_audio_sample_float_callback`.
+- Added `libretro.api.alloc` and `libretro.h`'s new types for allocating executable memory.
+- Added new environment calls to `EnvironmentCall`.
+- Added new entries to `libretro.api.perf.CpuFeatures`.
+- Added docstrings to all `CpuFeatures` members, including the new ones.
+- Added HDR-related types and constants to `libretro.api.video.frame`.
+- Added extra flags and types to `libretro.api.vfs`.
+
+### Removed
+
+- **BREAKING:** Remove `libretro.api.video.frame.PixelFormat.pillow_mode`.
+  PIL doesn't support HDR image modes,
+  and this property wouldn't be generally useful.
+
 ## [0.8.5] - 2026-08-26
 
 ### Added

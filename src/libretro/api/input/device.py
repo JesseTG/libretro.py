@@ -70,6 +70,12 @@ to read the most recently polled input.
     semantics depend on ``device`` and ``id``,
     and ``0`` is returned for unsupported combinations.
 
+.. warning::
+    Query with a base device ID only.
+    IDs derived from ``RETRO_DEVICE_SUBCLASS`` are reserved for future definition,
+    and the masking described under ``device`` is a frontend convenience
+    that cores must not rely on.
+
 Corresponds to :c:type:`retro_input_state_t` in ``libretro.h``.
 
 .. seealso::

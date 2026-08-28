@@ -14,7 +14,7 @@ or to be notified of audio buffer status changes.
         libretro.py's included :class:`.AudioDriver` implementations.
 """
 
-from ctypes import Structure, c_int16, c_size_t, c_uint
+from ctypes import Structure, c_float, c_int16, c_size_t, c_uint
 from dataclasses import dataclass
 
 from libretro.api._utils import NullPointerToNoneMixin
@@ -62,6 +62,36 @@ Corresponds to :c:type:`retro_audio_sample_batch_t` in ``libretro.h``.
 
     :meth:`.AudioDriver.sample_batch`
         The method that implements this callback in libretro.py.
+"""
+
+retro_audio_sample_batch_float_t = TypedFunctionPointer[
+    c_size_t, [TypedPointer[c_float], CIntArg[c_size_t]]
+]
+"""
+Render multiple stereo audio frames at once, in floating-point format.
+
+The floating-point counterpart of :data:`retro_audio_sample_batch_t`,
+for cores whose audio is already float-native
+and would otherwise narrow it to 16 bits
+only for the frontend to widen it again.
+
+Registered by the :term:`frontend` and called by the :term:`core`,
+but only after :attr:`.EnvironmentCall.GET_AUDIO_SAMPLE_BATCH_FLOAT` reports success.
+A core must pick one sample format per loaded game
+and must not alternate between this callback and the 16-bit ones.
+
+:param data: Pointer to a buffer of interleaved left/right samples
+    (i.e. ``[L, R, L, R, ...]``), each normalized to the range ``[-1.0, 1.0]``.
+:param frames: Number of stereo frames in ``data`` (i.e. half the number of samples).
+:return: The number of frames that were processed by the frontend.
+
+Corresponds to :c:type:`retro_audio_sample_batch_float_t` in ``libretro.h``.
+
+.. seealso::
+
+    :data:`retro_audio_sample_batch_t`
+        The 16-bit callback that cores must fall back to
+        when the frontend declines to negotiate float output.
 """
 
 retro_audio_callback_t = TypedFunctionPointer[None, []]
@@ -165,6 +195,38 @@ class retro_audio_callback(Structure, NullPointerToNoneMixin):
 
 
 @dataclass(init=False, slots=True)
+class retro_audio_sample_float_callback(Structure, NullPointerToNoneMixin):
+    """
+    Frontend-provided callback for pushing audio to the frontend in floating-point format.
+
+    Corresponds to :c:type:`retro_audio_sample_float_callback` in ``libretro.h``.
+
+    Unlike :class:`retro_audio_callback`, which the core fills in and hands to the frontend,
+    the frontend populates this struct in response to
+    :attr:`.EnvironmentCall.GET_AUDIO_SAMPLE_BATCH_FLOAT`.
+    The core should negotiate once during :meth:`.Core.load_game`,
+    and the returned pointer stays valid until :meth:`.Core.unload_game`.
+    """
+
+    batch: retro_audio_sample_batch_float_t | None
+    """Called by the core to push a batch of floating-point audio frames to the frontend."""
+
+    _fields_ = (("batch", retro_audio_sample_batch_float_t),)
+
+    def __deepcopy__(self, _):
+        """
+        Return a copy of this struct.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_audio_sample_float_callback
+        >>> copy.deepcopy(retro_audio_sample_float_callback()).batch is None
+        True
+        """
+        return retro_audio_sample_float_callback(batch=self.batch)
+
+
+@dataclass(init=False, slots=True)
 class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
     """
     Core-registered callback for audio buffer status reporting.
@@ -217,9 +279,11 @@ class retro_audio_buffer_status_callback(Structure, NullPointerToNoneMixin):
 __all__ = [
     "retro_audio_sample_t",
     "retro_audio_sample_batch_t",
+    "retro_audio_sample_batch_float_t",
     "retro_audio_callback_t",
     "retro_audio_set_state_callback_t",
     "retro_audio_buffer_status_callback_t",
     "retro_audio_callback",
+    "retro_audio_sample_float_callback",
     "retro_audio_buffer_status_callback",
 ]

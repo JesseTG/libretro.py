@@ -27,6 +27,9 @@ RETRO_MEMORY_SYSTEM_RAM = 2
 RETRO_MEMORY_VIDEO_RAM = 3
 """Identifier for video RAM."""
 
+RETRO_MEMORY_ROM = 4
+"""Identifier for the loaded game's ROM."""
+
 
 RETRO_MEMDESC_CONST = 1 << 0
 RETRO_MEMDESC_BIGENDIAN = 1 << 1
@@ -366,4 +369,5 @@ __all__ = [
     "RETRO_MEMORY_RTC",
     "RETRO_MEMORY_SYSTEM_RAM",
     "RETRO_MEMORY_VIDEO_RAM",
+    "RETRO_MEMORY_ROM",
 ]

@@ -195,12 +195,60 @@ class Sensor(IntEnum):
     """
 
     ACCELEROMETER_X = RETRO_SENSOR_ACCELEROMETER_X
+    """
+    Acceleration along the device's local X axis,
+    in g (standard gravity, 9.80665 m/s²).
+
+    Includes the effect of gravity,
+    so a device at rest on a table reads close to ``(0, 0, 1)``
+    across the three accelerometer axes.
+    Positive values mean the device is accelerating to the right,
+    assuming the user is looking at it head-on.
+    """
+
     ACCELEROMETER_Y = RETRO_SENSOR_ACCELEROMETER_Y
+    """
+    Acceleration along the device's local Y axis,
+    in g (standard gravity, 9.80665 m/s²).
+
+    Includes the effect of gravity.
+    Positive values mean the device is accelerating upwards,
+    assuming the user is looking at it head-on.
+    """
+
     ACCELEROMETER_Z = RETRO_SENSOR_ACCELEROMETER_Z
+    """
+    Acceleration along the device's local Z axis,
+    in g (standard gravity, 9.80665 m/s²).
+
+    Includes the effect of gravity.
+    Positive values mean the device is accelerating towards the user,
+    assuming the user is looking at it head-on.
+    """
+
     GYROSCOPE_X = RETRO_SENSOR_GYROSCOPE_X
+    """
+    Angular velocity around the device's local X axis, in radians per second.
+
+    Positive values indicate counter-clockwise rotation.
+    """
+
     GYROSCOPE_Y = RETRO_SENSOR_GYROSCOPE_Y
+    """
+    Angular velocity around the device's local Y axis, in radians per second.
+
+    Positive values indicate counter-clockwise rotation.
+    """
+
     GYROSCOPE_Z = RETRO_SENSOR_GYROSCOPE_Z
+    """
+    Angular velocity around the device's local Z axis, in radians per second.
+
+    Positive values indicate counter-clockwise rotation.
+    """
+
     ILLUMINANCE = RETRO_SENSOR_ILLUMINANCE
+    """Ambient light intensity in the device's environment, in lux."""
 
     @property
     def type(self) -> SensorType:

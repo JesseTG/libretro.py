@@ -17,6 +17,8 @@ retro_pixel_format = c_int
 RETRO_PIXEL_FORMAT_0RGB1555 = 0
 RETRO_PIXEL_FORMAT_XRGB8888 = 1
 RETRO_PIXEL_FORMAT_RGB565 = 2
+RETRO_PIXEL_FORMAT_XRGB2101010 = 3
+RETRO_PIXEL_FORMAT_HDR10_2101010 = 4
 RETRO_PIXEL_FORMAT_UNKNOWN = 0x7FFFFFFF
 RETRO_MEMORY_ACCESS_WRITE = 1 << 0
 RETRO_MEMORY_ACCESS_READ = 1 << 1
@@ -65,6 +67,46 @@ class PixelFormat(IntEnum):
     XRGB8888 = RETRO_PIXEL_FORMAT_XRGB8888
     RGB565 = RETRO_PIXEL_FORMAT_RGB565
 
+    XRGB2101010 = RETRO_PIXEL_FORMAT_XRGB2101010
+    """
+    10 bits per channel, packed into 32 bits in native byte order:
+    two ignored high bits, then red in bits 29-20, green in 19-10, and blue in 9-0.
+
+    Standard-dynamic-range content, for cores that decode 10-bit sources
+    and would rather not narrow them to 8 bits.
+    A frontend is free to accept this format
+    and then transparently down-convert it to :attr:`XRGB8888`
+    when its video driver can't present a 10-bit surface,
+    so a core cannot assume the whole display path is 10-bit.
+
+    .. seealso::
+
+        :attr:`.EnvironmentCall.GET_SCREEN_10BPC_CAPABLE`
+            The environment call that reports whether 10 bits survive to the display.
+    """
+
+    HDR10_2101010 = RETRO_PIXEL_FORMAT_HDR10_2101010
+    """
+    HDR10: the same bit layout as :attr:`XRGB2101010`, but a different encoding.
+
+    Samples are SMPTE ST.2084 (PQ) over Rec.2020 primaries, covering 0 to 10000 nits,
+    exactly as HDR10 video does.
+    Because the core chooses absolute luminance per pixel,
+    highlights can sit well above SDR paper white
+    while the rest of the image stays where it was.
+
+    A frontend that accepts this format must pass the samples through unchanged;
+    one that can't present HDR10 natively must reject it outright,
+    since silently narrowing PQ samples to SDR looks badly wrong.
+    Cores should therefore keep an SDR path to fall back to.
+
+    .. seealso::
+
+        :attr:`.EnvironmentCall.GET_HDR_PAPER_WHITE_NITS`
+            The luminance the frontend treats as SDR white,
+            which a core should map its ordinary output to.
+    """
+
     @property
     def bytes_per_pixel(self) -> Literal[2, 4]:
         """Size of a single pixel in this format, in bytes."""
@@ -75,6 +117,10 @@ class PixelFormat(IntEnum):
                 return 4
             case self.RGB565:
                 return 2
+            case self.XRGB2101010:
+                return 4
+            case self.HDR10_2101010:
+                return 4
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
@@ -88,21 +134,101 @@ class PixelFormat(IntEnum):
                 return "L"
             case self.RGB565:
                 return "H"
+            case self.XRGB2101010:
+                return "L"
+            case self.HDR10_2101010:
+                return "L"
             case _:
                 raise ValueError(f"Unknown pixel format: {self}")
 
-    @property
-    def pillow_mode(self) -> Literal["BGR;15", "RGBX", "BGR;16"]:
-        """PIL-compatible mode string for this pixel format."""
-        match self:
-            case self.RGB1555:
-                return "BGR;15"
-            case self.XRGB8888:
-                return "RGBX"
-            case self.RGB565:
-                return "BGR;16"
-            case _:
-                raise ValueError(f"Unknown pixel format: {self}")
+
+retro_hdr_expand_gamut = c_uint
+"""The type the frontend writes a :class:`HdrExpandGamut` value through."""
+
+retro_hdr_output_mode = c_uint
+"""The type the frontend writes a :class:`HdrOutputMode` value through."""
+
+
+class HdrExpandGamut(IntEnum):
+    """
+    How the frontend widens the colour gamut of SDR content when presenting HDR.
+
+    Only meaningful alongside :attr:`.PixelFormat.HDR10_2101010`.
+    A core emitting that format performs its own Rec.709 to Rec.2020 rotation,
+    and has to make the same choice the frontend makes for SDR content;
+    otherwise a scene changes saturation
+    when the user switches the core between an SDR format and HDR10.
+
+    .. note::
+        ``libretro.h`` documents these values in prose without naming them,
+        so this enumeration is a libretro.py convenience
+        rather than a mirror of a C type.
+
+    .. seealso::
+
+        :attr:`.EnvironmentCall.GET_HDR_EXPAND_GAMUT`
+            The environment call that reports this setting.
+
+    >>> from libretro.api import HdrExpandGamut
+    >>> HdrExpandGamut.ACCURATE
+    <HdrExpandGamut.ACCURATE: 0>
+    """
+
+    ACCURATE = 0
+    """A faithful Rec.709 to Rec.2020 conversion, with no boost."""
+
+    EXPANDED = 1
+    """Rec.709 mapped into a slightly wider space than it started in."""
+
+    WIDE = 2
+    """Rec.709 mapped into DCI-P3."""
+
+    SUPER = 3
+    """
+    No rotation at all.
+
+    Values stay in Rec.709, and the boost comes from the display
+    interpreting them as Rec.2020.
+    """
+
+
+class HdrOutputMode(IntEnum):
+    """
+    Which HDR output path the frontend is presenting through.
+
+    Only meaningful alongside :attr:`.PixelFormat.HDR10_2101010`.
+    Both output modes accept the same PQ Rec.2020 frame
+    but do not treat its primaries identically,
+    so a core that encodes its own gamut has to know which one it is feeding.
+
+    .. note::
+        ``libretro.h`` documents these values in prose without naming them,
+        so this enumeration is a libretro.py convenience
+        rather than a mirror of a C type.
+
+    .. seealso::
+
+        :attr:`.EnvironmentCall.GET_HDR_OUTPUT_MODE`
+            The environment call that reports this setting.
+
+    >>> from libretro.api import HdrOutputMode
+    >>> HdrOutputMode.SCRGB
+    <HdrOutputMode.SCRGB: 2>
+    """
+
+    OFF = 0
+    """HDR output is disabled."""
+
+    HDR10 = 1
+    """A PQ Rec.2020 swapchain, which presents the core's samples unchanged."""
+
+    SCRGB = 2
+    """
+    A linear FP16 Rec.709 swapchain.
+
+    The frontend applies a Rec.2020 to Rec.709 rotation to the decoded samples,
+    so a core that has already chosen its own gamut must compensate for it here.
+    """
 
 
 class MemoryAccess(IntFlag):
@@ -189,4 +315,8 @@ __all__ = [
     "MemoryType",
     "retro_framebuffer",
     "retro_pixel_format",
+    "retro_hdr_expand_gamut",
+    "retro_hdr_output_mode",
+    "HdrExpandGamut",
+    "HdrOutputMode",
 ]

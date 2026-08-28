@@ -193,6 +193,7 @@ True
 .. seealso:: :mod:`libretro.drivers` for driver protocols that use these types.
 """
 
+from .alloc import *
 from .audio import *
 from .av import *
 from .camera import *

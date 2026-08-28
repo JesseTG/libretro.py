@@ -10,15 +10,18 @@ Virtual filesystem (VFS) interface types and callbacks.
         libretro.py's included :class:`.FileSystemDriver` implementations.
 """
 
+from collections.abc import Iterator, Sequence
 from copy import deepcopy
 from ctypes import (
     POINTER,
+    Array,
     Structure,
     c_bool,
     c_char_p,
     c_int,
     c_int32,
     c_int64,
+    c_size_t,
     c_uint,
     c_uint32,
     c_uint64,
@@ -27,19 +30,20 @@ from ctypes import (
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag
 from os import PathLike
-from typing import Literal
+from typing import Literal, overload
 
 from libretro.ctypes import (
     CBoolArg,
     CIntArg,
     CStringArg,
     Pointer,
+    TypedArray,
     TypedFunctionPointer,
     TypedPointer,
     c_void_ptr,
 )
 
-from ._utils import MemoDict, NullPointerToNoneMixin
+from ._utils import MemoDict, NullPointerToNoneMixin, deepcopy_array
 
 RETRO_VFS_FILE_ACCESS_READ = 1 << 0
 RETRO_VFS_FILE_ACCESS_WRITE = 1 << 1
@@ -48,6 +52,7 @@ RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING = 1 << 2
 
 RETRO_VFS_FILE_ACCESS_HINT_NONE = 0
 RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS = 1 << 0
+RETRO_VFS_FILE_ACCESS_HINT_SEQUENTIAL_BULK = 1 << 1
 
 RETRO_VFS_SEEK_POSITION_START = 0
 RETRO_VFS_SEEK_POSITION_CURRENT = 1
@@ -232,7 +237,14 @@ Open a file for reading, writing, or both.
 Registered by the :term:`frontend` and called by the :term:`core`.
 
 :param path: The path of the file to open.
-:param mode: A bitmask of :class:`VfsFileAccess` flags.
+:param mode: A bitmask of :class:`VfsFileAccess` flags;
+    at least one of :attr:`.VfsFileAccess.READ` or :attr:`.VfsFileAccess.WRITE` must be set.
+
+    When nothing exists at ``path``,
+    the flags decide whether a file is created:
+    :attr:`~.VfsFileAccess.WRITE` without :attr:`~.VfsFileAccess.UPDATE_EXISTING`
+    creates an empty file there,
+    while any other combination fails without creating anything.
 :param hints: A bitmask of :class:`VfsFileAccessHint` flags.
 :return: A :class:`~libretro.ctypes.c_void_ptr` to a new :class:`retro_vfs_file_handle` on success,
     or :obj:`None` on failure (including when ``path`` names a directory).
@@ -305,7 +317,8 @@ Registered by the :term:`frontend` and called by the :term:`core`.
 :param stream: Pointer to the :class:`retro_vfs_file_handle` to seek.
 :param offset: New offset in bytes, relative to ``seek_position``.
 :param seek_position: A :class:`VfsSeekPosition` indicating the seek origin.
-:return: The resulting stream position, or ``-1`` on error.
+:return: ``0`` on success, ``-1`` on failure.
+    Use :data:`retro_vfs_tell_t` to read back the resulting position.
 
 Corresponds to :c:type:`retro_vfs_seek_t` in ``libretro.h``.
 """
@@ -392,6 +405,31 @@ Registered by the :term:`frontend` and called by the :term:`core`.
     or ``0`` if ``path`` does not refer to a valid file.
 
 Corresponds to :c:type:`retro_vfs_stat_t` in ``libretro.h``.
+"""
+
+retro_vfs_stat_64_t = TypedFunctionPointer[c_int, [CStringArg, TypedPointer[c_int64]]]
+"""
+Get information about a file at the given path, with a 64-bit size.
+
+Registered by the :term:`frontend` and called by the :term:`core`.
+
+Added in VFS API version 4 because :data:`retro_vfs_stat_t` reports the size
+through a signed 32-bit integer and so cannot describe files larger than 2 GiB.
+Changing the older callback would have broken every core already using it,
+so this one was appended instead.
+
+:param path: Path of the file to query.
+:param size: Pointer to an :class:`~ctypes.c_int64` that receives the file's size in bytes,
+    or :obj:`None` to ignore the size.
+:return: A bitmask of :class:`VfsStat` flags,
+    or ``0`` if ``path`` does not refer to a valid file.
+
+Corresponds to :c:type:`retro_vfs_stat_64_t` in ``libretro.h``.
+
+.. seealso::
+
+    :data:`retro_vfs_stat_t`
+        The 32-bit equivalent, available since VFS API version 1.
 """
 
 retro_vfs_mkdir_t = TypedFunctionPointer[c_int, [CStringArg]]
@@ -532,6 +570,11 @@ class retro_vfs_interface(Structure, NullPointerToNoneMixin):
     """Returns whether the current directory entry is a subdirectory."""
     closedir: retro_vfs_closedir_t | None
     """Closes an open directory handle."""
+    stat_64: retro_vfs_stat_64_t | None
+    """
+    Gets status flags and 64-bit size of a file.
+    Only set by frontends that implement VFS API version 4 or newer.
+    """
 
     _fields_ = (
         ("get_path", retro_vfs_get_path_t),
@@ -553,6 +596,8 @@ class retro_vfs_interface(Structure, NullPointerToNoneMixin):
         ("dirent_get_name", retro_vfs_dirent_get_name_t),
         ("dirent_is_dir", retro_vfs_dirent_is_dir_t),
         ("closedir", retro_vfs_closedir_t),
+        # VFS API v4; new fields must be appended so the struct stays ABI-compatible
+        ("stat_64", retro_vfs_stat_64_t),
     )
 
     def __deepcopy__(self, _):
@@ -577,6 +622,7 @@ class retro_vfs_interface(Structure, NullPointerToNoneMixin):
             self.dirent_get_name,
             self.dirent_is_dir,
             self.closedir,
+            self.stat_64,
         )
 
 
@@ -614,6 +660,289 @@ class retro_vfs_interface_info(Structure, NullPointerToNoneMixin):
         )
 
 
+@dataclass(init=False, slots=True)
+class retro_vfs_authorized_location(Structure):
+    """
+    A single filesystem location that the frontend has granted permission to access.
+
+    Corresponds to :c:type:`retro_vfs_authorized_location` in ``libretro.h``.
+
+    Useful on platforms where an application may only touch directories
+    the user has explicitly granted, such as Android's Storage Access Framework.
+
+    .. note::
+        The frontend owns both strings.
+        Cores that need them after the environment call returns must copy them.
+    """
+
+    path: bytes | None
+    """
+    Path to the authorized location,
+    in a form that can be passed directly to the callbacks in :class:`retro_vfs_interface`
+    (for example ``saf://...`` on Android).
+    """
+
+    label: bytes | None
+    """Human-readable name for this location, suitable for display to the user."""
+
+    flags: int
+    """
+    Reserved for future use.
+
+    ``libretro.h`` does not currently define any flags for this field.
+    """
+
+    _fields_ = (
+        ("path", c_char_p),
+        ("label", c_char_p),
+        ("flags", c_uint),
+    )
+
+    def __deepcopy__(self, _):
+        """
+        Return a deep copy of this object, including all strings.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_vfs_authorized_location
+        >>> loc = retro_vfs_authorized_location(path=b"saf://downloads", label=b"Downloads")
+        >>> copy.deepcopy(loc).label
+        b'Downloads'
+        """
+        return retro_vfs_authorized_location(
+            path=self.path,
+            label=self.label,
+            flags=self.flags,
+        )
+
+
+@dataclass(init=False, slots=True)
+class retro_vfs_authorized_locations(Structure, NullPointerToNoneMixin):
+    r"""
+    The set of :class:`retro_vfs_authorized_location`\s that the frontend exposes to a core.
+
+    Corresponds to :c:type:`retro_vfs_authorized_locations` in ``libretro.h``.
+
+    Empty sets have length ``0``;
+    populating :attr:`locations` lets the set be iterated like a sequence:
+
+    >>> from libretro.api import retro_vfs_authorized_location, retro_vfs_authorized_locations
+    >>> locs = (retro_vfs_authorized_location * 2)(
+    ...     retro_vfs_authorized_location(path=b"saf://roms", label=b"ROMs"),
+    ...     retro_vfs_authorized_location(path=b"saf://saves", label=b"Saves"),
+    ... )
+    >>> group = retro_vfs_authorized_locations(locs, 2)
+    >>> [loc.label for loc in group]
+    [b'ROMs', b'Saves']
+
+    .. note::
+        ``libretro.h`` names the length field ``count``,
+        but libretro.py calls it :attr:`num_locations`
+        so that :meth:`count` complies with :class:`~collections.abc.Sequence`.
+        Field names don't participate in the C ABI,
+        so the rename is invisible to :term:`core`\s.
+
+    .. seealso::
+
+        :attr:`.EnvironmentCall.GET_VFS_AUTHORIZED_LOCATIONS`
+            The environment call that fills in this struct.
+    """
+
+    locations: TypedPointer[retro_vfs_authorized_location] | None
+    """Array of authorized locations."""
+    num_locations: int
+    """
+    Number of entries in :attr:`locations`.
+
+    Named ``count`` in ``libretro.h``;
+    see the note in this class's summary for why libretro.py differs.
+    """
+
+    _fields_ = (
+        ("locations", POINTER(retro_vfs_authorized_location)),
+        ("num_locations", c_size_t),
+    )
+
+    def __init__(
+        self,
+        locations: TypedPointer[retro_vfs_authorized_location]
+        | TypedArray[retro_vfs_authorized_location]
+        | Array[retro_vfs_authorized_location]
+        | Sequence[retro_vfs_authorized_location]
+        | None = None,
+        num_locations: CIntArg[c_size_t] | None = None,
+    ):
+        """
+        Initialize a :class:`retro_vfs_authorized_locations`.
+
+        When *locations* is a :class:`~collections.abc.Sequence` (but not a pointer or array),
+        it is converted to a :class:`~ctypes.Array`
+        and *num_locations* defaults to its length:
+
+        >>> from libretro.api import retro_vfs_authorized_location, retro_vfs_authorized_locations
+        >>> group = retro_vfs_authorized_locations(
+        ...     [retro_vfs_authorized_location(path=b"saf://roms")]
+        ... )
+        >>> len(group)
+        1
+
+        :param locations: Array of authorized locations as a pointer, array, or iterable.
+        :param num_locations: Number of locations;
+            inferred from *locations* when it is an array or iterable,
+            and ``0`` when it is a pointer.
+        """
+        if locations is not None and not isinstance(locations, (TypedPointer, Array)):
+            items = list(locations)
+            locations = (retro_vfs_authorized_location * len(items))(*items)
+        if num_locations is None:
+            num_locations = len(locations) if isinstance(locations, Array) else 0
+
+        super(retro_vfs_authorized_locations, self).__init__(locations, num_locations)
+
+    def __len__(self):
+        """
+        Return the number of authorized locations.
+
+        >>> from libretro.api import retro_vfs_authorized_locations
+        >>> len(retro_vfs_authorized_locations())
+        0
+        """
+        return self.num_locations
+
+    @overload
+    def __getitem__(self, item: int) -> retro_vfs_authorized_location: ...
+    @overload
+    def __getitem__(
+        self, item: "slice[retro_vfs_authorized_location]"
+    ) -> list[retro_vfs_authorized_location]: ...
+    def __getitem__(
+        self, item: "int | slice[retro_vfs_authorized_location]"
+    ) -> retro_vfs_authorized_location | list[retro_vfs_authorized_location]:
+        """
+        Return a location by index or a list of locations by slice.
+
+        Supports negative indexes in the usual Python fashion:
+
+        >>> from libretro.api import retro_vfs_authorized_location, retro_vfs_authorized_locations
+        >>> locs = (retro_vfs_authorized_location * 2)(
+        ...     retro_vfs_authorized_location(path=b"saf://roms"),
+        ...     retro_vfs_authorized_location(path=b"saf://saves"),
+        ... )
+        >>> retro_vfs_authorized_locations(locs, 2)[-1].path
+        b'saf://saves'
+
+        :param item: An integer index or slice.
+        :return: A single :class:`retro_vfs_authorized_location` or a list of them.
+        :raises RuntimeError: If :attr:`locations` is :obj:`None`.
+        :raises IndexError: If ``item`` is an integer outside ``[-len, len)``.
+        :raises TypeError: If ``item`` is neither an :class:`int` nor a :class:`slice`.
+        """
+        if not self.locations:
+            raise RuntimeError("No authorized locations")
+
+        match item:
+            case int(i):
+                n = len(self)
+                if not (-n <= i < n):
+                    raise IndexError(f"Expected {-n} <= index < {n}, got {i}")
+                if i < 0:
+                    i += n
+                return self.locations[i]
+            case slice() as s:
+                return self.locations[s]
+            case _:
+                raise TypeError(f"Expected an int or slice, got {type(item).__name__}")
+
+    def __iter__(self) -> Iterator[retro_vfs_authorized_location]:
+        """
+        Iterate over the authorized locations.
+
+        Returns no elements when :attr:`locations` is :obj:`None`:
+
+        >>> from libretro.api import retro_vfs_authorized_locations
+        >>> list(retro_vfs_authorized_locations())
+        []
+        """
+        if not self.locations:
+            return
+        for i in range(self.num_locations):
+            yield self.locations[i]
+
+    def __contains__(self, item: object) -> bool:
+        """
+        Test whether ``item`` appears in this sequence.
+
+        :param item: The element to search for.
+        :return: :obj:`True` if found, :obj:`False` otherwise.
+        """
+        return any(v is item or v == item for v in self)
+
+    def __reversed__(self) -> Iterator[retro_vfs_authorized_location]:
+        """
+        Iterate over the authorized locations in reverse order.
+
+        Returns no elements when :attr:`locations` is :obj:`None`.
+
+        :return: An iterator over the locations in reverse order.
+        """
+        if not self.locations:
+            return
+        for i in range(self.num_locations - 1, -1, -1):
+            yield self.locations[i]
+
+    def count(self, value: object) -> int:
+        """
+        Count occurrences of ``value`` in this sequence.
+
+        :param value: The element to count.
+        :return: The number of times ``value`` appears.
+        """
+        return sum(1 for v in self if v is value or v == value)
+
+    def index(self, value: object, start: int = 0, stop: int | None = None) -> int:
+        """
+        Return the index of the first occurrence of ``value``.
+
+        :param value: The element to search for.
+        :param start: Optional start index (inclusive).
+        :param stop: Optional stop index (exclusive).
+        :return: The index of the first match within ``[start, stop)``.
+        :raises ValueError: If ``value`` is not found within the given range.
+        """
+        n = len(self)
+        if start < 0:
+            start = max(n + start, 0)
+        if stop is None:
+            stop = n
+        elif stop < 0:
+            stop = max(n + stop, 0)
+        for i in range(start, min(stop, n)):
+            v = self[i]
+            if v is value or v == value:
+                return i
+        raise ValueError(f"{value!r} is not in sequence")
+
+    def __deepcopy__(self, memodict: MemoDict = None):
+        """
+        Return a deep copy of this object,
+        including all subobjects and strings.
+        Intended for use with :func:`copy.deepcopy`.
+
+        >>> import copy
+        >>> from libretro.api import retro_vfs_authorized_locations
+        >>> copy.deepcopy(retro_vfs_authorized_locations()).num_locations
+        0
+        """
+        return retro_vfs_authorized_locations(
+            locations=deepcopy_array(self.locations, self.num_locations, memodict),
+            num_locations=self.num_locations,
+        )
+
+
+Sequence.register(retro_vfs_authorized_locations)  # type: ignore
+# Sequence.register isn't part of the type stubs
+
+
 class VfsFileAccessHint(IntFlag):
     """
     Hints for file access patterns.
@@ -624,7 +953,20 @@ class VfsFileAccessHint(IntFlag):
     """
 
     NONE = RETRO_VFS_FILE_ACCESS_HINT_NONE
+    """No hint; the frontend should use its default access strategy."""
+
     FREQUENT_ACCESS = RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS
+    """The file will be accessed often, so the frontend may keep it cached or mapped."""
+
+    SEQUENTIAL_BULK = RETRO_VFS_FILE_ACCESS_HINT_SEQUENTIAL_BULK
+    """
+    The file will be read once from start to finish and then closed.
+
+    Only meaningful in combination with :attr:`.VfsFileAccess.READ`.
+    The caller keeps whatever bytes it asks for,
+    so anything the frontend retains past the call is wasted;
+    a frontend that buffers its reads may skip doing so for such a stream.
+    """
 
 
 class VfsSeekPosition(IntEnum):
@@ -688,6 +1030,7 @@ __all__ = [
     "retro_vfs_remove_t",
     "retro_vfs_rename_t",
     "retro_vfs_stat_t",
+    "retro_vfs_stat_64_t",
     "retro_vfs_mkdir_t",
     "retro_vfs_opendir_t",
     "retro_vfs_readdir_t",
@@ -696,6 +1039,8 @@ __all__ = [
     "retro_vfs_closedir_t",
     "retro_vfs_interface",
     "retro_vfs_interface_info",
+    "retro_vfs_authorized_location",
+    "retro_vfs_authorized_locations",
     "VfsFileAccessHint",
     "VfsSeekPosition",
     "VfsStat",
