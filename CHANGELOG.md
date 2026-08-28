@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added HDR-related types and constants to `libretro.api.video.frame`.
 - Added extra flags and types to `libretro.api.vfs`.
 
+### Changed
+
+- Add support for resolving the old `SET_HW_RENDER` envcall value.
+
 ### Fixed
 
 - Fix `RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY`

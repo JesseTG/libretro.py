@@ -117,6 +117,11 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             EnvironmentCall.SET_HW_RENDER: lambda data: self._set_hw_render(
                 cast(data, TypedPointer[retro_hw_render_callback])
             ),
+            # Both identifiers reach the same handler;
+            # see EnvironmentCall.SET_HW_RENDER_EXPERIMENTAL for why there are two
+            EnvironmentCall.SET_HW_RENDER_EXPERIMENTAL: lambda data: self._set_hw_render(
+                cast(data, TypedPointer[retro_hw_render_callback])
+            ),
             EnvironmentCall.GET_VARIABLE: lambda data: self._get_variable(
                 cast(data, TypedPointer[retro_variable])
             ),
