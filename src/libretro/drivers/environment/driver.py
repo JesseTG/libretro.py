@@ -16,6 +16,7 @@ from typing import Protocol, Self, runtime_checkable
 from libretro.api import (
     retro_audio_buffer_status_callback,
     retro_audio_callback,
+    retro_audio_sample_float_callback,
     retro_av_enable_flags,
     retro_camera_callback,
     retro_controller_info,
@@ -28,12 +29,16 @@ from libretro.api import (
     retro_device_power,
     retro_disk_control_callback,
     retro_disk_control_ext_callback,
+    retro_exec_mem_alloc,
+    retro_exec_mem_free,
     retro_fastforwarding_override,
     retro_frame_time_callback,
     retro_framebuffer,
     retro_game_geometry,
     retro_game_info_ext,
     retro_get_proc_address_interface,
+    retro_hdr_expand_gamut,
+    retro_hdr_output_mode,
     retro_hw_context_type,
     retro_hw_render_callback,
     retro_hw_render_context_negotiation_interface,
@@ -45,6 +50,7 @@ from libretro.api import (
     retro_location_callback,
     retro_log_callback,
     retro_memory_map,
+    retro_memory_status,
     retro_message,
     retro_message_ext,
     retro_microphone_interface,
@@ -60,6 +66,7 @@ from libretro.api import (
     retro_system_content_info_override,
     retro_throttle_state,
     retro_variable,
+    retro_vfs_authorized_locations,
     retro_vfs_interface_info,
 )
 from libretro.api.input import Port
@@ -437,6 +444,46 @@ class EnvironmentDriver(Protocol):
         return False
 
     def _get_file_browser_start_directory(self, dir: TypedPointer[c_char_p]) -> bool:
+        return False
+
+    def _get_target_sample_rate(self, rate: TypedPointer[c_uint]) -> bool:
+        return False
+
+    def _get_netplay_client_index(self, index: TypedPointer[c_uint]) -> bool:
+        return False
+
+    def _exec_mem_alloc(self, alloc: TypedPointer[retro_exec_mem_alloc]) -> bool:
+        return False
+
+    def _exec_mem_free(self, mem: TypedPointer[retro_exec_mem_free]) -> bool:
+        return False
+
+    def _get_audio_sample_batch_float(
+        self, callback: TypedPointer[retro_audio_sample_float_callback]
+    ) -> bool:
+        return False
+
+    def _get_memory_status(self, status: TypedPointer[retro_memory_status]) -> bool:
+        return False
+
+    def _get_screen_10bpc_capable(self, capable: TypedPointer[c_bool]) -> bool:
+        return False
+
+    def _get_hdr_paper_white_nits(self, nits: TypedPointer[c_float]) -> bool:
+        return False
+
+    def _get_hdr_expand_gamut(self, gamut: TypedPointer[retro_hdr_expand_gamut]) -> bool:
+        return False
+
+    def _get_hdr_output_mode(self, mode: TypedPointer[retro_hdr_output_mode]) -> bool:
+        return False
+
+    def _get_hdr_max_nits(self, nits: TypedPointer[c_float]) -> bool:
+        return False
+
+    def _get_vfs_authorized_locations(
+        self, locations: TypedPointer[retro_vfs_authorized_locations]
+    ) -> bool:
         return False
 
     # ruff: enable[ARG002]

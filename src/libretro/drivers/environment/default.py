@@ -15,6 +15,7 @@ from libretro.api import (
     EnvironmentCall,
     retro_audio_buffer_status_callback,
     retro_audio_callback,
+    retro_audio_sample_float_callback,
     retro_av_enable_flags,
     retro_camera_callback,
     retro_controller_info,
@@ -27,12 +28,16 @@ from libretro.api import (
     retro_device_power,
     retro_disk_control_callback,
     retro_disk_control_ext_callback,
+    retro_exec_mem_alloc,
+    retro_exec_mem_free,
     retro_fastforwarding_override,
     retro_frame_time_callback,
     retro_framebuffer,
     retro_game_geometry,
     retro_game_info_ext,
     retro_get_proc_address_interface,
+    retro_hdr_expand_gamut,
+    retro_hdr_output_mode,
     retro_hw_context_type,
     retro_hw_render_callback,
     retro_hw_render_context_negotiation_interface,
@@ -44,6 +49,7 @@ from libretro.api import (
     retro_location_callback,
     retro_log_callback,
     retro_memory_map,
+    retro_memory_status,
     retro_message,
     retro_message_ext,
     retro_microphone_interface,
@@ -59,6 +65,7 @@ from libretro.api import (
     retro_system_content_info_override,
     retro_throttle_state,
     retro_variable,
+    retro_vfs_authorized_locations,
     retro_vfs_interface_info,
 )
 from libretro.ctypes import TypedPointer
@@ -328,6 +335,51 @@ class DefaultEnvironmentDriver(DictEnvironmentDriver):
             ),
             EnvironmentCall.GET_FILE_BROWSER_START_DIRECTORY: lambda data: (
                 self._get_file_browser_start_directory(cast(data, TypedPointer[c_char_p]))
+            ),
+            EnvironmentCall.GET_TARGET_SAMPLE_RATE: lambda data: self._get_target_sample_rate(
+                cast(data, TypedPointer[c_uint])
+            ),
+            EnvironmentCall.GET_NETPLAY_CLIENT_INDEX: lambda data: self._get_netplay_client_index(
+                cast(data, TypedPointer[c_uint])
+            ),
+            EnvironmentCall.EXEC_MEM_ALLOC: lambda data: self._exec_mem_alloc(
+                cast(data, TypedPointer[retro_exec_mem_alloc])
+            ),
+            EnvironmentCall.EXEC_MEM_FREE: lambda data: self._exec_mem_free(
+                cast(data, TypedPointer[retro_exec_mem_free])
+            ),
+            EnvironmentCall.GET_AUDIO_SAMPLE_BATCH_FLOAT: lambda data: (
+                self._get_audio_sample_batch_float(
+                    cast(data, TypedPointer[retro_audio_sample_float_callback])
+                )
+            ),
+            EnvironmentCall.GET_MEMORY_STATUS: lambda data: self._get_memory_status(
+                cast(data, TypedPointer[retro_memory_status])
+            ),
+            # Both identifiers reach the same handler;
+            # see EnvironmentCall.SET_SERIALIZATION_QUIRKS_V1 for why there are two
+            EnvironmentCall.SET_SERIALIZATION_QUIRKS_V1: lambda data: (
+                self._set_serialization_quirks(cast(data, TypedPointer[c_uint64]))
+            ),
+            EnvironmentCall.GET_SCREEN_10BPC_CAPABLE: lambda data: self._get_screen_10bpc_capable(
+                cast(data, TypedPointer[c_bool])
+            ),
+            EnvironmentCall.GET_HDR_PAPER_WHITE_NITS: lambda data: self._get_hdr_paper_white_nits(
+                cast(data, TypedPointer[c_float])
+            ),
+            EnvironmentCall.GET_HDR_EXPAND_GAMUT: lambda data: self._get_hdr_expand_gamut(
+                cast(data, TypedPointer[retro_hdr_expand_gamut])
+            ),
+            EnvironmentCall.GET_HDR_OUTPUT_MODE: lambda data: self._get_hdr_output_mode(
+                cast(data, TypedPointer[retro_hdr_output_mode])
+            ),
+            EnvironmentCall.GET_HDR_MAX_NITS: lambda data: self._get_hdr_max_nits(
+                cast(data, TypedPointer[c_float])
+            ),
+            EnvironmentCall.GET_VFS_AUTHORIZED_LOCATIONS: lambda data: (
+                self._get_vfs_authorized_locations(
+                    cast(data, TypedPointer[retro_vfs_authorized_locations])
+                )
             ),
         }
 
