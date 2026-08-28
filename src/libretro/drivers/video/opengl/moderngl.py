@@ -924,6 +924,10 @@ class ModernGlVideoDriver(VideoDriver):
                             (width, height), 3, data, internal_format=GL_RGB5
                         )
                         # moderngl can't natively express GL_RGB5
+                    case _:
+                        # The 10-bit formats have no texture mapping here yet;
+                        # fail loudly instead of leaving self._cpu_color unset
+                        raise ValueError(f"{self._pixel_format!r} frames aren't supported")
 
                 self._cpu_color.label = "libretro.py CPU-Rendered Frame"
 
