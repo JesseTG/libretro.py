@@ -368,16 +368,14 @@ class ModernGlVideoDriver(VideoDriver):
                     # TODO: Re-render whichever framebuffer was most recently used
                     pass
                 case FrameBufferSpecial.HARDWARE:
-                    assert self._color is not None, (
-                        "Color buffer should have been initialized in reinit() by now"
-                    )
-                    assert self._hw_render_fbo is not None, (
-                        "Hardware render FBO should have been initialized in reinit() by now"
-                    )
                     assert self._hw_render_color is not None, (
                         "Hardware render color buffer should have been initialized in reinit() by now"
                     )
-                    self._context.copy_framebuffer(self._color, self._hw_render_fbo)
+                    # The quad below redraws every pixel this frame occupies,
+                    # so blitting the hardware framebuffer over first would be wasted work.
+                    # It would be *expensive* wasted work, too:
+                    # both surfaces are allocated for the core's maximum geometry,
+                    # which is usually far larger than a single frame.
                     self._hw_render_color.use()
                     # This texture is sized for the core's *maximum* geometry,
                     # but the core only rendered into the corner
@@ -403,22 +401,21 @@ class ModernGlVideoDriver(VideoDriver):
             assert self._shader_program is not None, (
                 "Shader program should have been initialized in reinit() by now"
             )
-            assert self._fbo is not None, "FBO should have been initialized in reinit() by now"
-            assert self._color is not None, (
-                "Color buffer should have been initialized in reinit() by now"
-            )
             assert self._vao is not None, "VAO should have been initialized in reinit() by now"
 
             # A core may resize its output between frames with SET_GEOMETRY,
             # so aim at the frame that was just handed over
-            # rather than at the geometry this framebuffer was created with.
+            # rather than at the geometry this framebuffer was created with,
+            # growing the framebuffer first if the frame has outgrown it.
+            self.__resize_fbo(width, height)
+            assert self._fbo is not None, "FBO should have been initialized in reinit() by now"
+
             # These belong on the framebuffer and not on the context:
             # Framebuffer.use() re-applies its own viewport and scissor,
             # which would undo anything set through Context.viewport here.
             self._fbo.viewport = (0, 0, width, height)
             self._fbo.scissor = (0, 0, width, height)
             self._fbo.use()
-            self._color.use(1)
 
             self._vao.render(moderngl.TRIANGLE_STRIP)
 
@@ -428,7 +425,24 @@ class ModernGlVideoDriver(VideoDriver):
                 ):
                     self._window.fbo.use()
                     self._context.copy_framebuffer(self._window.fbo, self._fbo)
+
+                    # swap_buffers() also pumps window events, and pyglet's
+                    # resize/scale handlers update their "WindowBlock" UBO and
+                    # leave it bound to uniform-buffer binding 0 -- an indexed
+                    # binding that belongs to the core between frames.
+                    # melonDS, for one, binds its 3D config UBO there exactly
+                    # once at startup, so a single clobber would black out its
+                    # 3D renderer for the rest of the session.
+
+                    bound_ubo = int(GL.glGetIntegeri_v(GL.GL_UNIFORM_BUFFER_BINDING, 0))  # type: ignore
                     self._window.swap_buffers()
+                    GL.glBindBufferBase(GL.GL_UNIFORM_BUFFER, 0, bound_ubo)
+
+            # Scissoring is context-wide state that outlives this call, and the next
+            # thing to draw through this context is usually the core.
+            # Left enabled, it clips the core's own rendering to the corner
+            # that the frame just presented happened to occupy.
+            self._context.scissor = None
 
             self._context.finish()
             self._last_size = (width, height)
@@ -547,7 +561,7 @@ class ModernGlVideoDriver(VideoDriver):
         self._context.clear_errors()
         with self._context.debug_scope("libretro.ModernGlVideoDriver.reinit"):
             self._context.gc_mode = "auto"
-            self.__init_fbo()
+            self.__init_fbo(*self.__get_presentation_size())
 
             self._shader_program = self._context.program(
                 vertex_shader=self._vertex_shader,
@@ -831,17 +845,46 @@ class ModernGlVideoDriver(VideoDriver):
         height = min(geometry.max_height, max_fbo_size, max_rb_size)
         return width, height
 
-    def __init_fbo(self):
+    def __get_presentation_size(self) -> tuple[int, int]:
+        """
+        Return the size to give the framebuffer that frames are presented in.
+
+        Unlike the framebuffer that a hardware-rendering core draws into,
+        this one only ever holds a single frame,
+        so it's allocated for the geometry frames arrive at
+        rather than for the largest geometry the core is allowed to use.
+        Cores routinely declare a maximum many times the size of the frames they emit,
+        and every pixel of that surplus costs time on each frame
+        it's carried through the driver.
+        :meth:`__resize_fbo` grows it if a frame ever arrives that doesn't fit.
+        """
+        assert self._system_av_info is not None
+        max_width, max_height = self.__get_framebuffer_size()
+        geometry = self._system_av_info.geometry
+        return min(geometry.base_width, max_width), min(geometry.base_height, max_height)
+
+    def __resize_fbo(self, width: int, height: int) -> None:
+        """Grow the presentation framebuffer if a frame arrives that overflows it."""
+        assert self._fbo is not None
+        fbo_width, fbo_height = self._fbo.size
+        if width <= fbo_width and height <= fbo_height:
+            return
+
+        # Never shrink, and never exceed what the core said it would need.
+        max_width, max_height = self.__get_framebuffer_size()
+        self.__init_fbo(
+            min(max(width, fbo_width), max_width),
+            min(max(height, fbo_height), max_height),
+        )
+
+    def __init_fbo(self, width: int, height: int):
         assert self._context is not None
         with self._context.debug_scope("libretro.ModernGlVideoDriver.__init_fbo"):
-            assert self._system_av_info is not None
-
             del self._fbo
             del self._color
             del self._depth
 
-            geometry = self._system_av_info.geometry
-            size = self.__get_framebuffer_size()
+            size = (width, height)
 
             # Similar to glGenTextures, glBindTexture, and glTexImage2D
             self._color = self._context.texture(size, 4)
@@ -854,8 +897,8 @@ class ModernGlVideoDriver(VideoDriver):
             self._depth.label = "libretro.py Main FBO Depth Attachment"
             self._fbo.label = "libretro.py Main FBO"
 
-            self._fbo.viewport = (0, 0, geometry.base_width, geometry.base_height)
-            self._fbo.scissor = (0, 0, geometry.base_width, geometry.base_height)
+            self._fbo.viewport = (0, 0, width, height)
+            self._fbo.scissor = (0, 0, width, height)
             self._fbo.clear()
 
         self._context.clear_errors()

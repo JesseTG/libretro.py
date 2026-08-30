@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed `ModernGlVideoDriver` unnecessarily copying a hardware-rendered frame
+  into the "present" framebuffer used to simulate the final screen.
+- Fixed `ModernGlVideoDriver` allocating an excessively large presentation framebuffer.
+- Fixed `ModernGlVideoDriver` not restoring a core's UBO binding after calling `swap_buffers`,
+  which resulted in a Pyglet-private UBO interfering with the core's rendering.
+
 ## [0.9.0] - 2026-08-30
 
 ### Added
