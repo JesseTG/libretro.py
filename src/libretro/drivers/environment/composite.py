@@ -2169,7 +2169,9 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
         if self._mic is None:
             return 0
 
-        mic = self._mic.open_mic(params[0] if params else None)
+        mic_params = deepcopy(params[0]) if params else None
+
+        mic = self._mic.open_mic(mic_params)
         if not mic:
             return 0
 

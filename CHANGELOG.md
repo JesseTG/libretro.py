@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY`
   not being resolved by `DefaultEnvironmentDriver`
   despite it being supported.
+- Fix `CompositeEnvironmentDriver._open_mic` not making a copy of the provided mic params,
+  resulting in a crash if the params object was short-lived
+  (e.g. pointer to the stack).
 
 ### Removed
 
