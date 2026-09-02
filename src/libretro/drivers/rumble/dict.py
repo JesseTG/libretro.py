@@ -67,7 +67,12 @@ class DictRumbleDriver(RumbleDriver):
 
     @override
     def set_rumble_state(self, port: Port, effect: RumbleEffect, strength: int) -> bool:
-        self._rumble_state[port] = RumbleState(effect, strength)
+        state = self._rumble_state.get(port)
+        if state is None:
+            state = RumbleState(0, 0)
+            self._rumble_state[port] = state
+
+        state[RumbleEffect(effect)] = strength
         return True
 
     def __getitem__(self, port: Port) -> RumbleState:

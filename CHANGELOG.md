@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `RecordingRumbleDriver` that logs every `set_rumble_state` call it receives.
+  Use it to assert on how a core drives the motors over time,
+  not just on the state it leaves them in.
+
+### Fixed
+
+- Fixed `DictRumbleDriver.set_rumble_state` storing the `RumbleEffect`
+  in the `strong` field and the strength in the `weak` field,
+  and resetting the motor that wasn't addressed.
+
+## [0.9.1] - 2026-08-30
+
 ### Fixed
 
 - Fixed `ModernGlVideoDriver` unnecessarily copying a hardware-rendered frame

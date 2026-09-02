@@ -9,3 +9,4 @@ Driver protocols and implementations for controller rumble feedback.
 
 from .dict import *
 from .driver import *
+from .recording import *
