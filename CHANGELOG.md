@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
-## [Unreleased]
+## [0.10.0] - 2026-09-02
 
 ### Added
 
