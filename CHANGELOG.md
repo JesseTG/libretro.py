@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > breaking changes may be introduced
 > at any time without warning.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed `PortInput` not accepting `accelerometer` or `gyroscope` readings;
+  they were declared as class attributes instead of dataclass fields,
+  so `IterableSensorDriver` reported 0 for every accelerometer and gyroscope axis
+  given by a `PortInput`.
+  As a result, `PortInput`'s first positional argument is now `accelerometer`
+  instead of `illuminance`.
+
 ## [0.11.0] - 2026-09-07
 
 ### Added
