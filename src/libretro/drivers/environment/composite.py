@@ -328,8 +328,10 @@ class CompositeEnvironmentDriver(DefaultEnvironmentDriver):
     def video_refresh(self, data: c_void_ptr, width: int, height: int, pitch: int) -> None:
         # Handle the constants and their equivalent ints, just to be safe
         match data.value:
-            case 0:
-                # Passing NULL to retro_video_refresh_t means "redraw the frame"
+            case None | 0:
+                # Passing NULL to retro_video_refresh_t means "redraw the frame".
+                # ctypes reports a NULL c_void_p's value as None rather than 0,
+                # so both spellings have to be matched here.
                 self._video.refresh(FrameBufferSpecial.DUPE, width, height, pitch)
             case int(i) if i == MAX_POINTER_VALUE:
                 self._video.refresh(FrameBufferSpecial.HARDWARE, width, height, pitch)
