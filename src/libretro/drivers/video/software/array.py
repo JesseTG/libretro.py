@@ -11,7 +11,7 @@ import itertools
 from array import array
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import final, override
+from typing import override
 from warnings import warn
 
 from libretro.api.av import retro_game_geometry, retro_system_av_info
@@ -32,7 +32,6 @@ class FramebufferDimensions:
         return self.height * self.pitch
 
 
-@final
 class ArrayVideoDriver(SoftwareVideoDriver):
     """
     Video driver that stores frames in an :class:`~array.array`.
