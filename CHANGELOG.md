@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `retro_memory_map.find` to resolve an emulated address
   to the descriptor that covers it and the offset within it.
 
+### Changed
+
+- Unmark `ModernGlVideoDriver` as `@final`.
+
 ## [0.11.1] - 2026-09-18
 
 ### Fixed

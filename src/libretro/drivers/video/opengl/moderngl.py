@@ -21,7 +21,7 @@ from collections.abc import Iterator, Sequence, Set
 from copy import deepcopy
 from importlib import resources
 from sys import modules
-from typing import TYPE_CHECKING, cast, final, override
+from typing import TYPE_CHECKING, cast, override
 
 import moderngl
 from OpenGL import GL
@@ -203,7 +203,6 @@ def _warn_unhandled_gl_errors():
         warnings.warn(f"Core did not handle the following OpenGL errors: {error_string}")
 
 
-@final
 class ModernGlVideoDriver(VideoDriver):
     """
     A video driver that exposes an OpenGL context to the :term:`core`
