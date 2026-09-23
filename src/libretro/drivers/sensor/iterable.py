@@ -39,8 +39,8 @@ class SensorState:
 class PortInput:
     """A frozen snapshot of every sensor reading on a single input port."""
 
-    accelerometer = Vector3()
-    gyroscope = Vector3()
+    accelerometer: Vector3 = Vector3()
+    gyroscope: Vector3 = Vector3()
     illuminance: float = 0.0
 
     def __getitem__(self, item: Sensor) -> float:

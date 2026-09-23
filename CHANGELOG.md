@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `CompositeEnvironmentDriver.video_refresh` raising `TypeError`
+  when a core duped a frame by passing `NULL` to `retro_video_refresh_t`.
+  `ctypes` reports a NULL `c_void_p`'s `value` as `None` rather than `0`,
+  so the frame-dupe branch was unreachable
+  and every dupe fell through to the error case.
+
+## [0.12.0] - 2026-09-22
+
 ### Added
 
 - Added `retro_memory_descriptor.view`,
@@ -22,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Unmark `ModernGlVideoDriver` as `@final`.
+- Unmark `ArrayVideoDriver` as `@final`.
 
 ## [0.11.1] - 2026-09-18
 
