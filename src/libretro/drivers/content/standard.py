@@ -10,7 +10,7 @@ The standard content driver that loads game files from disk or memory.
 from __future__ import annotations
 
 import os
-from collections.abc import Buffer, Generator, Sequence
+from collections.abc import Buffer, Generator, Iterable, Sequence
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from ctypes import Array, c_void_p
 from os import PathLike
@@ -62,6 +62,20 @@ class _PersistentBuffer:
         if self.ptr:
             del self.ptr
             self.ptr = None
+
+
+def _has_extension(extensions: Iterable[bytes], ext: bytes) -> bool:
+    """
+    Return whether an extension is in a list of extensions, ignoring case.
+
+    RetroArch matches content extensions the same way.
+
+    :param extensions: Extensions without leading dots, such as :attr:`.retro_system_info.extensions`.
+    :param ext: An extension without a leading dot.
+    :return: :obj:`True` if any extension in ``extensions`` matches ``ext``.
+    """
+    ext = ext.lower()
+    return any(e.lower() == ext for e in extensions)
 
 
 class StandardContentDriver(ContentDriver):
@@ -188,10 +202,10 @@ class StandardContentDriver(ContentDriver):
 
         ext = get_extension(content)
         if ext is not None:
-            if not selected_subsystem and ext not in self._system_info.extensions:
+            if not selected_subsystem and not _has_extension(self._system_info.extensions, ext):
                 raise ContentError(f"Content extension '{ext!r}' is not supported by the system")
 
-            if selected_subsystem and ext not in selected_subsystem[1].extensions:
+            if selected_subsystem and not _has_extension(selected_subsystem[1].extensions, ext):
                 # If we're trying to load an inapplicable subsystem ROM...
                 desc = selected_subsystem[1].desc or "unknown"
                 ident = selected_subsystem[0].ident or "unknown"
@@ -401,7 +415,9 @@ class StandardContentDriver(ContentDriver):
                 # If loading a content file with a specially-treated extension...
                 overrides: ContentInfoOverrides
                 return overrides[ext].need_fullpath
-            case bytes(), None, _ if ext.removeprefix(b".") in self._system_info.extensions:
+            case bytes(), None, _ if _has_extension(
+                self._system_info.extensions, ext.removeprefix(b".")
+            ):
                 # If loading a regular content file with no relevant overrides...
                 return self._system_info.need_fullpath
             case bytes(), None, _:
@@ -429,7 +445,7 @@ class StandardContentDriver(ContentDriver):
             case bytes(ext), ContentInfoOverrides() as overrides if ext in overrides:
                 # If loading a content file with a specially-treated extension...
                 return overrides[ext].persistent_data
-            case bytes(ext), _ if ext in self._system_info.extensions:
+            case bytes(ext), _ if _has_extension(self._system_info.extensions, ext):
                 # If loading a regular content file with no relevant overrides...
                 return False  # Regular content is not guaranteed to be persistent
             case _, _:
