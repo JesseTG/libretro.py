@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It filled the buffer one byte at a time in Python,
   on every call to `reinit` and when a larger frame arrived;
   it now copies from a zero-filled `bytes` object.
+- Fixed `ArrayVideoDriver` discarding the first frame
+  passed to `refresh` before any call to `reinit`;
+  it allocated the frame buffer without copying the frame into it.
 
 ## [0.12.0] - 2026-09-22
 

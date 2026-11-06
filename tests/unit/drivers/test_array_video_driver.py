@@ -66,3 +66,14 @@ def test_a_larger_frame_grows_the_buffer(video: ArrayVideoDriver) -> None:
     assert screenshot is not None
     assert (screenshot.width, screenshot.height) == (WIDTH, HEIGHT)
     assert bytes(screenshot.data) == rgba(frame)
+
+
+def test_the_first_frame_is_kept_without_reinit(video: ArrayVideoDriver) -> None:
+    """A frame that arrives before any AV info is stored, not just used to size the buffer."""
+    frame = xrgb8888_frame(WIDTH, HEIGHT)
+
+    video.refresh(memoryview(frame), WIDTH, HEIGHT, PITCH)
+
+    screenshot = video.screenshot()
+    assert screenshot is not None
+    assert bytes(screenshot.data) == rgba(frame)

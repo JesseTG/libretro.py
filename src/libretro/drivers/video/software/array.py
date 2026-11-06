@@ -51,14 +51,10 @@ class ArrayVideoDriver(SoftwareVideoDriver):
     def refresh(
         self, data: memoryview | FrameBufferSpecial, width: int, height: int, pitch: int
     ) -> None:
-        requested_size = height * pitch
         match data:
-            case memoryview() if self._frame is None:
-                self._frame = array("B", bytes(requested_size))
-
-            case memoryview() if self._frame:
-                if len(data) > len(self._frame):
-                    # Reallocate frame buffer
+            case memoryview():
+                if self._frame is None or len(data) > len(self._frame):
+                    # Allocate or grow the frame buffer
                     self._frame = array("B", bytes(len(data)))
                 frameview = memoryview(self._frame)
                 frameview[: len(data)] = data
