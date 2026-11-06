@@ -7,7 +7,6 @@ Software-rendered :class:`.VideoDriver` that stores frames in an :class:`~array.
         The protocol this driver implements.
 """
 
-import itertools
 from array import array
 from copy import deepcopy
 from dataclasses import dataclass
@@ -55,12 +54,12 @@ class ArrayVideoDriver(SoftwareVideoDriver):
         requested_size = height * pitch
         match data:
             case memoryview() if self._frame is None:
-                self._frame = array("B", itertools.repeat(0, requested_size))
+                self._frame = array("B", bytes(requested_size))
 
             case memoryview() if self._frame:
                 if len(data) > len(self._frame):
                     # Reallocate frame buffer
-                    self._frame = array("B", itertools.repeat(0, len(data)))
+                    self._frame = array("B", bytes(len(data)))
                 frameview = memoryview(self._frame)
                 frameview[: len(data)] = data
 
@@ -89,7 +88,7 @@ class ArrayVideoDriver(SoftwareVideoDriver):
 
         geometry = self._system_av_info.geometry
         bufsize = geometry.max_width * geometry.max_height * self._pixel_format.bytes_per_pixel
-        self._frame = array("B", itertools.repeat(0, bufsize))
+        self._frame = array("B", bytes(bufsize))
 
     @property
     @override

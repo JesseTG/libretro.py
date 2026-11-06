@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ctypes` reports a NULL `c_void_p`'s `value` as `None` rather than `0`,
   so the frame-dupe branch was unreachable
   and every dupe fell through to the error case.
+- Fixed `ArrayVideoDriver` taking a third of a second
+  to allocate a frame buffer for a 1920 x 1080 XRGB8888 frame.
+  It filled the buffer one byte at a time in Python,
+  on every call to `reinit` and when a larger frame arrived;
+  it now copies from a zero-filled `bytes` object.
 
 ## [0.12.0] - 2026-09-22
 
