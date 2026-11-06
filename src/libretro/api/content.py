@@ -827,7 +827,7 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
 
     def by_extension(self, ext: str | bytes) -> retro_subsystem_rom_info:
         """
-        Return the ROM info for the given file extension.
+        Return the ROM info for the given file extension, ignoring case.
 
         :param ext: The file extension (with or without leading dot).
         :raises KeyError: If no ROM slot supports the extension.
@@ -840,9 +840,9 @@ class retro_subsystem_info(Structure, NullPointerToNoneMixin):
         ...     print('Not found')
         Not found
         """
-        ext = as_bytes(ext).removeprefix(b".")
+        ext = as_bytes(ext).removeprefix(b".").lower()
         for info in self:
-            if ext in info.extensions:
+            if any(e.lower() == ext for e in info.extensions):
                 return info
 
         raise KeyError(f"Subsystem ROM with extension {ext!r} not found")
@@ -1025,6 +1025,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
     An indexed and extension-keyed collection of :class:`retro_system_content_info_override`.
 
     Supports lookup by integer index or by file extension.
+    Extension lookups ignore case, as RetroArch's do.
 
     >>> from libretro.api.content import ContentInfoOverrides
     >>> from libretro.api import retro_system_content_info_override
@@ -1060,9 +1061,10 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
         overrides_by_ext: dict[bytes, retro_system_content_info_override] = {}
         for o in self._overrides:
             for e in o.get_extensions():
-                if e not in overrides_by_ext:
+                key = e.lower()
+                if key not in overrides_by_ext:
                     # If this isn't a duplicate override...
-                    overrides_by_ext[e] = o
+                    overrides_by_ext[key] = o
                     # If an extension is listed more than once in a RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE call,
                     # only the first occurrence is used.
 
@@ -1092,6 +1094,11 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
         b'bin'
         >>> overrides[b'bin'].extensions
         b'bin'
+
+        Extensions are matched without regard to case:
+
+        >>> overrides['.BIN'].extensions
+        b'bin'
         """
         match item:
             case int() if -len(self) <= item < len(self):
@@ -1101,7 +1108,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
             case slice() as s:
                 return self._overrides[s]
             case str() | bytes():
-                ext = as_bytes(item).removeprefix(b".")
+                ext = as_bytes(item).removeprefix(b".").lower()
                 if ext in self._overrides_by_ext:
                     return self._overrides_by_ext[ext]
 
@@ -1129,7 +1136,7 @@ class ContentInfoOverrides(Sequence[retro_system_content_info_override]):
         """
         match item:
             case str(ext) | bytes(ext):
-                return as_bytes(ext).removeprefix(b".") in self._overrides_by_ext
+                return as_bytes(ext).removeprefix(b".").lower() in self._overrides_by_ext
             case retro_system_content_info_override():
                 return item in self._overrides
             case _:

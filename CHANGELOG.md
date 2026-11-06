@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ctypes` reports a NULL `c_void_p`'s `value` as `None` rather than `0`,
   so the frame-dupe branch was unreachable
   and every dupe fell through to the error case.
+- Fixed `StandardContentDriver` rejecting content
+  whose extension differs in case from the core's `valid_extensions`,
+  such as `GAME.SFC` for a core that lists `sfc`.
+  RetroArch matches extensions without regard to case,
+  and so do `StandardContentDriver`, `ContentInfoOverrides`,
+  and `retro_subsystem_info.by_extension` now.
 
 ## [0.12.0] - 2026-09-22
 

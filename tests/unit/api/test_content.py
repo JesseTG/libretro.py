@@ -208,6 +208,15 @@ def test_retro_subsystem_info_by_extension_finds_match() -> None:
     assert found.desc == b"BIOS"
 
 
+def test_retro_subsystem_info_by_extension_ignores_case() -> None:
+    roms = (retro_subsystem_rom_info * 1)(
+        retro_subsystem_rom_info(desc=b"BIOS", valid_extensions=b"bin|ROM"),
+    )
+    info = retro_subsystem_info(b"x", b"x", roms, 1, 0)
+    assert info.by_extension(b".BIN").desc == b"BIOS"
+    assert info.by_extension("rom").desc == b"BIOS"
+
+
 def test_retro_subsystem_info_deepcopy() -> None:
     info = retro_subsystem_info(desc=b"sgb", ident=b"sgb", id=1)
     dup = copy.deepcopy(info)
@@ -323,6 +332,14 @@ def test_content_info_overrides_membership() -> None:
     overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b"bin")])
     assert b"bin" in overrides
     assert b"rom" not in overrides
+
+
+def test_content_info_overrides_ignore_case() -> None:
+    overrides = ContentInfoOverrides([retro_system_content_info_override(extensions=b"bin|ISO")])
+    assert b"BIN" in overrides
+    assert ".iso" in overrides
+    assert overrides[b".Bin"].extensions == b"bin|ISO"
+    assert overrides["iso"].extensions == b"bin|ISO"
 
 
 def test_content_info_overrides_first_match_wins() -> None:
